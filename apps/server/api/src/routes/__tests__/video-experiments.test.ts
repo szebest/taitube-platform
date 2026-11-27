@@ -1,5 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import { mintToken } from '@vp/dev-identity';
+import { EXPERIMENT_MIN_IMPRESSIONS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import {
   type TestApp,
@@ -127,6 +128,30 @@ describe('title and thumbnail test routes', () => {
       variants: ['a', 'b'].map((variantId) =>
         expect.objectContaining({ variantId, watchSecondsPerImpression: null, clickThrough: null })
       ),
+    });
+  });
+
+  it('applies nothing on its own when every variant has enough data and one clearly leads', async () => {
+    const test = await start();
+    const before = await version();
+    ctx.repositories.videoExperiments.addStats(
+      [
+        { variantId: 'a' as const, starts: 100, watchSeconds: 1_000 },
+        { variantId: 'b' as const, starts: 700, watchSeconds: 20_000 },
+      ].map((row) => ({
+        ...row,
+        experimentId: test.id,
+        viewDate: '2026-11-20' as const,
+        impressions: EXPERIMENT_MIN_IMPRESSIONS,
+      }))
+    );
+
+    const [listed] = (await call('owner', 'GET', testsUrl())).json().items;
+
+    expect(listed).toMatchObject({ status: 'running', results: { enoughData: true } });
+    expect(expectOk(await ctx.repositories.videos.findById(VIDEO))).toMatchObject({
+      title: 'Control',
+      version: before,
     });
   });
 
