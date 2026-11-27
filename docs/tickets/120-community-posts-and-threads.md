@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | XL (one stack of three slices, see *Delivery*) |
 | Blocked by | 17 - Housekeeping · 38 - User identity · 39 - Permissions · 40 - Video reactions · 41 - Channel subscriptions · 42 - Threaded comments · 57 - Production video player · 58 - Modern browse layout · 59 - Modern video watch page · 95 - Design system 2 · 98 - Realtime user event stream · 99 - Notifications · 103 - Comment hearts, reports and the creator inbox · 113 - Channel comment moderation · 115 - Channel identity · 116 - Video management power tools · 117 - Channel team roles |
-| Blocks | 121, 122 |
+| Blocks | 121, 122, 177, 179 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** ready
