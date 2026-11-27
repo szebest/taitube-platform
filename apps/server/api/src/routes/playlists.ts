@@ -6,6 +6,7 @@ import {
   listMyPlaylists,
   removePlaylistItem,
   reorderPlaylist,
+  SHARE_TOKEN_PARAM,
   updatePlaylist,
 } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
@@ -13,6 +14,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { viewerSessionOf } from './video-access-request';
 
 export async function playlistsRoutes(app: FastifyInstance): Promise<void> {
   const { playlistService } = app.services;
@@ -29,9 +31,22 @@ export async function playlistsRoutes(app: FastifyInstance): Promise<void> {
 
   server.get(
     getPlaylist.path,
-    { schema: { ...contractSchema(getPlaylist), params: getPlaylist.params } },
+    {
+      schema: {
+        ...contractSchema(getPlaylist),
+        params: getPlaylist.params,
+        querystring: getPlaylist.query,
+      },
+    },
     async (request, reply) =>
-      sendResult(reply, request, await playlistService.get(request.user ?? null, request.params.id))
+      sendResult(
+        reply,
+        request,
+        await playlistService.open(request.user ?? null, request.params.id, {
+          shareToken: request.query[SHARE_TOKEN_PARAM] ?? null,
+          sessionKey: viewerSessionOf(request),
+        })
+      )
   );
 
   server.patch(

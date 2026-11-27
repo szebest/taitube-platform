@@ -78,7 +78,7 @@ export const restorePlaylistActivity = defineEndpoint({
   errors: {
     ...OWNER_AND_SEATS,
     404: [ErrorCodes.PLAYLIST_NOT_FOUND, ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND],
-    409: [ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE],
+    409: [ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE, ErrorCodes.PLAYLIST_IS_SMART],
   },
 });
 

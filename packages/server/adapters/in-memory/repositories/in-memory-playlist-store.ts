@@ -1,11 +1,19 @@
-import { type Result, ok, unwrapOr } from '@kit/result';
-import type { AppendItemOutcome, WatchHistoryRepositoryPort } from '@vp/core/repositories';
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
+import type {
+  AppendItemOutcome,
+  PinOutcome,
+  WatchHistoryRepositoryPort,
+} from '@vp/core/repositories';
 import {
+  DEFAULT_PLAYLIST_SETTINGS,
+  PLAYLIST_PIN_LIMIT,
+  type NewPlaylistInput,
   type Playlist,
   type PlaylistActivityEntry,
   type PlaylistEntry,
   type PlaylistItemSort,
   type PositionWrite,
+  WATCH_LATER_TITLE,
   appendPositions,
   isWatchCompleted,
 } from '@vp/domain';
@@ -16,9 +24,11 @@ import {
   type NewRow,
   type StoredItem,
   byPosition,
+  removedOf,
   sortKeyOf,
   storedRow,
 } from './in-memory-playlist-items';
+import type { InMemoryPlaylistLibraryRepository } from './in-memory-playlist-library-repository';
 import {
   type VideoLookups,
   channelCard,
@@ -27,14 +37,24 @@ import {
 } from './watchable-video';
 
 export interface InMemoryPlaylistDeps extends VideoLookups {
-  seats: () => Pick<InMemoryPlaylistCollaboratorRepository, 'seatOf' | 'record' | 'forget'>;
+  seats: () => Pick<
+    InMemoryPlaylistCollaboratorRepository,
+    'seatOf' | 'record' | 'forget' | 'userIdsOn'
+  >;
   history: () => Pick<WatchHistoryRepositoryPort, 'findMany'>;
+  follows: () => Pick<InMemoryPlaylistLibraryRepository, 'isFollowing'>;
 }
 
 export interface KeyedRow {
   id: string;
   key: string | number;
 }
+
+const NEW_PLAYLIST = {
+  ...DEFAULT_PLAYLIST_SETTINGS,
+  isSystem: false,
+  customThumbnailKey: null,
+} as const satisfies Partial<Playlist>;
 
 /** The playlists and their rows, and what every write does with them, for the repository on top. */
 export class InMemoryPlaylistStore {
@@ -48,6 +68,101 @@ export class InMemoryPlaylistStore {
     this.playlists.clear();
     this.items.clear();
     this.restored.clear();
+  }
+
+  async create(input: NewPlaylistInput): Promise<Result<Playlist, DatabaseUnavailable>> {
+    const now = new Date();
+    const playlist: Playlist = {
+      ...NEW_PLAYLIST,
+      ...input,
+      kind: input.kind ?? 'playlist',
+      rules: input.rules ?? null,
+      forkedFromPlaylistId: input.forkedFromPlaylistId ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.playlists.set(playlist.id, playlist);
+    return ok({ ...playlist });
+  }
+
+  async provisionWatchLater(input: {
+    id: string;
+    ownerId: string;
+  }): Promise<Result<void, DatabaseUnavailable>> {
+    const held = [...this.playlists.values()].some(
+      (playlist) => playlist.ownerId === input.ownerId && playlist.isSystem
+    );
+    if (held) return ok();
+    const now = new Date();
+    this.playlists.set(input.id, {
+      ...input,
+      title: WATCH_LATER_TITLE,
+      description: '',
+      visibility: 'private',
+      ...NEW_PLAYLIST,
+      kind: 'playlist',
+      isSystem: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return ok();
+  }
+
+  /** Rows written as they stand, logging nothing: the items of a new fork or frozen copy. */
+  async seedRows(playlistId: string, rows: readonly NewRow[]): Promise<void> {
+    await this.appendRows(playlistId, rows);
+  }
+
+  rowsOf(playlistId: string): StoredItem[] {
+    return this.itemsOf(playlistId);
+  }
+
+  /** Counts and pins with no await between, so parallel pins never pass the limit. */
+  pin(ownerId: string, playlistId: string, at: Date): PinOutcome {
+    const playlist = this.playlists.get(playlistId);
+    if (!playlist) return 'missing';
+    if (playlist.pinnedAt !== null) return 'pinned';
+    const pins = [...this.playlists.values()].filter(
+      (held) => held.ownerId === ownerId && held.pinnedAt !== null
+    ).length;
+    if (pins >= PLAYLIST_PIN_LIMIT) return 'full';
+    playlist.pinnedAt = at;
+    return 'pinned';
+  }
+
+  unpin(playlistId: string): boolean {
+    const playlist = this.playlists.get(playlistId);
+    if (!playlist) return false;
+    playlist.pinnedAt = null;
+    return true;
+  }
+
+  /** A seat taken ends removing watched videos, which is one viewer's fact; answers whether it was on. */
+  stopAutoRemove(playlistId: string): boolean {
+    const playlist = this.playlists.get(playlistId);
+    if (!playlist?.autoRemoveWatched) return false;
+    playlist.autoRemoveWatched = false;
+    return true;
+  }
+
+  /** Takes a video the owner finished out of each list of theirs that asks, logging it to restore. */
+  async removeWatched(userId: string, videoId: string): Promise<Result<void, DatabaseUnavailable>> {
+    const lists = [...this.playlists.values()].filter(
+      (playlist) =>
+        playlist.ownerId === userId &&
+        playlist.autoRemoveWatched &&
+        this.deps.seats().userIdsOn(playlist.id).length === 0
+    );
+    for (const playlist of lists) {
+      const item = this.videosOf(playlist.id).find((row) => row.videoId === videoId);
+      if (!item) continue;
+      this.items.delete(item.id);
+      const logged = await this.log(playlist.id, userId, [
+        { action: 'auto_removed', target: removedOf(item) },
+      ]);
+      if (isErr(logged)) return logged;
+    }
+    return ok();
   }
 
   /** Appends like the postgres adapter: a held video is `present`, a gone one `video-missing`. */

@@ -22,6 +22,7 @@ describe('applyViewBatch transaction', () => {
       devices: [],
       shareLinks: [],
       experiments: [],
+      playlists: [],
     };
 
     expectErr(await repositories.videoViews.applyBatch(batch));

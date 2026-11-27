@@ -63,7 +63,7 @@ export async function logReorder(
 }
 
 /** The copy of an item in another playlist: a new row, credited to whoever copied it. */
-function copyOf(item: StoredPlaylistItem, actorId: string): NewRow {
+export function copyOf(item: StoredPlaylistItem, actorId: string): NewRow {
   const { kind, videoId, title, note, startMs, endMs } = item;
   return kind === 'video' && videoId !== null
     ? { kind: 'video', id: uuidv7(), videoId, addedBy: actorId, note, startMs, endMs }

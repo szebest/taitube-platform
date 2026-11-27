@@ -8,6 +8,7 @@ import {
   type ExperimentCount,
   type FirstWeekRow,
   type PeerVideo,
+  type PlaylistCount,
   type HourlyViewCount,
   type HourlyViews,
   type RetentionCount,
@@ -36,10 +37,11 @@ export interface ViewedVideos {
   addViews(videoId: string, views: number): void;
 }
 
-/** The in-memory share link and experiment stores, which hold the numbers a flush adds for them. */
+/** The in-memory share link, experiment and playlist stores, which hold the numbers a flush adds for them. */
 export interface ViewStatsSinks {
   shareLinks: { addStats(counts: readonly ShareLinkCount[]): void };
   experiments: { addStats(counts: readonly ExperimentCount[]): void };
+  playlists: { addStats(counts: readonly PlaylistCount[]): void };
 }
 
 export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
@@ -92,6 +94,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
 
     this.sinks.shareLinks.addStats(batch.shareLinks);
     this.sinks.experiments.addStats(batch.experiments);
+    this.sinks.playlists.addStats(batch.playlists);
 
     const deltas = viewsByVideo(kept);
     for (const { videoId, views } of deltas) this.videos.addViews(videoId, views);

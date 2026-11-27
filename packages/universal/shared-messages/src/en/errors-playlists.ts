@@ -13,4 +13,12 @@ export const playlistErrors = {
   playlistActivityNotRestorable: dt(
     'This change cannot be undone, or its video is back in the playlist already.'
   ),
+  playlistIsSmart: dt(
+    'A smart playlist fills itself from its rules, so videos cannot be added by hand.'
+  ),
+  playlistNotSmart: dt('Only a smart playlist has rules to change or freeze.'),
+  playlistHasCollaborators: dt(
+    'Removing watched videos works only on a playlist nobody else works on.'
+  ),
+  playlistPinLimit: dt('You have pinned the most playlists you can. Unpin one first.'),
 };

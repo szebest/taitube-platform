@@ -17,10 +17,11 @@ describe('@vp/domain-rules: decideImageCrops', () => {
     expect(expectOk(decideImageCrops(banner, IMAGE))).toEqual(banner);
   });
 
-  it('accepts a square avatar crop', () => {
-    const avatar: ImageCrops = { kind: 'avatar', crop: { x: 10, y: 10, width: 400, height: 400 } };
-
-    expect(expectOk(decideImageCrops(avatar, IMAGE))).toEqual(avatar);
+  it.each<ImageCrops>([
+    { kind: 'avatar', crop: { x: 10, y: 10, width: 400, height: 400 } },
+    { kind: 'playlist-cover', crop: { x: 0, y: 0, width: 1600, height: 900 } },
+  ])('accepts a $kind crop of its shape', (crops) => {
+    expect(expectOk(decideImageCrops(crops, IMAGE))).toEqual(crops);
   });
 
   it.each(['desktop', 'mobile', 'tv'] as const)(
@@ -38,10 +39,11 @@ describe('@vp/domain-rules: decideImageCrops', () => {
     }
   );
 
-  it('refuses a non-square avatar crop', () => {
-    const avatar: ImageCrops = { kind: 'avatar', crop: { x: 0, y: 0, width: 400, height: 300 } };
-
-    expect(expectErr(decideImageCrops(avatar, IMAGE))).toMatchObject({ field: 'crop' });
+  it.each<ImageCrops>([
+    { kind: 'avatar', crop: { x: 0, y: 0, width: 400, height: 300 } },
+    { kind: 'playlist-cover', crop: { x: 0, y: 0, width: 900, height: 900 } },
+  ])('refuses a $kind crop of another shape', (crops) => {
+    expect(expectErr(decideImageCrops(crops, IMAGE))).toMatchObject({ field: 'crop' });
   });
 
   it.each([
@@ -51,10 +53,15 @@ describe('@vp/domain-rules: decideImageCrops', () => {
       crop: { x: 0, y: 0, width: 100, height: 100 },
     },
     { kind: 'banner', image: { width: 1000, height: 560 }, crop: null },
+    {
+      kind: 'playlist-cover',
+      image: { width: 639, height: 360 },
+      crop: { x: 0, y: 0, width: 320, height: 180 },
+    },
   ] as const)(
     'refuses a $kind image below the minimum before looking at the crops',
     ({ kind, image, crop }) => {
-      const crops: ImageCrops = kind === 'avatar' && crop ? { kind, crop } : banner;
+      const crops: ImageCrops = kind === 'banner' || !crop ? banner : { kind, crop };
 
       expect(expectErr(decideImageCrops(crops, image)).code).toBe('IMAGE_TOO_SMALL');
     }

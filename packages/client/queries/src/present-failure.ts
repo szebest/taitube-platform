@@ -175,6 +175,10 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS:
     case ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT:
     case ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE:
+    case ErrorCodes.PLAYLIST_IS_SMART:
+    case ErrorCodes.PLAYLIST_NOT_SMART:
+    case ErrorCodes.PLAYLIST_HAS_COLLABORATORS:
+    case ErrorCodes.PLAYLIST_PIN_LIMIT:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

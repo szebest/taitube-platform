@@ -1,9 +1,11 @@
+import { assertNever } from '@kit/result';
 import type { ChannelImageCommit } from '@vp/core/repositories';
 import { channelImageUploads as up, channels } from '@vp/db';
 import {
   CHANNEL_IMAGE_UPLOAD_EDGES as EDGES,
   channelImageFailed,
   channelImageReady,
+  type ChannelImageKind,
   type ChannelImageUpload,
 } from '@vp/domain';
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
@@ -40,13 +42,68 @@ export async function nextVersion(
     .from(up)
     .where(and(eq(up.channelId, upload.channelId), eq(up.kind, upload.kind)));
 
-  const current = (upload.kind === 'avatar' ? channel?.avatar : channel?.banner) ?? 0;
-  return Math.max(current, queued?.newest ?? 0) + 1;
+  return Math.max(heldVersion(upload.kind, channel), queued?.newest ?? 0) + 1;
+}
+
+function heldVersion(
+  kind: ChannelImageKind,
+  channel: { avatar: number; banner: number } | undefined
+): number {
+  switch (kind) {
+    case 'avatar':
+      return channel?.avatar ?? 0;
+    case 'banner':
+      return channel?.banner ?? 0;
+    case 'playlist-cover':
+      return 0;
+    default:
+      return assertNever(kind, 'ChannelImageKind');
+  }
+}
+
+async function advanceChannel(
+  tx: PostgresDatabase,
+  upload: ImageUploadRow,
+  defaultUrl: string
+): Promise<boolean> {
+  const version = upload.version ?? 0;
+  switch (upload.kind) {
+    case 'avatar':
+      return (
+        (
+          await tx
+            .update(channels)
+            .set({ avatarVersion: version, avatarUrl: defaultUrl, updatedAt: new Date() })
+            .where(and(eq(channels.id, upload.channelId), lt(channels.avatarVersion, version)))
+            .returning({ id: channels.id })
+        ).length > 0
+      );
+    case 'banner':
+      return (
+        (
+          await tx
+            .update(channels)
+            .set({
+              bannerVersion: version,
+              bannerUrl: defaultUrl,
+              bannerCrops: upload.crops?.kind === 'banner' ? upload.crops.crops : undefined,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(channels.id, upload.channelId), lt(channels.bannerVersion, version)))
+            .returning({ id: channels.id })
+        ).length > 0
+      );
+    case 'playlist-cover':
+      return true;
+    default:
+      return assertNever(upload.kind, 'ChannelImageKind');
+  }
 }
 
 /**
  * Moves the channel's version to the upload's when it is newer, and only then: the compare is in
- * the write, so a retried or late job cannot take an older image back.
+ * the write, so a retried or late job cannot take an older image back. A playlist cover moves no
+ * channel version and is always ready; the playlist takes it when its owner names the upload.
  */
 export async function commitUpload(
   tx: PostgresDatabase,
@@ -54,24 +111,7 @@ export async function commitUpload(
   defaultUrl: string
 ): Promise<ChannelImageCommit> {
   const version = upload.version ?? 0;
-  const advanced =
-    upload.kind === 'avatar'
-      ? await tx
-          .update(channels)
-          .set({ avatarVersion: version, avatarUrl: defaultUrl, updatedAt: new Date() })
-          .where(and(eq(channels.id, upload.channelId), lt(channels.avatarVersion, version)))
-          .returning({ id: channels.id })
-      : await tx
-          .update(channels)
-          .set({
-            bannerVersion: version,
-            bannerUrl: defaultUrl,
-            bannerCrops: upload.crops?.kind === 'banner' ? upload.crops.crops : undefined,
-            updatedAt: new Date(),
-          })
-          .where(and(eq(channels.id, upload.channelId), lt(channels.bannerVersion, version)))
-          .returning({ id: channels.id });
-  const applied = advanced.length > 0;
+  const applied = await advanceChannel(tx, upload, defaultUrl);
 
   const [row] = await tx
     .update(up)
@@ -81,14 +121,16 @@ export async function commitUpload(
   if (!row) throw new Error('channel_image_uploads update returned no row');
 
   if (applied) {
-    await appendChannelAudit(tx, {
-      channelId: upload.channelId,
-      actorUserId: upload.uploadedBy,
-      action: 'channel.updated',
-      targetType: 'channel',
-      targetId: upload.channelId,
-      meta: { fields: [upload.kind] },
-    });
+    if (upload.kind !== 'playlist-cover') {
+      await appendChannelAudit(tx, {
+        channelId: upload.channelId,
+        actorUserId: upload.uploadedBy,
+        action: 'channel.updated',
+        targetType: 'channel',
+        targetId: upload.channelId,
+        meta: { fields: [upload.kind] },
+      });
+    }
     await appendUserEvent(tx, {
       userId: upload.uploadedBy,
       ...channelImageReady({

@@ -1,11 +1,11 @@
 import type { ApiClient } from '@vp/api-client';
 import type { QueuedChannelImage } from '@vp/api-contracts';
 import type { ImageCrops } from '@vp/domain';
-import type { ChannelImageKind } from '@vp/validation';
+import type { ChannelPageImageKind } from '@vp/validation';
 import axios from 'axios';
 
 interface ChannelImageUpload {
-  kind: ChannelImageKind;
+  kind: ChannelPageImageKind;
   file: File;
   /** The file's decoded pixels, which the API reads again. */
   size: { width: number; height: number };
@@ -31,7 +31,7 @@ export async function uploadChannelImage(
     body: {
       uploadId: prepared.uploadId,
       ...size,
-      ...(crops.kind === 'avatar' ? { crop: crops.crop } : { crops: crops.crops }),
+      ...(crops.kind === 'banner' ? { crops: crops.crops } : { crop: crops.crop }),
     },
     ...(signal && { signal }),
   });

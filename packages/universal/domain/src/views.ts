@@ -1,6 +1,7 @@
 import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
 import type { ExperimentCount } from './experiments';
 import { type HourlyViewCount, type ViewHour, viewHourOf } from './hourly-views';
+import type { PlaylistCount } from './playlist-stats';
 import type { RetentionCount } from './retention';
 import type { ShareLinkCount } from './share-links';
 import type { DeviceViewCount } from './view-devices';
@@ -24,6 +25,7 @@ export interface ViewBatch {
   readonly devices: readonly DeviceViewCount[];
   readonly shareLinks: readonly ShareLinkCount[];
   readonly experiments: readonly ExperimentCount[];
+  readonly playlists: readonly PlaylistCount[];
 }
 
 export type ViewBatchOutcome =

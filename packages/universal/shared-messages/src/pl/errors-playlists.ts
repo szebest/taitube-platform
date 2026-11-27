@@ -13,4 +13,12 @@ export const playlistErrors = {
   playlistActivityNotRestorable: dt(
     'Tej zmiany nie można cofnąć albo jej film już jest w playliście.'
   ),
+  playlistIsSmart: dt(
+    'Inteligentna playlista wypełnia się sama według reguł, więc nie można dodawać do niej filmów ręcznie.'
+  ),
+  playlistNotSmart: dt('Tylko inteligentna playlista ma reguły do zmiany albo zamrożenia.'),
+  playlistHasCollaborators: dt(
+    'Usuwanie obejrzanych filmów działa tylko na playliście, której nikt inny nie współtworzy.'
+  ),
+  playlistPinLimit: dt('Masz już przypiętą maksymalną liczbę playlist. Najpierw odepnij jedną.'),
 };

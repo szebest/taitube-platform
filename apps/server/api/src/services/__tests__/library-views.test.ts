@@ -1,8 +1,16 @@
 import type { VideoRecord } from '@vp/core/repositories';
-import type { PlaylistDetail, PublicPlaylist, WatchHistoryEntry } from '@vp/domain';
+import {
+  DEFAULT_PLAYLIST_SETTINGS,
+  type OwnedPlaylist,
+  type Playlist,
+  type PlaylistDetail,
+  type PublicPlaylist,
+  type WatchHistoryEntry,
+} from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
 import {
   toChannelPlaylistView,
+  toOwnedPlaylistView,
   toPlaylistView,
   toWatchHistoryItemView,
   toWatchProgressView,
@@ -38,7 +46,11 @@ function clip(posterKey: string | null): VideoRecord {
   };
 }
 
-function detail(customThumbnailKey: string | null, posterKey: string | null): PlaylistDetail {
+function detail(
+  customThumbnailKey: string | null,
+  posterKey: string | null,
+  settings: Partial<Playlist> = {}
+): PlaylistDetail {
   return {
     playlist: {
       id: 'p1',
@@ -49,8 +61,11 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
       kind: 'playlist',
       isSystem: false,
       customThumbnailKey,
+      ...DEFAULT_PLAYLIST_SETTINGS,
+      coverMode: customThumbnailKey === null ? 'auto' : 'custom',
       createdAt: AT,
       updatedAt: AT,
+      ...settings,
     },
     owner: null,
     items: [
@@ -68,6 +83,7 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
       },
     ],
     sections: [{ id: 's1', title: 'Part one', position: 1, addedBy: 'u1' }],
+    viewer: { role: 'editor', following: true },
   };
 }
 
@@ -103,14 +119,71 @@ describe('apps/server/api/services: library views', () => {
       url: `${CDN}/v1/poster.jpg`,
     },
     { scenario: 'nothing to show', custom: null, poster: null, url: null },
-  ])('shows $scenario as the playlist thumbnail', ({ custom, poster, url }) => {
-    expect(toPlaylistView(detail(custom, poster), CDN, SPRITE).thumbnailUrl).toBe(url);
+    {
+      scenario: 'the item it names',
+      custom: null,
+      poster: 'v1/poster.jpg',
+      settings: { coverMode: 'item' as const, coverVideoId: 'v1' },
+      url: `${CDN}/v1/poster.jpg`,
+    },
+    {
+      scenario: 'the first poster for a custom cover with no image',
+      custom: null,
+      poster: 'v1/poster.jpg',
+      settings: { coverMode: 'custom' as const },
+      url: `${CDN}/v1/poster.jpg`,
+    },
+  ])('shows $scenario as the playlist thumbnail', ({ custom, poster, settings, url }) => {
+    expect(toPlaylistView(detail(custom, poster, settings), CDN, SPRITE).thumbnailUrl).toBe(url);
   });
 
-  it("dates the playlist and its items on the wire, each video under its owner's channel", () => {
+  it('draws the auto mosaic from the posters, stores nothing and dates the pin', () => {
+    const pinnedAt = new Date('2026-03-02T00:00:00.000Z');
+    const view = toPlaylistView(detail(null, 'v1/poster.jpg', { pinnedAt }), CDN, SPRITE);
+
+    expect(view).toMatchObject({
+      cover: { mode: 'auto', videoId: null, mosaicUrls: [`${CDN}/v1/poster.jpg`] },
+      pinnedAt: pinnedAt.toISOString(),
+      rules: null,
+      autoRemoveWatched: false,
+      forkedFromPlaylistId: null,
+    });
+  });
+
+  it('shows the items a smart playlist computed in place of the stored ones', () => {
+    const stored = toPlaylistView(detail(null, null), CDN, SPRITE).items;
+    const view = toPlaylistView(detail(null, null), CDN, SPRITE, [
+      ...stored,
+      ...stored.map((item) => ({ ...item, id: 'i2', position: 1 })),
+    ]);
+
+    expect([view.videoCount, view.items.map((item) => item.id)]).toEqual([2, ['i1', 'i2']]);
+  });
+
+  it.each([
+    { rules: null, isSmart: false },
+    {
+      rules: { match: 'all' as const, conditions: [], sort: 'newest' as const, limit: 5 },
+      isSmart: true,
+    },
+  ])('flags an owned playlist smart: $isSmart', ({ rules, isSmart }) => {
+    const owned: OwnedPlaylist = {
+      ...detail(null, null, { rules }).playlist,
+      videoCount: 0,
+      containsVideo: false,
+    };
+
+    expect(toOwnedPlaylistView(owned)).toMatchObject({ isSmart, pinnedAt: null });
+  });
+
+  it("dates the playlist and its items on the wire, each video under its owner's channel, and keeps where the caller stands", () => {
     const view = toPlaylistView(detail(null, null), CDN, SPRITE);
 
-    expect(view).toMatchObject({ createdAt: AT.toISOString(), videoCount: 1 });
+    expect(view).toMatchObject({
+      createdAt: AT.toISOString(),
+      videoCount: 1,
+      viewer: { role: 'editor', following: true },
+    });
     expect(view.items[0]).toMatchObject({
       addedAt: AT.toISOString(),
       video: { id: 'v1', channel: VIDEO_CHANNEL },

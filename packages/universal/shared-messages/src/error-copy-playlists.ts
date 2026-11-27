@@ -8,4 +8,8 @@ export const PLAYLIST_ERROR_COPY = {
   [ErrorCodes.PLAYLIST_INVITE_INVALID]: 'errors.playlistInviteInvalid',
   [ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND]: 'errors.playlistActivityNotFound',
   [ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE]: 'errors.playlistActivityNotRestorable',
+  [ErrorCodes.PLAYLIST_IS_SMART]: 'errors.playlistIsSmart',
+  [ErrorCodes.PLAYLIST_NOT_SMART]: 'errors.playlistNotSmart',
+  [ErrorCodes.PLAYLIST_HAS_COLLABORATORS]: 'errors.playlistHasCollaborators',
+  [ErrorCodes.PLAYLIST_PIN_LIMIT]: 'errors.playlistPinLimit',
 } as const satisfies Partial<Record<ErrorCode, SharedArgumentFreeKey>>;

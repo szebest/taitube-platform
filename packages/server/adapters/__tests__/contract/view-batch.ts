@@ -10,6 +10,7 @@ export function viewBatch(overrides: Partial<ViewBatch> = {}): ViewBatch {
     devices: [],
     shareLinks: [],
     experiments: [],
+    playlists: [],
     ...overrides,
   };
 }

@@ -4,6 +4,7 @@ import type { PlaybackWatch, ViewBufferPort, ViewEvent } from '@vp/core/ports';
 import type { ViewBatch, ViewCount } from '@vp/domain';
 import { describeViewBufferAccessContract } from './view-buffer-access.contract';
 import { describeViewBufferDeviceContract } from './view-buffer-device.contract';
+import { describeViewBufferPlaylistContract } from './view-buffer-playlists.contract';
 import { describeViewBufferRetentionContract } from './view-buffer-retention.contract';
 
 export interface ViewBufferSubject {
@@ -122,6 +123,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       });
       expect(next?.batchId).not.toBe(first);
       expect(next?.counts).toEqual([expect.objectContaining({ videoId, views: 1 })]);
@@ -230,4 +232,5 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
   describeViewBufferRetentionContract(makeSubject);
   describeViewBufferDeviceContract(makeSubject);
   describeViewBufferAccessContract(makeSubject);
+  describeViewBufferPlaylistContract(makeSubject);
 }

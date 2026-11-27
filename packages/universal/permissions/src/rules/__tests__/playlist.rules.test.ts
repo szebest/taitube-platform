@@ -186,6 +186,40 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
     ).toBe(expected);
   });
 
+  it.each<{ scenario: string; user: UserContext | null; action: AppAction; expected: boolean }>([
+    { scenario: 'the owner pins', user: creatorUser, action: 'pin', expected: true },
+    { scenario: 'a stranger pins', user: standardUser, action: 'pin', expected: false },
+    { scenario: 'a stranger follows', user: standardUser, action: 'subscribe', expected: true },
+    { scenario: 'the owner follows', user: creatorUser, action: 'subscribe', expected: false },
+    { scenario: 'a guest follows', user: guestUser, action: 'subscribe', expected: false },
+  ])('on a public list, $scenario: $expected', ({ user, action, expected }) => {
+    expect(buildAbility(definePlaylistRules, user).can(action, owned('public'))).toBe(expected);
+  });
+
+  it.each([
+    { scenario: 'the owner', user: creatorUser, expected: true },
+    { scenario: 'a stranger', user: standardUser, expected: false },
+    { scenario: 'a guest', user: guestUser, expected: false },
+  ])('lets $scenario read the stats: $expected', ({ user, expected }) => {
+    const stats = subject('PlaylistStats', { ownerId: creatorUser.id });
+
+    expect(buildAbility(definePlaylistRules, user).can('read', stats)).toBe(expected);
+  });
+
+  it.each([
+    { scenario: 'an editor', role: 'editor' as const },
+    { scenario: 'a contributor', role: 'contributor' as const },
+  ])('keeps the rules, pins and stats from $scenario', ({ role }) => {
+    const ability = buildAbility(definePlaylistRules, standardUser);
+
+    expect([
+      ability.can('update', seated(role), 'rules'),
+      ability.can('update', seated(role), 'autoRemoveWatched'),
+      ability.can('pin', seated(role)),
+      ability.can('read', subject('PlaylistStats', { ownerId: creatorUser.id })),
+    ]).toEqual([false, false, false, false]);
+  });
+
   it('grants nothing on a seat resolved for someone else', () => {
     const ability = buildAbility(definePlaylistRules, creatorUser);
     const other = subject('Playlist', {

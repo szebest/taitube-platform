@@ -11,18 +11,20 @@ const OWNER_ACTIONS = [
   'manageCollaborators',
   'readActivity',
   'restoreItem',
+  'pin',
 ] as const;
 
 /**
  * A private playlist is its owner's and its collaborators'; an unlisted one is readable by anyone
  * with the link. An editor curates the list and its words, never its visibility or kind; a
- * contributor adds, and removes or annotates only what they added.
+ * contributor adds, and removes or annotates only what they added. Anyone signed in follows a
+ * playlist they can read and is not the owner of; its stats are the owner's alone.
  */
 export function definePlaylistRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
 ): void {
-  const { can } = builder;
+  const { can, cannot } = builder;
 
   can('read', 'Playlist', { visibility: 'public' });
   can('read', 'Playlist', { visibility: 'unlisted' });
@@ -33,6 +35,9 @@ export function definePlaylistRules(
 
   can('create', 'Playlist');
   can([...OWNER_ACTIONS], 'Playlist', { ownerId: user.id });
+  can('subscribe', 'Playlist');
+  cannot('subscribe', 'Playlist', { ownerId: user.id });
+  can('read', 'PlaylistStats', { ownerId: user.id });
 
   can(['read', 'readActivity'], 'Playlist', { collaboratorId: user.id });
 

@@ -7,6 +7,8 @@ export * from './leave-playlist.rule';
 export * from './manage-playlist.rule';
 export * from './playlist-import-line.rule';
 export * from './playlist-invite.rule';
+export * from './playlist-library.rule';
+export * from './playlist-settings.rule';
 export * from './reorder-playlist.rule';
 export * from './restore-playlist-item.rule';
 export * from './series-membership.rule';

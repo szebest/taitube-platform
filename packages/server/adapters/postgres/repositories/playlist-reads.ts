@@ -1,7 +1,7 @@
 import * as schema from '@vp/db';
 import type { OwnedPlaylist, PlaylistDetail, SeatedPlaylist } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
-import { and, count, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
+import type { ShareGrant, UserContext } from '@vp/permissions';
+import { type Column, and, count, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import { rowsOf, toDetailItems, toPlaylist } from './playlist-query';
@@ -11,9 +11,15 @@ const {
   playlists: p,
   playlistItems: pi,
   playlistCollaborators: pc,
+  playlistFollows: pf,
   videos: v,
   channels: ch,
 } = schema;
+
+/** An anonymous caller holds no row of anyone's. */
+function heldBy(column: Column, userId: string | null) {
+  return userId === null ? sql`false` : eq(column, userId);
+}
 
 /** The playlist with `userId`'s seat resolved on it, whoever may read it. */
 export async function seatedOf(
@@ -24,10 +30,7 @@ export async function seatedOf(
   const [row] = await db
     .select({ playlist: getTableColumns(p), role: pc.role })
     .from(p)
-    .leftJoin(
-      pc,
-      and(eq(pc.playlistId, p.id), userId === null ? sql`false` : eq(pc.userId, userId))
-    )
+    .leftJoin(pc, and(eq(pc.playlistId, p.id), heldBy(pc.userId, userId)))
     .where(eq(p.id, id));
   if (!row) return null;
   return {
@@ -40,18 +43,35 @@ export async function seatedOf(
 export async function detailOf(
   db: PostgresDatabase,
   id: string,
-  viewer: UserContext | null
+  viewer: UserContext | null,
+  share: ShareGrant | null
 ): Promise<PlaylistDetail | null> {
+  const viewerId = viewer?.id ?? null;
   const [header] = await db
-    .select({ playlist: getTableColumns(p), ...channelCardColumns })
+    .select({
+      playlist: getTableColumns(p),
+      ...channelCardColumns,
+      seat: pc.role,
+      followedAt: pf.createdAt,
+    })
     .from(p)
     .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
-    .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer)));
+    .leftJoin(pc, and(eq(pc.playlistId, p.id), heldBy(pc.userId, viewerId)))
+    .leftJoin(pf, and(eq(pf.playlistId, p.id), heldBy(pf.userId, viewerId)))
+    .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer, share)));
   if (!header) return null;
 
   const rows = await rowsOf(db, id, viewer);
-  const { playlist, ...owner } = header;
-  return { playlist: toPlaylist(playlist), owner: toChannelCard(owner), ...toDetailItems(rows) };
+  const { playlist, seat, followedAt, ...owner } = header;
+  return {
+    playlist: toPlaylist(playlist),
+    owner: toChannelCard(owner),
+    ...toDetailItems(rows),
+    viewer: {
+      role: playlist.ownerId === viewerId ? 'owner' : seat,
+      following: followedAt !== null,
+    },
+  };
 }
 
 export async function ownedBy(

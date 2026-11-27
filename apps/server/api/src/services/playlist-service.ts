@@ -1,25 +1,31 @@
 import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { OwnedPlaylistView, PlaylistView } from '@vp/api-contracts';
-import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositories';
+import type {
+  PlaylistCollaboratorRepositoryPort,
+  PlaylistRepositoryPort,
+  VideoRepository,
+} from '@vp/core/repositories';
 import {
   type Playlist,
+  type PlaylistChange,
   type PlaylistKind,
   type SeatedPlaylist,
   type PlaylistPatch,
   type PlaylistReorder,
   type PlaylistVisibility,
-  nextEpisode,
-  percentWatched,
+  type SmartPlaylistRules,
 } from '@vp/domain';
 import {
   type CreatePlaylistFailure,
   type DeletePlaylistFailure,
   type ManagePlaylistFailure,
-  type PlaylistNotFound,
+  type PlaylistSettingsContext,
   type ReorderPlaylistFailure,
   type SeriesVideoNotOwned,
+  type ShareLinkExpired,
   type UpdatePlaylistFailure,
   type VideoNotFound,
+  coverVideoOf,
   decidePlaylistAction,
   decidePlaylistCreate,
   decidePlaylistDelete,
@@ -31,23 +37,20 @@ import {
   publicReadFailure,
   videoNotFound,
 } from '@vp/domain-rules';
-import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
-import { toOwnedPlaylistView, toPlaylistView } from './library-views';
-import type { SpriteGeometry } from './video-views';
-import type { ViewerProgress } from './viewer-progress';
+import { toOwnedPlaylistView } from './library-views';
+import type { PlaylistCoverService } from './playlist-cover-service';
+import type { PlaylistAccess, PlaylistReader, ReadPlaylistFailure } from './playlist-reader';
 
 export interface PlaylistServiceDeps {
   playlists: PlaylistRepositoryPort;
+  seats: Pick<PlaylistCollaboratorRepositoryPort, 'seats'>;
   videos: VideoRepository;
-  viewerProgress: ViewerProgress;
-  cdn: CdnBase;
-  sprite: SpriteGeometry;
+  reader: Pick<PlaylistReader, 'get' | 'open'>;
+  covers: Pick<PlaylistCoverService, 'readyCoverKey'>;
 }
-
-type ReadPlaylistFailure = PlaylistNotFound | DatabaseUnavailable;
 type CreatePlaylistServiceFailure = CreatePlaylistFailure | ReadPlaylistFailure;
 type ItemsFailure = ManagePlaylistFailure | DatabaseUnavailable;
 type AddItemFailure =
@@ -61,6 +64,7 @@ interface NewPlaylistBody {
   description?: string;
   visibility?: PlaylistVisibility;
   kind?: PlaylistKind;
+  rules?: SmartPlaylistRules;
 }
 
 /**
@@ -83,14 +87,23 @@ export class PlaylistService {
       ...decided.value,
     });
     if (isErr(created)) return created;
-    return await this.detail(actor, created.value.id);
+    return await this.deps.reader.get(actor, created.value.id);
   }
 
   async get(
     viewer: UserContext | null,
     playlistId: string
   ): Promise<Result<PlaylistView, ReadPlaylistFailure>> {
-    return await this.detail(viewer, playlistId);
+    return await this.deps.reader.get(viewer, playlistId);
+  }
+
+  /** A read of the page: through a share link if one is held, counting the open for anyone but the owner. */
+  async open(
+    viewer: UserContext | null,
+    playlistId: string,
+    access: PlaylistAccess
+  ): Promise<Result<PlaylistView, ReadPlaylistFailure | ShareLinkExpired>> {
+    return await this.deps.reader.open(viewer, playlistId, access);
   }
 
   async listMine(
@@ -106,14 +119,22 @@ export class PlaylistService {
   async update(
     actor: UserContext,
     playlistId: string,
-    patch: PlaylistPatch
+    patch: PlaylistChange
   ): Promise<
     Result<PlaylistView, UpdatePlaylistFailure | SeriesVideoNotOwned | DatabaseUnavailable>
   > {
     const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
 
-    const decided = decidePlaylistUpdate({ actor, playlist: playlist.value, playlistId, patch });
+    const context = await this.settingsContext(playlist.value, patch);
+    if (isErr(context)) return context;
+    const decided = decidePlaylistUpdate({
+      actor,
+      playlist: playlist.value,
+      playlistId,
+      patch,
+      context: context.value,
+    });
     if (isErr(decided)) return decided;
 
     const owned = await this.checkSeriesConversion(actor, playlist.value, decided.value);
@@ -121,7 +142,9 @@ export class PlaylistService {
 
     const updated = await this.deps.playlists.update(playlistId, decided.value, actor.id);
     if (isErr(updated)) return updated;
-    return updated.value ? await this.detail(actor, playlistId) : err(playlistNotFound(playlistId));
+    return updated.value
+      ? await this.deps.reader.get(actor, playlistId)
+      : err(playlistNotFound(playlistId));
   }
 
   async remove(
@@ -164,7 +187,7 @@ export class PlaylistService {
     switch (added.value) {
       case 'added':
       case 'present':
-        return await this.detail(actor, playlistId);
+        return await this.deps.reader.get(actor, playlistId);
       case 'playlist-missing':
         return err(playlistNotFound(playlistId));
       case 'video-missing':
@@ -214,7 +237,7 @@ export class PlaylistService {
     );
     if (isErr(reordered)) return reordered;
     return reordered.value
-      ? await this.detail(actor, playlistId)
+      ? await this.deps.reader.get(actor, playlistId)
       : err(playlistNotFound(playlistId));
   }
 
@@ -226,6 +249,32 @@ export class PlaylistService {
     const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
     return decidePlaylistAction({ actor, playlist: playlist.value, playlistId }, action);
+  }
+
+  /** The seats and the cover a settings change is decided against, read only when it asks. */
+  private async settingsContext(
+    playlist: Playlist | null,
+    patch: PlaylistChange
+  ): Promise<Result<PlaylistSettingsContext, DatabaseUnavailable>> {
+    if (!playlist) return ok({ seated: 0, holdsCoverVideo: false, coverImageKey: null });
+    const seats =
+      patch.autoRemoveWatched === true
+        ? await this.deps.seats.seats(playlist.id, null)
+        : ok({ seated: 0, isCollaborator: false });
+    if (isErr(seats)) return seats;
+    const coverVideoId = coverVideoOf(playlist, patch);
+    const held = coverVideoId === null ? ok([]) : await this.deps.playlists.findItems(playlist.id);
+    if (isErr(held)) return held;
+    const { coverUploadId } = patch;
+    const coverImageKey =
+      coverUploadId === undefined
+        ? ok(null)
+        : await this.deps.covers.readyCoverKey(playlist.ownerId, coverUploadId);
+    return map(coverImageKey, (key) => ({
+      seated: seats.value.seated,
+      holdsCoverVideo: held.value.some((item) => item.videoId === coverVideoId),
+      coverImageKey: key,
+    }));
   }
 
   /** A playlist becomes a series only when every video it holds is the owner's own. */
@@ -244,58 +293,4 @@ export class PlaylistService {
     }
     return ok();
   }
-
-  private async detail(
-    viewer: UserContext | null,
-    playlistId: string
-  ): Promise<Result<PlaylistView, ReadPlaylistFailure>> {
-    const found = await this.deps.playlists.findDetail(playlistId, viewer);
-    if (isErr(found)) return found;
-    if (!found.value) return err(playlistNotFound(playlistId));
-
-    const view = toPlaylistView(found.value, this.deps.cdn, this.deps.sprite);
-    const videos = await this.deps.viewerProgress.attach(
-      viewer,
-      view.items.map((item) => item.video)
-    );
-    const items = view.items.map((item, index) => ({
-      ...item,
-      video: videos[index] ?? item.video,
-    }));
-    return ok(
-      view.kind === 'series'
-        ? { ...view, ...seriesProgress(view.items.length, items, viewer) }
-        : { ...view, items }
-    );
-  }
-}
-
-type PlaylistItems = PlaylistView['items'];
-
-/** A series reads like a list of episodes: numbered for everyone, with progress and "Continue" for a signed-in viewer. */
-function seriesProgress(
-  count: number,
-  items: PlaylistItems,
-  viewer: UserContext | null
-): Pick<PlaylistView, 'items' | 'nextEpisodeVideoId'> {
-  const episodes = items.map((item) => {
-    const watched = item.video.viewer;
-    return {
-      ...item,
-      episode: item.position + 1,
-      progress: watched ? percentWatched(watched.progressSeconds, item.video.durationMs) : null,
-    };
-  });
-  if (!viewer || count === 0) return { items: episodes, nextEpisodeVideoId: null };
-
-  return {
-    items: episodes,
-    nextEpisodeVideoId: nextEpisode(
-      episodes.map(({ videoId, progress, video }) => ({
-        videoId,
-        percent: progress,
-        watchedAt: video.viewer ? new Date(video.viewer.watchedAt) : null,
-      }))
-    ),
-  };
 }

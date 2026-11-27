@@ -1,14 +1,15 @@
-import type {
-  CaptionTrack,
-  Category,
-  Channel,
-  Comment,
-  CommentReport,
-  EditorPick,
-  LiveStream,
-  SeatedPlaylist,
-  Upload,
-  Video,
+import {
+  type CaptionTrack,
+  type Category,
+  type Channel,
+  type Comment,
+  type CommentReport,
+  DEFAULT_PLAYLIST_SETTINGS,
+  type EditorPick,
+  type LiveStream,
+  type SeatedPlaylist,
+  type Upload,
+  type Video,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
@@ -156,6 +157,7 @@ export function aPlaylist(overrides: Partial<SeatedPlaylist> = {}): SeatedPlayli
     kind: 'playlist',
     isSystem: false,
     customThumbnailKey: null,
+    ...DEFAULT_PLAYLIST_SETTINGS,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

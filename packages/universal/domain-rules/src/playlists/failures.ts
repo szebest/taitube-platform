@@ -1,4 +1,5 @@
 import { type Failure, type InputFailure } from '@kit/errors';
+import { PLAYLIST_PIN_LIMIT } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 
 export type PlaylistNotFound = Failure<
@@ -136,5 +137,55 @@ export function playlistActivityNotRestorable(activityId: string): PlaylistActiv
     code: ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE,
     message: 'This change removed no item, or its video is gone',
     activityId,
+  };
+}
+
+export type PlaylistIsSmart = Failure<typeof ErrorCodes.PLAYLIST_IS_SMART, { playlistId: string }>;
+
+export type PlaylistNotSmart = Failure<
+  typeof ErrorCodes.PLAYLIST_NOT_SMART,
+  { playlistId: string }
+>;
+
+export type PlaylistHasCollaborators = Failure<
+  typeof ErrorCodes.PLAYLIST_HAS_COLLABORATORS,
+  { playlistId: string }
+>;
+
+export type PlaylistPinLimit = Failure<
+  typeof ErrorCodes.PLAYLIST_PIN_LIMIT,
+  { playlistId: string; limit: number }
+>;
+
+export function playlistIsSmart(playlistId: string): PlaylistIsSmart {
+  return {
+    code: ErrorCodes.PLAYLIST_IS_SMART,
+    message: 'A smart playlist computes its items from its rules and takes none by hand',
+    playlistId,
+  };
+}
+
+export function playlistNotSmart(playlistId: string): PlaylistNotSmart {
+  return {
+    code: ErrorCodes.PLAYLIST_NOT_SMART,
+    message: 'Only a smart playlist has rules to change or freeze',
+    playlistId,
+  };
+}
+
+export function playlistHasCollaborators(playlistId: string): PlaylistHasCollaborators {
+  return {
+    code: ErrorCodes.PLAYLIST_HAS_COLLABORATORS,
+    message: 'Watched videos are removed only from a playlist its owner has alone',
+    playlistId,
+  };
+}
+
+export function playlistPinLimit(playlistId: string): PlaylistPinLimit {
+  return {
+    code: ErrorCodes.PLAYLIST_PIN_LIMIT,
+    message: `A user pins at most ${PLAYLIST_PIN_LIMIT} playlists`,
+    playlistId,
+    limit: PLAYLIST_PIN_LIMIT,
   };
 }

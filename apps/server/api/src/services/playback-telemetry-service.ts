@@ -42,6 +42,7 @@ export class PlaybackTelemetryService {
     if (event.eventType === 'playback_start') {
       metrics.playbackStarts.inc();
       if (shown) await this.recordExperiments([shown], 'starts');
+      if (event.playlistId) await this.recordPlaylistPlay(event.playlistId, event.videoId);
     }
 
     metrics.playbackWatchSeconds.inc(event.watchedSeconds);
@@ -99,6 +100,17 @@ export class PlaybackTelemetryService {
     if (!shareLinkId) return null;
     const link = unwrapOr(await this.deps.shareLinks.findById(shareLinkId), null);
     return link?.targetType === 'video' && link.targetId === videoId ? link.id : null;
+  }
+
+  /** A start on a watch page opened from a playlist is one of its plays, the video's own too. */
+  private async recordPlaylistPlay(playlistId: string, videoId: string): Promise<void> {
+    const { viewDate } = viewBucketsOf(new Date(this.deps.now()));
+    ignore(
+      await this.deps.viewBuffer.recordPlaylistEvents([
+        { measure: 'plays', playlistId, videoId, viewDate },
+      ]),
+      'a play the buffer could not take is a gap in a statistic, and the beacon is not retried'
+    );
   }
 
   private async recordExperiments(

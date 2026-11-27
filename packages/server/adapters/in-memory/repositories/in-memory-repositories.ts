@@ -26,7 +26,10 @@ import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repos
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
-import { type PlaylistRepositories, playlistsOf } from './in-memory-playlist-providers';
+import {
+  type PlaylistRepositories as Playlists,
+  playlistsOf,
+} from './in-memory-playlist-providers';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -81,9 +84,12 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly comments: InMemoryCommentRepository;
   readonly commentModeration: InMemoryCommentModerationRepository;
   readonly commentReports: InMemoryCommentReportRepository;
-  declare readonly playlists: PlaylistRepositories['playlists'];
-  declare readonly playlistCollaborators: PlaylistRepositories['playlistCollaborators'];
-  declare readonly playlistActivity: PlaylistRepositories['playlistActivity'];
+  declare readonly playlists: Playlists['playlists'];
+  declare readonly playlistCollaborators: Playlists['playlistCollaborators'];
+  declare readonly playlistActivity: Playlists['playlistActivity'];
+  declare readonly smartPlaylists: Playlists['smartPlaylists'];
+  declare readonly playlistLibrary: Playlists['playlistLibrary'];
+  declare readonly playlistStats: Playlists['playlistStats'];
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
   readonly notifications: InMemoryNotificationRepository;

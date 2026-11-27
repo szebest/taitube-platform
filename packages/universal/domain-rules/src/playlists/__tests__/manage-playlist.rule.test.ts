@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@kit/result';
+import { type Result, isErr, isOk } from '@kit/result';
 import type { SeatedPlaylist } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -6,20 +6,29 @@ import { ADMIN, OWNER, STRANGER, aPlaylist } from '../../__tests__/entities';
 import {
   type PlaylistAction,
   decidePlaylistAction,
+  decidePlaylistCoverUpload,
   decidePlaylistDelete,
   decidePlaylistUpdate,
 } from '../manage-playlist.rule';
 
 const playlist = aPlaylist();
 const watchLater = aPlaylist({ id: 'wl-1', title: 'Watch Later', isSystem: true });
+const smart = aPlaylist({ rules: { match: 'all', conditions: [], sort: 'newest', limit: 50 } });
+const context = { seated: 0, holdsCoverVideo: false, coverImageKey: null };
 
-const DECISIONS = {
+type Decide = (
+  actor: UserContext | null,
+  target?: SeatedPlaylist | null
+) => Result<unknown, { code: string }>;
+
+const DECISIONS: Record<'update' | 'delete' | 'items' | 'cover', Decide> = {
   update: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
     decidePlaylistUpdate({
       actor,
       playlist: target,
       playlistId: target?.id ?? playlist.id,
       patch: { title: 'New' },
+      context,
     }),
   delete: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
     decidePlaylistDelete({ actor, playlist: target, playlistId: target?.id ?? playlist.id }),
@@ -28,6 +37,8 @@ const DECISIONS = {
       { actor, playlist: target, playlistId: target?.id ?? playlist.id },
       'manageItems'
     ),
+  cover: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
+    decidePlaylistCoverUpload({ actor, playlist: target, playlistId: target?.id ?? playlist.id }),
 };
 
 type Decision = keyof typeof DECISIONS;
@@ -86,7 +97,7 @@ describe('@vp/domain-rules: playlist management', () => {
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.PLAYLIST_NOT_FOUND);
   });
 
-  it.each<Decision>(['update', 'delete'])(
+  it.each<Decision>(['update', 'delete', 'cover'])(
     'refuses to %s the system playlist, even for its owner',
     (decision) => {
       const result = DECISIONS[decision](OWNER, watchLater);
@@ -99,12 +110,50 @@ describe('@vp/domain-rules: playlist management', () => {
     expect(isOk(DECISIONS.items(OWNER, watchLater))).toBe(true);
   });
 
+  it('lets the owner of the system playlist turn on removing watched videos', () => {
+    const result = decidePlaylistUpdate({
+      actor: OWNER,
+      playlist: watchLater,
+      playlistId: watchLater.id,
+      patch: { autoRemoveWatched: true },
+      context,
+    });
+
+    expect(isOk(result) && result.value).toEqual({ autoRemoveWatched: true });
+  });
+
+  it.each<{ action: PlaylistAction; code: string | null }>([
+    { action: 'addItem', code: ErrorCodes.PLAYLIST_IS_SMART },
+    { action: 'removeItem', code: ErrorCodes.PLAYLIST_IS_SMART },
+    { action: 'manageItems', code: ErrorCodes.PLAYLIST_IS_SMART },
+    { action: 'restoreItem', code: ErrorCodes.PLAYLIST_IS_SMART },
+    { action: 'manageCollaborators', code: null },
+    { action: 'delete', code: null },
+  ])('on a smart playlist the owner may $action: $code', ({ action, code }) => {
+    const result = decidePlaylistAction(
+      { actor: OWNER, playlist: smart, playlistId: smart.id },
+      action
+    );
+
+    expect(isErr(result) ? result.error.code : null).toBe(code);
+  });
+
+  it('still answers a stranger on a private smart playlist with PLAYLIST_NOT_FOUND', () => {
+    const result = decidePlaylistAction(
+      { actor: STRANGER, playlist: smart, playlistId: smart.id },
+      'addItem'
+    );
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.PLAYLIST_NOT_FOUND);
+  });
+
   it('hands back the normalized patch', () => {
     const result = decidePlaylistUpdate({
       actor: OWNER,
       playlist,
       playlistId: playlist.id,
       patch: { title: '  Road trip 2 ', visibility: 'public' },
+      context,
     });
 
     expect(isOk(result) && result.value).toEqual({ title: 'Road trip 2', visibility: 'public' });
@@ -116,6 +165,7 @@ describe('@vp/domain-rules: playlist management', () => {
       playlist,
       playlistId: playlist.id,
       patch: { kind: 'series' },
+      context,
     });
 
     expect(isOk(result) && result.value).toEqual({ kind: 'series' });
@@ -127,6 +177,7 @@ describe('@vp/domain-rules: playlist management', () => {
       playlist,
       playlistId: playlist.id,
       patch: { title: '  ' },
+      context,
     });
 
     expect(isErr(result) && result.error).toMatchObject({
@@ -176,6 +227,11 @@ describe('@vp/domain-rules: playlist management', () => {
     },
     { role: 'editor' as const, patch: { kind: 'series' as const }, code: ErrorCodes.FORBIDDEN },
     { role: 'contributor' as const, patch: { title: 'New' }, code: ErrorCodes.FORBIDDEN },
+    {
+      role: 'editor' as const,
+      patch: { coverUploadId: 'upload-1' },
+      code: ErrorCodes.FORBIDDEN,
+    },
   ])('lets an $role change $patch: $code', ({ role, patch, code }) => {
     const target = seated(role);
     const result = decidePlaylistUpdate({
@@ -183,6 +239,7 @@ describe('@vp/domain-rules: playlist management', () => {
       playlist: target,
       playlistId: target.id,
       patch,
+      context,
     });
 
     expect(isErr(result) ? result.error.code : null).toBe(code);

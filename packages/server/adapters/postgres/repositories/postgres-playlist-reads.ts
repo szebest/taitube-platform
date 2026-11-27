@@ -14,7 +14,7 @@ import type {
   StoredPlaylistItem,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import type { UserContext } from '@vp/permissions';
+import type { ShareGrant, UserContext } from '@vp/permissions';
 import { eq } from 'drizzle-orm';
 import { storedItems } from './playlist-item-writes';
 import { publicPlaylistsOf, sortedItems, toPlaylist, toStoredItem } from './playlist-query';
@@ -47,10 +47,11 @@ export class PostgresPlaylistReads {
 
   async findDetail(
     id: string,
-    viewer: UserContext | null
+    viewer: UserContext | null,
+    share: ShareGrant | null = null
   ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>> {
     return await fromPromise(
-      () => detailOf(this.db, id, viewer),
+      () => detailOf(this.db, id, viewer, share),
       databaseUnavailable.during('findPlaylist')
     );
   }

@@ -187,6 +187,10 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 409,
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 409,
   [ErrorCodes.SCREENING_REJECTED]: 422,
+  [ErrorCodes.PLAYLIST_IS_SMART]: 409,
+  [ErrorCodes.PLAYLIST_NOT_SMART]: 409,
+  [ErrorCodes.PLAYLIST_HAS_COLLABORATORS]: 409,
+  [ErrorCodes.PLAYLIST_PIN_LIMIT]: 409,
 };
 
 const UNCLASSIFIED_STATUS = 422;

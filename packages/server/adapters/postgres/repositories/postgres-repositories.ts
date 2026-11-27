@@ -90,6 +90,9 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly playlists: PlaylistRepositories['playlists'];
   declare readonly playlistCollaborators: PlaylistRepositories['playlistCollaborators'];
   declare readonly playlistActivity: PlaylistRepositories['playlistActivity'];
+  declare readonly smartPlaylists: PlaylistRepositories['smartPlaylists'];
+  declare readonly playlistLibrary: PlaylistRepositories['playlistLibrary'];
+  declare readonly playlistStats: PlaylistRepositories['playlistStats'];
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
   readonly notifications: PostgresNotificationRepository;

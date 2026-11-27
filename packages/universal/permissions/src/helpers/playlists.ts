@@ -4,6 +4,8 @@ import type {
   AppAction,
   PlaylistInviteResource,
   PlaylistResource,
+  PlaylistStatsResource,
+  ShareGrant,
   UserContext,
 } from '../types/index';
 
@@ -23,6 +25,8 @@ type PlaylistAction = Extract<
   | 'manageCollaborators'
   | 'readActivity'
   | 'restoreItem'
+  | 'pin'
+  | 'subscribe'
 >;
 
 function can(action: PlaylistAction, { user, playlist }: PlaylistCheck, field?: string): boolean {
@@ -33,8 +37,13 @@ export function canCreatePlaylist({ user }: { user: UserContext | null }): boole
   return getUserPermissions(user).can('create', 'Playlist');
 }
 
-export function canReadPlaylist(check: PlaylistCheck): boolean {
-  return can('read', check);
+/** `share` is a live link the caller holds; it grants `read` on its own playlist and on no other. */
+export function canReadPlaylist({
+  user,
+  playlist,
+  share = null,
+}: PlaylistCheck & { share?: ShareGrant | null }): boolean {
+  return getUserPermissions(user, share).can('read', subject('Playlist', { ...playlist }));
 }
 
 /** Without `field`, whether the caller may change anything at all; with it, that one field. */
@@ -73,6 +82,25 @@ export function canReadPlaylistActivity(check: PlaylistCheck): boolean {
 
 export function canRestorePlaylistItem(check: PlaylistCheck): boolean {
   return can('restoreItem', check);
+}
+
+export function canPinPlaylist(check: PlaylistCheck): boolean {
+  return can('pin', check);
+}
+
+/** Following needs a playlist the caller can read and does not own. */
+export function canFollowPlaylist(check: PlaylistCheck): boolean {
+  return can('subscribe', check);
+}
+
+export function canReadPlaylistStats({
+  user,
+  stats,
+}: {
+  user: UserContext | null;
+  stats: PlaylistStatsResource;
+}): boolean {
+  return getUserPermissions(user).can('read', subject('PlaylistStats', { ...stats }));
 }
 
 interface InviteCheck {

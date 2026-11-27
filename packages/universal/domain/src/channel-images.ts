@@ -20,11 +20,20 @@ export type BannerCrops = Record<BannerTarget, CropRect>;
 
 export type ImageCrops =
   | { readonly kind: 'avatar'; readonly crop: CropRect }
-  | { readonly kind: 'banner'; readonly crops: BannerCrops };
+  | { readonly kind: 'banner'; readonly crops: BannerCrops }
+  | { readonly kind: 'playlist-cover'; readonly crop: CropRect };
 
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
 export const BANNER_WIDTHS = [1280, 2560] as const;
+
+/** Width over height a playlist cover is cropped to, the shape of a video thumbnail. */
+export const PLAYLIST_COVER_ASPECT = 16 / 9;
+
+export const PLAYLIST_COVER_WIDTHS = [640, 1280] as const;
+
+/** The variant a playlist keeps as its custom cover. */
+export const PLAYLIST_COVER_KEPT_WIDTH: (typeof PLAYLIST_COVER_WIDTHS)[number] = 1280;
 
 export interface ChannelBannerLink {
   label: string;
@@ -37,7 +46,7 @@ export const HANDLE_RESERVATION_DAYS = 90;
 
 export const CONTACT_REVEALS_PER_DAY = 20;
 
-export type ChannelImageKind = 'avatar' | 'banner';
+export type ChannelImageKind = 'avatar' | 'banner' | 'playlist-cover';
 
 export const IMAGE_UPLOAD_STATUSES = [
   'issued',
@@ -49,6 +58,16 @@ export const IMAGE_UPLOAD_STATUSES = [
 ] as const;
 
 export type ImageUploadStatus = (typeof IMAGE_UPLOAD_STATUSES)[number];
+
+/** Whether the job's variants of an upload are in the public bucket: cut, and not purged yet. */
+export const IMAGE_UPLOAD_HAS_VARIANTS: Readonly<Record<ImageUploadStatus, boolean>> = {
+  issued: false,
+  queued: false,
+  ready: true,
+  failed: false,
+  superseded: true,
+  purged: false,
+};
 
 /**
  * Every edge of an upload's status. `CHANNEL_IMAGE_UPLOAD` in `@vp/domain-rules` is the machine
@@ -62,7 +81,10 @@ export const CHANNEL_IMAGE_UPLOAD_EDGES = {
   purge: { from: ['issued', 'failed', 'superseded', 'ready'], to: 'purged' },
 } as const satisfies Record<string, { from: readonly ImageUploadStatus[]; to: ImageUploadStatus }>;
 
-/** One file a creator uploaded for an avatar or banner, from the presigned URL to the version it became. */
+/**
+ * One file a creator uploaded for an avatar, a banner or a playlist cover, from the presigned URL to
+ * the version it became.
+ */
 export interface ChannelImageUpload {
   id: string;
   channelId: string;

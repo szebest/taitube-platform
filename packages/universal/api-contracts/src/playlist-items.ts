@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
-import { PlaylistItemSchema } from './playlists';
+import { PlaylistItemSchema, ShareQuerySchema } from './playlist-resource';
 
 const PlaylistParamSchema = z.object({ id: z.uuid({ error: 'Invalid playlist ID format' }) });
 
@@ -22,6 +22,7 @@ const WRITE_ERRORS = {
   401: [ErrorCodes.UNAUTHORIZED],
   403: [ErrorCodes.FORBIDDEN],
   404: [ErrorCodes.PLAYLIST_NOT_FOUND],
+  409: [ErrorCodes.PLAYLIST_IS_SMART],
 } as const;
 
 export const listPlaylistItems = defineEndpoint({
@@ -30,16 +31,19 @@ export const listPlaylistItems = defineEndpoint({
   tag: 'Playlists',
   summary: 'Page through the items of a playlist',
   description:
-    'The videos of a playlist this viewer may watch, in the order asked for, keyset-paged on it. Sections are left out; they come with the playlist.',
+    'The videos of a playlist this viewer may watch, in the order asked for, keyset-paged on it. Sections are left out; they come with the playlist. A smart playlist pages what its rules compute, in their order and up to their limit, whatever the sort.',
   anonymous: true,
   params: PlaylistParamSchema,
-  query: KeysetQuerySchema.extend({ sort: SortSchema.default('manual') }),
+  query: KeysetQuerySchema.extend({ sort: SortSchema.default('manual') }).extend(
+    ShareQuerySchema.shape
+  ),
   status: 200,
   result: z.object({ items: z.array(PlaylistItemSchema), nextCursor: z.string().nullable() }),
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR],
     401: [ErrorCodes.UNAUTHORIZED],
     404: [ErrorCodes.PLAYLIST_NOT_FOUND],
+    410: [ErrorCodes.SHARE_LINK_EXPIRED],
   },
 });
 

@@ -16,6 +16,15 @@ export interface SeatedPlaylist extends Playlist {
   readonly collaboratorRole: PlaylistCollaboratorRole | null;
 }
 
+export const PLAYLIST_VIEWER_ROLES = ['owner', ...PLAYLIST_COLLABORATOR_ROLES] as const;
+type PlaylistViewerRole = (typeof PLAYLIST_VIEWER_ROLES)[number];
+
+/** Where one caller stands on a playlist: their seat on it, if any, and whether they follow it. */
+export interface PlaylistViewerState {
+  readonly role: PlaylistViewerRole | null;
+  readonly following: boolean;
+}
+
 export interface PlaylistCollaborator {
   readonly playlistId: string;
   readonly userId: string;

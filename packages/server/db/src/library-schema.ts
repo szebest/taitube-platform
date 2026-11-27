@@ -7,6 +7,7 @@ import {
   PLAYLIST_VISIBILITIES,
   type PlaylistCoverMode,
   type PlaylistItemKind,
+  type SmartPlaylistRules,
 } from '@vp/domain';
 import { PLAYLIST_NOTE_MAX_LENGTH, PLAYLIST_SECTION_TITLE_MAX_LENGTH } from '@vp/validation';
 import { sql } from 'drizzle-orm';
@@ -41,7 +42,7 @@ export const playlists = pgTable(
     kind: text('kind', { enum: PLAYLIST_KINDS }).notNull().default('playlist'),
     isSystem: boolean('is_system').notNull().default(false),
     customThumbnailKey: text('custom_thumbnail_key'),
-    rules: jsonb('rules'),
+    rules: jsonb('rules').$type<SmartPlaylistRules>(),
     autoRemoveWatched: boolean('auto_remove_watched').notNull().default(false),
     pinnedAt: timestamptz('pinned_at'),
     forkedFromPlaylistId: uuid('forked_from_playlist_id').references(

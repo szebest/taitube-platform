@@ -1,4 +1,5 @@
 import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
 import {
   InMemoryChannelAuditRepository,
   InMemoryChannelHandleHistoryRepository,
@@ -65,7 +66,11 @@ export async function subscriptionHarness() {
   });
   const cache = new InMemorySubscriptionCache();
   const viewerProgress = new ViewerProgress(
-    new InMemoryWatchHistoryRepository({ channelsRepo: channels, videosRepo: videos })
+    new InMemoryWatchHistoryRepository({
+      channelsRepo: channels,
+      videosRepo: videos,
+      playlists: () => ({ removeWatched: async () => ok() }),
+    })
   );
   const serviceOver = (subscriptionCache: InMemorySubscriptionCache) =>
     new SubscriptionService({

@@ -7,6 +7,7 @@ import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistItemService } from '../playlist-item-service';
+import { playlistReading } from './playlist-reading';
 import { TEST_SPRITE } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000b101', role: 'USER' };
@@ -17,9 +18,12 @@ const SECTION = '00000000-0000-7000-8000-00000000b1c9';
 
 async function setUp() {
   const repositories = new InMemoryRepositories();
+  const { smart, sharing } = playlistReading(repositories);
   const service = new PlaylistItemService({
     playlists: repositories.playlists,
     videos: repositories.videos,
+    smart,
+    sharing,
     paginator: new Paginator(),
     cdn: asCdnBase('http://cdn.test'),
     sprite: TEST_SPRITE,

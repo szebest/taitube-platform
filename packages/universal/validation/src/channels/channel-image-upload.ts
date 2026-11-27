@@ -16,6 +16,7 @@ const CHANNEL_IMAGE_UPLOAD_LIMITS: Readonly<
 > = {
   avatar: { maxBytes: 2 * MEGABYTE, minWidth: 200, minHeight: 200 },
   banner: { maxBytes: 6 * MEGABYTE, minWidth: 1024, minHeight: 576 },
+  'playlist-cover': { maxBytes: 2 * MEGABYTE, minWidth: 640, minHeight: 360 },
 };
 
 export interface ImageDimensions {

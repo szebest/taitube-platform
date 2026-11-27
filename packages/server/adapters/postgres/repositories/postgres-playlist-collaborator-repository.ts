@@ -5,7 +5,12 @@ import type {
   PlaylistSeatGrant,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { PlaylistCollaborator, PlaylistCollaboratorRole, PlaylistInvite } from '@vp/domain';
+import {
+  type PlaylistCollaborator,
+  type PlaylistCollaboratorRole,
+  type PlaylistInvite,
+  autoRemoveStopped,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { playlistInviteOutbox } from '@vp/job-contracts';
 import { and, asc, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
@@ -164,8 +169,14 @@ export class PostgresPlaylistCollaboratorRepository implements PlaylistCollabora
             .update(inv)
             .set({ useCount: sql`${inv.useCount} + 1` })
             .where(eq(inv.id, invite.invite.id));
+          const stopped = await tx
+            .update(p)
+            .set({ autoRemoveWatched: false })
+            .where(and(eq(p.id, playlistId), eq(p.autoRemoveWatched, true)))
+            .returning({ id: p.id });
           await recordPlaylistChange(tx, playlistId, userId, [
             { action: 'collaborator_added', target: { userId, role } },
+            ...(stopped.length > 0 ? [autoRemoveStopped()] : []),
           ]);
           return ok(decided.value);
         }),

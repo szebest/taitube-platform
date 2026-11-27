@@ -83,3 +83,8 @@ export type RestorablePlaylistActivity = Extract<
 export function isRestorable(activity: PlaylistActivity): activity is RestorablePlaylistActivity {
   return activity.action === 'item_removed' || activity.action === 'auto_removed';
 }
+
+/** What a seat taken logs when it ends the list's removal of watched videos, one viewer's fact. */
+export function autoRemoveStopped(): PlaylistActivityEntry {
+  return { action: 'settings_changed', target: { fields: ['autoRemoveWatched'] } };
+}

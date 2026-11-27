@@ -1,5 +1,5 @@
 import { createTraceparent, getActiveTraceparent } from '@kit/observability';
-import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
+import { type Result, andThen, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
 import type { ChannelImageRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind, ChannelImageUpload, CropRect } from '@vp/domain';
@@ -53,6 +53,11 @@ export interface PreparedImageUpload {
   expiresAt: string;
 }
 
+export interface QueuedImageUpload {
+  uploadId: string;
+  version: number;
+}
+
 export interface CompleteImageInput {
   uploadId: string;
   width: number;
@@ -85,10 +90,18 @@ export type CompleteImageFailure =
   | StorageUnavailable
   | QueueUnavailable;
 
+/** What `prepareUpload` records the file under: the channel it belongs to and who sent it. */
+export interface ImageOwner {
+  channelId: string;
+  uploadedBy: string;
+}
+
 /**
- * Avatars and banners: the file goes into the private bucket by presigned PUT, the crops come
- * with the completion, and a job cuts the variants. The channel keeps its image until that job
- * says otherwise, so nothing here changes what a visitor sees.
+ * Avatars, banners and playlist covers: the file goes into the private bucket by presigned PUT,
+ * the crops come with the completion, and a job cuts the variants. The channel keeps its image
+ * until that job says otherwise, so nothing here changes what a visitor sees. `prepare` and
+ * `complete` are a channel's own images; a playlist cover is authorised by its playlist and comes
+ * through `prepareUpload` and `queueUpload`.
  */
 export class ChannelImagePipelineService {
   constructor(private readonly deps: ChannelImagePipelineServiceDeps) {}
@@ -101,18 +114,25 @@ export class ChannelImagePipelineService {
     const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
     if (isErr(allowed)) return allowed;
 
-    const checked = validateChannelImageUploadRequest(request);
-    if (isErr(checked)) return checked;
-
     const channel = await this.deps.channels.findById(acting.channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return err(channelNotFound(acting.channelId));
+
+    return await this.prepareUpload({ channelId: channel.value.id, uploadedBy: user.id }, request);
+  }
+
+  async prepareUpload(
+    { channelId, uploadedBy }: ImageOwner,
+    request: { kind: ChannelImageKind; contentType: string; sizeBytes: number }
+  ): Promise<Result<PreparedImageUpload, PrepareImageFailure>> {
+    const checked = validateChannelImageUploadRequest(request);
+    if (isErr(checked)) return checked;
 
     const { kind, contentType, sizeBytes } = checked.value;
     const uploadId = uuidv7();
     const presigned = await this.deps.storage.createPresignedPutUrl({
       bucket: this.deps.rawBucket,
-      key: channelImageUploadKey(channel.value.id, kind, uploadId),
+      key: channelImageUploadKey(channelId, kind, uploadId),
       contentType,
       contentLength: sizeBytes,
       expiresInSeconds: this.deps.presignedUrlTtlSeconds,
@@ -121,8 +141,8 @@ export class ChannelImagePipelineService {
 
     const recorded = await this.deps.images.create({
       id: uploadId,
-      channelId: channel.value.id,
-      uploadedBy: user.id,
+      channelId,
+      uploadedBy,
       kind,
       contentType,
       sizeBytes,
@@ -143,11 +163,18 @@ export class ChannelImagePipelineService {
     acting: ActingChannel,
     kind: ChannelImageKind,
     input: CompleteImageInput
-  ): Promise<Result<{ uploadId: string; version: number }, CompleteImageFailure>> {
+  ): Promise<Result<QueuedImageUpload, CompleteImageFailure>> {
     const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
     if (isErr(allowed)) return allowed;
+    return await this.queueUpload(acting.channelId, kind, input);
+  }
 
-    const upload = await this.ownUpload(acting.channelId, kind, input.uploadId);
+  async queueUpload(
+    channelId: string,
+    kind: ChannelImageKind,
+    input: CompleteImageInput
+  ): Promise<Result<QueuedImageUpload, CompleteImageFailure>> {
+    const upload = await this.ownUpload(channelId, kind, input.uploadId);
     if (isErr(upload)) return upload;
 
     const uploaded = await this.checkObject(upload.value);
@@ -231,12 +258,20 @@ function decideCrops(
   kind: ChannelImageKind,
   { crop, crops }: CompleteImageInput
 ): Result<Parameters<typeof decideImageCrops>[0], InvalidField<Record<never, never>>> {
-  if (kind === 'avatar') {
-    return crop
-      ? ok({ kind, crop })
-      : err(invalidField('crop', 'An avatar needs a square crop', {}));
+  switch (kind) {
+    case 'avatar':
+      return crop
+        ? ok({ kind, crop })
+        : err(invalidField('crop', 'An avatar needs a square crop', {}));
+    case 'banner':
+      return crops
+        ? ok({ kind, crops })
+        : err(invalidField('crops', 'A banner needs a crop for desktop, mobile and tv', {}));
+    case 'playlist-cover':
+      return crop
+        ? ok({ kind, crop })
+        : err(invalidField('crop', 'A playlist cover needs a 16:9 crop', {}));
+    default:
+      return assertNever(kind, 'ChannelImageKind');
   }
-  return crops
-    ? ok({ kind, crops })
-    : err(invalidField('crops', 'A banner needs a crop for desktop, mobile and tv', {}));
 }
