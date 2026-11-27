@@ -34,6 +34,8 @@ secrets:
     - GRAFANA_OTLP_HEADERS
     - CLOUDFLARE_TUNNEL_TOKEN
     - VIDEO_ACCESS_SECRET
+    - LIVE_HOOK_SECRET
+    - WATCH_PARTY_GUEST_SALT
 health:
   readyzTimeoutSec: 300
   smoke: false
