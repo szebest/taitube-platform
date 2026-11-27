@@ -273,10 +273,9 @@ measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N
 - **Add specs freely; never add a shard by hand.** The shard count follows from `tests/timings/unit.json`
   (`pnpm unit-shards` prints it), so a suite that grows gets more shards once its timings are refreshed. A new spec
   costs the median until then. Refresh with `pnpm timings:update --run <id> --run <id>`; `refresh-unit-timings.yml`
-  also does it every Monday (or on `workflow_dispatch`) from the last two green `main` runs. It points the branch
-  `chore/refresh-unit-timings` at `main`, writes the file onto it through the contents API and opens one issue,
-  "Unit timings are ready for a pull request", that links the compare view; open the pull request from there, since
-  Actions may not create one (the repository setting stays off). The issue closes when `main`'s file is current. Do not raise the 240 s budget when a shard misses it: refresh the timings, or lower the target in
+  also does it every Monday (or on `workflow_dispatch`) from the last two green `main` runs and opens a pull
+  request, which needs "Allow GitHub Actions to create and approve pull requests" on; close and reopen it to run CI
+  on it. Do not raise the 240 s budget when a shard misses it: refresh the timings, or lower the target in
   `scripts/timings/plan-shards.ts` if the measured parallelism fell.
 - **One retry, and a pass on it fails the job.** CI retries a failed test once (`--retry=1` for vitest,
   `retries: 1` under `CI` for Playwright and the visual suite), so the report tells a flaky test from a broken
