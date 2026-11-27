@@ -8,7 +8,7 @@
 | Blocks | 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** A channel page is the same page for every creator: fixed tabs, a fixed Home, and the Start here shelf
 > ([96](96-channel-featured-videos-start-here.md)) as the one thing a creator arranges. A creator who makes a series, a
