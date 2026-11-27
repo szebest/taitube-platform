@@ -59,11 +59,13 @@ export function describeShareLinkRepositoryContract(makeSubject: MakeRepositorie
       expect(await create(shareLink(5), 2)).toBe(false);
     });
 
-    it('finds a link by its token, and answers null for one nobody holds', async () => {
+    it('finds a link by its token or id, and answers null for one nobody holds', async () => {
       await create(shareLink(1));
 
       expect(expectOk(await links.findByToken(shareLink(1).token))).toEqual(shareLink(1));
       expect(expectOk(await links.findByToken(shareLink(2).token))).toBeNull();
+      expect(expectOk(await links.findById(linkId(1)))).toEqual(shareLink(1));
+      expect(expectOk(await links.findById(linkId(2)))).toBeNull();
     });
 
     it('revokes a link of its own target, keeps the first time on a second revoke, and leaves other targets alone', async () => {

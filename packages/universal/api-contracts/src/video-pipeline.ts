@@ -72,13 +72,14 @@ export const listVideoGenerations = defineEndpoint({
   tag: 'Creator Studio',
   summary: 'The generations of a video and its edit list',
   description:
-    'Newest first. `editBase` is the generation a new edit renders from and the timeline its ranges are on; `edit` is the list saved over it, or null.',
+    'Newest first. `editBase` is the generation a new edit renders from and the timeline its ranges are on; `edit` is the list saved over it, or null; `revertible` says the edit that plays can go back to its base.',
   params: VideoIdParamSchema,
   status: 200,
   result: z.object({
     activeGeneration: z.number().int().min(1),
     editBase: z.object({ generation: z.number().int().min(1), durationMs: z.number().int() }),
     edit: VideoEditSchema.nullable(),
+    revertible: z.boolean(),
     items: z.array(GenerationSchema),
   }),
   errors: AUTHENTICATED,

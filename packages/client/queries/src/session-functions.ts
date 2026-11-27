@@ -69,10 +69,11 @@ export const rememberIdentity = createServerFn({ method: 'POST' })
     );
   });
 
-/** Starts adding an account: the one-time state its sign-in must bring back. */
-export const startAddAccount = createServerFn({ method: 'POST' }).handler(() =>
-  issueAddNonce(requestSession().cookieDomain)
-);
+/** Starts adding an account: the one-time state its sign-in must bring back, holding its slot. */
+export const startAddAccount = createServerFn({ method: 'POST' }).handler(() => {
+  const { cookieDomain, accountsMax } = requestSession();
+  return issueAddNonce(cookieDomain, accountsMax);
+});
 
 /** What the switcher draws before any account is asked: every row, expired where its session is gone. */
 export type AccountsList = Accounts & { readonly accountsMax: number };

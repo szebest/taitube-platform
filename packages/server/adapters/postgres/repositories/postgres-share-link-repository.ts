@@ -67,6 +67,14 @@ export class PostgresShareLinkRepository extends ShareLinkRepository {
     return map(rows, ([row]) => row ?? null);
   }
 
+  async findById(id: string): Promise<Result<ShareLink | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () => this.db.select().from(sl).where(eq(sl.id, id)).limit(1),
+      databaseUnavailable.during('findShareLinkById')
+    );
+    return map(rows, ([row]) => row ?? null);
+  }
+
   async revoke(
     targetType: ShareLinkTargetType,
     targetId: string,

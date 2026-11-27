@@ -8,6 +8,7 @@ import {
   signOutAll,
   startAddAccount,
 } from '../session-functions';
+import { accountsAfter, accountsCookies } from './accounts-fixtures';
 import { inRequest } from './in-request';
 
 const ACCOUNTS = [0, 1, 2].reduce<Accounts>(
@@ -21,16 +22,11 @@ const ACCOUNTS = [0, 1, 2].reduce<Accounts>(
   NO_ACCOUNTS
 );
 
-const THREE_SLOTS = `vp.session.0=a; vp.session.1=b; vp.session.2=c; vp.accounts=${encodeURIComponent(
-  JSON.stringify(ACCOUNTS)
-)}`;
+const THREE_SLOTS = `vp.session.0=a; vp.session.1=b; vp.session.2=c; ${accountsCookies(ACCOUNTS)}`;
 
 const names = (setCookies: string[]) => setCookies.map((set) => set.split(';')[0]?.split('=')[0]);
 
-function accountsWritten(setCookies: string[]): Accounts {
-  const written = setCookies.find((set) => set.startsWith('vp.accounts='))?.split(';')[0] ?? '';
-  return JSON.parse(decodeURIComponent(written.slice('vp.accounts='.length)));
-}
+const accountsWritten = (setCookies: string[]) => accountsAfter(THREE_SLOTS, setCookies);
 
 describe('@vp/queries: session server functions', () => {
   it.each([
@@ -52,9 +48,9 @@ describe('@vp/queries: session server functions', () => {
       cookie: THREE_SLOTS,
     });
 
-    expect(names(setCookies)).toEqual(['vp.session.2', 'vp.accounts']);
+    expect(names(setCookies)).toEqual(['vp.session.2', 'vp.accounts.2', 'vp.accounts']);
     expect(setCookies[0]).toMatch(/Max-Age=0; Path=\/; HttpOnly/);
-    expect(accountsWritten(setCookies).slots.map(({ slot }) => slot)).toEqual([0, 1]);
+    expect((await accountsWritten(setCookies)).slots.map(({ slot }) => slot)).toEqual([0, 1]);
     expect(value).toEqual({ next: { slot: 0 }, accounts: 2 });
   });
 
@@ -74,6 +70,9 @@ describe('@vp/queries: session server functions', () => {
       'vp.session.0',
       'vp.session.1',
       'vp.session.2',
+      'vp.accounts.0',
+      'vp.accounts.1',
+      'vp.accounts.2',
       'vp.accounts',
     ]);
     for (const set of setCookies) expect(set).toContain('Max-Age=0');
@@ -84,8 +83,8 @@ describe('@vp/queries: session server functions', () => {
       cookie: THREE_SLOTS,
     });
 
-    expect(names(setCookies)).toEqual(['vp.session.1', 'vp.accounts']);
-    expect(accountsWritten(setCookies).slots.map(({ expired }) => expired)).toEqual([
+    expect(names(setCookies)).toEqual(['vp.session.1', 'vp.accounts.1']);
+    expect((await accountsWritten(setCookies)).slots.map(({ expired }) => expired)).toEqual([
       false,
       true,
       false,
@@ -98,19 +97,19 @@ describe('@vp/queries: session server functions', () => {
       { cookie: THREE_SLOTS }
     );
 
-    expect(accountsWritten(setCookies)).toMatchObject({
+    expect(await accountsWritten(setCookies)).toMatchObject({
       defaultSlot: 1,
       slots: [{ channel: null }, { channel: 'second' }, { channel: null }],
     });
   });
 
-  it('starts an add with a fresh state, kept in a short-lived cookie no script reads', async () => {
-    const first = await inRequest(() => startAddAccount());
-    const second = await inRequest(() => startAddAccount());
+  it('starts an add with a fresh state holding the first free slot, kept in a short-lived cookie no script reads', async () => {
+    const first = await inRequest(() => startAddAccount(), { cookie: THREE_SLOTS });
+    const second = await inRequest(() => startAddAccount(), { cookie: THREE_SLOTS });
 
     expect(first.value).not.toBe(second.value);
     expect(first.setCookies).toEqual([
-      `vp.add-nonce=${first.value}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`,
+      `vp.add-nonce.3=${first.value}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`,
     ]);
   });
 
