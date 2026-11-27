@@ -7,7 +7,7 @@ export type ClientAppOptions = Omit<BundleRules, 'flaggedDirs'> & {
     prerender?: readonly string[];
     configUrl: string;
     port: number;
-    plugins?: () => PluginOption[] | Promise<PluginOption[]>;
+    plugins?: (target: string[]) => PluginOption[] | Promise<PluginOption[]>;
     compiler?: ReactCompiler;
 };
 export function clientAppConfig({ configUrl, port, plugins, prerender, compiler, flaggedDirs, ...rules }: ClientAppOptions): UserConfigFnPromise

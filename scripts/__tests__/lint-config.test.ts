@@ -23,11 +23,24 @@ describe('lint.config', () => {
     ['unused-import.ts', 'eslint(no-unused-vars)'],
     ['use-no-memo-without-reason.tsx', 'house(use-no-memo-reason)'],
     ['use-no-memo-placeholder-reason.tsx', 'house(use-no-memo-reason)'],
+    ['view-transition-unguarded.ts', 'house(guard-newer-apis)'],
+    ['view-transition-in-check.ts', 'house(guard-newer-apis)'],
+    ['idle-callback-bare-unguarded.ts', 'house(guard-newer-apis)'],
+    ['idle-callback-bare-cancel-unguarded.ts', 'house(guard-newer-apis)'],
   ])('reports %s as %s', (fixture, code) => {
     expect(codesFor(fixture)).toContain(code);
   });
 
   it('lets a "use no memo" stand under a real `// no-memo:` reason', () => {
     expect(codesFor('use-no-memo-with-reason.tsx')).not.toContain('house(use-no-memo-reason)');
+  });
+
+  it.each([
+    'view-transition-guarded.ts',
+    'view-transition-optional-call.ts',
+    'idle-callback-bare-guarded.ts',
+    'idle-callback-shadowed.ts',
+  ])('lets %s stand: a `typeof` check, an optional call or a local binding', (fixture) => {
+    expect(codesFor(fixture)).not.toContain('house(guard-newer-apis)');
   });
 });

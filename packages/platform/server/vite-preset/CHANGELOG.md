@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- The client build compiles to the `browserslist` of the root above the app, through `browserslist-to-esbuild`, in place of Vite's default `baseline-widely-available`; both are peer dependencies now.
+- `ClientAppOptions['plugins']` is called with that esbuild target, so a plugin with a build of its own, such as a service worker's, takes the same one.
+
 ## 0.2.0
 
 - Breaking: `clientAppTestConfig` takes the project's whole ordered `setupFiles` and its `env`; no setup file or variable of an app is written into the package.
