@@ -31,6 +31,7 @@ export function PostItem({ post, detail = false }: PostItemProps) {
         { onError: (error) => showFailure(tOr('posts.likeFailed', {}, ''), error) }
       )
     );
+  const likes = unwrapOr(format({ type: 'count', value: post.likeCount }), '');
   const replies = (
     <>
       <Icon name="chat" />
@@ -58,11 +59,11 @@ export function PostItem({ post, detail = false }: PostItemProps) {
           variant="ghost"
           tone={post.likedByViewer ? 'accent' : 'neutral'}
           aria-pressed={post.likedByViewer}
-          aria-label={tOr(post.likedByViewer ? 'posts.unlike' : 'posts.like', {}, '')}
+          aria-label={`${tOr(post.likedByViewer ? 'posts.unlike' : 'posts.like', {}, '')} ${likes}`}
           onClick={toggleLike}
         >
           <Icon name="heart" />
-          <Format value={{ type: 'count', value: post.likeCount }} />
+          {likes}
         </Button>
         {post.commentsEnabled &&
           (detail ? (

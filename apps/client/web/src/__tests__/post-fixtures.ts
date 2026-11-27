@@ -1,6 +1,6 @@
 import type { PostView } from '@vp/api-contracts';
-import { channel } from '@vp/web-testing';
 
+const CHANNEL_ID = '0190c3a0-5e1d-7000-8000-00000000c001';
 export const POST_ID = '0190c3a0-5e1d-7000-8000-0000000e1001';
 export const POLL_POST_ID = '0190c3a0-5e1d-7000-8000-0000000e1002';
 const QUIZ_POST_ID = '0190c3a0-5e1d-7000-8000-0000000e1003';
@@ -11,11 +11,14 @@ export const SHARE_PLAYLIST_ID = '0190c3a0-5e1d-7000-8000-0000000e2002';
 const PUBLISHED_AT = '2026-10-14T09:12:00.000Z';
 
 export function post(overrides: Partial<PostView> = {}): PostView {
-  const { id, handle, displayName, avatarUrl } = channel();
-
   return {
     id: POST_ID,
-    channel: { id, handle, displayName, avatarUrl },
+    channel: {
+      id: CHANNEL_ID,
+      handle: 'creator',
+      displayName: 'The Creator',
+      avatarUrl: null,
+    },
     kind: 'text',
     body: { kind: 'text', text: 'A new episode is out' },
     commentsEnabled: true,

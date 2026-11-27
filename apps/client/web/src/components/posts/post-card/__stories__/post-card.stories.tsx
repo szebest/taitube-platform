@@ -39,7 +39,7 @@ function StoryCard({ children, ...props }: Partial<PostCardRootProps> & { childr
       />
       <PostCard.Body>{children}</PostCard.Body>
       <PostCard.Actions>
-        <Button variant="ghost" tone="neutral" aria-pressed={false} aria-label="Like">
+        <Button variant="ghost" tone="neutral" aria-pressed={false} aria-label="Like 12">
           <Icon name="heart" />
           12
         </Button>

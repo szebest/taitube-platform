@@ -10,9 +10,9 @@ describe('apps/client/web: PostItem', () => {
     const calls: string[] = [];
     const { user } = await renderPosts(POSTS_URL, { calls });
 
-    await user.click(await screen.findByRole('button', { name: 'Like' }));
+    await user.click(await screen.findByRole('button', { name: /^Like/ }));
 
-    const liked = await screen.findByRole('button', { name: 'Unlike' });
+    const liked = await screen.findByRole('button', { name: /^Unlike/ });
     expect(liked).toHaveAttribute('aria-pressed', 'true');
     expect(liked).toHaveTextContent('4');
     expect(calls).toContain(`PUT /v1/posts/${POST_ID}/reactions`);
@@ -25,9 +25,9 @@ describe('apps/client/web: PostItem', () => {
       calls,
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Unlike' }));
+    await user.click(await screen.findByRole('button', { name: /^Unlike/ }));
 
-    expect(await screen.findByRole('button', { name: 'Like' })).toHaveTextContent('3');
+    expect(await screen.findByRole('button', { name: /^Like/ })).toHaveTextContent('3');
     expect(calls).toContain(`DELETE /v1/posts/${POST_ID}/reactions`);
   });
 
@@ -35,7 +35,7 @@ describe('apps/client/web: PostItem', () => {
     const calls: string[] = [];
     const { user } = await renderPosts(POSTS_URL, { guest: true, calls });
 
-    await user.click(await screen.findByRole('button', { name: 'Like' }));
+    await user.click(await screen.findByRole('button', { name: /^Like/ }));
 
     expect(await screen.findByRole('dialog', { name: 'Sign in to like this' })).toBeInTheDocument();
     expect(calls.some((call) => call.startsWith('PUT'))).toBe(false);
@@ -53,7 +53,7 @@ describe('apps/client/web: PostItem', () => {
   it('leaves the reply count out when replies are off', async () => {
     await renderPosts(POSTS_URL, { posts: [post({ commentsEnabled: false })] });
 
-    await screen.findByRole('button', { name: 'Like' });
+    await screen.findByRole('button', { name: /^Like/ });
     expect(screen.queryByRole('link', { name: /repl/ })).not.toBeInTheDocument();
   });
 
