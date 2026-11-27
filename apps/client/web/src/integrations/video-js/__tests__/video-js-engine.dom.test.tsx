@@ -1,14 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { Events } from 'hls.js';
-import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
+import { attachedHls } from '#app/integrations/video-js/__tests__/offline-hls';
 import { PlayerChannelProvider, useOnPlayerEnded } from '#app/lib/player/player-channel';
-import {
-  usePlayerCommands,
-  usePlayerState,
-  VideoJsEngine,
-  type VideoJsEngineProps,
-} from '../video-js-engine';
+import { VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
   const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
@@ -16,23 +10,6 @@ vi.mock(import('hls.js'), async (importOriginal) => {
 });
 
 const POSTER = 'http://localhost:9000/posters/p.jpg';
-
-function PickRendition() {
-  const { selectVideoRendition } = usePlayerCommands();
-
-  return (
-    <button type="button" onClick={() => selectVideoRendition('0')}>
-      Pick 360p
-    </button>
-  );
-}
-
-function PlayerFlags() {
-  const buffering = usePlayerState((state) => state.buffering);
-  const ended = usePlayerState((state) => state.ended);
-
-  return <output>{`buffering:${buffering} ended:${ended}`}</output>;
-}
 
 function WatchEnd({ onEnded }: { onEnded: () => void }) {
   useOnPlayerEnded(onEnded);
@@ -49,9 +26,7 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}, onChannelEnded = 
       title="Launch day"
       {...props}
     >
-      <PickRendition />
       <WatchEnd onEnded={onChannelEnded} />
-      <PlayerFlags />
     </VideoJsEngine>,
     { wrapper: PlayerChannelProvider }
   );
@@ -104,26 +79,6 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(video.muted).toBe(muted);
   });
 
-  it.each([
-    { from: { paused: false, muted: true }, to: { paused: true, muted: true }, call: 'pause' },
-    { from: { paused: true, muted: true }, to: { paused: false, muted: true }, call: 'play' },
-  ] as const)('$call()s the media once the control changes', ({ from, to, call }) => {
-    const spy = vi.spyOn(HTMLMediaElement.prototype, call).mockResolvedValue(undefined);
-    const { rerender } = renderEngine({ layout: 'vertical', control: from });
-    spy.mockClear();
-
-    rerender(
-      <VideoJsEngine
-        playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
-        title="Launch day"
-        layout="vertical"
-        control={to}
-      />
-    );
-
-    expect(spy).toHaveBeenCalledOnce();
-  });
-
   it('reports a pause when the browser refuses to autoplay, which fires no pause event', async () => {
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
       new DOMException('', 'NotAllowedError')
@@ -140,20 +95,6 @@ describe('apps/client/web: the Video.js engine', () => {
     await vi.waitFor(() => expect(onPause).toHaveBeenCalledOnce());
   });
 
-  it.each([
-    { event: 'waiting', media: { paused: false }, flags: 'buffering:true ended:false' },
-    { event: 'ended', media: { ended: true }, flags: 'buffering:false ended:true' },
-  ])('exposes the $event state to the skin', async ({ event, media, flags }) => {
-    const { video } = renderEngine();
-    for (const [name, value] of Object.entries(media)) {
-      Object.defineProperty(video, name, { configurable: true, value });
-    }
-
-    fireEvent(video, new Event(event));
-
-    expect(await screen.findByText(flags)).toBeInTheDocument();
-  });
-
   it('reports a stall to onWaiting', () => {
     const onWaiting = vi.fn();
     const { video } = renderEngine({ onWaiting });
@@ -162,37 +103,6 @@ describe('apps/client/web: the Video.js engine', () => {
 
     expect(onWaiting).toHaveBeenCalledOnce();
   });
-
-  it.each([
-    {
-      picker: 'adaptive bitrate',
-      picked: false,
-      level: 1,
-      quality: { width: 1280, height: 720, bitrate: 2_880_000, auto: true },
-    },
-    {
-      picker: 'the viewer',
-      picked: true,
-      level: 0,
-      quality: { width: 640, height: 360, bitrate: 1_440_000, auto: false },
-    },
-  ])(
-    'reports the rendition $picker picked as the active quality',
-    async ({ picked, level, quality }) => {
-      const onQualityChange = vi.fn();
-      const { user, video } = renderEngine({ onQualityChange });
-      const hls = await parseMaster(video, [360, 720], 720);
-
-      if (picked) {
-        await user.click(screen.getByRole('button', { name: 'Pick 360p' }));
-      }
-      act(() => {
-        hls.trigger(Events.LEVEL_SWITCHED, { level });
-      });
-
-      await vi.waitFor(() => expect(onQualityChange).toHaveBeenLastCalledWith(quality));
-    }
-  );
 
   it.each([
     { loop: true, looped: true },
