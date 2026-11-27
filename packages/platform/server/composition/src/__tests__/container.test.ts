@@ -1,5 +1,5 @@
 import { token } from '@kit/di';
-import { err, ok } from '@kit/result';
+import { err, ok, type Result } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { Container, DisposeFailed, closeOnDispose } from '../container';
 
@@ -152,13 +152,10 @@ describe('packages/composition: Container', () => {
 
   it('lets a dispose during start finish the start in flight, then starts nothing more', async () => {
     const { calls, lifecycle } = recorder();
-    let release: () => void = () => {};
+    const { promise: started, resolve: release } = Promise.withResolvers<Result<void, never>>();
     const c = new Container()
       .provide(Storage, () => 'raw', {
-        start: () =>
-          new Promise((resolve) => {
-            release = () => resolve(ok());
-          }),
+        start: () => started,
         dispose: () => void calls.push('dispose Storage'),
       })
       .provide(Multipart, (c) => `${c.get(Storage)}-parts`, lifecycle('Multipart'));
@@ -166,7 +163,7 @@ describe('packages/composition: Container', () => {
 
     const starting = c.start();
     const disposing = c.dispose();
-    release();
+    release(ok());
 
     expect(expectErr(await starting)).toEqual({ type: 'interrupted' });
     expectOk(await disposing);
@@ -221,12 +218,9 @@ describe('packages/composition: Container', () => {
   });
 
   it('names the disposer it is still waiting on', async () => {
-    let release = () => {};
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
     const c = new Container().provide(Storage, () => 'raw', {
-      dispose: () =>
-        new Promise<void>((resolve) => {
-          release = resolve;
-        }),
+      dispose: () => released,
     });
     c.get(Storage);
 

@@ -4,10 +4,7 @@ const TYPES = ['All', 'Videos', 'Channels', 'Playlists'];
 
 test.describe('the search result tabs', () => {
   test('stay mounted, clickable and counted while another tab loads', async ({ page }) => {
-    let releaseChannelPage = () => {};
-    const heldChannelPage = new Promise<void>((resolve) => {
-      releaseChannelPage = resolve;
-    });
+    const { promise: heldChannelPage, resolve: releaseChannelPage } = Promise.withResolvers<void>();
     await page.route('**/v1/search?*', async (route) => {
       if (new URL(route.request().url()).searchParams.get('type') !== 'channel') {
         return route.continue();

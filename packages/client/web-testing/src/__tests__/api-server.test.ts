@@ -60,10 +60,7 @@ describe('@vp/web-testing: apiServer', () => {
 
   it('waits for a request still in flight before dropping the handlers it is answered by', async () => {
     const order: string[] = [];
-    let release = () => {};
-    const released = new Promise<void>((resolve) => {
-      release = resolve;
-    });
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
     let entered = false;
     apiServer.use(
       http.get(HEALTH_URL, async () => {
