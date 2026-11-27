@@ -6,7 +6,8 @@ import { UNMODERATED } from './stored-comment';
 const stored: StoredComment = {
   id: 'c1',
   parentId: 'root',
-  videoId: 'v1',
+  target: { type: 'video', id: 'v1' },
+  channelId: 'ch-owner',
   authorId: 'u1',
   authorChannelId: 'ch1',
   content: 'hello',
@@ -69,7 +70,8 @@ describe('adapters/in-memory: comment projections', () => {
   describe('newStoredComment', () => {
     const input = {
       id: 'c9',
-      videoId: 'v1',
+      target: { type: 'video', id: 'v1' } as const,
+      channelId: 'ch-owner',
       authorId: 'u1',
       authorChannelId: 'ch1',
       parentId: null,

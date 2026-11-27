@@ -17,8 +17,8 @@ const CURSOR = { isPinned: true, likeCount: 4, createdAt: CREATED_AT, id: 'c-9' 
 
 const col = (name: string) =>
   name === 'created_at'
-    ? `date_trunc('milliseconds', "video_comments"."created_at")`
-    : `"video_comments"."${name}"`;
+    ? `date_trunc('milliseconds', "comments"."created_at")`
+    : `"comments"."${name}"`;
 
 describe('adapters/postgres: comment thread SQL query', () => {
   it.each([
@@ -93,7 +93,9 @@ describe('adapters/postgres: comment thread SQL query', () => {
   it('folds the joined channel into the author and drops the tombstone', () => {
     const thread = toCommentThread({
       id: 'c-1',
-      videoId: 'v-1',
+      targetType: 'video',
+      targetId: 'v-1',
+      channelId: 'ch-owner',
       authorId: 'u-1',
       authorChannelId: 'ch-1',
       parentId: null,
@@ -113,6 +115,9 @@ describe('adapters/postgres: comment thread SQL query', () => {
     });
 
     expect(thread).not.toHaveProperty('deletedAt');
+    expect(thread).not.toHaveProperty('targetType');
+    expect(thread.target).toEqual({ type: 'video', id: 'v-1' });
+    expect(thread.channelId).toBe('ch-owner');
     expect(thread.author).toEqual({
       userId: 'u-1',
       channelId: 'ch-1',

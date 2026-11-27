@@ -2,6 +2,7 @@ import { expectOk } from '@kit/testing/result';
 import type { CommentModerationWrite } from '@vp/core/repositories';
 import {
   type CommentModerationAction,
+  type CommentTarget,
   type Disclosure,
   type ModerationState,
   commentModerationAudit,
@@ -12,6 +13,7 @@ import {
   OWNER_ID,
   VIDEO_IDS,
   publicVideo,
+  videoTarget,
   seedOwners,
   seededChannel,
 } from './fixtures';
@@ -33,7 +35,7 @@ export const HELD_AT_CREATION = {
 export interface ModerationFixture {
   readonly ctx: CommentContractContext;
   readonly channelId: string;
-  target(id: string): { id: string; videoId: string };
+  target(id: string): { id: string; target: CommentTarget };
   audit(
     action: CommentModerationAction['action'],
     id: string,
@@ -113,12 +115,12 @@ export function describeModerationFixture(
       get channelId() {
         return channelId;
       },
-      target: (id) => ({ id, videoId: VIDEO_IDS.a }),
+      target: (id) => ({ id, target: videoTarget(VIDEO_IDS.a) }),
       audit,
       moderate: async (id, action, from, to) =>
         expectOk(
           await subject.repositories.commentModeration.moderate({
-            comment: { id, videoId: VIDEO_IDS.a },
+            comment: { id, target: videoTarget(VIDEO_IDS.a) },
             from,
             outcome: to,
             moderatorId: OWNER_ID,

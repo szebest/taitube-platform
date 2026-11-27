@@ -7,6 +7,7 @@ import {
   VIDEO_IDS,
   publicVideo,
   seedOwners,
+  videoTarget,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -77,7 +78,8 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
       expectOk(
         await subject.repositories.comments.create({
           id: COMMENT_ID,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
           authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
@@ -93,14 +95,15 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
       expectOk(
         await subject.repositories.comments.create({
           id: COMMENT_ID,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
           authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
       );
-      const target = { id: COMMENT_ID, videoId: VIDEO_IDS.a };
+      const target = { id: COMMENT_ID, target: videoTarget(VIDEO_IDS.a) };
 
       expectOk(await subject.repositories.comments.setHearted(target, true));
       expectOk(await subject.repositories.comments.setHearted(target, true));

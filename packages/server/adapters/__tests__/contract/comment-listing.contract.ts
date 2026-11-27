@@ -8,7 +8,7 @@ import {
   seedComment,
   seedThreads,
 } from './comment-contract-context';
-import { VIDEO_IDS, idsOf } from './fixtures';
+import { VIDEO_IDS, idsOf, videoTarget } from './fixtures';
 
 export function describeCommentListingContract(ctx: CommentContractContext): void {
   describe('listing', () => {
@@ -16,7 +16,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       await seedThreads(ctx);
 
       const top = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: null,
           sort: 'top',
           window: keyset(10),
@@ -31,7 +31,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       await seedThreads(ctx);
 
       const newest = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: null,
           sort: 'newest',
           window: keyset(10),
@@ -43,10 +43,14 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
 
     it.each(['top', 'newest'] as const)('puts the pinned comment first under %s', async (sort) => {
       await seedThreads(ctx);
-      expectOk(await ctx.comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true));
+      expectOk(await ctx.comments.setPinned({ id: C.old, target: videoTarget(VIDEO_IDS.a) }, true));
 
       const [first] = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, { viewer: null, sort, window: keyset(10) })
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
+          viewer: null,
+          sort,
+          window: keyset(10),
+        })
       );
 
       expect(first).toMatchObject({ id: C.old, isPinned: true });
@@ -57,13 +61,13 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       { sort: 'newest' as const, order: [C.old, C.fresh, C.liked] },
     ])('walks every root once from keyset cursors under $sort', async ({ sort, order }) => {
       await seedThreads(ctx);
-      expectOk(await ctx.comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true));
+      expectOk(await ctx.comments.setPinned({ id: C.old, target: videoTarget(VIDEO_IDS.a) }, true));
       const seen: string[] = [];
       let window = keyset(1);
 
       for (let page = 0; page < 5; page++) {
         const rows = expectOk(
-          await ctx.comments.listThreads(VIDEO_IDS.a, { viewer: null, sort, window })
+          await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), { viewer: null, sort, window })
         );
         const [row] = rows;
         if (!row) break;
@@ -79,7 +83,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       await seedThreads(ctx);
 
       const page = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: null,
           sort: 'top',
           window: { type: 'offset', offset: 1, limit: 1 },
@@ -94,7 +98,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
       await seedComment(ctx, C.other, { videoId: VIDEO_IDS.b });
 
       const other = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.b, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.b), {
           viewer: null,
           sort: 'top',
           window: keyset(10),
@@ -107,7 +111,7 @@ export function describeCommentListingContract(ctx: CommentContractContext): voi
 
     it('lists a thread replies oldest first and resumes from a cursor', async () => {
       await seedThreads(ctx);
-      const root = { id: C.liked, videoId: VIDEO_IDS.a };
+      const root = { id: C.liked, target: videoTarget(VIDEO_IDS.a) };
 
       const all = expectOk(
         await ctx.comments.listReplies(root, { viewer: null, cursor: null, limit: 10 })

@@ -32,10 +32,12 @@ describe('postgres: export catalogue queries', () => {
       sourceKey: 'raw/v/source.mp4',
       createdAt: new Date(AT),
     });
-    await db.insert(schema.videoComments).values(
+    await db.insert(schema.comments).values(
       [1, 2, 3].map((n) => ({
         id: commentId(n),
-        videoId: VIDEO_ID,
+        targetType: 'video' as const,
+        targetId: VIDEO_ID,
+        channelId: CHANNEL_ID,
         authorId: FAN_ID,
         authorChannelId: FAN_CHANNEL_ID,
         content: `comment ${n}`,

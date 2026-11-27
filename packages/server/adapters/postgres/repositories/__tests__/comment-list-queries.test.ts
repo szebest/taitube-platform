@@ -15,10 +15,10 @@ describe('comment list queries', () => {
   it('lists the caller own live comments, newest first, one row past the page', () => {
     const { sql, params } = authoredCommentsQuery(db, VIEWER, { cursor: null, limit: 24 }).toSQL();
 
-    expect(sql).toContain('"video_comments"."author_id" = $1');
-    expect(sql).toContain('"video_comments"."deleted_at" IS NULL');
+    expect(sql).toContain('"comments"."author_id" = $2');
+    expect(sql).toContain('"comments"."deleted_at" IS NULL');
     expect(sql).toContain(
-      `order by date_trunc('milliseconds', "video_comments"."created_at") desc, "video_comments"."id" desc`
+      `order by date_trunc('milliseconds', "comments"."created_at") desc, "comments"."id" desc`
     );
     expect(params).toContain('viewer-1');
     expect(params).toContain(25);
@@ -45,7 +45,7 @@ describe('comment list queries', () => {
     });
   });
 
-  it("scopes the creator inbox to comments on the channel's videos by someone else", () => {
+  it('scopes the creator inbox to comments the channel moderates by someone else', () => {
     const { sql } = creatorInboxQuery(db, 'owner-1', {
       channelId: 'channel-1',
       filter: 'all',
@@ -53,7 +53,7 @@ describe('comment list queries', () => {
       limit: 10,
     }).toSQL();
 
-    expect(sql).toContain('"videos"."channel_id" = $1');
-    expect(sql).toContain('"video_comments"."author_id" <> $2');
+    expect(sql).toContain('"comments"."channel_id" = $4');
+    expect(sql).toContain('"comments"."author_id" <> $5');
   });
 });

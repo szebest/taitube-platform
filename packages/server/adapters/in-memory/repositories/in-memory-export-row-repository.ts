@@ -134,7 +134,8 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
       .filter(
         (comment) =>
           comment.deletedAt === null &&
-          videos.has(comment.videoId) &&
+          comment.target.type === 'video' &&
+          videos.has(comment.target.id) &&
           onDays(viewDateOf(comment.createdAt), scope.range)
       )
       .sort(byCreated)
@@ -142,8 +143,8 @@ export class InMemoryExportRowRepository implements ExportRowRepositoryPort {
         const author = channels.get(comment.authorChannelId);
         return {
           commentId: comment.id,
-          videoId: comment.videoId,
-          videoTitle: videos.get(comment.videoId)?.title ?? '',
+          videoId: comment.target.id,
+          videoTitle: videos.get(comment.target.id)?.title ?? '',
           parentId: comment.parentId,
           authorHandle: author?.handle ?? null,
           authorDisplayName: author?.displayName ?? null,

@@ -1,6 +1,7 @@
 import type { Result } from '@kit/result';
 import type {
   ChannelUserRestriction,
+  CommentTarget,
   ModerationRecord,
   NewChannelAuditEntry,
   NewChannelUserRestriction,
@@ -16,14 +17,14 @@ export interface ChannelUserRestrictionQuery {
 
 export interface RestrictionWritten {
   restriction: ChannelUserRestriction;
-  /** The channel's videos the user commented on, whose count was recounted and cache must be purged. */
-  videoIds: string[];
+  /** What of the channel the user commented on, whose count was recounted and cache must be purged. */
+  targets: CommentTarget[];
 }
 
 export interface RestrictionLifted {
   /** `false` when the user had none to lift; nothing was recounted or audited then. */
   lifted: boolean;
-  videoIds: string[];
+  targets: CommentTarget[];
 }
 
 /**

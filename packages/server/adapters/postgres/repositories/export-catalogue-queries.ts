@@ -7,7 +7,7 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { keysetPast, msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
-const { videoComments: c, videos: v, channels: ch, categories: cat } = schema;
+const { comments: c, videos: v, channels: ch, categories: cat } = schema;
 
 export interface CreatedKey {
   createdAt: Date;
@@ -34,7 +34,7 @@ export async function commentRows(
   const rows = await db
     .select({
       commentId: c.id,
-      videoId: c.videoId,
+      videoId: v.id,
       videoTitle: v.title,
       parentId: c.parentId,
       authorHandle: ch.handle,
@@ -48,7 +48,7 @@ export async function commentRows(
       disclosure: c.moderationDisclosure,
     })
     .from(c)
-    .innerJoin(v, eq(v.id, c.videoId))
+    .innerJoin(v, and(eq(c.targetType, 'video'), eq(v.id, c.targetId)))
     .leftJoin(ch, eq(ch.id, c.authorChannelId))
     .where(
       and(

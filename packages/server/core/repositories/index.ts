@@ -14,6 +14,7 @@ export * from './channel-repository';
 export * from './channel-image-repository';
 export * from './channel-handle-history-repository';
 export * from './channel-page-repository';
+export * from './channel-post-repository';
 export * from './channel-member-repository';
 export * from './channel-invite-repository';
 export * from './account-audit-repository';

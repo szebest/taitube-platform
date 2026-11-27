@@ -21,6 +21,8 @@ import {
   idsOf,
   publicVideo,
   seedOwners,
+  videoTarget,
+  OWNER_CHANNEL_ID,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -58,7 +60,8 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       const created = expectOk(
         await comments.create({
           id: C.old,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
           authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
@@ -68,7 +71,8 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
       expect(created).toMatchObject({
         id: C.old,
-        videoId: VIDEO_IDS.a,
+        target: videoTarget(VIDEO_IDS.a),
+        channelId: OWNER_CHANNEL_ID,
         parentId: null,
         content: 'first',
         isPinned: false,
@@ -97,7 +101,8 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         ids.map((id) =>
           comments.create({
             id,
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: OTHER_OWNER_ID,
             authorChannelId: OTHER_OWNER_CHANNEL_ID,
             parentId: null,
@@ -112,7 +117,8 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     function reply(id: string, parentId: string) {
       return comments.create({
         id,
-        videoId: VIDEO_IDS.a,
+        target: videoTarget(VIDEO_IDS.a),
+        channelId: OWNER_CHANNEL_ID,
         authorId: OTHER_OWNER_ID,
         authorChannelId: OTHER_OWNER_CHANNEL_ID,
         parentId,
@@ -125,7 +131,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
       const [created, removed] = await Promise.all([
         reply(C.reply1, C.liked),
-        comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }),
+        comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) }),
       ]);
 
       expect(expectOk(removed)).toBe(expectOk(created) === null ? 1 : 2);
@@ -135,7 +141,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('writes nothing for a reply to a removed root', async () => {
       await seedComment(ctx, C.liked);
-      expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
+      expectOk(await comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) }));
 
       expect(expectOk(await reply(C.reply1, C.liked))).toBeNull();
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
@@ -207,7 +213,9 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     it('removes a root with its replies and takes them all off the count', async () => {
       await seedThreads(ctx);
 
-      const removed = expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
+      const removed = expectOk(
+        await comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) })
+      );
 
       expect(removed).toBe(3);
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(2);
@@ -219,7 +227,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(
         idsOf(
           expectOk(
-            await comments.listThreads(VIDEO_IDS.a, {
+            await comments.listThreads(videoTarget(VIDEO_IDS.a), {
               viewer: null,
               sort: 'top',
               window: keyset(10),
@@ -232,11 +240,19 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     it('removes a reply and drops it from its root reply count', async () => {
       await seedThreads(ctx);
 
-      expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(1);
-      expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(0);
+      expect(
+        expectOk(await comments.remove({ id: C.reply1, target: videoTarget(VIDEO_IDS.a) }))
+      ).toBe(1);
+      expect(
+        expectOk(await comments.remove({ id: C.reply1, target: videoTarget(VIDEO_IDS.a) }))
+      ).toBe(0);
 
       const [liked] = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { viewer: null, sort: 'top', window: keyset(1) })
+        await comments.listThreads(videoTarget(VIDEO_IDS.a), {
+          viewer: null,
+          sort: 'top',
+          window: keyset(1),
+        })
       );
       expect(liked).toMatchObject({ id: C.liked, replyCount: 1 });
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(4);
@@ -244,7 +260,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('holds one pinned comment per video, unpinning the previous one', async () => {
       await seedThreads(ctx);
-      const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
+      const at = (id: string) => ({ id, target: videoTarget(VIDEO_IDS.a) });
 
       expectOk(await comments.setPinned(at(C.old), true));
       const pinned = expectOk(await comments.setPinned(at(C.fresh), true));
@@ -258,7 +274,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('keeps the current pin when the comment to pin was removed', async () => {
       await seedThreads(ctx);
-      const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
+      const at = (id: string) => ({ id, target: videoTarget(VIDEO_IDS.a) });
       expectOk(await comments.setPinned(at(C.old), true));
       expectOk(await comments.remove(at(C.fresh)));
 
@@ -268,7 +284,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('answers null when pinning a comment that is gone', async () => {
       expect(
-        expectOk(await comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true))
+        expectOk(await comments.setPinned({ id: C.old, target: videoTarget(VIDEO_IDS.a) }, true))
       ).toBeNull();
     });
 

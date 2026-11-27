@@ -15,6 +15,8 @@ import {
   type Comment,
   type CommentEditWrite,
   type CommentRemoval,
+  type CommentTarget,
+  commentVideoId,
   type CommentThread,
   type CreatorInboxComment,
   type ModerationRecord,
@@ -39,8 +41,10 @@ import {
   type PublicScopeContext,
   publicScopeOf,
 } from './comment-public-scope';
+import { moveCommentsCount, ownerOf, removeTargetComments, sameTarget } from './comment-targets';
 import { repliesOf, standing, type StoredComment } from './comment-visibility';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
+import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -49,6 +53,7 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
+  postsRepo: Pick<InMemoryChannelPostRepository, 'posts'>;
   outboxRepo: OutboxRepository;
   auditRepo: InMemoryChannelAuditRepository;
   reportsRepo: InMemoryCommentReportRepository;
@@ -76,14 +81,14 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   }
 
   async listThreads(
-    videoId: string,
+    target: CommentTarget,
     { viewer, sort, window }: ListCommentThreadsOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
-    const scope = await this.scope([videoId]);
+    const scope = this.scope();
     const roots = this.live()
       .filter(
         (comment) =>
-          comment.videoId === videoId &&
+          sameTarget(comment.target, target) &&
           comment.parentId === null &&
           isVisibleTo(viewer, comment, scope)
       )
@@ -98,7 +103,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     root: CommentLocator,
     { viewer, cursor, limit }: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
-    const scope = await this.scope([root.videoId]);
+    const scope = this.scope();
     const replies = this.repliesOf(root.id)
       .filter((reply) => isVisibleTo(viewer, reply, scope))
       .sort((a, b) => compareKeys(rowKey(a), rowKey(b)))
@@ -109,11 +114,11 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   }
 
   async listOwnNonPublic(
-    videoId: string,
+    target: CommentTarget,
     authorId: string
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
-    const scope = await this.scope([videoId]);
-    const mine = ownNonPublic(this.live(), videoId, authorId, scope);
+    const scope = this.scope();
+    const mine = ownNonPublic(this.live(), target, authorId, scope);
     return ok(await this.threadsOf(mine, ownOrPublicTo({ id: authorId }, scope)));
   }
 
@@ -121,16 +126,16 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     input: NewCommentInput,
     audit?: NewChannelAuditEntry
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
-    const video = unwrapOr(await this.deps.videosRepo.findById(input.videoId), null);
-    const scope = await this.scope([input.videoId]);
+    const owner = await ownerOf(this.deps, input.target);
+    const scope = this.scope([input.channelId]);
     if (input.parentId !== null && !this.liveById(input.parentId)) return ok(null);
     const stored = newStoredComment(input, new Date());
     this.comments.set(stored.id, stored);
     const counted = isVisibleTo(null, stored, scope);
-    if (counted && video) video.commentsCount = (video.commentsCount ?? 0) + 1;
+    if (counted && owner) await moveCommentsCount(this.deps, input.target, 1);
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
-    const told = await announceCreated(this.deps, { created, video, input, counted });
+    const told = await announceCreated(this.deps, { created, owner, input, counted });
     if (isErr(told)) return told;
     const recorded = await recordModeration(this.deps, audit && { audit });
     return isErr(recorded) ? recorded : ok(created);
@@ -144,7 +149,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     const comment = this.liveById(id);
     if (!comment) return ok(null);
 
-    const scope = await this.scope([comment.videoId]);
+    const scope = this.scope();
     const read = () => this.toThread(comment, ownOrPublicTo({ id: comment.authorId }, scope));
     return editStored(this.deps, comment, this.repliesOf(id), scope, content, edit, read);
   }
@@ -153,8 +158,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     target: CommentLocator,
     record?: ModerationRecord & { removal?: NewCommentRemoval }
   ): Promise<Result<number, DatabaseUnavailable>> {
-    const video = unwrapOr(await this.deps.videosRepo.findById(target.videoId), null);
-    const scope = await this.scope([target.videoId]);
+    const scope = this.scope();
     const comment = this.liveById(target.id);
     if (!comment) return ok(0);
 
@@ -163,7 +167,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     const counted = removed.filter((row) => isVisibleTo(null, row, scope)).length;
     const now = new Date();
     for (const row of removed) Object.assign(row, { deletedAt: now, isPinned: false });
-    if (video) video.commentsCount = (video.commentsCount ?? 0) - counted;
+    await moveCommentsCount(this.deps, comment.target, -counted);
     if (record?.removal)
       this.removals.set(record.removal.id, { ...record.removal, createdAt: now });
     const recorded = await recordModeration(this.deps, record);
@@ -178,9 +182,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     const comment = this.liveById(target.id);
     if (!comment) return ok(null);
 
-    const scope = await this.scope([target.videoId]);
+    const scope = this.scope();
     for (const row of this.live()) {
-      if (pinned && row.videoId === target.videoId) row.isPinned = false;
+      if (pinned && sameTarget(row.target, target.target)) row.isPinned = false;
     }
     Object.assign(comment, { isPinned: pinned, updatedAt: new Date() });
     const recorded = await recordModeration(this.deps, audit && { audit });
@@ -194,9 +198,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     hearted: boolean
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const comment = this.liveById(target.id);
-    if (!comment || comment.videoId !== target.videoId) return ok(null);
+    if (!comment || !sameTarget(comment.target, target.target)) return ok(null);
 
-    const scope = await this.scope([target.videoId]);
+    const scope = this.scope();
     const heart = await applyHeart(this.deps.outboxRepo, comment, hearted);
     return isErr(heart) ? heart : ok(await this.toThread(comment, ownOrPublicTo(null, scope)));
   }
@@ -222,8 +226,12 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   peek(id: string) {
     const comment = this.comments.get(id);
     if (!comment) return undefined;
-    const { videoId, authorId, content, deletedAt } = comment;
-    return { id, videoId, authorId, content, removed: deletedAt !== null };
+    const { target, authorId, content, deletedAt } = comment;
+    return { id, videoId: commentVideoId(target), authorId, content, removed: deletedAt !== null };
+  }
+
+  removeTarget(target: CommentTarget): void {
+    removeTargetComments(this.comments, target);
   }
 
   clear(): void {
@@ -243,9 +251,8 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return repliesOf(this.comments.values(), rootId);
   }
 
-  private scope(videoIds: readonly string[]): Promise<PublicScopeContext> {
-    return publicScopeOf(this.comments, videoIds, {
-      videos: this.deps.videosRepo,
+  private scope(channelIds: readonly string[] = []): PublicScopeContext {
+    return publicScopeOf(this.comments, channelIds, {
       restrictions: this.deps.restrictionsRepo,
     });
   }

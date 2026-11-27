@@ -14,6 +14,8 @@ import {
   seedCategories,
   seedOwners,
   VIDEO_IDS,
+  videoTarget,
+  OWNER_CHANNEL_ID,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -162,7 +164,8 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
         expectOk(
           await repositories.comments.create({
             id: COMMENT(n),
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: fan.userId,
             authorChannelId: fan.id,
             parentId: n === 2 ? COMMENT(1) : null,
@@ -175,7 +178,9 @@ export function describeExportRowRepositoryContract(makeSubject: MakeRepositorie
         moderationState: 'held',
         moderationDisclosure: 'silent',
       });
-      expectOk(await repositories.comments.remove({ id: COMMENT(3), videoId: VIDEO_IDS.a }));
+      expectOk(
+        await repositories.comments.remove({ id: COMMENT(3), target: videoTarget(VIDEO_IDS.a) })
+      );
 
       const read = await walk(rows.comments.bind(rows), scope);
 

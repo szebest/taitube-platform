@@ -9,6 +9,7 @@ import {
   idsOf,
   publicVideo,
   seededChannel,
+  videoTarget,
 } from './fixtures';
 
 const REPORT_ID = '00000000-0000-7000-8000-000000000d01';
@@ -30,7 +31,8 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
     expectOk(
       await ctx.comments.create({
         id: OWNER_REPLY_ID,
-        videoId: VIDEO_IDS.a,
+        target: videoTarget(VIDEO_IDS.a),
+        channelId: OWNER_CHANNEL_ID,
         authorId: OWNER_ID,
         authorChannelId: OWNER_CHANNEL_ID,
         parentId,
@@ -47,7 +49,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
     beforeEach(() => seedComment(ctx, C.old));
 
     const setHearted = async (hearted: boolean, videoId: string = VIDEO_IDS.a) =>
-      expectOk(await ctx.comments.setHearted({ id: C.old, videoId }, hearted));
+      expectOk(await ctx.comments.setHearted({ id: C.old, target: videoTarget(videoId) }, hearted));
 
     it('hearts a comment, keeps the first instant when hearted again, and takes it back', async () => {
       const first = await setHearted(true);
@@ -63,7 +65,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       await setHearted(true);
 
       const [thread] = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: null,
           sort: 'top',
           window: { type: 'keyset', cursor: null, limit: 5 },
@@ -76,7 +78,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
     it('answers null for a comment under another video or one that was removed', async () => {
       expect(await setHearted(true, VIDEO_IDS.b)).toBeNull();
 
-      expectOk(await ctx.comments.remove({ id: C.old, videoId: VIDEO_IDS.a }));
+      expectOk(await ctx.comments.remove({ id: C.old, target: videoTarget(VIDEO_IDS.a) }));
 
       expect(await setHearted(true)).toBeNull();
     });
@@ -124,7 +126,7 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
     it('leaves out the comments of a removed video and of a removed comment', async () => {
       await seedComment(ctx, C.old, { hoursAgo: 3 });
       await seedComment(ctx, C.fresh, { hoursAgo: 1, videoId: VIDEO_IDS.b });
-      expectOk(await ctx.comments.remove({ id: C.old, videoId: VIDEO_IDS.a }));
+      expectOk(await ctx.comments.remove({ id: C.old, target: videoTarget(VIDEO_IDS.a) }));
 
       expect(idsOf(await inbox())).toEqual([C.fresh]);
     });
@@ -283,7 +285,8 @@ export function describeCommentInboxContract(ctx: CommentContractContext): void 
       expectOk(
         await ctx.comments.create({
           id: C.old,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
           authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,

@@ -2,7 +2,16 @@ import { expectOk } from '@kit/testing/result';
 import type { CommentReportRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { C, seedComment, type CommentContractContext } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
+  publicVideo,
+  seedOwners,
+  videoTarget,
+  OWNER_CHANNEL_ID,
+} from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -101,7 +110,9 @@ export function describeCommentReportRepositoryContract(
         ids: [R.first, R.second],
         at: SHARED_MILLISECOND,
       });
-      expectOk(await subject.repositories.comments.remove({ id: C.old, videoId: VIDEO_IDS.a }));
+      expectOk(
+        await subject.repositories.comments.remove({ id: C.old, target: videoTarget(VIDEO_IDS.a) })
+      );
 
       const page = expectOk(await reports.list({ cursor: null, limit: 1 }));
       const last = page[0];

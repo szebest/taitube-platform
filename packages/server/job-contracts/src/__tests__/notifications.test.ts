@@ -10,6 +10,7 @@ import {
   NOTIFY_HEART,
   NOTIFY_MODERATION,
   NOTIFY_PARTY_INVITE,
+  NOTIFY_POST_SUBSCRIBERS,
   NOTIFY_TEAM_INVITE,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
@@ -21,6 +22,7 @@ import {
   NotifyProcessingJob,
   NotifySubscribersJob,
   partyInviteOutbox,
+  postSubscribersOutbox,
   subscribersOutbox,
   transitionNotificationJobs,
   visibilityNotificationJobs,
@@ -85,6 +87,12 @@ describe('job-contracts: notification jobs', () => {
       outbox: announceLiveOutbox({ liveStreamId: VIDEO_ID, after: AFTER }),
       name: ANNOUNCE_LIVE,
       jobId: `${VIDEO_ID}--announce-live--${AFTER}`,
+    },
+    {
+      scenario: 'a later batch of a post',
+      outbox: postSubscribersOutbox({ postId: VIDEO_ID, after: AFTER }),
+      name: NOTIFY_POST_SUBSCRIBERS,
+      jobId: `${VIDEO_ID}--notify-post-subscribers--${AFTER}`,
     },
     {
       scenario: 'a comment',
