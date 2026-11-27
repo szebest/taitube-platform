@@ -31,8 +31,6 @@ jobs:
     timeout-minutes: 3
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
-      unit-shards: ${{ steps.unit-shards.outputs.unit-shards }}
-      unit-shard-count: ${{ steps.unit-shards.outputs.unit-shard-count }}
       platform: ${{ github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true' }}
       extractable: ${{ steps.extractable.outputs.extractable }}
     steps:
@@ -79,11 +77,6 @@ jobs:
       - name: Fail when a committed route tree differs from the one its app's build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
-
-      - name: Plan the unit shards from the recorded spec costs, so the shard count follows the suite
-        id: unit-shards
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm -s unit-shards --github-output
 
       - name: List the platform packages and the second app, one extractable shard each
         id: extractable
@@ -218,7 +211,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.build.outputs.unit-shards || '[1]') }}
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -256,11 +249,8 @@ jobs:
         id: unit-tests
         run: |
           echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
-          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/${{ needs.build.outputs.unit-shard-count }} --retry=1 $(pnpm -s quarantine) \
-            --reporter=default --reporter=json --reporter=./scripts/timings/timings-reporter.ts \
-            --reporter=./scripts/vitest-retried-reporter.ts \
-            --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json" \
-            --outputFile.timings="$RUNNER_TEMP/unit-timings-${{ matrix.shard }}.json"
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/14 --retry=1 $(pnpm -s quarantine) \
+            --reporter=default --reporter=./scripts/vitest-retried-reporter.ts
 
       - name: Hold the unit tests to their budget
         uses: ./.github/actions/budget
@@ -268,16 +258,6 @@ jobs:
           step: unit-tests
           seconds: 240
           started-at: ${{ steps.unit-tests.outputs.started-at }}
-
-      - name: Keep the shard's JSON report and its spec costs, which pnpm timings:update reads
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: unit-reports-${{ matrix.shard }}
-          path: |
-            ${{ runner.temp }}/unit-${{ matrix.shard }}.json
-            ${{ runner.temp }}/unit-timings-${{ matrix.shard }}.json
-          retention-days: 14
 
   unit:
     name: unit

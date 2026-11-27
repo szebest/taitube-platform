@@ -56,7 +56,7 @@ export function WatchPage({ readOnServer, renderActions, renderCreatorStats }: W
         aside={
           <>
             <WatchTranscript videoId={video.id} />
-            <WatchQueue key={video.id} />
+            <WatchQueue key={video.id} video={video} />
           </>
         }
       />
