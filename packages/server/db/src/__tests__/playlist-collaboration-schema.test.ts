@@ -121,4 +121,17 @@ describe('db: 0048 playlist collaboration', () => {
 
     await expect(insert).resolves.toBeDefined();
   });
+
+  it.each([
+    { kind: 'playlist-cover', ok: true },
+    { kind: 'poster', ok: false },
+  ])('stores a $kind channel image upload: $ok', async ({ kind, ok }) => {
+    const insert = database.engine.query(
+      `insert into channel_image_uploads (id, channel_id, uploaded_by, kind, content_type, size_bytes)
+       values ($1, $2, $2, $3, 'image/png', 1)`,
+      [crypto.randomUUID(), ownerId, kind]
+    );
+
+    await (ok ? expect(insert).resolves.toBeDefined() : expect(insert).rejects.toThrow());
+  });
 });

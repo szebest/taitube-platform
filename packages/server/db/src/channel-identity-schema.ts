@@ -60,7 +60,10 @@ export const channelImageUploads = pgTable(
     unique('channel_image_uploads_version_key').on(table.channelId, table.kind, table.version),
     index('channel_image_uploads_channel_idx').on(table.channelId, table.kind),
     index('channel_image_uploads_status_idx').on(table.status, table.updatedAt),
-    check('channel_image_uploads_kind_check', sql`${table.kind} IN ('avatar', 'banner')`),
+    check(
+      'channel_image_uploads_kind_check',
+      sql`${table.kind} IN ('avatar', 'banner', 'playlist-cover')`
+    ),
     check('channel_image_uploads_status_check', sql`${table.status} IN (${STATUS_LIST})`),
   ]
 );

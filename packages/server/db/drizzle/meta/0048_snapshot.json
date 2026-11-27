@@ -9322,7 +9322,7 @@
       "checkConstraints": {
         "channel_image_uploads_kind_check": {
           "name": "channel_image_uploads_kind_check",
-          "value": "\"channel_image_uploads\".\"kind\" IN ('avatar', 'banner')"
+          "value": "\"channel_image_uploads\".\"kind\" IN ('avatar', 'banner', 'playlist-cover')"
         },
         "channel_image_uploads_status_check": {
           "name": "channel_image_uploads_status_check",

@@ -61,6 +61,7 @@ CREATE TABLE "playlist_stats_daily" (
 	CONSTRAINT "playlist_stats_daily_playlist_id_day_pk" PRIMARY KEY("playlist_id","day")
 );
 --> statement-breakpoint
+ALTER TABLE "channel_image_uploads" DROP CONSTRAINT "channel_image_uploads_kind_check";--> statement-breakpoint
 ALTER TABLE "share_links" DROP CONSTRAINT "share_links_target_type_check";--> statement-breakpoint
 ALTER TABLE "playlist_items" ALTER COLUMN "video_id" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "playlist_items" ADD COLUMN "kind" text DEFAULT 'video' NOT NULL;--> statement-breakpoint
@@ -105,4 +106,5 @@ ALTER TABLE "playlist_items" ADD CONSTRAINT "playlist_items_title_check" CHECK (
 ALTER TABLE "playlist_items" ADD CONSTRAINT "playlist_items_note_check" CHECK ("playlist_items"."note" IS NULL OR char_length("playlist_items"."note") <= 300);--> statement-breakpoint
 ALTER TABLE "playlist_items" ADD CONSTRAINT "playlist_items_segment_check" CHECK (("playlist_items"."start_ms" IS NULL OR "playlist_items"."start_ms" >= 0) AND ("playlist_items"."end_ms" IS NULL OR "playlist_items"."end_ms" >= 1000) AND ("playlist_items"."start_ms" IS NULL OR "playlist_items"."end_ms" IS NULL OR "playlist_items"."end_ms" - "playlist_items"."start_ms" >= 1000));--> statement-breakpoint
 ALTER TABLE "playlists" ADD CONSTRAINT "playlists_cover_mode_check" CHECK ("playlists"."cover_mode" IN ('auto', 'item', 'custom'));--> statement-breakpoint
-ALTER TABLE "share_links" ADD CONSTRAINT "share_links_target_type_check" CHECK ("share_links"."target_type" IN ('video', 'playlist'));
+ALTER TABLE "share_links" ADD CONSTRAINT "share_links_target_type_check" CHECK ("share_links"."target_type" IN ('video', 'playlist'));--> statement-breakpoint
+ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'playlist-cover'));
