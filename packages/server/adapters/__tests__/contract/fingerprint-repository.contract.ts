@@ -46,7 +46,7 @@ export function describeFingerprintRepositoryContract(makeSubject: MakeRepositor
           await fingerprints().findFramesSharingBand([FRAME], VIDEO_IDS.b, LIMITS)
         );
 
-        expect(hits.map((hit) => hit.idx).sort()).toEqual([0, 2]);
+        expect(hits.map((hit) => hit.idx).sort((a, b) => a - b)).toEqual([0, 2]);
         expect(hits.every((hit) => hit.videoId === VIDEO_IDS.a)).toBe(true);
       });
 
@@ -79,7 +79,11 @@ export function describeFingerprintRepositoryContract(makeSubject: MakeRepositor
           await fingerprints().findFramesSharingBand([FRAME], VIDEO_IDS.c, LIMITS)
         );
 
-        expect(hits.map((hit) => [hit.videoId, hit.idx]).sort()).toEqual([
+        expect(
+          hits
+            .toSorted((a, b) => a.videoId.localeCompare(b.videoId) || a.idx - b.idx)
+            .map((hit) => [hit.videoId, hit.idx])
+        ).toEqual([
           [VIDEO_IDS.a, 3],
           [VIDEO_IDS.b, 7],
         ]);

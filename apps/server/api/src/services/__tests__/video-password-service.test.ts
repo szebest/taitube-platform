@@ -17,9 +17,11 @@ const PRIVATE = '00000000-0000-7000-8000-0000000002a5';
 const NOW = Date.parse('2026-11-20T12:00:00.000Z');
 const PASSWORD = 'open sesame';
 
+const salted = (password: string) => `salted:${Array.from(password).reverse().join('')}`;
+
 const hasher: PasswordHasherPort = {
-  hash: async (password) => ok(`salted:${[...password].reverse().join('')}`),
-  verify: async (password, encoded) => ok(encoded === `salted:${[...password].reverse().join('')}`),
+  hash: async (password) => ok(salted(password)),
+  verify: async (password, encoded) => ok(encoded === salted(password)),
 };
 
 const unlock: UnlockCredentials = {

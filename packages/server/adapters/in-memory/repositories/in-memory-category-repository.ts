@@ -127,6 +127,6 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
   }
 
   async countVideos(categoryId: string): Promise<Result<number, DatabaseUnavailable>> {
-    return ok(this.videosRepo ? await this.videosRepo.countByCategoryId(categoryId) : 0);
+    return ok(this.videosRepo?.countByCategoryId(categoryId) ?? 0);
   }
 }

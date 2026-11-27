@@ -62,7 +62,7 @@ describe('admin report routes', () => {
 
       const res = await queue('admin');
 
-      expect(res.json().items.map((item: { id: string }) => item.id)).toEqual([
+      expect(res.json().items.map((item: { id: string }): string => item.id)).toEqual([
         open.id,
         first.id,
         resolvedOne.id,
@@ -109,9 +109,11 @@ describe('admin report routes', () => {
         'removed',
         'removed',
       ]);
-      expect(items.map((item: { id: string }) => item.id).sort()).toEqual(
-        [mine.id, theirs.id].sort()
-      );
+      expect(
+        items
+          .map((item: { id: string }) => item.id)
+          .sort((a: string, b: string) => a.localeCompare(b))
+      ).toEqual([mine.id, theirs.id].sort((a, b) => a.localeCompare(b)));
       expect(items[0].comment.removed).toBe(true);
     });
 

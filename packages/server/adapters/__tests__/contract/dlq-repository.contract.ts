@@ -138,7 +138,9 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
         dlq.transition({ ...REPLAY, id: DLQ_IDS.first }),
       ]);
 
-      expect(moves.map((move) => expectOk(move) !== null).sort()).toEqual([false, true]);
+      expect(
+        moves.map((move) => expectOk(move) !== null).sort((a, b) => Number(a) - Number(b))
+      ).toEqual([false, true]);
     });
 
     it('writes the outbox row in the same call when one is supplied', async () => {

@@ -5,7 +5,7 @@ function box(type: string, payload: number[]): Uint8Array {
   const bytes = new Uint8Array(8 + payload.length);
   new DataView(bytes.buffer).setUint32(0, bytes.length);
   bytes.set(
-    [...type].map((char) => char.charCodeAt(0)),
+    Array.from(type, (char) => char.charCodeAt(0)),
     4
   );
   bytes.set(payload, 8);
@@ -17,7 +17,7 @@ function largeBox(type: string, payload: number[]): Uint8Array {
   const view = new DataView(bytes.buffer);
   view.setUint32(0, 1);
   bytes.set(
-    [...type].map((char) => char.charCodeAt(0)),
+    Array.from(type, (char) => char.charCodeAt(0)),
     4
   );
   view.setBigUint64(8, BigInt(bytes.length));

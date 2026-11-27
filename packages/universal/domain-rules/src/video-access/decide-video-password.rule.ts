@@ -10,7 +10,7 @@ export function decideVideoPassword(
   if (video.visibility !== 'unlisted') {
     return err(invalidVideoPassword('visibility', 'Only an unlisted video takes a password'));
   }
-  const length = [...password].length;
+  const length = Array.from(password).length;
   if (length < VIDEO_PASSWORD_MIN_LENGTH || length > VIDEO_PASSWORD_MAX_LENGTH) {
     return err(
       invalidVideoPassword(

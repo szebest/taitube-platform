@@ -8,7 +8,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 
 - [119: Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md)
 - [120: Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md)
-- [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -169,7 +168,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 135 | [Studio analytics and library - the backend gaps and the UI that waits on them](135-studio-analytics-and-library-backend-gaps.md) | 5 - Developer experience & growth | M | 60 | — | done |
 | 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (one PR, 12 work items as commits) | 68, 73, 102, 131, 110 | — | done |
 | 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (one PR, one slice) | — | — | done |
-| 138 | [Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md) | 5 - Developer experience & growth | M (one PR per rule group, about four) | 110 | — | ready |
+| 138 | [Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md) | 5 - Developer experience & growth | M (one PR per rule group, about four) | 110 | — | in-progress |
 | 139 | [Captions measurements - whisper speed, time to ready, transcode isolation, cue alignment, offline smoke](139-captions-measurements.md) | 5 - Developer experience & growth | S | 111 | 146 | in-progress |
 | 140 | [Watch parties - rooms on a shared clock, room roles, guests, the roster, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md) | 5 - Developer experience & growth | XL | 17, 30, 41, 47, 57, 59, 63, 66, 69, 73, 76, 81, 95, 97, 98, 99, 105, 106, 108 | 78, 141, 142, 143 | in-progress |
 | 141 | [Watch party voice chat - a self-hosted SFU, push-to-talk or open mic, speaking rings, per-user volume and ducking](141-watch-party-voice-chat.md) | 5 - Developer experience & growth | L | 83, 140 | 143 | blocked |

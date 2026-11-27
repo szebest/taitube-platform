@@ -71,12 +71,12 @@ describe('apps/server/worker: DLQ failure handler', () => {
   let world: FlowWorld;
   let lines: LogLine[];
 
-  const handlerOver = (overrides: Partial<Repositories> = {}, stage = QUEUE_NAME) =>
+  const handlerOver = (repos: Partial<Repositories> = {}, stage = QUEUE_NAME) =>
     createFailureHandler({
       workerId: STAGE_SETTINGS.workerId,
       stage,
       queueName: stage,
-      repositories: { ...world.repositories, ...overrides },
+      repositories: Object.assign({}, world.repositories, repos),
       getQueue: world.getQueue,
       logger: recordingLogger(lines),
       metrics: STAGE_SETTINGS.metrics,

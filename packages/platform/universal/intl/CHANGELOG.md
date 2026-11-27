@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Breaking: the `User` type is removed; `USER` stays. `resolveCurrency`'s `requested`, `DisplayNameValue.value` and the money formatter's `currency` are typed `string`: the `User` member of the union was already absorbed by `string`, so no accepted value changes, and nothing else used the type.
+
 ## 0.3.0
 
 - Breaking: `SUPPORTED_LOCALES` and `FALLBACK_LOCALE` are removed; the app registers its locales with the new

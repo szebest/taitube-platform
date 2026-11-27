@@ -222,6 +222,6 @@ describe('architecture: every cluster environment renders what its file says', (
     expect(
       keys,
       `${ENVIRONMENT_FILE(name)} secrets.keys and infra/k8s/overlays/cloud/external-secret.yaml must agree`
-    ).toEqual([...env.secrets.keys].sort());
+    ).toEqual([...env.secrets.keys].sort((a, b) => a.localeCompare(b)));
   });
 });

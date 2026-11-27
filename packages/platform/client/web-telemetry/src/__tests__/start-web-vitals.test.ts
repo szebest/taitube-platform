@@ -67,7 +67,13 @@ describe('startWebVitals', () => {
   it('listens for all five vitals', () => {
     startOnPage();
 
-    expect([...reporters.keys()].sort()).toEqual(['CLS', 'FCP', 'INP', 'LCP', 'TTFB']);
+    expect([...reporters.keys()].sort((a, b) => a.localeCompare(b))).toEqual([
+      'CLS',
+      'FCP',
+      'INP',
+      'LCP',
+      'TTFB',
+    ]);
   });
 
   it('beacons one batch when the page is hidden, the page-load vitals on the landing route and INP on the route it happened on', () => {
