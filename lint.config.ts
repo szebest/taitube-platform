@@ -178,6 +178,22 @@ const LINT_IGNORES = [
   `${packageDir('@kit/ui')}/src/styles/generated/**`,
 ];
 
+/** APIs the browser floor in the root `package.json` lacks, which no TypeScript lib or compat table gates. */
+export const NEWER_THAN_FLOOR: NonNullable<OxlintConfig['rules']> = {
+  'house/guard-newer-apis': [
+    'error',
+    {
+      apis: [
+        'document.startViewTransition',
+        'window.requestIdleCallback',
+        'window.cancelIdleCallback',
+        'scheduler.yield',
+        'scheduler.postTask',
+      ],
+    },
+  ],
+};
+
 const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   {
     files: ['apps/client/*/src/**'],
@@ -198,6 +214,15 @@ const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
         },
       ],
     },
+  },
+  {
+    files: [
+      'packages/{universal,client}/**',
+      'packages/platform/{universal,client}/**',
+      'apps/client/**',
+    ],
+    excludeFiles: ['apps/client/*/e2e/**'],
+    rules: NEWER_THAN_FLOOR,
   },
   {
     files: [

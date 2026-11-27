@@ -34,7 +34,7 @@ export function unknownExampleKeys(
   entries: readonly ExampleEntry[],
   declared: ReadonlySet<string>
 ): string[] {
-  const unknown = new Set(entries.map((entry) => entry.key).filter((key) => !declared.has(key)));
+  const unknown = new Set(entries.map((entry) => entry.key)).difference(declared);
   return [...unknown].map(
     (key) =>
       `${key} is in .env.example but is not in AppEnvSchema (app-env.ts) or EXTRA_ENV_DOCS (${EXTRA_REGISTRY}): declare and document it, or remove the line`

@@ -24,8 +24,8 @@ function drift(reference: Catalogue, translation: Catalogue) {
   const expected = keysOf(reference);
   const actual = keysOf(translation);
   return {
-    missing: [...expected].filter((key) => !actual.has(key)),
-    extra: [...actual].filter((key) => !expected.has(key)),
+    missing: [...expected.difference(actual)],
+    extra: [...actual.difference(expected)],
   };
 }
 

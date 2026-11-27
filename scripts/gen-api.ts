@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import ts from 'typescript';
+import { SERVER } from '../tests/architecture/ecmascript-baseline';
 import { surfaceOf } from './api-surface';
 import { isPlatform, load, type Pkg } from './workspace-packages';
 
@@ -63,8 +64,8 @@ function createProgram(root: string, files: string[]): ts.Program {
   return ts.createProgram(
     files,
     {
-      target: ts.ScriptTarget.ES2022,
-      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+      target: SERVER.target,
+      lib: [...SERVER.lib, 'lib.dom.d.ts'],
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       jsx: ts.JsxEmit.ReactJSX,

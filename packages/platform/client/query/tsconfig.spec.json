@@ -1,7 +1,6 @@
 {
   "extends": "@kit/tsconfig/spec.json",
   "compilerOptions": {
-    "lib": ["ES2023", "DOM"],
     "types": ["node", "vite/client", "vitest/globals"]
   },
   "include": ["src/**/*"]

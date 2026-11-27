@@ -1,19 +1,5 @@
 import { Singleflight } from '../singleflight';
 
-function deferred<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (e: Error) => void;
-} {
-  let resolve!: (value: T) => void;
-  let reject!: (e: Error) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
-
 describe('Singleflight', () => {
   let singleflight: Singleflight;
 
@@ -22,7 +8,7 @@ describe('Singleflight', () => {
   });
 
   it('runs the work once for concurrent callers on the same key', async () => {
-    const gate = deferred<string>();
+    const gate = Promise.withResolvers<string>();
     let calls = 0;
     const run = () =>
       singleflight.do('key', () => {
@@ -63,7 +49,7 @@ describe('Singleflight', () => {
   });
 
   it('releases the key after a rejection and propagates it to every caller', async () => {
-    const gate = deferred<string>();
+    const gate = Promise.withResolvers<string>();
     const run = () => singleflight.do('key', () => gate.promise);
 
     const [a, b] = [run(), run()];
@@ -79,7 +65,7 @@ describe('Singleflight', () => {
   });
 
   it('forgets the in-flight work on clear', async () => {
-    const gate = deferred<string>();
+    const gate = Promise.withResolvers<string>();
     const first = singleflight.do('key', () => gate.promise);
     singleflight.clear();
     expect(singleflight.inFlightCount).toBe(0);

@@ -28,6 +28,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   environment variable (read with `loadEnv`) is not `true`, none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
   of its own, no `process.env` read, no module in two chunks, an entry chunk within its `entryBudgetKb` (gzip), and
   no `vendor-player` or `vendor-charts` chunk among the entry's static imports;
+- `build.target` from the `browserslist` of the root above the app (`browserslist-to-esbuild`), given to the app's `plugins` so its service worker builds to the same floor; see [docs/standards/runtime-baseline.md](../../../../docs/standards/runtime-baseline.md);
 - no common-chunk merging into the entry (`mergeCommonChunks: false`), so an entry stays what its own imports make it;
 - the `vendor-*` chunks (`react`, `tanstack`, `dnd`, `forms`, `player`, `charts`), so vendor code keeps its hash across a deploy.
 

@@ -111,10 +111,16 @@ function fillSandbox(repoRoot: string, root: string, packages: readonly Pkg[]): 
     join(root, 'pnpm-workspace.yaml'),
     dump({ packages: packages.map((pkg) => pkg.dir), ...settings })
   );
-  const { packageManager } = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  const { packageManager, browserslist } = JSON.parse(
+    readFileSync(join(repoRoot, 'package.json'), 'utf8')
+  );
   writeFileSync(
     join(root, 'package.json'),
-    JSON.stringify({ name: 'extractable-sandbox', private: true, packageManager }, null, 2)
+    JSON.stringify(
+      { name: 'extractable-sandbox', private: true, packageManager, browserslist },
+      null,
+      2
+    )
   );
   writeFileSync(
     join(root, 'pnpm-lock.yaml'),

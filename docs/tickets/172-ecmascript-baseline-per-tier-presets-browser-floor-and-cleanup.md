@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [packages/universal/tsconfig/AGENTS.md](../../packages/platform/universal/tsconfig/AGENTS.md) · [packages/AGENTS.md](../../packages/AGENTS.md) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [testing.md, dual runtime](../standards/testing.md) · [170](170-platform-packages-open-closed-extractable.md) · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) |
 
-**Status:** ready
+**Status:** done
 
 > **Owner decision (final).** The `server` tier targets **ES2025** (`target` and `lib`). `client`, `universal`, the specs
 > and the apps (web, studio, the web service worker) target **ES2024**. `universal` is the lowest common denominator
@@ -149,39 +149,43 @@ fallback becomes deletable and the ticket that raises the floor owns that.
 Greps run on `origin/main` (e3bb23f4 plus the 11 later commits) over `apps`, `packages`, `scripts`, `tools`, `tests`;
 each hit below was read. **Commit 0 reruns them** (PR #326 adds code). Left as `[ ]` until done.
 
-- [ ] **F1. Stale per-package `lib` overrides, 25 files plus `tsconfig.repo.json`:** `packages/universal/{intl,messages}/tsconfig.json`
+- [x] **F1. Stale per-package `lib` overrides, 25 files plus `tsconfig.repo.json`:** `packages/universal/{intl,messages}/tsconfig.json`
   and `tsconfig.spec.json` (4); `packages/client/{ui,forms,queries,web-telemetry,components,workbench,permissions-react,web-testing,intl-react}/tsconfig.json`
   and `tsconfig.spec.json` (18); `apps/client/web/tsconfig.json`, `apps/client/studio/tsconfig.json` (2);
   `apps/client/web/tsconfig.sw.json` (1, keeps `WebWorker`, ES entry from the table). Delete the `lib` line; the preset owns it.
-- [ ] **F2. Architecture program hard-codes ES2022:** `tests/architecture/program.ts:16,21,66,112`, `tests/architecture/runtime-code.ts:29`,
+- [x] **F2. Architecture program hard-codes ES2022:** `tests/architecture/program.ts:16,21,66,112`, `tests/architecture/runtime-code.ts:29`,
   `tests/architecture/metric-emissions.ts:32`. Take the level from the table module; the shared program spans server code, so it uses ES2025 and no DOM.
-- [ ] **F3. Comment and cast naming an ES level:** `packages/universal/intl/src/intl-cache.ts:86` (see *Intl.DurationFormat*). The only comment in the repo naming an ES version.
-- [ ] **F4. Hand-rolled `escapeRegExp`, 5 copies.** Server tier, use `RegExp.escape` once ES2025 is gated:
+- [x] **F3. Comment and cast naming an ES level:** `packages/universal/intl/src/intl-cache.ts:86` (see *Intl.DurationFormat*). The only comment in the repo naming an ES version.
+- [x] **F4. Hand-rolled `escapeRegExp`, 5 copies.** Server tier, use `RegExp.escape` once ES2025 is gated:
   `packages/server/vite-preset/src/client-app-config.ts:32` (note: #326 edits this file), `scripts/ci-health/margins.ts:33`
   (check `workspace-source-aliases.test.ts` does not compare the regex source: `RegExp.escape` escapes a leading
   alphanumeric as `\x..`). **Stay** (`RegExp.escape` is Chrome 136, Firefox 134, Safari 18.2, above the floor; VERIFY):
   `apps/client/web/src/features/search/utils/matched-terms.ts:16`, `packages/client/web-telemetry/src/start-web-tracing.ts:18`.
-- [ ] **F5. Copy-then-sort in production code, use `toSorted`** (ES2023, below the floor, already used in `apps/client/web`):
+  Done at the slice head: the two copies above, plus `scripts/codemod/references-rewrite.ts`, `scripts/server-bundle.ts`, `tests/architecture/entrypoints.ts` and `in-memory-cache-client.ts` (both split on `*` first, because `RegExp.escape` also escapes it). `packages/server/adapters/postgres/scopes/contains.ts` escapes a SQL `LIKE` pattern, not a regex: left.
+- [x] **F5. Copy-then-sort in production code, use `toSorted`** (ES2023, below the floor, already used in `apps/client/web`):
   `apps/client/studio/src/features/admin/components/category-table/category-table.tsx:184`, `packages/universal/domain/src/notification.ts:88`,
   `packages/universal/domain-rules/src/screening/decide-screening.rule.ts:75`, `apps/server/api/src/services/watch-party/watch-party-invite-candidates.ts:114`,
   `packages/server/vite-preset/src/bundle-guard.ts:23`, `apps/client/web/src/features/search/utils/matched-terms.ts:13`.
   Plus the spec helper `sortedKeys` (`apps/server/api/src/services/watch-party/__tests__/watch-party-role-party.ts:57`) and `sorted` (`packages/universal/domain/src/__tests__/watch-party-roles.test.ts:43`): inline them.
   `comment-own-overlay.ts:28` sorts a fresh array: leave.
-- [ ] **F6. Deferred-promise boilerplate, use `Promise.withResolvers`** (ES2024, already used in `abort-mid-request.ts`):
+  Done for every copy of an array that is then sorted, in production code (18 files, rerun at the slice head) and in the two spec helpers, plus `package-moves.test.ts`'s `sorted`. Left, each a fresh array that `toSorted` would copy again: `bundle-guard.ts:23` and `matched-terms.ts:13` (spread of a `Set`), `notification.ts:88` (spread of a `Map`).
+- [x] **F6. Deferred-promise boilerplate, use `Promise.withResolvers`** (ES2024, already used in `abort-mid-request.ts`):
   `packages/server/concurrency/src/__tests__/singleflight.test.ts:3` (a hand-written `deferred<T>()`: delete it),
   `apps/server/api/src/__tests__/serve.test.ts:30-38`, `packages/server/composition/src/__tests__/container.test.ts:140` and `:209`,
   `apps/server/worker/src/stages/__tests__/transcode.test.ts:183`, `apps/client/web/src/features/clips/components/clip-delete/__tests__/clip-delete.dom.test.tsx:39`,
   `apps/client/web/src/lib/query-keys/__tests__/recommendation-feedback-mutations.test.ts:54`, `packages/client/web-testing/src/__tests__/api-server.test.ts:65`.
   `segment-uploader.ts:201` pushes resolvers into an array: not this pattern, leave.
-- [ ] **F7. Set difference by hand in specs, use `Set.prototype.difference`** (ES2025, server tier, Node specs; `metrics.test.ts` also runs under Bun):
+  Also converted from the rerun: `bounded-map.test.ts`, `sse-events.test.ts`, `account-glance.test.ts`, `render-identities.tsx`, the `search-tabs` and `accounts` e2e specs and `offline-state.dom.test.tsx`.
+- [x] **F7. Set difference by hand in specs, use `Set.prototype.difference`** (ES2025, server tier, Node specs; `metrics.test.ts` also runs under Bun):
   `packages/server/observability/src/__tests__/metrics.test.ts:66-67`, `tests/architecture/catalogue-parity.test.ts:22-23`,
   `tests/architecture/env-keys-consumed.test.ts:144`, `tests/architecture/frontend-layers.test.ts:133`.
   **Stay:** `packages/universal/domain-rules/src/playlists/reorder-playlist.rule.ts:19` (`every(... named.has)`): `isSubsetOf` is Chrome 122, Firefox 127, Safari 17, above the floor on Firefox (VERIFY).
-- [ ] **F8. Last-element index, use `.at(-1)`** (ES2022, no baseline change; listed because the sweep was asked for):
+  Done where both sides are sets: `pipeline-metrics.test.ts`, `catalogue-parity.test.ts`, `env-keys-consumed.test.ts`, `env-key-closure.test.ts` (2), `error-code-drift.test.ts`, `compose-environment.test.ts`, `env-docs-rules.ts`. `frontend-layers.test.ts:133` maps each feature to a path before the lookup, so it is not a set difference: left.
+- [x] **F8. Last-element index, use `.at(-1)`** (ES2022, no baseline change; listed because the sweep was asked for):
   `apps/client/studio/src/features/admin/utils/pick-days.ts:11`, `packages/universal/pagination/src/pagination.ts:90`,
   `packages/server/adapters/in-memory/in-memory-storage-client.ts:142`.
-- [ ] **F9. Unguarded API above the floor:** none found. The one use of a newer-than-floor DOM API, `startViewTransition` in
-  `packages/client/ui/src/appearance/provider.tsx:63`, is guarded.
+- [x] **F9. Unguarded API above the floor:** none found. The one use of a newer-than-floor DOM API, `startViewTransition` in
+  `packages/platform/client/ui/src/appearance/provider.tsx:69`, is guarded.
 - **None found** (grepped, read, nothing to remove): `structuredClone` and `JSON.parse(JSON.stringify(` shims; `lodash`, `ramda`,
   `core-js`, `es-toolkit` imports in our source (`es-toolkit` is only a transitive `recharts` dependency, named in the
   `charts` vendor chunk of `client-app-config.ts`); `Array.prototype` / `Object.prototype` polyfills; `groupBy`, `findLast`,
@@ -230,7 +234,20 @@ each hit below was read. **Commit 0 reruns them** (PR #326 adds code). Left as `
 
 ## Delivery
 
-**One PR**, branch `ticket/172-ecmascript-baseline`, ordered commits, no stack; each commit leaves typecheck, lint and tests green:
+**One stack**, trunk `feat/172-ecmascript-baseline`, three slices; each slice leaves typecheck, lint and tests green, and the
+numbered steps below are its ordered commits:
+
+| Slice | Branch | Holds (steps) | ACs | Est. lines |
+|---|---|---|---|---|
+| a | `slice/172a-presets` | 0, 1, 2, and F2, F3 from 5 | 1, 2, 5, 6 | ~500 |
+| b | `slice/172b-floor-guard` | 3, 4, 6 | 3, 4, 8 | ~400 |
+| c | `slice/172c-cleanup` | F4 to F8 from 5, one commit each | 7, 9 | ~150 over ~25 files |
+
+The cleanup is its own top slice because it touches files spread over apps and packages that other tickets in flight
+also edit; it lands last.
+
+170 landed first: the presets live at `packages/platform/universal/tsconfig` (`@kit/tsconfig`), and the tier table lives
+in `tests/architecture`, never in the preset package.
 
 0. **Recorded checks, no behaviour change:** rerun the *Cleanup findings* greps, run the feature probe on Node 24.15 and Bun 1.4.2, rerun the
    Baseline command, the Vite and `vite-plugin-pwa` target check, and the compat-plugin spike; write the results into the PR body.

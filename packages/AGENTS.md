@@ -64,6 +64,10 @@ Apps sit outside `packages/` because they are deployables, not libraries, but th
 too: `apps/server/` (`api`, `worker`) or `apps/client/` (`web`, `studio`), held to the same table. No app is
 `universal`, and an app anywhere else has no tier and fails `pnpm boundaries`.
 
+A tier also fixes the ECMAScript level its code is written and typed against: `server` ES2025, `universal` and `client`
+ES2024, set by the tier's `@kit/tsconfig` preset and never by a package. The standard is
+[docs/standards/runtime-baseline.md](../docs/standards/runtime-baseline.md).
+
 ### What makes a package `universal`
 
 **A client consumer, not portability.** Plenty of code *could* run in a browser without any browser needing

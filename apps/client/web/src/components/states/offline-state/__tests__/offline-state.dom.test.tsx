@@ -55,13 +55,9 @@ describe('apps/client/web: OfflineState', () => {
   });
 
   it('shows a spinner on the retry while it checks, then says it is still offline', async () => {
-    let finishCheck: () => void = () => undefined;
+    const { promise: check, resolve: finishCheck } = Promise.withResolvers<void>();
     const { user, onRetry } = renderOffline();
-    onRetry.mockReturnValue(
-      new Promise<void>((resolve) => {
-        finishCheck = resolve;
-      })
-    );
+    onRetry.mockReturnValue(check);
     const retry = screen.getByRole('button', { name: 'Try again' });
 
     await user.click(retry);

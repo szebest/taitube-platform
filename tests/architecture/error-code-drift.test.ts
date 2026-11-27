@@ -45,6 +45,6 @@ describe('architecture: no error code drifts between the vocabulary, the maps an
   it('documents no code the vocabulary has dropped', () => {
     const known = new Set(declaredErrorCodes());
 
-    expect([...sddCodes()].filter((code) => !known.has(code))).toEqual([]);
+    expect([...sddCodes().difference(known)]).toEqual([]);
   });
 });
