@@ -41,6 +41,14 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
     backdatePost: async (id, createdAt) => {
       await db.update(schema.channelPosts).set({ createdAt }).where(eq(schema.channelPosts.id, id));
     },
+    placePost: async (id, patch) => {
+      await db.update(schema.channelPosts).set(patch).where(eq(schema.channelPosts.id, id));
+    },
+    seedDraftPost: async (input) => {
+      await db
+        .insert(schema.channelPosts)
+        .values({ ...input, kind: input.payload.kind, status: 'draft' });
+    },
     backdatePlaylist: async (id, updatedAt) => {
       await db.update(schema.playlists).set({ updatedAt }).where(eq(schema.playlists.id, id));
     },

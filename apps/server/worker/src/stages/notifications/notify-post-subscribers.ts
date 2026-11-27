@@ -3,6 +3,7 @@ import { isErr, ok, type Result } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { levelAllows, NOTIFICATION_FANOUT_BATCH, type NotificationActor } from '@vp/domain';
+import { decidePostRead } from '@vp/domain-rules';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { type NotifyPostSubscribersJob, postSubscribersOutbox } from '@vp/job-contracts';
 import { usersSwitchedOn } from './notification-switches';
@@ -38,9 +39,10 @@ export function createNotifyPostSubscribersProcessor(deps: NotifyPostSubscribers
 
     const post = await repositories.channelPosts.findById(postId);
     if (isErr(post)) return post;
-    if (post.value?.status !== 'published') return skipped;
+    const published = decidePostRead({ post: post.value, postId });
+    if (isErr(published)) return skipped;
 
-    const channel = await repositories.channels.findById(post.value.channelId);
+    const channel = await repositories.channels.findById(published.value.channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return skipped;
 
@@ -65,7 +67,7 @@ export function createNotifyPostSubscribersProcessor(deps: NotifyPostSubscribers
       displayName: channel.value.displayName,
       avatarUrl: channel.value.avatarUrl,
     };
-    const excerpt = postExcerpt(post.value.payload);
+    const excerpt = postExcerpt(published.value.payload);
     let recorded = 0;
     for (const { subscriberId } of levelled) {
       if (!switchedOn.value.has(subscriberId)) continue;

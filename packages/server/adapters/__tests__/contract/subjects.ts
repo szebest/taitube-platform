@@ -1,6 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/repositories';
-import type { CommentModerationFields } from '@vp/domain';
+import type { CommentModerationFields, NewChannelPostInput } from '@vp/domain';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { InMemoryRepositories } from '../../in-memory/repositories/in-memory-repositories';
 export interface RepositoriesSubject {
@@ -11,6 +11,10 @@ export interface RepositoriesSubject {
   adjustComment(id: string, patch: CommentAdjustment): Promise<void>;
   /** `publish` stamps its own `createdAt`; export specs place posts on the days they are read by. */
   backdatePost(id: string, createdAt: Date): Promise<void>;
+  /** `publish` stamps now and no write path pins; ordering specs place a post in the keyset directly. */
+  placePost(id: string, patch: PostPlacement): Promise<void>;
+  /** The port publishes only; a draft is the one state a spec cannot reach through it. */
+  seedDraftPost(input: NewChannelPostInput): Promise<void>;
   /** Ordering specs place a playlist's last change in the past rather than waiting on a clock. */
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
   /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
@@ -24,6 +28,8 @@ export interface RepositoriesSubject {
   reset(): Promise<void>;
   close(): Promise<void>;
 }
+
+export type PostPlacement = Partial<{ pinnedAt: Date; publishedAt: Date }>;
 
 interface MicrosecondSpread {
   stamp: AnyPgColumn;
@@ -55,6 +61,25 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
       const stored = repositories.channelPosts.posts.get(id);
       if (!stored) throw new Error(`post ${id} is not there to backdate`);
       stored.createdAt = createdAt;
+    },
+    placePost: async (id, patch) => {
+      const stored = repositories.channelPosts.posts.get(id);
+      if (!stored) throw new Error(`post ${id} is not there to place`);
+      Object.assign(stored, patch);
+    },
+    seedDraftPost: async (input) => {
+      repositories.channelPosts.posts.set(input.id, {
+        ...input,
+        status: 'draft',
+        publishAt: null,
+        publishedAt: null,
+        pinnedAt: null,
+        editedAt: null,
+        likeCount: 0,
+        commentsCount: 0,
+        version: 1,
+        createdAt: new Date(),
+      });
     },
     backdatePlaylist: async (id, updatedAt) => {
       const stored = expectOk(await repositories.playlists.findById(id));

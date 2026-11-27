@@ -8,7 +8,6 @@ import {
   type CommentCreateHarness,
   OTHER,
   OWNER,
-  VIDEO_ID,
   VIEWER,
   setUpCommentCreate,
 } from './comment-create-harness';

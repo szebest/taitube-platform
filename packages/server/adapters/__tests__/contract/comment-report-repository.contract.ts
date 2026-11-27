@@ -10,7 +10,6 @@ import {
   publicVideo,
   seedOwners,
   videoTarget,
-  OWNER_CHANNEL_ID,
 } from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
