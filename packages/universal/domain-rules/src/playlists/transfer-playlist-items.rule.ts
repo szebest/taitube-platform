@@ -1,4 +1,4 @@
-import { type Result, andThen, err, map, ok } from '@kit/result';
+import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { SeatedPlaylist, StoredPlaylistItem } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { type PlaylistItemNotFound, playlistItemNotFound } from './failures';
@@ -34,16 +34,27 @@ export function decidePlaylistTransfer(
 
 export type TransferItemFailure = PlaylistItemNotFound | ManagePlaylistFailure;
 
-/** One item of a batch: a move takes it out of the source, which is `removeItem` on that item. */
+/**
+ * One item of a batch: a section lands only where the actor may `manageItems`, and a move takes the
+ * item out of the source, which is `removeItem` on that item.
+ */
 export function decidePlaylistTransferItem(input: {
   readonly actor: UserContext;
   readonly source: SeatedPlaylist;
+  readonly target: SeatedPlaylist;
   readonly itemId: string;
   readonly item: StoredPlaylistItem | null;
   readonly mode: PlaylistTransferMode;
 }): Result<StoredPlaylistItem, TransferItemFailure> {
-  const { actor, source, itemId, item, mode } = input;
+  const { actor, source, target, itemId, item, mode } = input;
   if (!item) return err(playlistItemNotFound(source.id, itemId));
+  if (item.kind === 'section') {
+    const landing = decidePlaylistAction(
+      { actor, playlist: target, playlistId: target.id },
+      'manageItems'
+    );
+    if (isErr(landing)) return landing;
+  }
   if (mode === 'copy') return ok(item);
   return andThen(
     decidePlaylistAction({ actor, playlist: source, playlistId: source.id }, 'removeItem', item),

@@ -1,12 +1,14 @@
 import type {
   AppendItemOutcome,
+  MergeOutcome,
+  MergeSource,
   NewPlaylistItem,
   RestoreItemOutcome,
   TransferOutcome,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { RestorablePlaylistActivity, StoredPlaylistItem } from '@vp/domain';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { recordPlaylistChange } from './playlist-change';
 import {
@@ -18,7 +20,7 @@ import {
 } from './playlist-item-writes';
 import type { PostgresDatabase } from './types';
 
-const { playlistItems: pi } = schema;
+const { playlists: p, playlistItems: pi, playlistActivity: pa } = schema;
 
 /** Appends the videos under the caller's lock and logs each one that went in. */
 export async function appendLogged(
@@ -139,6 +141,32 @@ export async function transferRows(
   );
 }
 
+const landed = (outcome: AppendItemOutcome | 'source-missing') =>
+  outcome === 'added' || outcome === 'present';
+
+/** Every playlist locked up front in id order, so a merge cannot deadlock a move between two of them. */
+export async function mergeRows(
+  tx: PostgresDatabase,
+  targetId: string,
+  sources: readonly MergeSource[],
+  actorId: string
+): Promise<MergeOutcome> {
+  const ids = [...new Set([targetId, ...sources.map((source) => source.sourceId)])].sort();
+  for (const id of ids) {
+    if (!(await lockPlaylist(tx, id)) && id === targetId) return null;
+  }
+  const outcomes = new Map<string, NonNullable<TransferOutcome>>();
+  for (const { sourceId, items, deleteIfLanded } of sources) {
+    const outcome = await transferRows(tx, sourceId, targetId, items, 'copy', actorId);
+    if (!outcome) return null;
+    outcomes.set(sourceId, outcome);
+    if (deleteIfLanded && [...outcome.values()].every(landed)) {
+      await tx.delete(p).where(and(eq(p.id, sourceId), eq(p.isSystem, false)));
+    }
+  }
+  return outcomes;
+}
+
 async function moveOut(
   tx: PostgresDatabase,
   sourceId: string,
@@ -172,6 +200,18 @@ export async function restoreRow(
   actorId: string
 ): Promise<RestoreItemOutcome> {
   if (!(await lockPlaylist(tx, playlistId))) return 'playlist-missing';
+  const [restoredAlready] = await tx
+    .select({ id: pa.id })
+    .from(pa)
+    .where(
+      and(
+        eq(pa.playlistId, playlistId),
+        eq(pa.action, 'restored'),
+        sql`${pa.target}->>'activityId' = ${activity.id}`
+      )
+    )
+    .limit(1);
+  if (restoredAlready) return 'present';
   const { videoId, title, addedBy, note, startMs, endMs } = activity.target;
   const row: NewRow =
     videoId === null

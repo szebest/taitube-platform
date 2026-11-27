@@ -130,7 +130,13 @@ export const importPlaylist = defineEndpoint({
   params: PlaylistParamSchema,
   body: z.object({
     format: z.enum(['json', 'csv', 'urls']),
-    content: z.string().max(PLAYLIST_IMPORT_MAX_BYTES),
+    content: z
+      .string()
+      .max(PLAYLIST_IMPORT_MAX_BYTES)
+      .refine(
+        (content) => new TextEncoder().encode(content).byteLength <= PLAYLIST_IMPORT_MAX_BYTES,
+        `At most ${PLAYLIST_IMPORT_MAX_BYTES} bytes of UTF-8`
+      ),
   }),
   status: 200,
   result: z.object({

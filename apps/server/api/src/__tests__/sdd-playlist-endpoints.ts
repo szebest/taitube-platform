@@ -35,7 +35,7 @@ const BODY = { hasBody: true };
 const QUERY = { hasQueryParams: true };
 const ID = '/v1/playlists/{id}';
 
-/** Ticket 119's playlist collaboration, items, transfer and import routes, as SDD §6.1 lists them. */
+/** The playlist collaboration, items, transfer and import routes, as SDD §6.1 lists them. */
 export const SDD_PLAYLIST_ENDPOINTS: SddEndpointContract[] = [
   row('get', `${ID}/items`, [200, 400, 401, 404], [...READING, INVALID_CURSOR], QUERY),
   row(

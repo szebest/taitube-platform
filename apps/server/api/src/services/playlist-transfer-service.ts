@@ -2,6 +2,7 @@ import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { PlaylistItemResultView } from '@vp/api-contracts';
 import type {
   AppendItemOutcome,
+  MergeSource,
   PlaylistRepositoryPort,
   TransferOutcome,
 } from '@vp/core/repositories';
@@ -39,7 +40,6 @@ interface MergeRequest {
 type Landed = AppendItemOutcome | 'source-missing';
 type Refusal = NonNullable<PlaylistItemResultView['code']>;
 type Batch = { playlistId: string; results: PlaylistItemResultView[] };
-type Landing = Result<Batch, ManagePlaylistFailure | DatabaseUnavailable>;
 type MergeFailure =
   | DeletePlaylistFailure
   | CreatePlaylistFailure
@@ -58,15 +58,39 @@ const LANDED: Readonly<Record<Landed, Omit<PlaylistItemResultView, 'itemId'>>> =
   'source-missing': { ok: false, duplicate: false, code: ErrorCodes.PLAYLIST_ITEM_NOT_FOUND },
 };
 
-function resultsOf(
+interface Decided {
+  itemIds: readonly string[];
+  refused: Map<string, Refusal>;
+  moving: StoredPlaylistItem[];
+}
+
+function decideItems(
+  actor: UserContext,
+  places: { source: SeatedPlaylist; target: SeatedPlaylist },
   itemIds: readonly string[],
-  refused: ReadonlyMap<string, Refusal>,
-  landed: NonNullable<TransferOutcome>
+  held: readonly StoredPlaylistItem[],
+  mode: PlaylistTransferMode
+): Decided {
+  const byId = new Map(held.map((item) => [item.id, item]));
+  const refused = new Map<string, Refusal>();
+  const moving: StoredPlaylistItem[] = [];
+  for (const itemId of itemIds) {
+    const item = byId.get(itemId) ?? null;
+    const one = decidePlaylistTransferItem({ actor, ...places, itemId, item, mode });
+    if (isErr(one)) refused.set(itemId, refusalOf(one.error));
+    else moving.push(one.value);
+  }
+  return { itemIds, refused, moving };
+}
+
+function resultsOf(
+  { itemIds, refused }: Decided,
+  landed: TransferOutcome | undefined
 ): PlaylistItemResultView[] {
   return itemIds.map((itemId) => {
     const code = refused.get(itemId);
     if (code) return { itemId, ok: false, duplicate: false, code };
-    return { itemId, ...LANDED[landed.get(itemId) ?? 'source-missing'] };
+    return { itemId, ...LANDED[landed?.get(itemId) ?? 'source-missing'] };
   });
 }
 
@@ -88,7 +112,7 @@ export class PlaylistTransferService {
     if (isErr(source)) return source;
     const target = await this.deps.playlists.findSeated(to, actor.id);
     if (isErr(target)) return target;
-    const decided = decidePlaylistTransfer({
+    const places = decidePlaylistTransfer({
       actor,
       source: source.value,
       sourceId,
@@ -96,28 +120,15 @@ export class PlaylistTransferService {
       targetId: to,
       mode,
     });
-    if (isErr(decided)) return decided;
+    if (isErr(places)) return places;
 
     const items = await this.deps.playlists.findItems(sourceId, itemIds);
     if (isErr(items)) return items;
-    const byId = new Map(items.value.map((item) => [item.id, item]));
-    const refused = new Map<string, Refusal>();
-    const moving: StoredPlaylistItem[] = [];
-    for (const itemId of itemIds) {
-      const item = byId.get(itemId) ?? null;
-      const one = decidePlaylistTransferItem({
-        actor,
-        source: decided.value.source,
-        itemId,
-        item,
-        mode,
-      });
-      if (isErr(one)) refused.set(itemId, refusalOf(one.error));
-      else moving.push(one.value);
-    }
-    return await this.land(sourceId, to, moving, mode, actor, (landed) =>
-      resultsOf(itemIds, refused, landed)
-    );
+    const decided = decideItems(actor, places.value, itemIds, items.value, mode);
+    const landed = await this.deps.playlists.transfer(sourceId, to, decided.moving, mode, actor.id);
+    if (isErr(landed)) return landed;
+    if (landed.value === null) return err(playlistNotFound(to));
+    return ok({ playlistId: to, results: resultsOf(decided, landed.value) });
   }
 
   async duplicate(
@@ -133,9 +144,10 @@ export class PlaylistTransferService {
 
     const created = await this.create(actor, request.title ?? title, description);
     if (isErr(created)) return created;
-    return await this.copyAll(actor, [readable.value], created.value);
+    return await this.copyAll(actor, [readable.value], created.value, false);
   }
 
+  /** A source is deleted only when every one of its items landed, in the transaction of the copy. */
   async merge(actor: UserContext, request: MergeRequest): Promise<Result<Batch, MergeFailure>> {
     const sources: SeatedPlaylist[] = [];
     for (const sourceId of request.sourceIds) {
@@ -151,26 +163,20 @@ export class PlaylistTransferService {
 
     const target = await this.mergeTarget(actor, request);
     if (isErr(target)) return target;
-    if (sources.some((source) => source.id === target.value)) {
+    if (sources.some((source) => source.id === target.value.id)) {
       return err(invalidField('into', 'A playlist cannot be merged into itself', {}));
     }
-    const merged = await this.copyAll(actor, sources, target.value);
-    if (isErr(merged) || !request.deleteSources) return merged;
-    for (const source of sources) {
-      const removed = await this.deps.playlists.remove(source.id);
-      if (isErr(removed)) return removed;
-    }
-    return merged;
+    return await this.copyAll(actor, sources, target.value, request.deleteSources);
   }
 
   private async mergeTarget(
     actor: UserContext,
     { into, newTitle }: MergeRequest
-  ): Promise<Result<string, MergeFailure>> {
+  ): Promise<Result<SeatedPlaylist, MergeFailure>> {
     if (into === undefined) return await this.create(actor, newTitle ?? '', '');
     const target = await this.deps.playlists.findSeated(into, actor.id);
     return andThen(target, (playlist) =>
-      map(decidePlaylistAction({ actor, playlist, playlistId: into }, 'addItem'), ({ id }) => id)
+      decidePlaylistAction({ actor, playlist, playlistId: into }, 'addItem')
     );
   }
 
@@ -178,7 +184,7 @@ export class PlaylistTransferService {
     actor: UserContext,
     title: string,
     description: string
-  ): Promise<Result<string, CreatePlaylistFailure | DatabaseUnavailable>> {
+  ): Promise<Result<SeatedPlaylist, CreatePlaylistFailure | DatabaseUnavailable>> {
     const decided = decidePlaylistCreate({ actor, title, description, visibility: 'private' });
     if (isErr(decided)) return decided;
     const created = await this.deps.playlists.create({
@@ -186,42 +192,39 @@ export class PlaylistTransferService {
       ownerId: actor.id,
       ...decided.value,
     });
-    return map(created, ({ id }) => id);
+    return map(created, (playlist) => ({
+      ...playlist,
+      collaboratorId: null,
+      collaboratorRole: null,
+    }));
   }
 
   private async copyAll(
     actor: UserContext,
     sources: readonly SeatedPlaylist[],
-    targetId: string
-  ): Promise<Landing> {
-    const results: PlaylistItemResultView[] = [];
+    target: SeatedPlaylist,
+    deleteSources: boolean
+  ): Promise<Result<Batch, ManagePlaylistFailure | DatabaseUnavailable>> {
+    const plans: (Decided & MergeSource)[] = [];
     for (const source of sources) {
       const items = await this.deps.playlists.findItems(source.id);
       if (isErr(items)) return items;
-      const landed = await this.land(source.id, targetId, items.value, 'copy', actor, (outcome) =>
-        resultsOf(
-          items.value.map((item) => item.id),
-          new Map(),
-          outcome
-        )
-      );
-      if (isErr(landed)) return landed;
-      results.push(...landed.value.results);
+      const itemIds = items.value.map((item) => item.id);
+      const decided = decideItems(actor, { source, target }, itemIds, items.value, 'copy');
+      plans.push({
+        ...decided,
+        sourceId: source.id,
+        items: decided.moving,
+        deleteIfLanded: deleteSources && decided.refused.size === 0,
+      });
     }
-    return ok({ playlistId: targetId, results });
-  }
-
-  private async land(
-    sourceId: string,
-    targetId: string,
-    items: readonly StoredPlaylistItem[],
-    mode: PlaylistTransferMode,
-    actor: UserContext,
-    report: (landed: NonNullable<TransferOutcome>) => PlaylistItemResultView[]
-  ): Promise<Landing> {
-    const landed = await this.deps.playlists.transfer(sourceId, targetId, items, mode, actor.id);
-    if (isErr(landed)) return landed;
-    if (landed.value === null) return err(playlistNotFound(targetId));
-    return ok({ playlistId: targetId, results: report(landed.value) });
+    const merged = await this.deps.playlists.merge(target.id, plans, actor.id);
+    if (isErr(merged)) return merged;
+    const landed = merged.value;
+    if (landed === null) return err(playlistNotFound(target.id));
+    return ok({
+      playlistId: target.id,
+      results: plans.flatMap((plan) => resultsOf(plan, landed.get(plan.sourceId))),
+    });
   }
 }

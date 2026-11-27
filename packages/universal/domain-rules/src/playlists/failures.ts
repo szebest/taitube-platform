@@ -32,7 +32,7 @@ export function playlistItemNotFound(playlistId: string, itemId: string): Playli
 export function systemPlaylistImmutable(playlistId: string): SystemPlaylistImmutable {
   return {
     code: ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE,
-    message: 'A system playlist cannot be renamed or deleted',
+    message: 'A system playlist cannot be renamed, deleted or shared',
     playlistId,
   };
 }

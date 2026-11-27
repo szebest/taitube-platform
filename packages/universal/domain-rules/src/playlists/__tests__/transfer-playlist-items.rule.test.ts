@@ -62,9 +62,24 @@ describe('@vp/domain-rules: moving and copying items', () => {
   });
 
   const contributor = aPlaylist({ collaboratorId: STRANGER.id, collaboratorRole: 'contributor' });
+  const own = aPlaylist({ id: 'own', ownerId: STRANGER.id });
+  const section: StoredPlaylistItem = { ...item, kind: 'section', videoId: null, title: 'Part 1' };
 
   it.each([
     { scenario: 'copies any item', mode: 'copy' as const, held: item, code: null },
+    {
+      scenario: 'copies a section into their own playlist',
+      mode: 'copy' as const,
+      held: section,
+      code: null,
+    },
+    {
+      scenario: 'copies a section where they only contribute',
+      mode: 'copy' as const,
+      held: section,
+      target: contributor,
+      code: ErrorCodes.FORBIDDEN,
+    },
     {
       scenario: 'moves their own item',
       mode: 'move' as const,
@@ -83,10 +98,11 @@ describe('@vp/domain-rules: moving and copying items', () => {
       held: null,
       code: ErrorCodes.PLAYLIST_ITEM_NOT_FOUND,
     },
-  ])('a contributor $scenario: $code', ({ mode, held, code }) => {
+  ])('a contributor $scenario: $code', ({ mode, held, target = own, code }) => {
     const result = decidePlaylistTransferItem({
       actor: STRANGER,
       source: contributor,
+      target,
       itemId: 'item-1',
       item: held,
       mode,

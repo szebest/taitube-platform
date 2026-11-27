@@ -52,6 +52,11 @@ const ACTING = {
 
 const SEATS_FULL = { 409: [ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT] } as const;
 
+const SEATING = {
+  ...ACTING,
+  400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE],
+} as const;
+
 export const listPlaylistCollaborators = defineEndpoint({
   method: 'GET',
   path: '/v1/playlists/:id/collaborators',
@@ -78,7 +83,7 @@ export const invitePlaylistCollaborator = defineEndpoint({
   status: 201,
   result: InviteSchema,
   errors: {
-    ...ACTING,
+    ...SEATING,
     404: [ErrorCodes.PLAYLIST_NOT_FOUND, ErrorCodes.CHANNEL_NOT_FOUND],
     409: [ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS, ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT],
   },
@@ -161,7 +166,7 @@ export const createPlaylistInviteLink = defineEndpoint({
   }),
   status: 201,
   result: InviteSchema,
-  errors: { ...ACTING, ...SEATS_FULL },
+  errors: { ...SEATING, ...SEATS_FULL },
 });
 
 export const listPlaylistInvites = defineEndpoint({

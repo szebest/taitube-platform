@@ -43,6 +43,16 @@ export type AppendItemOutcome = 'added' | 'present' | 'video-missing';
 /** Each item's outcome by its id in the request; `null` when the target playlist is gone. */
 export type TransferOutcome = Map<string, AppendItemOutcome | 'source-missing'> | null;
 
+/** One source of a merge: what it hands over, and whether it goes once every item of it landed. */
+export interface MergeSource {
+  sourceId: string;
+  items: readonly StoredPlaylistItem[];
+  deleteIfLanded: boolean;
+}
+
+/** Each source's `TransferOutcome`; null when the target is gone. */
+export type MergeOutcome = Map<string, NonNullable<TransferOutcome>> | null;
+
 export type RestoreItemOutcome = 'restored' | 'present' | 'video-missing' | 'playlist-missing';
 
 export interface ListPublicPlaylistsOptions {
@@ -188,7 +198,19 @@ export interface PlaylistRepositoryPort {
     mode: 'move' | 'copy',
     actorId: string
   ): Promise<Result<TransferOutcome, DatabaseUnavailable>>;
-  /** Puts a removed item back at the end, as it stood, and logs the restore. */
+  /**
+   * Copies every source into `targetId` and deletes each source that asked once every one of its
+   * items is in the target, all in one transaction, so a failure leaves every source whole.
+   */
+  merge(
+    targetId: string,
+    sources: readonly MergeSource[],
+    actorId: string
+  ): Promise<Result<MergeOutcome, DatabaseUnavailable>>;
+  /**
+   * Puts a removed item back at the end, as it stood, and logs the restore. An activity restored
+   * already, or a video the playlist holds, is `present`.
+   */
   restoreItem(
     playlistId: string,
     activity: RestorablePlaylistActivity,

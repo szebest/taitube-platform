@@ -2,6 +2,11 @@ import type { Result } from '@kit/result';
 import type { PlaylistCollaborator, PlaylistCollaboratorRole, PlaylistInvite } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 
+export interface PlaylistSeatGrant {
+  playlistId: string;
+  role: PlaylistCollaboratorRole;
+}
+
 /** What the accepting transaction sees under its locks: the invite and the seats as they stand. */
 interface AcceptInviteContext {
   invite: (PlaylistInvite & { ownerId: string }) | null;
@@ -42,9 +47,7 @@ export interface PlaylistCollaboratorRepositoryPort {
     token: string,
     userId: string,
     plan: AcceptInvitePlan<F>
-  ): Promise<
-    Result<{ playlistId: string; role: PlaylistCollaboratorRole }, DatabaseUnavailable | F>
-  >;
+  ): Promise<Result<PlaylistSeatGrant, DatabaseUnavailable | F>>;
   changeRole(
     playlistId: string,
     userId: string,

@@ -1,5 +1,9 @@
 import { type Result, andThen, fromPromise, isErr, map, ok } from '@kit/result';
-import type { AcceptInvitePlan, PlaylistCollaboratorRepositoryPort } from '@vp/core/repositories';
+import type {
+  AcceptInvitePlan,
+  PlaylistCollaboratorRepositoryPort,
+  PlaylistSeatGrant,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { PlaylistCollaborator, PlaylistCollaboratorRole, PlaylistInvite } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
@@ -11,8 +15,6 @@ import { lockPlaylist } from './playlist-item-writes';
 import type { PostgresDatabase } from './types';
 
 const { playlists: p, playlistCollaborators: pc, playlistInvites: inv } = schema;
-
-type Granted = { playlistId: string; role: PlaylistCollaboratorRole };
 
 export class PostgresPlaylistCollaboratorRepository implements PlaylistCollaboratorRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -134,10 +136,10 @@ export class PostgresPlaylistCollaboratorRepository implements PlaylistCollabora
     token: string,
     userId: string,
     plan: AcceptInvitePlan<F>
-  ): Promise<Result<Granted, DatabaseUnavailable | F>> {
+  ): Promise<Result<PlaylistSeatGrant, DatabaseUnavailable | F>> {
     const outcome = await fromPromise(
       () =>
-        this.db.transaction(async (tx): Promise<Result<Granted, F>> => {
+        this.db.transaction(async (tx): Promise<Result<PlaylistSeatGrant, F>> => {
           const [invite] = await tx
             .select({ invite: inv, ownerId: p.ownerId })
             .from(inv)

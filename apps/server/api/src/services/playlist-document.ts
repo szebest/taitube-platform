@@ -34,6 +34,11 @@ const LineSchema = z.object({
 
 const DocumentSchema = z.object({ items: z.array(z.unknown()) });
 
+/** The quote `escape_formulas` puts before a cell a spreadsheet would run as a formula. */
+const ESCAPED_FORMULA = /^'[=+\-@\t\r]/;
+
+const unescapeFormula = (value: string) => (ESCAPED_FORMULA.test(value) ? value.slice(1) : value);
+
 /** One entry of an import: what names its video, and the note and segment it brings along. */
 export interface ImportLine {
   reference: string;
@@ -74,7 +79,7 @@ export function writeDocument(
   if (format === 'json') return JSON.stringify({ title, items: rows }, null, 2);
   return stringify(
     rows.map((row) => COLUMNS.map((column) => row[column] ?? '')),
-    { header: true, columns: [...COLUMNS] }
+    { header: true, columns: [...COLUMNS], escape_formulas: true }
   );
 }
 
@@ -115,7 +120,13 @@ function entriesOf(format: PlaylistImportFormat, content: string): Result<unknow
     }
     case 'csv':
       return tryCatch(
-        (): unknown[] => parse(content, { columns: true, skip_empty_lines: true, trim: true }),
+        (): unknown[] =>
+          parse(content, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+            cast: unescapeFormula,
+          }),
         () => invalidDocument('The content is not CSV with a header row')
       );
     default:

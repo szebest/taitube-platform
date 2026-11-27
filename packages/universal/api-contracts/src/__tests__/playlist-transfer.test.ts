@@ -21,7 +21,16 @@ describe('packages/api-contracts: playlist transfer', () => {
     ).toEqual([true, false]);
   });
 
-  it('refuses an import format it cannot read', () => {
-    expect(importPlaylist.body.safeParse({ format: 'xml', content: '' }).success).toBe(false);
+  it.each([
+    { scenario: 'a format it cannot read', format: 'xml', content: '', valid: false },
+    { scenario: '1 MB of ASCII', format: 'urls', content: 'a'.repeat(1024 * 1024), valid: true },
+    {
+      scenario: 'under 1 MB of characters over 1 MB of UTF-8',
+      format: 'urls',
+      content: 'é'.repeat(512 * 1024 + 1),
+      valid: false,
+    },
+  ])('takes an import of $scenario: $valid', ({ format, content, valid }) => {
+    expect(importPlaylist.body.safeParse({ format, content }).success).toBe(valid);
   });
 });

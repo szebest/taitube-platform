@@ -14,9 +14,10 @@ import {
   playlistCollaboratorLimit,
 } from './failures';
 import {
-  type ManagePlaylistFailure,
+  type DeletePlaylistFailure,
   type ManagePlaylistInput,
   decidePlaylistAction,
+  userEditable,
 } from './manage-playlist.rule';
 
 interface NewInviteFields {
@@ -41,12 +42,12 @@ export interface LinkInviteInput extends ManagePlaylistInput, NewInviteFields {
 }
 
 export type PersonalInviteFailure =
-  | ManagePlaylistFailure
+  | DeletePlaylistFailure
   | ChannelNotFound
   | PlaylistCollaboratorExists
   | PlaylistCollaboratorLimit;
 
-export type LinkInviteFailure = ManagePlaylistFailure | PlaylistCollaboratorLimit;
+export type LinkInviteFailure = DeletePlaylistFailure | PlaylistCollaboratorLimit;
 
 function invite(
   playlistId: string,
@@ -73,7 +74,7 @@ export function decidePlaylistInvite(
   input: PersonalInviteInput
 ): Result<PlaylistInvite, PersonalInviteFailure> {
   return andThen(
-    decidePlaylistAction(input, 'manageCollaborators'),
+    andThen(decidePlaylistAction(input, 'manageCollaborators'), userEditable),
     (playlist): Result<PlaylistInvite, PersonalInviteFailure> => {
       const { invitee, handle, isCollaborator, seated, now } = input;
       if (!invitee) return err(channelNotFound(handle));
@@ -96,7 +97,7 @@ export function decidePlaylistLinkInvite(
   input: LinkInviteInput
 ): Result<PlaylistInvite, LinkInviteFailure> {
   return andThen(
-    decidePlaylistAction(input, 'manageCollaborators'),
+    andThen(decidePlaylistAction(input, 'manageCollaborators'), userEditable),
     (playlist): Result<PlaylistInvite, LinkInviteFailure> => {
       if (input.seated >= MAX_PLAYLIST_COLLABORATORS) {
         return err(playlistCollaboratorLimit(playlist.id));

@@ -8,6 +8,8 @@ import type {
   PlaylistRepositoryPort,
   ReorderPlan,
   RestoreItemOutcome,
+  MergeOutcome,
+  MergeSource,
   TransferOutcome,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
@@ -25,7 +27,13 @@ import {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, eq, sql } from 'drizzle-orm';
-import { appendLogged, logReorder, restoreRow, transferRows } from './playlist-bulk-writes';
+import {
+  appendLogged,
+  logReorder,
+  mergeRows,
+  restoreRow,
+  transferRows,
+} from './playlist-bulk-writes';
 import { recordPlaylistChange } from './playlist-change';
 import { sortedOrder } from './playlist-item-sort';
 import {
@@ -244,6 +252,17 @@ export class PostgresPlaylistRepository
     return await fromPromise(
       () => this.db.transaction((tx) => transferRows(tx, sourceId, targetId, items, mode, actorId)),
       databaseUnavailable.during('transferPlaylistItems')
+    );
+  }
+
+  async merge(
+    targetId: string,
+    sources: readonly MergeSource[],
+    actorId: string
+  ): Promise<Result<MergeOutcome, DatabaseUnavailable>> {
+    return await fromPromise(
+      () => this.db.transaction((tx) => mergeRows(tx, targetId, sources, actorId)),
+      databaseUnavailable.during('mergePlaylists')
     );
   }
 

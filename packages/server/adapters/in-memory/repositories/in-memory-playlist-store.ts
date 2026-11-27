@@ -40,12 +40,14 @@ export interface KeyedRow {
 export class InMemoryPlaylistStore {
   protected readonly playlists = new Map<string, Playlist>();
   protected readonly items = new Map<string, StoredItem>();
+  protected readonly restored = new Set<string>();
 
   constructor(protected readonly deps: InMemoryPlaylistDeps) {}
 
   clear(): void {
     this.playlists.clear();
     this.items.clear();
+    this.restored.clear();
   }
 
   /** Appends like the postgres adapter: a held video is `present`, a gone one `video-missing`. */

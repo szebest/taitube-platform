@@ -3,6 +3,7 @@ import type {
   AcceptInvitePlan,
   OutboxRepository,
   PlaylistCollaboratorRepositoryPort,
+  PlaylistSeatGrant,
 } from '@vp/core/repositories';
 import type {
   PlaylistActivityEntry,
@@ -23,8 +24,6 @@ export interface InMemoryPlaylistCollaboratorDeps {
   now: Clock;
 }
 
-type Granted = { playlistId: string; role: PlaylistCollaboratorRole };
-
 export class InMemoryPlaylistCollaboratorRepository implements PlaylistCollaboratorRepositoryPort {
   private rows: PlaylistCollaborator[] = [];
   private readonly invites = new Map<string, PlaylistInvite>();
@@ -32,7 +31,10 @@ export class InMemoryPlaylistCollaboratorRepository implements PlaylistCollabora
   constructor(private readonly deps: InMemoryPlaylistCollaboratorDeps) {}
 
   seatOf(playlistId: string, userId: string | null): PlaylistCollaboratorRole | null {
-    return this.rows.find((seat) => seat.playlistId === playlistId && seat.userId === userId)?.role ?? null;
+    return (
+      this.rows.find((seat) => seat.playlistId === playlistId && seat.userId === userId)?.role ??
+      null
+    );
   }
 
   userIdsOn(playlistId: string): string[] {
@@ -85,9 +87,7 @@ export class InMemoryPlaylistCollaboratorRepository implements PlaylistCollabora
     return ok(
       [...this.invites.values()]
         .filter((invite) => invite.playlistId === playlistId && invite.revokedAt === null)
-        .sort(
-          (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id)
-        )
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id))
     );
   }
 
@@ -121,7 +121,7 @@ export class InMemoryPlaylistCollaboratorRepository implements PlaylistCollabora
     token: string,
     userId: string,
     plan: AcceptInvitePlan<F>
-  ): Promise<Result<Granted, DatabaseUnavailable | F>> {
+  ): Promise<Result<PlaylistSeatGrant, DatabaseUnavailable | F>> {
     const invite = this.byToken(token);
     const ownerId = invite ? this.deps.ownerOf(invite.playlistId) : null;
     const owned = invite && ownerId !== null ? { ...invite, ownerId } : null;

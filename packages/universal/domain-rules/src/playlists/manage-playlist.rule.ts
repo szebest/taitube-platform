@@ -85,7 +85,10 @@ export function decidePlaylistAction(
   });
 }
 
-function userEditable(playlist: SeatedPlaylist): Result<SeatedPlaylist, SystemPlaylistImmutable> {
+/** Watch Later keeps its system rules: never renamed, deleted or shared. */
+export function userEditable(
+  playlist: SeatedPlaylist
+): Result<SeatedPlaylist, SystemPlaylistImmutable> {
   return playlist.isSystem ? err(systemPlaylistImmutable(playlist.id)) : ok(playlist);
 }
 

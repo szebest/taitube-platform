@@ -1,5 +1,5 @@
 import { assertNever } from '@kit/result';
-import type { NewPlaylistItem, PlaylistItemCursor } from '@vp/core/repositories';
+import type { NewPlaylistItem, PlaylistItemCursor, TransferOutcome } from '@vp/core/repositories';
 import {
   type PlaylistItemSort,
   type RemovedPlaylistItem,
@@ -122,4 +122,8 @@ export function isPast(
   order: 'asc' | 'desc'
 ): boolean {
   return !cursor || compareSorted(row, cursor, order) > 0;
+}
+
+export function landedWhole(outcome: NonNullable<TransferOutcome>): boolean {
+  return [...outcome.values()].every((each) => each === 'added' || each === 'present');
 }

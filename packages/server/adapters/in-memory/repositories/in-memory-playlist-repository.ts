@@ -2,6 +2,8 @@ import { type Result, isErr, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
   AppendItemOutcome,
+  MergeOutcome,
+  MergeSource,
   NewPlaylistItem,
   NewPlaylistSection,
   PlaylistItemTarget,
@@ -29,6 +31,7 @@ import {
   SORT_ORDER,
   compareSorted,
   copyOf,
+  landedWhole,
   removedOf,
   restoredRow,
 } from './in-memory-playlist-items';
@@ -250,8 +253,29 @@ export class InMemoryPlaylistRepository
       if (isErr(loggedOut)) return loggedOut;
     }
     return ok(
-      new Map(items.map((item) => [item.id, held.has(item.id) ? outcomeOf(item) : 'source-missing']))
+      new Map(
+        items.map((item) => [item.id, held.has(item.id) ? outcomeOf(item) : 'source-missing'])
+      )
     );
+  }
+
+  async merge(
+    targetId: string,
+    sources: readonly MergeSource[],
+    actorId: string
+  ): Promise<Result<MergeOutcome, DatabaseUnavailable>> {
+    const outcomes = new Map<string, NonNullable<TransferOutcome>>();
+    for (const { sourceId, items, deleteIfLanded } of sources) {
+      const outcome = await this.transfer(sourceId, targetId, items, 'copy', actorId);
+      if (isErr(outcome)) return outcome;
+      if (outcome.value === null) return ok(null);
+      outcomes.set(sourceId, outcome.value);
+      if (deleteIfLanded && landedWhole(outcome.value)) {
+        const removed = await this.remove(sourceId);
+        if (isErr(removed)) return removed;
+      }
+    }
+    return ok(outcomes);
   }
 
   async restoreItem(
@@ -260,9 +284,11 @@ export class InMemoryPlaylistRepository
     actorId: string
   ): Promise<Result<RestoreItemOutcome, DatabaseUnavailable>> {
     if (!this.playlists.has(playlistId)) return ok('playlist-missing');
+    if (this.restored.has(activity.id)) return ok('present');
     const row = restoredRow(activity.target, uuidv7());
     const outcome = (await this.appendRows(playlistId, [row])).get(row.id) ?? 'added';
     if (outcome !== 'added') return ok(outcome);
+    this.restored.add(activity.id);
     const logged = await this.log(playlistId, actorId, [
       { action: 'restored', target: { activityId: activity.id, itemId: row.id } },
     ]);

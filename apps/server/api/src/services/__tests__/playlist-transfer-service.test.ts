@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
@@ -43,7 +44,40 @@ async function setUp() {
   };
   const order = async (playlistId: string) =>
     expectOk(await repositories.playlists.findItems(playlistId)).map((item) => item.videoId);
-  return { repositories, service, playlist, order };
+  const contributingTo = async () => {
+    const { id } = expectOk(
+      await repositories.playlists.create({
+        id: randomUUID(),
+        ownerId: STRANGER.id,
+        title: 'Shared',
+        description: '',
+        visibility: 'private',
+      })
+    );
+    const token = randomUUID();
+    expectOk(
+      await repositories.playlistCollaborators.createInvite({
+        id: randomUUID(),
+        playlistId: id,
+        role: 'contributor',
+        token,
+        inviteeUserId: null,
+        createdBy: STRANGER.id,
+        expiresAt: new Date(Date.now() + 60_000),
+        maxUses: null,
+        useCount: 0,
+        revokedAt: null,
+        createdAt: new Date(),
+      })
+    );
+    expectOk(
+      await repositories.playlistCollaborators.accept(token, OWNER.id, () =>
+        ok({ playlistId: id, role: 'contributor' as const })
+      )
+    );
+    return id;
+  };
+  return { repositories, service, playlist, order, contributingTo };
 }
 
 describe('PlaylistTransferService', () => {
@@ -62,6 +96,31 @@ describe('PlaylistTransferService', () => {
       [true, true],
     ]);
     expect(await order(source)).toEqual(VIDEOS);
+  });
+
+  it('refuses a section where the actor only contributes, and keeps a merge source it could not empty', async () => {
+    const { repositories, service, playlist, contributingTo } = await setUp();
+    const source = await playlist([VIDEOS[0] ?? '']);
+    const section = { id: randomUUID(), title: 'Part 1', addedBy: OWNER.id };
+    expectOk(await repositories.playlists.addSection(source, section, OWNER.id));
+    const target = await contributingTo();
+    const itemIds = expectOk(await repositories.playlists.findItems(source)).map((item) => item.id);
+
+    const copied = expectOk(
+      await service.transfer(OWNER, source, { itemIds, to: target, mode: 'copy' })
+    );
+    const merged = expectOk(
+      await service.merge(OWNER, { sourceIds: [source], into: target, deleteSources: true })
+    );
+
+    expect([copied, merged].map(({ results }) => results.map((result) => result.code))).toEqual([
+      [undefined, ErrorCodes.FORBIDDEN],
+      [undefined, ErrorCodes.FORBIDDEN],
+    ]);
+    expect(expectOk(await repositories.playlists.findById(source))).not.toBeNull();
+    expect(
+      expectOk(await repositories.playlists.findItems(target)).map((item) => item.kind)
+    ).toEqual(['video']);
   });
 
   it.each([

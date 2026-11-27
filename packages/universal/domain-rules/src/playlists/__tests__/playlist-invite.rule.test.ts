@@ -60,6 +60,11 @@ describe('@vp/domain-rules: playlist invites', () => {
       code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT,
     },
     {
+      scenario: 'Watch Later',
+      overrides: { playlist: aPlaylist({ isSystem: true }) },
+      code: ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE,
+    },
+    {
       scenario: 'an editor inviting',
       overrides: {
         actor: STRANGER,
@@ -83,14 +88,25 @@ describe('@vp/domain-rules: playlist invites', () => {
     }
   );
 
-  it('opens no link on a full playlist', () => {
+  it.each([
+    {
+      scenario: 'a full playlist',
+      overrides: { seated: 20 },
+      code: ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT,
+    },
+    {
+      scenario: 'Watch Later',
+      overrides: { playlist: aPlaylist({ isSystem: true }) },
+      code: ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE,
+    },
+  ])('opens no link on $scenario', ({ overrides, code }) => {
     const result = decidePlaylistLinkInvite({
       ...base,
-      seated: 20,
       expiresInDays: 7,
       maxUses: null,
+      ...overrides,
     });
 
-    expect(expectErr(result).code).toBe(ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT);
+    expect(expectErr(result).code).toBe(code);
   });
 });
