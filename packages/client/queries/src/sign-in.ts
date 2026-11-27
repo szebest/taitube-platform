@@ -62,7 +62,7 @@ export async function completeSignIn(
   }
   const reserved = spent?.kind === 'spent' ? spent.reserved : undefined;
   const freeSlot =
-    reserved !== undefined && !occupied.includes(reserved)
+    reserved !== undefined && reserved < accountsMax && !occupied.includes(reserved)
       ? reserved
       : firstFreeSlot(accounts, occupied, accountsMax);
   const slot = listed ?? (target.mode === 'slot' ? target.slot : freeSlot);
@@ -103,7 +103,7 @@ export async function completeSignIn(
     label: account.channel.displayName,
     avatarUrl: account.channel.avatarUrl,
   };
-  writeAccounts(withSignedIn(accounts, signedIn), cookieDomain);
+  writeAccounts(withSignedIn(accounts, signedIn), cookieDomain, slot);
   const held = new Set([...occupied, slot]).size;
   return listed !== undefined && occupied.includes(listed)
     ? { kind: 'already-signed-in', slot, accounts: held }

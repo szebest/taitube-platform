@@ -44,8 +44,16 @@ describe('@vp/queries: accounts cookie', () => {
     },
     { change: 'a slot signed out', next: withoutSlot(TWO, 0), written: ['vp.accounts.0'] },
     { change: 'nothing', next: TWO, written: [] },
-  ])('writes only the cookies $change changes', async ({ next, written }) => {
-    const { setCookies } = await write(next);
+    {
+      change: 'a sign-in renewing slot 0 unchanged',
+      next: TWO,
+      renewed: 0,
+      written: ['vp.accounts.0', 'vp.accounts'],
+    },
+  ])('writes only the cookies $change changes', async ({ next, renewed, written }) => {
+    const { setCookies } = await inRequest(() => writeAccounts(next, undefined, renewed), {
+      cookie: accountsCookies(TWO),
+    });
 
     expect(names(setCookies)).toEqual(written);
     expect(await accountsAfter(accountsCookies(TWO), setCookies)).toEqual(next);

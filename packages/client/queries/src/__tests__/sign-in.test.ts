@@ -80,17 +80,30 @@ describe('@vp/queries: sign-in', () => {
   });
 
   it.each([
-    { scenario: 'the slot its nonce held', cookie: 'vp.session.0=first', slot: 3 },
+    { scenario: 'the slot its nonce held', cookie: 'vp.session.0=first', nonce: 3, slot: 3 },
     {
       scenario: 'the first free slot when its own was taken meanwhile',
       cookie: 'vp.session.0=first; vp.session.3=someone',
+      nonce: 3,
       slot: 1,
     },
-  ])('adds into $scenario', async ({ cookie, slot }) => {
+    {
+      scenario: 'the first free slot when its own is past ACCOUNTS_MAX',
+      cookie: 'vp.session.0=first',
+      nonce: 9,
+      slot: 1,
+    },
+  ])('adds into $scenario', async ({ cookie, nonce, slot }) => {
     api();
+    vi.mocked(requestSession).mockReturnValue({
+      apiBaseUrl: undefined,
+      cookieDomain: undefined,
+      devTokenUrl: undefined,
+      accountsMax: 5,
+    });
 
     const { value } = await inRequest(() => completeSignIn(issue, 'creator', ADD), {
-      cookie: `${cookie}; vp.add-nonce.3=n0nce`,
+      cookie: `${cookie}; vp.add-nonce.${nonce}=n0nce`,
     });
 
     expect(value).toMatchObject({ kind: 'signed-in', slot });
@@ -107,13 +120,13 @@ describe('@vp/queries: sign-in', () => {
     expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.2=new-token-of-creator;/);
   });
 
-  it('ends on the slot a user already holds, so one user never holds two', async () => {
+  it('ends on the slot a user already holds, so one user never holds two, and renews its row', async () => {
     const recorded = api();
     const held = withSignedIn(NO_ACCOUNTS, {
       slot: 3,
       userId: account().user.id,
-      label: 'Me',
-      avatarUrl: null,
+      label: account().channel.displayName,
+      avatarUrl: account().channel.avatarUrl,
     });
 
     const { value, setCookies } = await signIn(
@@ -124,6 +137,10 @@ describe('@vp/queries: sign-in', () => {
     expect(value).toEqual({ kind: 'already-signed-in', slot: 3, accounts: 2 });
     expect(sessionCookies(setCookies)[0]).toMatch(/^vp\.session\.3=new-token-of-creator;/);
     expect(recorded[0]?.body).toEqual({ slot: 3, added: false });
+    expect(setCookies.filter((set) => set.startsWith('vp.accounts'))).toEqual([
+      expect.stringMatching(/^vp\.accounts\.3=.*Max-Age=2592000/),
+      expect.stringMatching(/^vp\.accounts=.*Max-Age=2592000/),
+    ]);
   });
 
   it('signs a user whose slot expired back into that slot, as a sign-in rather than an add', async () => {

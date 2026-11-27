@@ -71,18 +71,31 @@ function serializeShared({ defaultSlot, accents = {}, pinned = [] }: Accounts): 
 /**
  * Writes the cookies of `accounts` that differ from the ones the request carries, and only those,
  * so two requests in flight that change different slots both land. A cookie the request did not
- * carry is never cleared: another tab may have just set it.
+ * carry is never cleared: another tab may have just set it. The `renewed` slot's row and the shared
+ * cookie are set even when unchanged, so a sign-in restarts their lifetime.
  */
-export function writeAccounts(accounts: Accounts, domain: string | undefined): void {
+export function writeAccounts(
+  accounts: Accounts,
+  domain: string | undefined,
+  renewed?: number
+): void {
   const carried = getCookies();
-  const write = (name: string, value: string | undefined) => {
-    if (value === carried[name]) return;
-    if (value === undefined) deleteCookie(name, cookieAttributes(domain));
-    else setCookie(name, value, { ...cookieAttributes(domain), maxAge: ACCOUNTS_MAX_AGE_S });
+  const write = (name: string, value: string | undefined, renew: boolean) => {
+    if (value === undefined) {
+      if (carried[name] !== undefined) deleteCookie(name, cookieAttributes(domain));
+      return;
+    }
+    if (renew || value !== carried[name]) {
+      setCookie(name, value, { ...cookieAttributes(domain), maxAge: ACCOUNTS_MAX_AGE_S });
+    }
   };
   for (let slot = 0; slot < SLOT_COUNT; slot += 1) {
     const row = accounts.slots.find((entry) => entry.slot === slot);
-    write(rowCookieName(slot), row && serializeRow(row));
+    write(rowCookieName(slot), row && serializeRow(row), slot === renewed);
   }
-  write(ACCOUNTS_COOKIE, accounts.slots.length > 0 ? serializeShared(accounts) : undefined);
+  write(
+    ACCOUNTS_COOKIE,
+    accounts.slots.length > 0 ? serializeShared(accounts) : undefined,
+    renewed !== undefined
+  );
 }
