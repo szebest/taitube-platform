@@ -72,7 +72,11 @@ test.describe('watch vitals', () => {
     await expect(page.getByText(/^Vitals comment \d+$/).first()).toBeVisible();
     await page.waitForLoadState('networkidle');
 
-    const { cls } = await readVitals(page);
+    const { cls, shifts } = await readVitals(page);
+    await test.info().attach('layout-shifts', {
+      body: JSON.stringify({ cls, shifts }, null, 2),
+      contentType: 'application/json',
+    });
     test.info().annotations.push({ type: 'cls', description: String(cls) });
     expect(cls).toBeLessThan(CLS_BUDGET);
   });
