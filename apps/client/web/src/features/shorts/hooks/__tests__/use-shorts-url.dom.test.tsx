@@ -8,6 +8,23 @@ vi.mock(import('#app/components/player/taitube-player/taitube-player'), async ()
 
 const pathOf = (position: number) => `/shorts/${SHORTS[position - 1]?.id}`;
 
+type ShortsRouter = Awaited<ReturnType<typeof renderShorts>>['router'];
+
+/** Holds the router's render of `path` until a test releases it, as a view transition defers it. */
+function holdRenderOf(router: ShortsRouter, path: string) {
+  const held: Array<() => Promise<void>> = [];
+  vi.spyOn(router, 'startViewTransition').mockImplementation((render) => {
+    if (router.latestLocation.pathname !== path) {
+      return render();
+    }
+
+    return new Promise((rendered) => {
+      held.push(() => render().then(rendered));
+    });
+  });
+  return held;
+}
+
 describe('apps/client/web: useShortsUrl', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -65,5 +82,39 @@ describe('apps/client/web: useShortsUrl', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe(pathOf(3)));
     expect(screen.getByRole('status')).toHaveTextContent('Short 3');
+  });
+
+  it('names the Short the viewer went back to, as its write of the Short they left lands late', async () => {
+    const { router } = await renderShorts();
+    const frame = screen.getByRole('region', { name: 'Shorts player' });
+    const held = holdRenderOf(router, pathOf(3));
+
+    fireEvent.keyDown(frame, { key: 'ArrowDown' });
+    await waitFor(() => expect(router.state.location.pathname).toBe(pathOf(2)));
+    fireEvent.keyDown(frame, { key: 'ArrowDown' });
+    await waitFor(() => expect(held).toHaveLength(1));
+    vi.useFakeTimers();
+    fireEvent.keyDown(frame, { key: 'ArrowUp' });
+    act(() => vi.advanceTimersByTime(300));
+    vi.useRealTimers();
+    await act(() => held[0]?.());
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(pathOf(2)));
+    expect(screen.getByRole('status')).toHaveTextContent('Short 2');
+  });
+
+  it('takes the feed to the Short something else sent the URL to, while its own write still lands', async () => {
+    const { router } = await renderShorts();
+    const held = holdRenderOf(router, pathOf(2));
+
+    fireEvent.keyDown(screen.getByRole('region', { name: 'Shorts player' }), { key: 'ArrowDown' });
+    await waitFor(() => expect(held).toHaveLength(1));
+    await act(() =>
+      router.navigate({ to: '/shorts/$videoId', params: { videoId: SHORTS[2]?.id ?? '' } })
+    );
+    await act(() => held[0]?.());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Short 3');
+    expect(router.state.location.pathname).toBe(pathOf(3));
   });
 });
