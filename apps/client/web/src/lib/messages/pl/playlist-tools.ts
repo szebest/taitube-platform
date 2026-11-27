@@ -98,6 +98,24 @@ export const playlistTools = {
     },
   }),
   coverVideo: dt('Film na okładce'),
+  coverDrop: dt('Upuść tu obraz JPEG, PNG lub WebP albo go wybierz'),
+  coverHint: dt(
+    'Co najmniej 640 x 360 px i najwyżej 2 MB; okładką zostaje środkowy fragment 16:9.'
+  ),
+  coverSelected: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: 'Wybrany obraz:',
+        few: 'Wybrane obrazy:',
+        many: 'Wybrane obrazy:',
+        other: 'Wybrane obrazy:',
+      },
+    },
+  }),
+  coverTooSmall: dt('Ten obraz jest za mały: musi mieć co najmniej {minWidth} x {minHeight} px.'),
+  coverUnreadable: dt('Nie udało się odczytać tego pliku jako obrazu.'),
+  coverUploading: dt('Przygotowujemy Twoją okładkę'),
+  coverUploadFailed: dt('Ten obraz nie mógł zostać okładką. Spróbuj innego.'),
   saved: dt('Ustawienia zapisane'),
   rulesTitle: dt('Edytuj reguły'),
   rulesDescription: dt('Playlista wybiera filmy według tych reguł przy każdym otwarciu.'),

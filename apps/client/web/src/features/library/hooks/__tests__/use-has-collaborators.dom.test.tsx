@@ -49,6 +49,12 @@ describe('apps/client/web: useHasCollaborators', () => {
     { case: 'an item someone else added', playlist: addedByOther, collaborators: 0, shown: true },
     { case: 'a collaborator on the list', playlist, collaborators: 1, shown: true },
     { case: 'only the owner', playlist, collaborators: 0, shown: false },
+    {
+      case: 'a reader without a seat, who may not list them',
+      playlist: { ...playlist, viewer: { role: null, following: false } },
+      collaborators: 1,
+      shown: false,
+    },
   ])('is $shown for $case', async ({ playlist: read, collaborators, shown }) => {
     const result = renderHasCollaborators(read, collaborators);
 

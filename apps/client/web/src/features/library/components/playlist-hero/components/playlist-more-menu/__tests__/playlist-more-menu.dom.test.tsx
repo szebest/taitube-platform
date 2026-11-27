@@ -3,7 +3,7 @@ import { freezePlaylist } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
-import { STRANGER_OWNER, seated } from '#app/features/library/__tests__/playlist-people';
+import { seated, seatedAs } from '#app/features/library/__tests__/playlist-people';
 import {
   chooseFromMore,
   renderPlaylist,
@@ -37,7 +37,7 @@ describe('apps/client/web: the playlist More menu', () => {
     },
     {
       viewer: 'an editor',
-      overrides: { ownerId: STRANGER_OWNER, visibility: 'public' as const },
+      overrides: seatedAs('editor'),
       seat: 'editor' as const,
       items: ['Collaborators', 'Activity', 'Edit details', 'Leave playlist'],
     },

@@ -1,91 +1,54 @@
 import { waitFor } from '@testing-library/react';
-import { followPlaylist, listFollowedPlaylists, unfollowPlaylist } from '@vp/api-contracts';
+import { followPlaylist, unfollowPlaylist } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
-import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { NOW, uuid } from '#app/__tests__/library-fixtures';
-import { libraryKeys } from '#app/lib/query-keys/library-keys';
+import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
+import { libraryKeys, playlistQueryOptions } from '#app/lib/query-keys/library-keys';
 import { useFollowPlaylist } from '../use-follow-playlist';
 import { renderWithToasts } from './toast-harness';
 
 const LIST = uuid(4100);
-const OTHER = uuid(4101);
+const KEY = playlistQueryOptions(api, LIST).queryKey;
 const NO_CONTENT = () => new HttpResponse<null>(null, { status: 204 });
-const followed = (playlistId: string) => ({ playlistId, followedAt: NOW, playlist: null });
 
-function renderFollow(
-  { pages = [[]], enabled = true, write = NO_CONTENT } = {} as {
-    pages?: string[][];
-    enabled?: boolean;
-    write?: () => Response;
-  }
-) {
-  const asked = vi.fn();
+function renderFollow(following: boolean, write: () => Response = NO_CONTENT) {
   const writes: string[] = [];
-  const stored = pages.map((ids) => [...ids]);
   apiServer.use(
-    mockEndpoint(listFollowedPlaylists, ({ request }) => {
-      asked();
-      const at = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
-      return HttpResponse.json({
-        items: (stored[at] ?? []).map(followed),
-        nextCursor: at + 1 < stored.length ? String(at + 1) : null,
-      });
-    }),
     mockEndpoint(followPlaylist, () => {
       writes.push('follow');
-      const reply = write();
-      if (reply.ok) stored[0]?.push(LIST);
-      return reply;
+      return write();
     }),
     mockEndpoint(unfollowPlaylist, () => {
       writes.push('unfollow');
-      const reply = write();
-      if (reply.ok) {
-        for (const ids of stored) ids.splice(0, ids.length, ...ids.filter((id) => id !== LIST));
-      }
-      return reply;
+      return write();
     })
   );
   const client = createQueryClient();
-  const { result, show } = renderWithToasts(() => useFollowPlaylist(LIST, enabled), client);
-  return { result, show, client, asked, writes };
+  const playlist = playlistDetail(LIST, [], { viewer: { role: null, following } });
+  client.setQueryData(KEY, playlist);
+  client.setQueryData(libraryKeys.followed(), { pages: [], pageParams: [] });
+  const { result, show } = renderWithToasts(() => useFollowPlaylist(playlist), client);
+  return { result, show, client, writes };
 }
 
 describe('apps/client/web: useFollowPlaylist', () => {
-  it.each([
-    { case: 'on the first page', pages: [[LIST]], following: true },
-    { case: 'on a later page', pages: [[OTHER], [LIST]], following: true },
-    { case: 'nowhere', pages: [[OTHER]], following: false },
-  ])('knows the playlist is followed or not when it is $case', async ({ pages, following }) => {
-    const { result } = renderFollow({ pages });
-
-    await waitFor(() => expect(result.current.following).toBe(following));
-    await waitFor(() => expect(result.current.isPending).toBe(false));
-  });
-
-  it('asks nothing while it is not enabled', async () => {
-    const { result, asked } = renderFollow({ pages: [[LIST]], enabled: false });
-
-    expect(result.current.following).toBe(false);
-    expect(asked).not.toHaveBeenCalled();
+  it.each([true, false])('reads following %s from the playlist read', (following) => {
+    expect(renderFollow(following).result.current.following).toBe(following);
   });
 
   it.each([
-    { from: 'not following', pages: [[]], write: 'follow', following: true },
-    { from: 'following', pages: [[LIST]], write: 'unfollow', following: false },
+    { from: 'not following', following: false, write: 'follow' },
+    { from: 'following', following: true, write: 'unfollow' },
   ])(
-    'switches $from at once and marks the followed list stale',
-    async ({ pages, write, following }) => {
-      const { result, client, writes } = renderFollow({ pages });
-      await waitFor(() => expect(result.current.isPending).toBe(false));
-      client.setQueryData(libraryKeys.followed(), { pages: [], pageParams: [] });
-      await waitFor(() => expect(result.current.following).toBe(!following));
+    'switches $from in the cached read and marks the followed list stale',
+    async ({ following, write }) => {
+      const { result, client, writes } = renderFollow(following);
 
       result.current.toggle();
 
-      await waitFor(() => expect(result.current.following).toBe(following));
+      await waitFor(() => expect(client.getQueryData(KEY)?.viewer.following).toBe(!following));
       await waitFor(() => expect(writes).toEqual([write]));
       await waitFor(() =>
         expect(client.getQueryState(libraryKeys.followed())?.isInvalidated).toBe(true)
@@ -94,10 +57,9 @@ describe('apps/client/web: useFollowPlaylist', () => {
   );
 
   it('puts the follow back and says so when the server refuses', async () => {
-    const { result, show, writes } = renderFollow({
-      write: () => problemReply(ErrorCodes.INTERNAL),
-    });
-    await waitFor(() => expect(result.current.isPending).toBe(false));
+    const { result, show, client, writes } = renderFollow(false, () =>
+      problemReply(ErrorCodes.INTERNAL)
+    );
 
     result.current.toggle();
 
@@ -105,6 +67,6 @@ describe('apps/client/web: useFollowPlaylist', () => {
       expect(show).toHaveBeenCalledWith(expect.objectContaining({ tone: 'danger' }))
     );
     expect(writes).toEqual(['follow']);
-    await waitFor(() => expect(result.current.following).toBe(false));
+    expect(client.getQueryData(KEY)?.viewer.following).toBe(false);
   });
 });

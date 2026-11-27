@@ -6,7 +6,7 @@ import { libraryKeys, playlistQueryOptions } from '#app/lib/query-keys/library-k
 
 export type PlaylistSettings = Pick<
   ContractBody<typeof updatePlaylist>,
-  'autoRemoveWatched' | 'coverMode' | 'coverVideoId' | 'rules'
+  'autoRemoveWatched' | 'coverMode' | 'coverVideoId' | 'coverUploadId' | 'rules'
 >;
 
 function savePlaylistSettingsMutationOptions(api: ApiClient, playlistId: string) {

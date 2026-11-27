@@ -1,16 +1,10 @@
 import { screen, waitFor } from '@testing-library/react';
-import {
-  type FollowedPlaylistView,
-  followPlaylist,
-  forkPlaylist,
-  pinPlaylist,
-  unfollowPlaylist,
-} from '@vp/api-contracts';
+import { followPlaylist, forkPlaylist, pinPlaylist, unfollowPlaylist } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { NOW, playlistDetail, uuid } from '#app/__tests__/library-fixtures';
+import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { STRANGER_OWNER } from '#app/features/library/__tests__/playlist-people';
 import { libraryApi, renderLibrary } from '#app/features/library/__tests__/render-library';
@@ -24,7 +18,6 @@ import { getRouter } from '#app/router';
 
 const SOMEONE_ELSES = { ownerId: STRANGER_OWNER, visibility: 'public' as const };
 const FORK = uuid(4200);
-const FOLLOWED: FollowedPlaylistView = { playlistId: LIST, followedAt: NOW, playlist: null };
 
 /** Someone else's public playlist; `followed` says whether the viewer follows it, `writes` collects each write. */
 async function renderTheirs(followed: boolean) {
@@ -35,10 +28,12 @@ async function renderTheirs(followed: boolean) {
   };
   const rendered = await renderLibrary(`/playlist?list=${LIST}`, {
     details: [
-      playlistDetail(LIST, VIDEOS, SOMEONE_ELSES),
+      playlistDetail(LIST, VIDEOS, {
+        ...SOMEONE_ELSES,
+        viewer: { role: null, following: followed },
+      }),
       playlistDetail(FORK, VIDEOS, { title: 'Road trips (copy)' }),
     ],
-    followed: followed ? [FOLLOWED] : [],
     handlers: [
       mockEndpoint(followPlaylist, noContent('follow')),
       mockEndpoint(unfollowPlaylist, noContent('unfollow')),

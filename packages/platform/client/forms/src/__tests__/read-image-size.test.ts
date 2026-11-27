@@ -1,6 +1,6 @@
 import { readImageSize } from '../read-image-size';
 
-describe('apps/client/studio: readImageSize', () => {
+describe('@kit/forms: readImageSize', () => {
   it('answers the pixels of the decoded image and releases it', async () => {
     const close = vi.fn();
     vi.stubGlobal(

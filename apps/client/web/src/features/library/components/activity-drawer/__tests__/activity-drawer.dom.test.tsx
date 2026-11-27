@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { uuid } from '#app/__tests__/library-fixtures';
-import { activity, STRANGER_OWNER, seated } from '#app/features/library/__tests__/playlist-people';
+import { activity, seated, seatedAs } from '#app/features/library/__tests__/playlist-people';
 import {
   chooseFromMore,
   LAZY,
@@ -81,7 +81,7 @@ describe('apps/client/web: the activity drawer', () => {
   });
 
   it('offers no Restore to a collaborator', async () => {
-    const { drawer } = await openActivity({ ownerId: STRANGER_OWNER, visibility: 'public' });
+    const { drawer } = await openActivity(seatedAs('editor'));
 
     await drawer.findByRole('list', { name: 'Changes to this playlist' });
 

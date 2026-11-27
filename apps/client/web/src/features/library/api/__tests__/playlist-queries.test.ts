@@ -11,10 +11,9 @@ import {
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { NOW, uuid } from '#app/__tests__/library-fixtures';
+import { uuid } from '#app/__tests__/library-fixtures';
 import { libraryKeys } from '#app/lib/query-keys/library-keys';
 import {
-  followedPlaylistIdsQueryOptions,
   followedPlaylistsQueryOptions,
   playlistActivityQueryOptions,
   playlistCollaboratorsQueryOptions,
@@ -68,18 +67,6 @@ describe('apps/client/web: playlist queries', () => {
       'limit=30',
       'limit=30&cursor=next',
     ]);
-  });
-
-  it('walks every followed page for the ids a Follow button reads', async () => {
-    const { asked, reply } = keysetPages((cursor) => [
-      { playlistId: cursor ? uuid(2) : uuid(1), followedAt: NOW, playlist: null },
-    ]);
-    apiServer.use(mockEndpoint(listFollowedPlaylists, reply as never));
-
-    const ids = await createQueryClient().query(followedPlaylistIdsQueryOptions(api));
-
-    expect(ids).toEqual([uuid(1), uuid(2)]);
-    expect(asked).toHaveLength(2);
   });
 
   it('asks for the stats over the range and keeps each range apart', async () => {
@@ -149,8 +136,5 @@ describe('apps/client/web: playlist queries', () => {
     const playlist = libraryKeys.playlist(LIST);
 
     for (const key of parts) expect(key.slice(0, playlist.length)).toEqual(playlist);
-    expect(followedPlaylistIdsQueryOptions(api).queryKey.slice(0, 2)).toEqual(
-      libraryKeys.followed()
-    );
   });
 });

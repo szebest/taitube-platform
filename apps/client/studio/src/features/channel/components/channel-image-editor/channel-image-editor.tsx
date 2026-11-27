@@ -1,4 +1,4 @@
-import { useAppForm } from '@kit/forms';
+import { readImageSize, useAppForm } from '@kit/forms';
 import { isErr } from '@kit/result';
 import {
   CHANNEL_IMAGE_CONTENT_TYPES,
@@ -16,7 +16,6 @@ import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { useT } from '#app/lib/messages';
 import { ChannelImage } from '../channel-image/channel-image';
-import { readImageSize } from './utils/read-image-size';
 
 const IMAGE_ACCEPT = Object.fromEntries(CHANNEL_IMAGE_CONTENT_TYPES.map((type) => [type, []]));
 

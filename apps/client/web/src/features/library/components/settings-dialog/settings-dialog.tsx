@@ -10,6 +10,7 @@ import {
 } from '#app/features/library/hooks/use-save-playlist-settings';
 import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
+import { CoverUpload } from './components/cover-upload/cover-upload';
 
 const { UrlModal } = urlModals;
 
@@ -18,8 +19,8 @@ export interface SettingsDialogProps {
 }
 
 /**
- * `?modal=playlist-settings`: removing watched videos and the cover, each saved as it changes. A
- * custom cover is offered only while the playlist already has one: it is uploaded elsewhere.
+ * `?modal=playlist-settings`: removing watched videos and the cover, each saved as it changes. The
+ * `custom` mode is offered once the playlist has an image of its own; uploading one picks it.
  */
 export function SettingsDialog({ playlist }: SettingsDialogProps) {
   const { tOr } = useT();
@@ -95,6 +96,7 @@ export function SettingsDialog({ playlist }: SettingsDialogProps) {
               </Select.Content>
             </Select.Root>
           </Field.Root>
+          <CoverUpload playlistId={id} />
           {cover.mode === 'item' && (
             <Field.Root>
               <Field.Label>{tOr('playlistTools.coverVideo', {}, '')}</Field.Label>

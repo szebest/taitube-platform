@@ -19,7 +19,7 @@ export interface PlaylistHeroActionsProps {
 export function PlaylistHeroActions({ playlist, abilities }: PlaylistHeroActionsProps) {
   const { tOr } = useT();
   const account = useRequireAccount('playlist');
-  const follow = useFollowPlaylist(playlist.id, account.allowed && abilities.follow);
+  const follow = useFollowPlaylist(playlist);
   const fork = useCopyPlaylist(playlist.id, 'fork');
   const pin = usePinPlaylist(playlist.id);
 

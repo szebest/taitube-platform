@@ -38,6 +38,15 @@ export function seated(people: PlaylistCollaboratorView[], seat?: PlaylistCollab
   );
 }
 
+/** A public playlist of someone else, read by a viewer who sits on it in `role`. */
+export function seatedAs(role: PlaylistCollaboratorRole) {
+  return {
+    ownerId: STRANGER_OWNER,
+    visibility: 'public' as const,
+    viewer: { role, following: false },
+  };
+}
+
 export function invite(n: number, overrides: Partial<PlaylistInviteView> = {}): PlaylistInviteView {
   return {
     id: uuid(8500 + n),

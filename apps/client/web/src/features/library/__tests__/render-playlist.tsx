@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { render, screen, within } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
-import { createQueryClient } from '@vp/queries';
+import { createQueryClient, UserEventStream } from '@vp/queries';
 import { apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw/http';
 import type { ReactElement } from 'react';
@@ -61,7 +61,7 @@ export const titles = () =>
       (card) => within(card).getByRole('link', { name: /Tram ride|Old film|Night bus/ }).textContent
     );
 
-/** `ui` alone, as the signed-in owner: under the app's providers, toasts and a router for its links, with `handlers` answering the API. */
+/** `ui` alone, as the signed-in owner: under the app's providers, toasts, the event stream and a router for its links, with `handlers` answering the API. */
 export async function renderPart(
   ui: ReactElement,
   {
@@ -81,7 +81,9 @@ export async function renderPart(
   const rendered = render(
     <QueryClientProvider client={client}>
       <Providers>
-        <RouterProvider router={router} />
+        <UserEventStream>
+          <RouterProvider router={router} />
+        </UserEventStream>
       </Providers>
     </QueryClientProvider>
   );

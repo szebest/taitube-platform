@@ -1,28 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
 import type { PlaylistView } from '@vp/api-contracts';
 import type { PlaylistResource } from '@vp/permissions';
-import { useAccount, useApi } from '@vp/queries';
-import { playlistCollaboratorsQueryOptions } from '../api/playlist-queries';
+import { useAccount } from '@vp/queries';
 
-/**
- * The playlist as the permission rules see it, with the viewer's own seat on it. The read carries no
- * seat, so a signed-in reader other than the owner asks for the collaborators; a stranger is refused
- * that list, which means no seat.
- */
-export function usePlaylistAccess({ id, ownerId, visibility }: PlaylistView): PlaylistResource {
-  const api = useApi();
+/** The playlist as the permission rules see it, with the seat its read gives the viewer. */
+export function usePlaylistAccess({
+  id,
+  ownerId,
+  visibility,
+  viewer,
+}: PlaylistView): PlaylistResource {
   const account = useAccount();
-  const { data } = useQuery({
-    ...playlistCollaboratorsQueryOptions(api, id),
-    enabled: account !== undefined && account.id !== ownerId,
-  });
-  const seat = data?.items.find(({ userId }) => userId === account?.id);
+  const collaboratorRole = viewer.role === 'owner' ? null : viewer.role;
 
   return {
     id,
     ownerId,
     visibility,
-    collaboratorId: seat?.userId ?? null,
-    collaboratorRole: seat?.role ?? null,
+    collaboratorId: collaboratorRole === null ? null : (account?.id ?? null),
+    collaboratorRole,
   };
 }

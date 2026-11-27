@@ -15,8 +15,8 @@ import {
   collaborator,
   invite,
   person,
-  STRANGER_OWNER,
   seated,
+  seatedAs,
 } from '#app/features/library/__tests__/playlist-people';
 import {
   chooseFromMore,
@@ -125,16 +125,13 @@ describe('apps/client/web: the collaborators dialog', () => {
 
   it('lets a collaborator leave, back to their playlists', async () => {
     const left: string[] = [];
-    const { user, router } = await renderPlaylist(
-      { ownerId: STRANGER_OWNER, visibility: 'public' },
-      [
-        seated([ANA], 'editor'),
-        mockEndpoint(leavePlaylist, ({ params }) => {
-          left.push(String(params.id));
-          return new HttpResponse(null, { status: 204 });
-        }),
-      ]
-    );
+    const { user, router } = await renderPlaylist(seatedAs('editor'), [
+      seated([ANA], 'editor'),
+      mockEndpoint(leavePlaylist, ({ params }) => {
+        left.push(String(params.id));
+        return new HttpResponse(null, { status: 204 });
+      }),
+    ]);
 
     await chooseFromMore(user, 'Collaborators');
     const dialog = within(await screen.findByRole('dialog', { name: 'Collaborators' }, LAZY));

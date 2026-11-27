@@ -1,13 +1,9 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import { listPlaylistCollaborators } from '@vp/api-contracts';
-import { ErrorCodes } from '@vp/errors';
+import { renderHook } from '@testing-library/react';
+import type { PlaylistView } from '@vp/api-contracts';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { createQueryClient } from '@vp/queries';
-import { account, apiServer, mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
-import { HttpResponse } from 'msw/http';
+import { account, OWNER_ID } from '@vp/web-testing';
 import type { PropsWithChildren } from 'react';
-import { NOW, playlistDetail, uuid } from '#app/__tests__/library-fixtures';
+import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { type PlaylistAbilities, usePlaylistAbilities } from '../use-playlist-abilities';
 
@@ -51,29 +47,23 @@ const SEATED: PlaylistAbilities = {
   readActivity: true,
 };
 
-const seat = (role: 'editor' | 'contributor') => () =>
-  HttpResponse.json({ items: [{ userId: VIEWER, role, channel: null, joinedAt: NOW }] });
-
 const READER: PlaylistAbilities = { ...NONE, follow: true };
 
 function renderAbilities(
   Session: ReturnType<typeof signedIn>,
   user: { id: string; role: 'USER' | 'GUEST' } | null,
-  reply: () => Response
+  role: PlaylistView['viewer']['role']
 ) {
-  apiServer.use(mockEndpoint(listPlaylistCollaborators, reply));
-  const client = createQueryClient();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>
-      <Session>
-        <PermissionsProvider userContext={user}>{children}</PermissionsProvider>
-      </Session>
-    </QueryClientProvider>
+    <Session>
+      <PermissionsProvider userContext={user}>{children}</PermissionsProvider>
+    </Session>
   );
-  return renderHook(
-    () => usePlaylistAbilities(playlistDetail(LIST, [], { visibility: 'public' })),
-    { wrapper }
-  ).result;
+  const playlist = playlistDetail(LIST, [], {
+    visibility: 'public',
+    viewer: { role, following: false },
+  });
+  return renderHook(() => usePlaylistAbilities(playlist), { wrapper }).result;
 }
 
 describe('apps/client/web: usePlaylistAbilities', () => {
@@ -82,43 +72,41 @@ describe('apps/client/web: usePlaylistAbilities', () => {
       viewer: 'the owner',
       Session: signedIn(),
       user: { id: OWNER_ID, role: 'USER' },
-      reply: seat('editor'),
+      role: 'owner',
       abilities: OWNER,
     },
     {
       viewer: 'an editor',
       Session: signedIn(account({ id: VIEWER })),
       user: { id: VIEWER, role: 'USER' },
-      reply: seat('editor'),
+      role: 'editor',
       abilities: SEATED,
     },
     {
       viewer: 'a contributor',
       Session: signedIn(account({ id: VIEWER })),
       user: { id: VIEWER, role: 'USER' },
-      reply: seat('contributor'),
+      role: 'contributor',
       abilities: SEATED,
     },
     {
       viewer: 'a signed-in reader with no seat',
       Session: signedIn(account({ id: VIEWER })),
       user: { id: VIEWER, role: 'USER' },
-      reply: () => problemReply(ErrorCodes.FORBIDDEN),
+      role: null,
       abilities: READER,
     },
     {
       viewer: 'a guest',
       Session: AppProviders,
       user: null,
-      reply: seat('editor'),
+      role: null,
       abilities: NONE,
     },
   ] as const)(
     'gives $viewer exactly what their seat allows',
-    async ({ Session, user, reply, abilities }) => {
-      const result = renderAbilities(Session, user, reply);
-
-      await waitFor(() => expect(result.current).toEqual(abilities));
+    ({ Session, user, role, abilities }) => {
+      expect(renderAbilities(Session, user, role).current).toEqual(abilities);
     }
   );
 });

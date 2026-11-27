@@ -3,7 +3,7 @@ import { getPlaylistStats } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { uuid } from '#app/__tests__/library-fixtures';
-import { STRANGER_OWNER, seated } from '#app/features/library/__tests__/playlist-people';
+import { seated, seatedAs } from '#app/features/library/__tests__/playlist-people';
 import {
   chooseFromMore,
   LAZY,
@@ -53,10 +53,7 @@ describe('apps/client/web: the playlist stats sheet', () => {
 
   it('is not offered to a collaborator', async () => {
     const { ranges, handler } = statsAsked();
-    const { user } = await renderPlaylist({ ownerId: STRANGER_OWNER, visibility: 'public' }, [
-      seated([], 'editor'),
-      handler,
-    ]);
+    const { user } = await renderPlaylist(seatedAs('editor'), [seated([], 'editor'), handler]);
 
     await user.click(await screen.findByRole('button', { name: 'More playlist actions' }));
 

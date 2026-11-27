@@ -1,8 +1,6 @@
 import { screen } from '@testing-library/react';
-import { listPlaylistCollaborators } from '@vp/api-contracts';
-import { mockEndpoint, OWNER_ID } from '@vp/web-testing';
-import { HttpResponse } from 'msw/http';
-import { NOW, uuid } from '#app/__tests__/library-fixtures';
+import { OWNER_ID } from '@vp/web-testing';
+import { uuid } from '#app/__tests__/library-fixtures';
 import { adder, annotatedPlaylist } from '#app/features/library/__tests__/annotated-playlist';
 import { renderPlaylist, rowOf } from '#app/features/library/__tests__/render-playlist';
 
@@ -11,22 +9,14 @@ const OWNER = uuid(9001);
 /** The viewer is a contributor on someone else's playlist and added Tram ride; the owner added the rest. */
 const renderAsContributor = () => {
   const playlist = annotatedPlaylist({ ownerId: OWNER });
-  return renderPlaylist(
-    {
-      ...playlist,
-      items: playlist.items.map((item, index) => ({
-        ...item,
-        addedBy: adder(index === 0 ? OWNER_ID : OWNER),
-      })),
-    },
-    [
-      mockEndpoint(listPlaylistCollaborators, () =>
-        HttpResponse.json({
-          items: [{ userId: OWNER_ID, role: 'contributor', channel: null, joinedAt: NOW }],
-        })
-      ),
-    ]
-  );
+  return renderPlaylist({
+    ...playlist,
+    viewer: { role: 'contributor', following: false },
+    items: playlist.items.map((item, index) => ({
+      ...item,
+      addedBy: adder(index === 0 ? OWNER_ID : OWNER),
+    })),
+  });
 };
 
 const menuOf = async (title: string) => {

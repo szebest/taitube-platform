@@ -9,7 +9,6 @@ export function playlistCollaboratorsQueryOptions(api: ApiClient, playlistId: st
     queryKey: libraryKeys.playlistPart(playlistId, 'collaborators'),
     queryFn: () =>
       api.playlistCollaboration.listPlaylistCollaborators({ params: { id: playlistId } }),
-    retry: false,
   });
 }
 
@@ -48,25 +47,6 @@ export function playlistStatsQueryOptions(
     queryKey: [...libraryKeys.playlistPart(playlistId, 'stats'), range],
     queryFn: () =>
       api.playlistSharing.getPlaylistStats({ params: { id: playlistId }, query: { range } }),
-  });
-}
-
-/** The id of every playlist the viewer follows, every page read, for a Follow button's state. */
-export function followedPlaylistIdsQueryOptions(api: ApiClient) {
-  return queryOptions({
-    queryKey: [...libraryKeys.followed(), 'ids'],
-    queryFn: async () => {
-      const ids: string[] = [];
-      let cursor: string | undefined;
-      do {
-        const page = await api.playlistLibrary.listFollowedPlaylists({
-          query: { limit: KEYSET_PAGE_SIZE, cursor },
-        });
-        ids.push(...page.items.map(({ playlistId }) => playlistId));
-        cursor = page.nextCursor ?? undefined;
-      } while (cursor !== undefined);
-      return ids;
-    },
   });
 }
 
