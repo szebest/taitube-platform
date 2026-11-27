@@ -116,6 +116,7 @@ export async function insertComment(
   audit?: NewChannelAuditEntry
 ): Promise<CommentThread | null> {
   const locked = await lockTarget(tx, input.target);
+  if (!locked) return null;
   if (input.parentId !== null && !(await isLive(tx, input.parentId))) return null;
 
   const now = new Date();
@@ -131,7 +132,7 @@ export async function insertComment(
   const counted = await isCounted(tx, input.id);
   if (counted) await moveCommentsCount(tx, target, 1);
   const created = await threadById(tx, input.id, { id: input.authorId });
-  if (counted && created && locked) await publish(tx, created, locked);
+  if (counted && created) await publish(tx, created, locked);
   if (created && moderation?.moderationState === 'held') await tellHeld(tx, created, moderators);
   if (audit) await appendChannelAudit(tx, audit);
   return created;

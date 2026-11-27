@@ -13,6 +13,7 @@ import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentKeysetWalksContract } from './comment-keyset-walks.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
 import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
+import { describeCommentTargetGoneContract } from './comment-target-gone.contract';
 import {
   OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
@@ -112,39 +113,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       );
 
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(10);
-    });
-
-    function reply(id: string, parentId: string) {
-      return comments.create({
-        id,
-        target: videoTarget(VIDEO_IDS.a),
-        channelId: OWNER_CHANNEL_ID,
-        authorId: OTHER_OWNER_ID,
-        authorChannelId: OTHER_OWNER_CHANNEL_ID,
-        parentId,
-        content: 'reply',
-      });
-    }
-
-    it('leaves no live reply under a root removed while the reply was written', async () => {
-      await seedComment(ctx, C.liked);
-
-      const [created, removed] = await Promise.all([
-        reply(C.reply1, C.liked),
-        comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) }),
-      ]);
-
-      expect(expectOk(removed)).toBe(expectOk(created) === null ? 1 : 2);
-      expect(expectOk(await comments.findById(C.reply1))).toBeNull();
-      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
-    });
-
-    it('writes nothing for a reply to a removed root', async () => {
-      await seedComment(ctx, C.liked);
-      expectOk(await comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) }));
-
-      expect(expectOk(await reply(C.reply1, C.liked))).toBeNull();
-      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
     });
 
     it('edits the content and marks the comment edited', async () => {
@@ -293,5 +261,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     describeAuthoredCommentsContract(ctx);
     describeCommentKeysetWalksContract(ctx);
     describeCommentPublicScopeContract(ctx);
+    describeCommentTargetGoneContract(ctx);
   });
 }

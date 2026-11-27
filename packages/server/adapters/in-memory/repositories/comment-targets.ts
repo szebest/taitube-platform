@@ -19,7 +19,7 @@ export function sameTarget(left: CommentTarget, right: CommentTarget): boolean {
   return left.type === right.type && left.id === right.id;
 }
 
-/** The target and who owns it, or null once it is gone. */
+/** The target and who owns it, or null once it is gone, also when it went while the owner was read. */
 export async function ownerOf(
   stores: CommentTargetStores,
   target: CommentTarget
@@ -35,7 +35,8 @@ export async function ownerOf(
       const post = stores.postsRepo.posts.get(target.id);
       if (!post) return null;
       const channel = unwrapOr(await stores.channelsRepo.findById(post.channelId), null);
-      return channel && { type: 'post', id: post.id, ownerId: channel.userId };
+      if (!(channel && stores.postsRepo.posts.has(post.id))) return null;
+      return { type: 'post', id: post.id, ownerId: channel.userId };
     }
     default:
       return assertNever(target, 'CommentTarget');

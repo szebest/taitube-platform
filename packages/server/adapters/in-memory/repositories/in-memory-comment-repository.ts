@@ -127,12 +127,13 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     audit?: NewChannelAuditEntry
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const owner = await ownerOf(this.deps, input.target);
+    if (!owner) return ok(null);
     const scope = this.scope([input.channelId]);
     if (input.parentId !== null && !this.liveById(input.parentId)) return ok(null);
     const stored = newStoredComment(input, new Date());
     this.comments.set(stored.id, stored);
     const counted = isVisibleTo(null, stored, scope);
-    if (counted && owner) await moveCommentsCount(this.deps, input.target, 1);
+    if (counted) await moveCommentsCount(this.deps, input.target, 1);
 
     const created = await this.toThread(stored, ownOrPublicTo({ id: input.authorId }, scope));
     const told = await announceCreated(this.deps, { created, owner, input, counted });
