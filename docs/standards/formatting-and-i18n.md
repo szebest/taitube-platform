@@ -6,9 +6,9 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 
 | Package | Tier, layer | Holds |
 |---|---|---|
-| `@kit/intl` | platform, universal | formatters, the value union, option allowlists, `IntlCache`, `localeChain`, `defineLocales`; no locale list |
-| `@kit/i18n` | platform, universal | the message engine: `defineEngine`, `defineKind`, `definePresets`, `defineParams`, `createI18n`; no string, no locale data |
-| `@kit/intl-react` | platform, client | `IntlProvider`, `useFormat`, `<Format>`, `createReactI18n` (a typed `TranslatorProvider` and `useT` per catalogue), `createLocaleStore()` |
+| `@kit/intl` | platform, universal | the formatter kinds and their registry, option allowlists, `IntlCache`, `parseDecimal`, `localeChain`, `defineLocales`; no locale list |
+| `@kit/i18n` | platform, universal | the message engine: `defineEngine`, `messageKind`, `definePresets`, `defineParams`, `createI18n`; no string, no locale data |
+| `@kit/intl-react` | platform, client | `IntlProvider`, `useFormat`, `useFormatParts`, `<Format>`, `<FormatList>`, `createReactI18n` (a typed `TranslatorProvider`, `useT`, `useTParts` and `<Message>` per catalogue), `ListPartView`, `createLocaleStore()` |
 | `@vp/intl-formats` | app, universal | the product's tagged values: `views`, `videoDuration`, `publishedAt`, `fileSize` and the rest |
 | `@vp/shared-messages` | app, universal | the app's engine (`dt`, `defineCatalogue`, `createI18n`, the param vocabulary), the words both apps render (`auth`, `browse`, `videos`, `errors`, `errorPage`, `ui`) in `en/` and `pl/`, `ERROR_COPY`, `LOCALES`; a server may read it |
 | each app's `src/lib/messages/` | app | its own namespaces in `en/` and `pl/`, its catalogue type (`DisjointNamespaces` of its own and the shared), its `useT`, its loader per locale |
@@ -41,37 +41,63 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 
 A component never builds the string itself: no `${n} views`, no `toLocaleString()`, no `toFixed`.
 
-## 3. The value union
+## 3. Kinds and tagged values
 
-A formatter reads a value tagged with one literal `type`, and `formatValue` switches on it:
+A formatter is a kind, `defineKind({ name, arg, options, render, parts? })`. `arg` guards the value, `options`
+checks the options, `render(arg, options, context)` returns `Result<Out, FormatFailure>`, and `context` is the
+`FormatContext` plus `format`, so a kind formats another by its tagged value without importing it (`list` formats
+its items, `numberRange` its ends). `parts` is the same result as structure a UI may use. A value is tagged with
+the kind's name, `{ type: 'count', value: 1200 }`, and `createIntl(context, kinds)` looks the name up in the registry
+it was handed: `formatKinds`, plus an app's own. `TaggedValue` is derived from that registry, so a kind added to it
+is typed at once, and a name it does not hold declines as `FORMAT_WRONG_KIND`; there is no second code for it.
 
-```ts
-type FormatValue =
-  | string                                            // as authored
-  | number                                            // plain decimal
-  | { type: 'count'; value: number; options?: CompactOptions }      // 1.2M
-  | { type: 'number'; value: number; options?: NumberOptions }      // 1,500 · 3 days
-  | { type: 'percent'; value: number; options?: PercentOptions }    // percentage points: 7 is 7%
-  | { type: 'bytes'; value: number; options?: BytesOptions }        // 4.5 MB
-  | { type: 'bitrate'; value: number; options?: BitrateOptions }    // 4.5 Mb/s, in bits per second
-  | { type: 'numberRange'; value: readonly [number, number]; options?: NumberOptions }
-  | { type: 'money'; value: number; units?: 'minor' | 'major'; options?: MoneyOptions }
-  | { type: 'date' | 'time' | 'dateTime'; value: string; options?: ... }   // ISO 8601 only
-  | { type: 'dateRange'; value: readonly [string, string]; options?: DateOptions }
-  | { type: 'relative'; value: string; now?: string; options?: RelativeOptions }   // 3 days ago
-  | { type: 'calendarDay'; value: string; now?: string }            // today 18:30, yesterday
-  | { type: 'duration'; value: number; options?: DurationOptions }  // 12:45, 1 hr, 2 min
-  | { type: 'list'; value: readonly string[]; options?: ListOptions }
-  | { type: 'displayName'; value: string | USER; of: DisplayNameType };
-```
+| Kind | Value | Reads as |
+|---|---|---|
+| `number`, `count` (compact), `percent`, `bytes`, `bitrate`, `money` | `number` | `1,500` · `1.2M` · `7%` (points) · `4.5 MB` · `4.5 Mb/s` · `£12.50` |
+| `numberRange` | `[number, number]` | `1 - 5`, money ends through `ctx.format` |
+| `date`, `time`, `dateTime` | ISO 8601 instant | a date-only string declines, it is a `plainDate` |
+| `dateRange` | `[instant, instant]` | `May 3, 6 - 8 PM` |
+| `plainDate` | `2024-05-01` | the same day in every zone |
+| `relative`, `calendarDay` | instant, from the value's or the context's `now` | `3 days ago` · `today 18:30` |
+| `duration` | seconds | `12:45` · `1 hr, 2 min` |
+| `list` | `readonly (string \| number \| TaggedValue)[]` | `A, B, and 2 more` |
+| `displayName` | code or `USER` | `Swedish` |
+| `timeZone` | IANA zone or `USER`, at an instant | `Central European Summer Time` · `GMT+2` |
+| `initials`, `capitalize` | name, text | `AL` · `Xlarge`, by the viewer's language and whole graphemes |
+| `isolate` | text | the text in FSI and PDI; opt-in per placeholder |
+| `truncate` | text | cut on graphemes |
+| `collator`, `pluralCategory` | none, count | not text: a comparator, a plural branch, called with `intl.call` |
 
-`FORMAT_KINDS` lists the tags and `KindsMatchUnion` holds it equal to the union at compile time. Domain
-values (`views`, `subscribers`, `commentCount`, `videoDuration`, `fileSize`, `uploadProgress`, `resolution`,
-`publishedAt`) return one of these; they never build a string or an `Intl` object. `collator` returns a
-comparator and `truncate` cuts on graphemes; `pluralCategory` picks a branch.
+Domain values (`views`, `subscribers`, `commentCount`, `videoDuration`, `fileSize`, `uploadProgress`, `resolution`,
+`publishedAt`) return a tagged value; they never build a string or an `Intl` object. A formatter returns
+`Result<string, FormatFailure>`, one of `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`,
+`FORMAT_UNRENDERABLE`.
 
-A formatter returns `Result<string, FormatFailure>`, one of `FORMAT_UNSUPPORTED_LOCALE`,
-`FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`.
+Rules every kind follows, so a new one needs no study of the old:
+
+- **A default never makes a valid call fail.** A kind applies a default per option only when no sibling of the same
+  pair is given: `percent` with `{ minimumFractionDigits: 2 }` is `7.00%`.
+- **Rounding is symmetric and a unit is picked after it**: `relative` reads 3570 seconds as "in 1 hour" and "1 hour ago".
+- **A calendar date is not an instant**: `date`, `time` and `dateTime` decline `2024-05-01`, and `plainDate` reads it in
+  no zone.
+- **No English in a package**: the words around a value, including "and N more", are the app's catalogue.
+
+Parsing is the inverse and lives beside the formatters: `parseDecimal(text, context)` reads a typed number by the
+locale's grouping, decimal and numerals (`1 234,5` in `pl` is `1234.5`) and declines grouping the locale does not use
+(`12,3,4`). It takes the separators from `Intl.NumberFormat`, never from a table.
+
+## 3a. Lists and parts
+
+`{ type: 'list', value: [...], options: { type, style, max, more, item } }`. `max` is the most items shown (`0` or absent
+shows all) and `more` is the copy for the rest, by plural category: `{ one: 'and {?} more', other: 'and {?} more' }`,
+`{?}` the hidden count. `max` without `more` does not compile and returns `FORMAT_UNRENDERABLE`. `item: { kind: 'money' }`
+formats raw items through that kind. `parts` returns a `ListDetail`: `segments` (`item | literal | more`), `visible`,
+`hidden`, `total`, `full` and `text`, all plain data, so a server render and a hydration agree.
+
+In a message, `{names:list}` takes the same config (`list: { names: { max, more, item } }`);
+`Translator.parts(key, args)` returns the `MessagePart`s, `t` is their text joined. In React, `<Message>` and
+`<FormatList>` render a list part through `ListPartView`: each item in `<bdi>`, the `more` segment the trigger of
+`@kit/ui`'s `MoreDisclosure`, which lists `full` in a popover. `moreTooltip={false}` renders the text only.
 
 ## 4. Option allowlists
 
@@ -86,7 +112,7 @@ export const COMPACT_OPTION_KEYS = [
 export type CompactOptions = Pick<Intl.NumberFormatOptions, (typeof COMPACT_OPTION_KEYS)[number]>;
 ```
 
-A misspelt key fails to compile where it is declared, and `withOptions` declines an unnamed key at runtime
+A misspelt key fails to compile where it is declared, and `optionKeys` declines an unnamed key at runtime
 with the key in the failure. A formatter's own option names (`base` on `bytes`, `style` on the date family)
 go in `OptionKeys`' second argument. Prefer a named style (`{ style: 'short' }`) to spelt-out fields at a call
 site: one decision instead of thirty that drift.
@@ -104,7 +130,7 @@ views: dt('{count:plural}', {
 | `{name}` | `string \| number` | as authored, or `number` |
 | `{name:number}` | `number` | `number`, options from `config.number[name]` |
 | `{name:date}` | ISO 8601 `string` | `date`, options from `config.date[name]` |
-| `{name:list}` | `readonly string[]` | `list`, options from `config.list[name]` |
+| `{name:list}` | `readonly (string \| TaggedValue)[]`, or the `item` kind's values | `list`, options from `config.list[name]`, including `max`, `more` and `item` |
 | `{name:plural}` | `number` | `Intl.PluralRules` picks `config.plural[name][category]`; `{?}` is the count |
 | `{name:enum}` | a key of `config.enum[name]` | the label |
 
@@ -132,7 +158,7 @@ The engine's type rules, each a compile error named in the message:
 - **Presets and kinds are the app's**: `definePresets({ number: { compact: { default: {...}, pl: {...} } } })`
   names an option set resolved per locale along the chain, a message names it (`formatter: 'compact'`) or
   overrides it (`{ preset: 'compact', maximumFractionDigits: 1 }`), and an unknown name fails
-  (`UnknownPreset`). A new kind is `defineKind` in the app; the engine is never edited for either.
+  (`UnknownPreset`). A new kind is `defineKind` in the app, listed with `messageKind`; the engine is never edited for either.
 
 `t` returns a `Result`, and a missing key is a failure carrying the key. `tOr(key, args, fallback)` is the
 render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, then the source locale `en`.
@@ -191,13 +217,18 @@ cache stays.
   once per translation; a story whose words are all props stays untagged, its translated shot would
   repeat the English one.
 - Numbers and dates go through `@kit/intl`, which picks the locale's digits and separators.
+- A user-written name or item inside a sentence or a list is wrapped in `<bdi>` (React) or the `isolate` kind (a message
+  placeholder), so a Latin name inside Arabic keeps its direction; the `MoreDisclosure` popover places by logical
+  `Side` and `Align` and flips with `dir`, and its items are `<bdi>` too.
 
 ## 10. Where a new one goes
 
 - Specs assert shape, not glyphs: ICU data moves between Node versions and differs in Bun.
-- A formatter: `packages/platform/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
-  tag in `FORMAT_KINDS`, a case in `formatValue`. Test at least three locales, one with a different grouping
-  separator and one non-Latin script.
+- A formatter: `packages/platform/universal/intl/src/formatters/<name>.ts` (`defineKind`), its spec, and its entry in
+  `formatKinds`; an app's own goes in the registry it passes to `createIntl`, with no edit to the package. Test at least
+  three locales, one with a different grouping separator and one non-Latin script.
+- A formatter that wraps an engine feature with a native constructor (`Intl.DurationFormat`) also gets a conformance table
+  against it ([testing.md](testing.md)).
 - A domain value: `packages/universal/intl-formats/src/<name>.ts`, returning a tagged value.
 - A message: the feature file under the app's `src/lib/messages/en/` and the same key in its `pl/`, or
   `catalogue-parity.test.ts` fails. Only a word both apps (or a client and a server) render goes into

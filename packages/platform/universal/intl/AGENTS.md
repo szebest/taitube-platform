@@ -20,6 +20,11 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
 `views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
 (a view count, a video duration) live in the app.
 
+The kinds it ships are in [formatting-and-i18n.md](../../../../docs/standards/formatting-and-i18n.md#3-kinds-and-tagged-values):
+numbers, dates, ranges, relative time, durations, lists with `max` and `more`, names, `initials`, `capitalize`,
+`timeZone`, `isolate`, `truncate`, `collator` and `pluralCategory`. `parseDecimal(text, context)` in `src/parsers/` is
+the inverse for numbers and returns a `Result` like a formatter.
+
 ---
 
 ## 2. Invariants
@@ -48,7 +53,17 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
    tag down to its language only (`sv-FI`, `sv`); the caller appends its own source locale.
 8. **One file per formatter, a spec where it can break.** A new formatter goes in `src/formatters/` and an
    entry in `formatKinds`; an app's own goes in the registry it passes to `createIntl`, with no edit here.
-9. **Presets are data the app registers.** `definePresets` freezes a table of named option sets per kind and
+9. **A default narrows nothing.** A kind applies each default only when no sibling of the same pair is given
+   (`percent` with `minimumFractionDigits: 2` is `7.00%`), so an override never turns a valid call into a `RangeError`.
+10. **A calendar date is not an instant.** `date`, `time` and `dateTime` decline `2024-05-01`, which read as UTC
+    midnight is the day before west of UTC; `plainDate` reads it in no zone.
+11. **Rounding is symmetric and a unit follows it.** `relative` rounds half away from zero and picks the unit
+    after, so `3570 s` reads "in 1 hour" and "1 hour ago".
+12. **A package ships no words.** "and N more" is the `more` copy the caller passes; a source scan fails on an English
+    literal in `src/`. A `toLocaleUpperCase` call is allowed only with the context's locale as its argument.
+13. **Parsers read separators from `Intl`.** `parseDecimal` derives grouping, decimal, minus and numerals from
+    `Intl.NumberFormat.formatToParts`, never a table, and declines grouping the locale does not use.
+14. **Presets are data the app registers.** `definePresets` freezes a table of named option sets per kind and
    `resolveEntry` resolves a name along the locale chain, then `default`, with `{ preset, ...overrides }` laid
    over it. The message engine and a server render call the same function.
 

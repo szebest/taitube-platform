@@ -86,6 +86,13 @@ packages (`@kit/di`, `@kit/errors`, `@kit/i18n`, `@kit/keyspace`, `@kit/permissi
 the app's registries run them (the table in [platform-packages.md](platform-packages.md)). Contracts for the app's own
 ports stay in `@vp/adapters`.
 
+**A fallback for a native API is held to it.** Where code rebuilds something an engine may or may not ship
+(`Intl.DurationFormat`), one spec runs both over a table of locales, styles and values and asserts equal strings,
+skipping with `describe.skipIf` where the native constructor is absent; a second test builds the subject from an
+environment without it, so the fallback runs on every runtime. A difference is fixed in the fallback when the native
+result is the specified one, and listed with both strings in the package's AGENTS.md when engines themselves
+disagree (`packages/platform/universal/intl/AGENTS.md`, "Known engine differences").
+
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
 second, and one loaded from the snapshot starts in about a tenth of that. The engine is truncated between
