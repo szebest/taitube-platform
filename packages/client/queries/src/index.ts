@@ -21,6 +21,7 @@ export * from './moderation-queries';
 export * from './notification-queries';
 export type { LiveChatLine } from './live-chat-state';
 export * from './parse-client-env';
+export * from './post-queries';
 export * from './prefetched';
 export { failureCode } from './failure-code';
 export * from './present-failure';

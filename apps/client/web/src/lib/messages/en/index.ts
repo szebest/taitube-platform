@@ -10,6 +10,7 @@ import { live } from './live';
 import { notifications } from './notifications';
 import { party } from './party';
 import { player } from './player';
+import { posts } from './posts';
 import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
@@ -34,6 +35,7 @@ export const en = {
   notifications,
   party,
   player,
+  posts,
   pwa,
   search,
   settings,

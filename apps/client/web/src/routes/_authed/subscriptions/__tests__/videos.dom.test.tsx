@@ -3,6 +3,7 @@ import { api } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
+import { renderPosts } from '#app/__tests__/render-posts';
 import { subscriptionFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { getRouter } from '#app/router';
 
@@ -19,6 +20,15 @@ describe('apps/client/web: /subscriptions/videos in the browser', () => {
     );
     expect(await screen.findByText('Feed video')).toBeInTheDocument();
     expect(answered).toContain('/v1/feed/subscriptions');
+  });
+
+  it('loads the community feed, and not the videos, when the Community tab is named', async () => {
+    const calls: string[] = [];
+
+    await renderPosts('/subscriptions/videos?tab=community', { calls });
+
+    expect(await screen.findByText('A new episode is out')).toBeInTheDocument();
+    expect(calls).toEqual(['GET /v1/feed/community']);
   });
 
   it('sends a guest to sign in without asking for members-only data', async () => {

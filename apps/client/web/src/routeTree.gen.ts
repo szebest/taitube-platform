@@ -29,6 +29,7 @@ import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]x
 import { Route as LiveIndexRouteImport } from './routes/live.index';
 import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
 import { Route as PartiesRoomIdRouteImport } from './routes/parties.$roomId';
+import { Route as PostIdRouteImport } from './routes/post.$id';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
 import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
 import { Route as SettingsAccountsRouteImport } from './routes/settings/accounts';
@@ -146,6 +147,11 @@ const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
 const PartiesRoomIdRoute = PartiesRoomIdRouteImport.update({
   id: '/parties/$roomId',
   path: '/parties/$roomId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PostIdRoute = PostIdRouteImport.update({
+  id: '/post/$id',
+  path: '/post/$id',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
   '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/feeds/videos.xml'
     | '/live/$streamId'
     | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
     | '/settings/accounts'
     | '/settings/language'
@@ -428,6 +438,7 @@ export interface FileRouteTypes {
     | '/feeds/videos.xml'
     | '/live/$streamId'
     | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
     | '/settings/accounts'
     | '/settings/language'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/feeds/videos.xml'
     | '/live/$streamId'
     | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
     | '/settings/accounts'
     | '/settings/language'
@@ -510,6 +522,7 @@ export interface RootRouteChildren {
   FeedsVideosDotxmlRoute: typeof FeedsVideosDotxmlRoute;
   LiveStreamIdRoute: typeof LiveStreamIdRoute;
   PartiesRoomIdRoute: typeof PartiesRoomIdRoute;
+  PostIdRoute: typeof PostIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   LiveIndexRoute: typeof LiveIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       path: '/parties/$roomId';
       fullPath: '/parties/$roomId';
       preLoaderRoute: typeof PartiesRoomIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/post/$id': {
+      id: '/post/$id';
+      path: '/post/$id';
+      fullPath: '/post/$id';
+      preLoaderRoute: typeof PostIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/settings/': {
@@ -875,6 +895,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedsVideosDotxmlRoute: FeedsVideosDotxmlRoute,
   LiveStreamIdRoute: LiveStreamIdRoute,
   PartiesRoomIdRoute: PartiesRoomIdRoute,
+  PostIdRoute: PostIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   UploadIndexRoute: UploadIndexRoute,

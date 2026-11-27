@@ -17,4 +17,5 @@ export const signInPrompt = {
   report: dt('Sign in to report this'),
   bell: dt('Sign in to get notifications'),
   feedback: dt('Sign in to tune your recommendations'),
+  vote: dt('Sign in to vote'),
 } as const;
