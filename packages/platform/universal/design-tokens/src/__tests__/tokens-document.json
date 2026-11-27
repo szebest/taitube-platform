@@ -240,6 +240,7 @@
           "sans": {
             "$value": [
               "Figtree Variable",
+              "Figtree Fallback",
               "ui-sans-serif",
               "system-ui",
               "sans-serif"
@@ -248,6 +249,7 @@
           "editorial": {
             "$value": [
               "Newsreader Variable",
+              "Newsreader Fallback",
               "ui-serif",
               "Georgia",
               "serif"
@@ -256,6 +258,7 @@
           "mono": {
             "$value": [
               "Geist Mono Variable",
+              "Geist Mono Fallback",
               "ui-monospace",
               "SFMono-Regular",
               "monospace"
@@ -341,6 +344,7 @@
           "sans": {
             "$value": [
               "Geist Variable",
+              "Geist Fallback",
               "ui-sans-serif",
               "system-ui",
               "sans-serif"
@@ -349,6 +353,7 @@
           "editorial": {
             "$value": [
               "Newsreader Variable",
+              "Newsreader Fallback",
               "ui-serif",
               "Georgia",
               "serif"
@@ -357,6 +362,7 @@
           "mono": {
             "$value": [
               "Geist Mono Variable",
+              "Geist Mono Fallback",
               "ui-monospace",
               "SFMono-Regular",
               "monospace"
