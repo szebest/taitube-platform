@@ -36,7 +36,7 @@ composition root):
 ## 2. Invariants
 
 1. **The template is the type.** `dt('{count:plural} views', ...)` makes `count` a required `number`; a kind's `arg`
-   guard types its argument (`{x:date}` an ISO string, `{x:list}` a string array, `{x:enum}` one of the keys its
+   guard types its argument (`{x:date}` an ISO string, `{x:list}` a list of items, or of its `item` kind's values, `{x:enum}` one of the keys its
    labels declare), `{x}` takes text or a number. A missing or misspelt argument is a compile error.
 2. **The placeholder grammar is flat.** `{name}` or `{name:kind}` and nothing nested; `ParseTemplate` (types) and
    `placeholders` (run time) read it the same way. A plural's branches live in its config and select through

@@ -1,4 +1,4 @@
-import type { Kind } from '@kit/intl';
+import type { Kind, ListDetail } from '@kit/intl';
 
 /** Whether a message using the kind must configure each of its names (`plural`, `enum`) or may (`number`). */
 export type Requirement = 'required' | 'optional';
@@ -20,13 +20,16 @@ export type ConfigKey = string & { readonly [configKey]: true };
 
 export const isConfigKey = (value: unknown): value is ConfigKey => typeof value === 'string';
 
-/** A `@kit/intl` text kind a template may name, `{price:money}`, and whether its config is required. */
+/**
+ * A `@kit/intl` text kind a template may name, `{price:money}`, and whether its config is
+ * required. A kind with structure (`list`) hands `Translator.parts` its `ListDetail`.
+ */
 export type MessageKind<
   Name extends string = string,
   Need extends Requirement = Requirement,
   Arg = unknown,
   Options = unknown,
-> = Kind<Name, Arg, Options, string> & { readonly config: Need };
+> = Kind<Name, Arg, Options, string, ListDetail> & { readonly config: Need };
 
 /**
  * Makes a text kind a placeholder kind: `messageKind(money, 'optional')` once an engine lists it.
@@ -34,7 +37,7 @@ export type MessageKind<
  */
 export function messageKind<
   const Need extends Requirement,
-  const K extends Kind<string, unknown, unknown, string>,
+  const K extends Kind<string, unknown, unknown, string, ListDetail>,
 >(kind: K, config: Need): K & { readonly config: Need } {
   return Object.freeze({ ...kind, config });
 }

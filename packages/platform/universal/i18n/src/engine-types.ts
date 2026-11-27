@@ -1,4 +1,4 @@
-import type { ArgOf, OptionsOf, PresetTable } from '@kit/intl';
+import type { ArgOf, FormatKinds, OptionsOf, PresetTable } from '@kit/intl';
 import type { ConfigKey, EntryOf, MessageKind } from './kind';
 import type { InvalidParamName, IsCamelCase } from './params';
 import type { Placeholder } from './template';
@@ -181,10 +181,22 @@ export type CheckConfig<C, P extends readonly Placeholder[], E extends EngineTyp
 
 type EntryIn<C, K, N> = K extends keyof C ? (N extends keyof C[K] ? C[K][N] : never) : never;
 
+/** The argument of a `@kit/intl` kind by name, `unknown` for one only the app's registry holds. */
+type FormatArg<K> = K extends FormatKinds[number]['name']
+  ? ArgOf<Extract<FormatKinds[number], { readonly name: K }>>
+  : unknown;
+
+/** An entry naming `item: { kind }` takes a list of that kind's arguments: `item: { kind: 'money' }`, numbers. */
+type ItemsOr<Entry, Arg> = [Entry] extends [never]
+  ? Arg
+  : Entry extends { readonly item: { readonly kind: infer K } }
+    ? readonly FormatArg<K>[]
+    : Arg;
+
 type ArgFor<H extends Placeholder, C, E extends EngineTypes> = H['kind'] extends string
   ? [ArgOfKind<KindAt<E, H['kind']>>] extends [ConfigKey]
     ? keyof EntryIn<C, H['kind'], H['name']> & string
-    : ArgOfKind<KindAt<E, H['kind']>>
+    : ItemsOr<EntryIn<C, H['kind'], H['name']>, ArgOfKind<KindAt<E, H['kind']>>>
   : string | number;
 
 /** The argument object a template asks for, one field per placeholder name, typed by its kind. */

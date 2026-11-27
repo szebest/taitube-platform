@@ -19,6 +19,10 @@
 - `relative` rounds half away from zero and reads a count that rounds up to the next unit in that unit:
   3570 seconds is "in 1 hour" and "1 hour ago".
 - Breaking: a preset's locale entry overrides part of `default` instead of replacing it.
+- `list` formats each item through its context (text, numbers, tagged values, or raw values of `item: { kind }`),
+  collapses past `max` into the caller's plural `more` branches (no copy of its own; `max` without `more` fails
+  to compile and declines), and its `parts`, through `runParts`, return a `ListDetail`. A kind may define
+  `parts` beside `render`.
 
 ## 0.4.0
 

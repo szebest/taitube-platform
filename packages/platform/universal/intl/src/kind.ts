@@ -32,18 +32,25 @@ export type CheckOptions<Options> = (
 /**
  * One formatter, built in or an app's own. `arg` guards the value, `options` checks the options
  * (`optionKeys` allowlists them), `render` turns both into `Out`: text for every kind a message
- * or `format` can show, something else (a comparator, a plural category) for the rest.
+ * or `format` can show, something else (a comparator, a plural category) for the rest. `parts`
+ * is the same result as structure a UI may use (a list's items and its "and 2 more").
  */
 export interface Kind<
   Name extends string = string,
   Arg = unknown,
   Options = unknown,
   Out = unknown,
+  Parts = unknown,
 > {
   readonly name: Name;
   arg(value: unknown): value is Arg;
   options(value: unknown, kind: string): Result<Options, FormatFailure>;
   render(arg: Arg, options: Options | undefined, context: KindContext): Result<Out, FormatFailure>;
+  parts?(
+    arg: Arg,
+    options: Options | undefined,
+    context: KindContext
+  ): Result<Parts, FormatFailure>;
 }
 
 export type ArgOf<K> = K extends Kind<string, infer Arg, unknown, unknown> ? Arg : never;
@@ -55,28 +62,30 @@ export type OutOf<K> = K extends Kind<string, unknown, unknown, infer Out> ? Out
 export type TaggedOf<K> =
   K extends Kind<infer Name, infer Arg, infer Options, infer Out>
     ? string extends Out
-      ? { readonly type: Name; readonly value: Arg } & (Partial<Options> extends Options
+      ? { readonly type: Name; readonly value: Arg } & (Record<never, never> extends Options
           ? { readonly options?: Options }
           : { readonly options: Options })
       : never
     : never;
 
-interface KindDefinition<Name extends string, Arg, Options, Out> {
+type Renders<Arg, Options, T> = (
+  arg: Arg,
+  options: Options | undefined,
+  context: KindContext
+) => Result<T, FormatFailure>;
+
+interface KindDefinition<Name extends string, Arg, Options, Out, Parts> {
   readonly name: Name;
   readonly arg: (value: unknown) => value is Arg;
   readonly options: CheckOptions<Options>;
-  readonly render: (
-    arg: Arg,
-    options: Options | undefined,
-    context: KindContext
-  ) => Result<Out, FormatFailure>;
+  readonly render: Renders<Arg, Options, Out>;
+  readonly parts?: Renders<Arg, Options, Parts>;
 }
 
-export function defineKind<const Name extends string, Arg, Options, Out = string>(
-  definition: KindDefinition<Name, Arg, Options, Out>
-): Kind<Name, Arg, Options, Out> {
-  const { name, arg, options, render } = definition;
-  return Object.freeze({ name, arg, options, render });
+export function defineKind<const Name extends string, Arg, Options, Out = string, Parts = never>(
+  definition: KindDefinition<Name, Arg, Options, Out, Parts>
+): Kind<Name, Arg, Options, Out, Parts> {
+  return Object.freeze({ ...definition });
 }
 
 /** A formatter's allowed option names: the `Intl` constructor's own keys, plus any it adds. */
@@ -118,7 +127,30 @@ export function runKind<Arg, Options, Out>(
   context: KindContext,
   label: string = kind.name
 ): Result<Out, FormatFailure> {
+  return checked(kind, arg, options, label, (value, valid) => kind.render(value, valid, context));
+}
+
+/** `runKind` for a kind's structure: its `parts`, or a failure when it has none. */
+export function runParts<Arg, Options, Parts>(
+  kind: Kind<string, Arg, Options, unknown, Parts>,
+  arg: unknown,
+  options: unknown,
+  context: KindContext,
+  label: string = kind.name
+): Result<Parts, FormatFailure> {
+  const { parts } = kind;
+  if (parts === undefined) return err(unrenderable(label, `${kind.name} has no parts`));
+  return checked(kind, arg, options, label, (value, valid) => parts(value, valid, context));
+}
+
+function checked<Arg, Options, T>(
+  kind: Kind<string, Arg, Options, unknown, unknown>,
+  arg: unknown,
+  options: unknown,
+  label: string,
+  run: (arg: Arg, options: Options | undefined) => Result<T, FormatFailure>
+): Result<T, FormatFailure> {
   if (!kind.arg(arg)) return err(wrongKind(label, describeValue(arg)));
-  if (options === undefined) return kind.render(arg, undefined, context);
-  return andThen(kind.options(options, label), (checked) => kind.render(arg, checked, context));
+  if (options === undefined) return run(arg, undefined);
+  return andThen(kind.options(options, label), (valid) => run(arg, valid));
 }

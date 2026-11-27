@@ -8,3 +8,4 @@ export * from './params';
 export * from './template';
 export * from './tokens';
 export * from './translator';
+export type { ListPart, MessagePart, TextPart } from './render';
