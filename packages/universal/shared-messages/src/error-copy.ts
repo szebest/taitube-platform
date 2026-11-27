@@ -1,6 +1,7 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { SharedArgumentFreeKey } from './catalogue';
 import { CHANNEL_ERROR_COPY } from './error-copy-channels';
+import { PLAYLIST_ERROR_COPY } from './error-copy-playlists';
 
 /**
  * The words a person sees for each failure code. Declared over the whole `ErrorCode` union, so a
@@ -151,4 +152,5 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
   ...CHANNEL_ERROR_COPY,
+  ...PLAYLIST_ERROR_COPY,
 };

@@ -96,6 +96,97 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
     expect(buildAbility(definePlaylistRules, user).can('create', 'Playlist')).toBe(expected);
   });
 
+  const seated = (role: 'editor' | 'contributor', fields: Record<string, unknown> = {}) =>
+    subject('Playlist', {
+      id: 'pl-1',
+      ownerId: creatorUser.id,
+      visibility: 'private',
+      collaboratorId: standardUser.id,
+      collaboratorRole: role,
+      ...fields,
+    });
+
+  it.each<{
+    scenario: string;
+    role: 'editor' | 'contributor';
+    action: AppAction;
+    fields?: Record<string, unknown>;
+    field?: string;
+    expected: boolean;
+  }>([
+    { scenario: 'an editor reads the private list', role: 'editor', action: 'read', expected: true },
+    { scenario: 'a contributor reads it', role: 'contributor', action: 'read', expected: true },
+    { scenario: 'an editor adds', role: 'editor', action: 'addItem', expected: true },
+    { scenario: 'an editor reorders', role: 'editor', action: 'manageItems', expected: true },
+    {
+      scenario: "an editor removes someone else's item",
+      role: 'editor',
+      action: 'removeItem',
+      fields: { addedBy: 'someone' },
+      expected: true,
+    },
+    { scenario: 'an editor renames', role: 'editor', action: 'update', field: 'title', expected: true },
+    {
+      scenario: 'an editor changes the visibility',
+      role: 'editor',
+      action: 'update',
+      field: 'visibility',
+      expected: false,
+    },
+    { scenario: 'an editor deletes', role: 'editor', action: 'delete', expected: false },
+    {
+      scenario: 'an editor seats people',
+      role: 'editor',
+      action: 'manageCollaborators',
+      expected: false,
+    },
+    { scenario: 'a contributor adds', role: 'contributor', action: 'addItem', expected: true },
+    {
+      scenario: 'a contributor removes their own item',
+      role: 'contributor',
+      action: 'removeItem',
+      fields: { addedBy: standardUser.id },
+      expected: true,
+    },
+    {
+      scenario: "a contributor removes someone else's item",
+      role: 'contributor',
+      action: 'removeItem',
+      fields: { addedBy: 'someone' },
+      expected: false,
+    },
+    {
+      scenario: 'a contributor annotates their own item',
+      role: 'contributor',
+      action: 'manageItems',
+      fields: { addedBy: standardUser.id },
+      expected: true,
+    },
+    {
+      scenario: 'a contributor reorders the list',
+      role: 'contributor',
+      action: 'manageItems',
+      expected: false,
+    },
+    { scenario: 'a contributor renames', role: 'contributor', action: 'update', expected: false },
+  ])('$scenario: $expected', ({ role, action, fields, field, expected }) => {
+    expect(
+      buildAbility(definePlaylistRules, standardUser).can(action, seated(role, fields), field)
+    ).toBe(expected);
+  });
+
+  it('grants nothing on a seat resolved for someone else', () => {
+    const ability = buildAbility(definePlaylistRules, creatorUser);
+    const other = subject('Playlist', {
+      ownerId: 'someone',
+      visibility: 'private',
+      collaboratorId: standardUser.id,
+      collaboratorRole: 'editor',
+    });
+
+    expect([ability.can('read', other), ability.can('addItem', other)]).toEqual([false, false]);
+  });
+
   it('leaves the admin grant to the admin rules', () => {
     expect(buildAbility(definePlaylistRules, adminUser).can('update', owned('private'))).toBe(
       false

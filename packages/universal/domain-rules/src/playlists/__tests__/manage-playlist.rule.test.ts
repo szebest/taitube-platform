@@ -1,11 +1,12 @@
 import { isErr, isOk } from '@kit/result';
-import type { Playlist } from '@vp/domain';
+import type { SeatedPlaylist } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ADMIN, OWNER, STRANGER, aPlaylist } from '../../__tests__/entities';
 import {
+  type PlaylistAction,
+  decidePlaylistAction,
   decidePlaylistDelete,
-  decidePlaylistItemsChange,
   decidePlaylistUpdate,
 } from '../manage-playlist.rule';
 
@@ -13,17 +14,20 @@ const playlist = aPlaylist();
 const watchLater = aPlaylist({ id: 'wl-1', title: 'Watch Later', isSystem: true });
 
 const DECISIONS = {
-  update: (actor: UserContext | null, target: Playlist | null = playlist) =>
+  update: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
     decidePlaylistUpdate({
       actor,
       playlist: target,
       playlistId: target?.id ?? playlist.id,
       patch: { title: 'New' },
     }),
-  delete: (actor: UserContext | null, target: Playlist | null = playlist) =>
+  delete: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
     decidePlaylistDelete({ actor, playlist: target, playlistId: target?.id ?? playlist.id }),
-  items: (actor: UserContext | null, target: Playlist | null = playlist) =>
-    decidePlaylistItemsChange({ actor, playlist: target, playlistId: target?.id ?? playlist.id }),
+  items: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
+    decidePlaylistAction(
+      { actor, playlist: target, playlistId: target?.id ?? playlist.id },
+      'manageItems'
+    ),
 };
 
 type Decision = keyof typeof DECISIONS;
@@ -129,5 +133,54 @@ describe('@vp/domain-rules: playlist management', () => {
       code: ErrorCodes.VALIDATION_FAILED,
       field: 'title',
     });
+  });
+
+  const seated = (role: 'editor' | 'contributor') =>
+    aPlaylist({ collaboratorId: STRANGER.id, collaboratorRole: role });
+
+  it.each<{
+    role: 'editor' | 'contributor';
+    action: PlaylistAction;
+    addedBy?: string;
+    code: string | null;
+  }>([
+    { role: 'editor', action: 'addItem', code: null },
+    { role: 'editor', action: 'removeItem', addedBy: OWNER.id, code: null },
+    { role: 'editor', action: 'manageItems', code: null },
+    { role: 'editor', action: 'readActivity', code: null },
+    { role: 'editor', action: 'manageCollaborators', code: ErrorCodes.FORBIDDEN },
+    { role: 'editor', action: 'restoreItem', code: ErrorCodes.FORBIDDEN },
+    { role: 'editor', action: 'delete', code: ErrorCodes.FORBIDDEN },
+    { role: 'contributor', action: 'addItem', code: null },
+    { role: 'contributor', action: 'removeItem', addedBy: STRANGER.id, code: null },
+    { role: 'contributor', action: 'removeItem', addedBy: OWNER.id, code: ErrorCodes.FORBIDDEN },
+    { role: 'contributor', action: 'manageItems', code: ErrorCodes.FORBIDDEN },
+    { role: 'contributor', action: 'readActivity', code: null },
+  ])('an $role may $action (added by $addedBy): $code', ({ role, action, addedBy, code }) => {
+    const target = seated(role);
+    const result = decidePlaylistAction(
+      { actor: STRANGER, playlist: target, playlistId: target.id },
+      action,
+      addedBy === undefined ? undefined : { addedBy }
+    );
+
+    expect(isErr(result) ? result.error.code : null).toBe(code);
+  });
+
+  it.each([
+    { role: 'editor' as const, patch: { title: 'New', description: 'Why' }, code: null },
+    { role: 'editor' as const, patch: { visibility: 'public' as const }, code: ErrorCodes.FORBIDDEN },
+    { role: 'editor' as const, patch: { kind: 'series' as const }, code: ErrorCodes.FORBIDDEN },
+    { role: 'contributor' as const, patch: { title: 'New' }, code: ErrorCodes.FORBIDDEN },
+  ])('lets an $role change $patch: $code', ({ role, patch, code }) => {
+    const target = seated(role);
+    const result = decidePlaylistUpdate({
+      actor: STRANGER,
+      playlist: target,
+      playlistId: target.id,
+      patch,
+    });
+
+    expect(isErr(result) ? result.error.code : null).toBe(code);
   });
 });

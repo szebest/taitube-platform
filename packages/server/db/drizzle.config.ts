@@ -9,6 +9,7 @@ export default defineConfig({
     './src/comment-moderation-schema.ts',
     './src/view-schema.ts',
     './src/library-schema.ts',
+    './src/playlist-collaboration-schema.ts',
     './src/user-events-schema.ts',
     './src/outbox-schema.ts',
     './src/preferences-schema.ts',

@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { playlistErrors } from './errors-playlists';
 import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
@@ -28,6 +29,7 @@ export const errors = {
   cannotSubscribeToSelf: dt('You cannot subscribe to your own channel.'),
   ...channelErrors,
   ...commentErrors,
+  ...playlistErrors,
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
   playlistNotFound: dt('This playlist does not exist or is private.'),
