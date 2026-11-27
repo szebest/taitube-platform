@@ -242,19 +242,11 @@ own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit sha
 `needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
-`unit` (vitest, `--shard=i/N`, N derived below) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/14`) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
-and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
-files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
-`tests/timings/unit.json` (milliseconds per spec file: environment, import and tests) and deals the files out
-longest first, each to the cheapest shard so far; a file with no entry costs the median. The two suites that
-repeat 20 times under Bun run in `unit-bun-shard-1` only.
-
-The vitest shard count is derived, not set. The `build` job runs `pnpm unit-shards --github-output`, which reads
-`tests/timings/unit.json` and plans the fewest shards whose expected wall time stays under 150 s each
-(`ceil(total cost / (150 s * 3.2))`, 3.2 being the cost-seconds one shard runs per wall second at `--maxWorkers=4`,
-measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N`), which `unit-shards` reads;
-`ci-shape` fails a hand-set matrix or denominator. The 150 s target leaves 40% under the 240 s budget.
+and print which shard did not, so the required checks in branch protection keep their names. Vitest splits the spec files with its
+own `--shard=i/N`, a hash of each path, over a fixed matrix: `ci-shape` fails a matrix that does not run every
+shard of the `/N` it names. The two suites that repeat 20 times under Bun run in `unit-bun-shard-1` only.
 
 ### Budgets, shards and retries: when to change what
 
@@ -265,18 +257,9 @@ measured). It exposes `unit-shards` (the matrix) and `unit-shard-count` (the `/N
 - **Raise a budget** when `ci-health` reports a run of it at or above 85% of its limit, and only by the formula
   over the measured window, in a PR that says the window and the numbers. Never to make one change pass: a change
   that slows a step by itself is a regression to fix. Lower one when the formula says so.
-- **Regenerate the timings** (`pnpm timings:update --run <id> --run <id>`, two or more green runs, which it
-  averages) when the shards' summed cost drifts apart, when a large spec moved or `unit-timings.test.ts` fails on a
-  spec file older than 7 days that the file does not list. The sequencer balances recorded cost to within 1%;
-  what remains between shards is the runner (the same files run 0.8 to 1.15 times their recorded cost on different
-  hosted runners).
-- **Add specs freely; never add a shard by hand.** The shard count follows from `tests/timings/unit.json`
-  (`pnpm unit-shards` prints it), so a suite that grows gets more shards once its timings are refreshed. A new spec
-  costs the median until then. Refresh with `pnpm timings:update --run <id> --run <id>`; `refresh-unit-timings.yml`
-  also does it every Monday (or on `workflow_dispatch`) from the last two green `main` runs and opens a pull
-  request, which needs "Allow GitHub Actions to create and approve pull requests" on; close and reopen it to run CI
-  on it. Do not raise the 240 s budget when a shard misses it: refresh the timings, or lower the target in
-  `scripts/timings/plan-shards.ts` if the measured parallelism fell.
+- **Add specs freely; raise N when a shard nears its budget.** The vitest shard count is the matrix of
+  `unit-shards` and the `/14` of its `--shard`, set together. A shard whose `unit-tests` step passes 85% of its
+  240 s budget (`ci-health` table 3) takes a larger N in the same PR, never a larger budget.
 - **One retry, and a pass on it fails the job.** CI retries a failed test once (`--retry=1` for vitest,
   `retries: 1` under `CI` for Playwright and the visual suite), so the report tells a flaky test from a broken
   one. A test that passes on its retry leaves a `passed on retry` error naming the spec and the test, a table in
