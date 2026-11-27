@@ -1,7 +1,11 @@
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { ThreadBody, ThreadView } from '@vp/api-contracts';
 import type { CommentSlowModePort } from '@vp/core/ports';
-import type { VideoRepository, VideoThreadRepositoryPort } from '@vp/core/repositories';
+import type {
+  ChannelMemberRepositoryPort,
+  VideoRepository,
+  VideoThreadRepositoryPort,
+} from '@vp/core/repositories';
 import { type ActingChannel, THREADS_OPEN_PER_VIEWER } from '@vp/domain';
 import {
   type AuthorizationFailure,
@@ -19,13 +23,14 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
-import { claimSlowMode, moderationOf } from './comment-create';
+import { claimSlowMode, moderationOf, moderatorsOf } from './comment-create';
 import { type CommentGateLookups, loadCommentGate } from './comment-gate-context';
 import { toThreadView } from './thread-views';
 
 export interface ThreadCreateDeps extends CommentGateLookups {
   videos: Pick<VideoRepository, 'findById'>;
   threads: Pick<VideoThreadRepositoryPort, 'countOpen' | 'create' | 'findEntry'>;
+  members: Pick<ChannelMemberRepositoryPort, 'listByChannel'>;
   slowMode: CommentSlowModePort;
   now: () => number;
 }
@@ -77,6 +82,9 @@ export async function createThread(
   const verdict = evaluateCommentGate(gate.value.settings, gate.value.context, `${title}\n${text}`);
   if (isErr(verdict)) return verdict;
 
+  const moderators = await moderatorsOf(deps, channelId, decided.value.video.ownerId);
+  if (isErr(moderators)) return moderators;
+
   const claimed = await claimSlowMode(deps, channelId, author.id, verdict.value.slowModeSeconds);
   if (isErr(claimed)) return claimed;
 
@@ -99,6 +107,7 @@ export async function createThread(
       title,
       body: text,
       moderation: moderationOf(verdict.value, `${title}\n${text}`),
+      moderators: moderators.value,
     },
     THREADS_OPEN_PER_VIEWER
   );

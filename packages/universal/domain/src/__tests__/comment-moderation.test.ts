@@ -1,6 +1,7 @@
 import {
   COMMENT_MODERATION_REASONS,
   commentModerationAudit,
+  keepsPin,
   liftAudit,
   restrictionAudit,
   trustAudit,
@@ -10,6 +11,16 @@ import { COMMENT_REPORT_REASONS } from '../comment-report';
 describe('@vp/domain: comment moderation reasons', () => {
   it('is the report reasons plus off_topic', () => {
     expect(COMMENT_MODERATION_REASONS).toEqual([...COMMENT_REPORT_REASONS, 'off_topic']);
+  });
+});
+
+describe('@vp/domain: keepsPin', () => {
+  it.each([
+    { state: 'published' as const, kept: true },
+    { state: 'held' as const, kept: false },
+    { state: 'hidden' as const, kept: false },
+  ])('keeps the pin of a $state item: $kept', ({ state, kept }) => {
+    expect(keepsPin(state)).toBe(kept);
   });
 });
 

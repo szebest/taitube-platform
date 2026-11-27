@@ -21,7 +21,7 @@ export interface CommentLookupDeps {
   comments: CommentRepositoryPort;
   videos: Pick<VideoRepository, 'findById'>;
   posts: Pick<ChannelPostRepositoryPort, 'findById'>;
-  threads: Pick<VideoThreadRepositoryPort, 'findById'>;
+  threads: Pick<VideoThreadRepositoryPort, 'findEntry'>;
   channels: Pick<ChannelRepositoryPort, 'findById'>;
 }
 
@@ -47,12 +47,13 @@ export async function findHost(
       return ok(channel.value && { type: 'post', post: post.value, ownerId: channel.value.userId });
     }
     case 'thread': {
-      const thread = await deps.threads.findById(target.id);
-      if (isErr(thread)) return thread;
-      if (!thread.value) return ok(null);
-      const video = await deps.videos.findById(thread.value.videoId);
+      const entry = await deps.threads.findEntry(target.id);
+      if (isErr(entry)) return entry;
+      if (!entry.value) return ok(null);
+      const { thread, authorShadowed } = entry.value;
+      const video = await deps.videos.findById(thread.videoId);
       if (isErr(video)) return video;
-      return ok(video.value && { type: 'thread', thread: thread.value, video: video.value });
+      return ok(video.value && { type: 'thread', thread, video: video.value, authorShadowed });
     }
     default:
       return assertNever(target, 'CommentTarget');

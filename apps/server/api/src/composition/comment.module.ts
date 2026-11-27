@@ -130,6 +130,8 @@ export function registerCommentServices(c: Container): Container {
       (c) =>
         new CreatorCommentService({
           comments: repositories().comments,
+          threads: repositories().videoThreads,
+          videos: repositories().videos,
           paginator: c.get(Services.Paginator),
         })
     );

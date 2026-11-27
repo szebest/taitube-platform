@@ -24,8 +24,15 @@ export const NotifySubscribersJob = z.object({
 });
 export type NotifySubscribersJob = z.infer<typeof NotifySubscribersJob>;
 
+/** What the comment sits under; the `CommentTarget` of the domain, one literal per kind. */
+const CommentTargetSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('video'), id: z.uuid() }),
+  z.object({ type: z.literal('post'), id: z.uuid() }),
+  z.object({ type: z.literal('thread'), id: z.uuid() }),
+]);
+
 export const NotifyCommentJob = z.object({
-  videoId: z.uuid(),
+  target: CommentTargetSchema,
   commentId: z.uuid(),
   traceparent: z.string().optional(),
   requestId: z.string().optional(),

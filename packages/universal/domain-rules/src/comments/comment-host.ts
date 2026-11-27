@@ -87,6 +87,7 @@ export function decideCommentHostRead(
           thread: host.thread,
           threadId: host.thread.id,
           video: host.video,
+          authorShadowed: host.authorShadowed,
         }),
         () => host
       );

@@ -1,6 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import type { VideoThreadRepositoryPort } from '@vp/core/repositories';
-import type { NewChannelAuditEntry, NewVideoThreadInput, VideoThread } from '@vp/domain';
+import type { NewVideoThreadInput, VideoThread } from '@vp/domain';
 import {
   OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
@@ -11,56 +11,14 @@ import {
   seedOwners,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
-
-const T = {
-  a: '00000000-0000-7000-8000-000000000b01',
-  b: '00000000-0000-7000-8000-000000000b02',
-  c: '00000000-0000-7000-8000-000000000b03',
-  d: '00000000-0000-7000-8000-000000000b04',
-  missing: '00000000-0000-7000-8000-000000000bff',
-} as const;
+import { PUBLISHED, T, pinAudit, removeAudit, threadInput } from './video-thread-contract-fixtures';
+import { describeHeldVideoThreadContract } from './video-thread-held.contract';
 
 const REPLY = '00000000-0000-7000-8000-000000000b81';
 
-const PUBLISHED = {
-  moderationState: 'published',
-  moderationDisclosure: null,
-  heldReason: null,
-  looksLikeQuestion: false,
-} as const;
-
-const threadInput = (id: string, over: Partial<NewVideoThreadInput> = {}): NewVideoThreadInput => ({
-  id,
-  videoId: VIDEO_IDS.a,
-  channelId: OWNER_CHANNEL_ID,
-  authorId: OTHER_OWNER_ID,
-  authorChannelId: OTHER_OWNER_CHANNEL_ID,
-  anchorMs: 1_000,
-  title: `Thread ${id.slice(-1)}`,
-  body: '',
-  moderation: PUBLISHED,
-  ...over,
-});
-
-const pinAudit = (id: string): NewChannelAuditEntry => ({
-  channelId: OWNER_CHANNEL_ID,
-  actorUserId: OWNER_ID,
-  action: 'comment.pinned',
-  targetType: 'comment',
-  targetId: id,
-  meta: { videoId: VIDEO_IDS.a, pinned: true },
-});
-
-const removeAudit = (id: string): NewChannelAuditEntry => ({
-  channelId: OWNER_CHANNEL_ID,
-  actorUserId: OWNER_ID,
-  action: 'comment.removed',
-  targetType: 'comment',
-  targetId: id,
-  meta: { videoId: VIDEO_IDS.a, disclosure: 'silent' },
-});
-
 export function describeVideoThreadRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
+  describeHeldVideoThreadContract(makeSubject);
+
   describe('VideoThreadRepository contract', () => {
     let subject: RepositoriesSubject;
     let threads: VideoThreadRepositoryPort;

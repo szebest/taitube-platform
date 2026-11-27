@@ -24,7 +24,7 @@ export type CommentTarget =
 export type CommentHost =
   | { type: 'video'; video: Video }
   | { type: 'post'; post: ChannelPost; ownerId: string }
-  | { type: 'thread'; thread: VideoThread; video: Video };
+  | { type: 'thread'; thread: VideoThread; video: Video; authorShadowed: boolean };
 
 /** The video a comment sits under, or null for a comment on anything else. */
 export function commentVideoId(target: CommentTarget): string | null {

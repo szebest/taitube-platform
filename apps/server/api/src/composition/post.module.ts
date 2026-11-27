@@ -60,6 +60,7 @@ export function registerPostServices(c: Container): Container {
         trusted: repositories.trustedCommenters,
         subscriptions: repositories.subscriptions,
         users: repositories.users,
+        members: repositories.channelMembers,
         slowMode: c.get(Adapters.CommentSlowMode),
         commentCache: c.get(Adapters.CommentCache),
         now: Date.now,

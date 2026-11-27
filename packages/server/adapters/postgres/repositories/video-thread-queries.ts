@@ -1,4 +1,4 @@
-import type { ListVideoThreadsOptions } from '@vp/core/repositories';
+import type { ListHeldThreadsOptions, ListVideoThreadsOptions } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { VideoThread, VideoThreadEntry } from '@vp/domain';
 import { type SQL, and, asc, desc, eq, getTableColumns, isNull, or, sql } from 'drizzle-orm';
@@ -32,10 +32,13 @@ const authorShadowed = sql<boolean>`exists (
 
 const pinnedRank = sql`coalesce(${msTimestamp(t.pinnedAt)}, '-infinity'::timestamptz)`;
 
+const byPinThenAnchor = [desc(pinnedRank), asc(t.anchorMs), asc(t.id)];
+
 async function entriesWhere(
   db: PostgresDatabase,
   where: SQL | undefined,
-  limit: number
+  limit: number,
+  order: SQL[] = byPinThenAnchor
 ): Promise<VideoThreadEntry[]> {
   const rows = await db
     .select({
@@ -50,7 +53,7 @@ async function entriesWhere(
     .from(t)
     .leftJoin(ch, eq(ch.id, t.authorChannelId))
     .where(and(isNull(t.deletedAt), where))
-    .orderBy(desc(pinnedRank), asc(t.anchorMs), asc(t.id))
+    .orderBy(...order)
     .limit(limit);
 
   return rows.map(
@@ -85,4 +88,21 @@ export async function threadEntry(
 ): Promise<VideoThreadEntry | null> {
   const [entry] = await entriesWhere(db, eq(t.id, id), 1);
   return entry ?? null;
+}
+
+/** Newest first, resumed from the `(createdAt, id)` of the last row of the page before. */
+export function heldThreads(
+  db: PostgresDatabase,
+  { channelId, authorId, cursor, limit }: ListHeldThreadsOptions
+): Promise<VideoThreadEntry[]> {
+  const createdAt = msTimestamp(t.createdAt);
+  const where = and(
+    eq(t.channelId, channelId),
+    eq(t.moderationState, 'held'),
+    authorId === undefined ? undefined : eq(t.authorId, authorId),
+    cursor
+      ? sql`(${createdAt}, ${t.id}) < (${cursor.createdAt.toISOString()}::timestamptz, ${cursor.id}::uuid)`
+      : undefined
+  );
+  return entriesWhere(db, where, limit, [desc(createdAt), desc(t.id)]);
 }

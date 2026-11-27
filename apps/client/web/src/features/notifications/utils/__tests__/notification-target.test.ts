@@ -5,6 +5,9 @@ import {
 } from '#app/features/notifications/__tests__/notification-fixtures';
 import { notificationTarget } from '../notification-target';
 
+const POST_ID = '0190c3a0-5e1d-7000-8000-0000000000a1';
+const THREAD_ID = '0190c3a0-5e1d-7000-8000-0000000000b1';
+
 describe('apps/client/web: notificationTarget', () => {
   it.each([
     {
@@ -33,6 +36,24 @@ describe('apps/client/web: notificationTarget', () => {
         to: '/watch/$videoId',
         params: { videoId: VIDEO_ID },
         search: { comment: COMMENT_ID },
+      },
+    },
+    {
+      case: 'a reply under a post opens the post',
+      overrides: { kind: 'reply' as const, videoId: null, commentId: COMMENT_ID },
+      payload: { postId: POST_ID },
+      count: 1,
+      target: { to: '/post/$id', params: { id: POST_ID }, search: {} },
+    },
+    {
+      case: 'a reply under a thread opens the thread on its video',
+      overrides: { kind: 'reply' as const, commentId: COMMENT_ID },
+      payload: { threadId: THREAD_ID },
+      count: 1,
+      target: {
+        to: '/watch/$videoId',
+        params: { videoId: VIDEO_ID },
+        search: { tab: 'threads', thread: THREAD_ID, comment: COMMENT_ID },
       },
     },
     {
@@ -71,7 +92,7 @@ describe('apps/client/web: notificationTarget', () => {
       count: 1,
       target: undefined,
     },
-  ])('$case', ({ overrides, count, target }) => {
-    expect(notificationTarget(notification(overrides, { count }))).toEqual(target);
+  ])('$case', ({ overrides, payload, count, target }) => {
+    expect(notificationTarget(notification(overrides, { count, ...payload }))).toEqual(target);
   });
 });

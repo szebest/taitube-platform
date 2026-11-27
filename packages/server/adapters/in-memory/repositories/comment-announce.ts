@@ -20,20 +20,20 @@ interface Announcement {
 }
 
 /**
- * What the transaction of a new comment tells people: a public one on a video reaches the notification
- * job and the video owner, a held one reaches the moderators the service named.
+ * What the transaction of a new comment tells people: a public one reaches the notification job, and
+ * on a video the owner too; a held one reaches the moderators the service named.
  */
 export async function announceCreated(
   deps: AnnounceDeps,
   { created, owner, input, counted }: Announcement
 ): Promise<Result<void, DatabaseUnavailable>> {
-  if (counted && owner?.type === 'video') {
+  if (counted && owner) {
     const enqueued = await deps.outboxRepo.enqueue(
-      commentOutbox({ videoId: owner.id, commentId: created.id })
+      commentOutbox({ target: created.target, commentId: created.id })
     );
     if (isErr(enqueued)) return enqueued;
 
-    if (owner.ownerId !== input.authorId) {
+    if (owner.type === 'video' && owner.ownerId !== input.authorId) {
       const announced = await deps.userEventsRepo.append({
         userId: owner.ownerId,
         ...commentCreated(created, { id: owner.id, title: owner.title }),

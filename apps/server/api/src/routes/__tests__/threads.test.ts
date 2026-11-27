@@ -192,6 +192,29 @@ describe('thread routes', () => {
       expect(own.json().markers).toEqual([]);
       expect([read.statusCode, ownRead.statusCode]).toEqual([404, 200]);
     });
+
+    it('keeps the replies of the thread reachable by its author alone', async () => {
+      const id = await started('fan');
+      await reply('fan', id, 'my own');
+      expectOk(
+        await ctx.repositories.channelUserRestrictions.apply({
+          channelId: ctx.ownerChannelId,
+          userId: FAN,
+          kind: 'shadow',
+          reason: null,
+          expiresAt: null,
+          createdBy: OWNER,
+        })
+      );
+
+      const read = await ctx.call('anonymous', 'GET', `/v1/threads/${id}/comments`);
+      const posted = await reply('stranger', id);
+      const own = await ctx.call('fan', 'GET', `/v1/threads/${id}/comments`);
+
+      expect([read.statusCode, codeOf(read)]).toEqual([404, ErrorCodes.THREAD_NOT_FOUND]);
+      expect([posted.statusCode, codeOf(posted)]).toEqual([404, ErrorCodes.THREAD_NOT_FOUND]);
+      expect(own.json()).toMatchObject({ total: 1 });
+    });
   });
 
   describe('replies', () => {

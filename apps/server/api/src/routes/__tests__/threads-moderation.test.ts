@@ -1,6 +1,8 @@
+import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { EDITOR, MODERATOR, OWNER, type PostsApp, seedPostsApp } from '../../__tests__/posts-app';
 import { type TestApp, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import { saveSettings } from '../../services/__tests__/comment-deps';
 
 const LONG = '88888888-8888-7888-8888-888888888888';
 const DURATION_MS = 100_000;
@@ -140,6 +142,81 @@ describe('thread moderation routes', () => {
       const own = await ctx.call('fan', 'POST', `/v1/threads/${id}/remove`, { payload: {} });
 
       expect([editor.statusCode, stranger.statusCode, own.statusCode]).toEqual([403, 403, 204]);
+    });
+  });
+
+  describe('a held thread', () => {
+    const heldThread = async () => {
+      await saveSettings(ctx.repositories, ctx.ownerChannelId, {
+        ...DEFAULT_COMMENT_SETTINGS,
+        reviewMode: 'all',
+      });
+      return started('fan');
+    };
+    const act = (
+      who: 'owner' | 'moderator' | 'editor' | 'fan' | 'anonymous',
+      id: string,
+      action: object
+    ) =>
+      ctx.call(who, 'POST', `/v1/comments/${id}/moderate`, {
+        payload: action,
+        as: who === 'fan' || who === 'anonymous' ? undefined : ctx.ownerChannelId,
+      });
+
+    it('reaches the creator inbox as a row on the thread and leaves it once approved', async () => {
+      const id = await heldThread();
+      const inbox = () =>
+        ctx.call('owner', 'GET', '/v1/creator/comments?filter=held', { as: ctx.ownerChannelId });
+
+      const before = (await inbox()).json().items;
+      const approved = await act('owner', id, { action: 'approve' });
+
+      expect(before).toMatchObject([
+        {
+          id,
+          status: 'held',
+          targetSummary: { type: 'thread', id, title: 'The cut' },
+          video: { id: LONG, title: 'Long' },
+        },
+      ]);
+      expect(approved.json()).toMatchObject({ state: 'published', comment: null });
+      expect((await inbox()).json().items).toEqual([]);
+      expect((await list()).json().items).toMatchObject([{ id }]);
+    });
+
+    it.each([
+      { who: 'owner' as const, status: 200 },
+      { who: 'moderator' as const, status: 200 },
+      { who: 'editor' as const, status: 404 },
+      { who: 'fan' as const, status: 403 },
+      { who: 'anonymous' as const, status: 401 },
+    ])('answers $status to an approval from $who', async ({ who, status }) => {
+      const id = await heldThread();
+
+      const res = await act(who, id, { action: 'approve' });
+
+      expect([res.statusCode, res.body]).toEqual([status, expect.anything()]);
+    });
+
+    it('takes a rejected thread down with the same action a comment takes', async () => {
+      const id = await heldThread();
+
+      const res = await act('moderator', id, { action: 'remove', disclosure: 'silent' });
+
+      expect(res.json()).toMatchObject({ state: 'removed', comment: null });
+      expect((await ctx.call('owner', 'GET', `/v1/threads/${id}`)).statusCode).toBe(404);
+    });
+
+    it('refuses an approval twice', async () => {
+      const id = await heldThread();
+      await act('owner', id, { action: 'approve' });
+
+      const again = await act('owner', id, { action: 'approve' });
+
+      expect([again.statusCode, codeOf(again)]).toEqual([
+        409,
+        ErrorCodes.MODERATION_NOT_APPLICABLE,
+      ]);
     });
   });
 });

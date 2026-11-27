@@ -1,6 +1,9 @@
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
+  ListHeldThreadsOptions,
   ListVideoThreadsOptions,
+  ThreadModerated,
+  ThreadModerationWrite,
   ThreadRemovalRecord,
   VideoThreadRepositoryPort,
 } from '@vp/core/repositories';
@@ -16,8 +19,13 @@ import type {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
-import { threadEntry, threadsOfVideo, toVideoThread } from './video-thread-queries';
-import { createThreadWithinLimit, removeThreadRow, setThreadPinned } from './video-thread-writes';
+import { heldThreads, threadEntry, threadsOfVideo, toVideoThread } from './video-thread-queries';
+import {
+  createThreadWithinLimit,
+  moderateThreadRow,
+  removeThreadRow,
+  setThreadPinned,
+} from './video-thread-writes';
 
 const { videoThreads: t } = schema;
 
@@ -50,6 +58,24 @@ export class PostgresVideoThreadRepository implements VideoThreadRepositoryPort 
     return fromPromise(
       () => threadsOfVideo(this.db, videoId, options),
       databaseUnavailable.during('listVideoThreads')
+    );
+  }
+
+  async listHeld(
+    options: ListHeldThreadsOptions
+  ): Promise<Result<VideoThreadEntry[], DatabaseUnavailable>> {
+    return fromPromise(
+      () => heldThreads(this.db, options),
+      databaseUnavailable.during('listHeldVideoThreads')
+    );
+  }
+
+  async moderate(
+    write: ThreadModerationWrite
+  ): Promise<Result<ThreadModerated, DatabaseUnavailable>> {
+    return fromPromise(
+      () => this.db.transaction((tx) => moderateThreadRow(tx, write)),
+      databaseUnavailable.during('moderateVideoThread')
     );
   }
 

@@ -1,19 +1,24 @@
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
+  ListHeldThreadsOptions,
   ListVideoThreadsOptions,
+  ThreadModerated,
+  ThreadModerationWrite,
   ThreadRemovalRecord,
   VideoThreadRepositoryPort,
 } from '@vp/core/repositories';
-import type { OutboxRepository } from '@vp/core/repositories';
-import type {
-  CommentRemoval,
-  CommentTarget,
-  NewChannelAuditEntry,
-  NewVideoThreadInput,
-  ThreadCreated,
-  ThreadPinOutcome,
-  VideoThread,
-  VideoThreadEntry,
+import type { OutboxRepository, UserEventRepository } from '@vp/core/repositories';
+import {
+  type CommentRemoval,
+  type CommentTarget,
+  type NewChannelAuditEntry,
+  type NewVideoThreadInput,
+  type ThreadCreated,
+  type ThreadPinOutcome,
+  type VideoThread,
+  type VideoThreadEntry,
+  commentHeld,
+  keepsPin,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { recordModeration } from './comment-moderation-record';
@@ -26,6 +31,7 @@ import type { InMemoryChannelUserRestrictionRepository } from './in-memory-chann
 export interface InMemoryVideoThreadRepositoryOptions {
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
   outboxRepo: Pick<OutboxRepository, 'enqueue'>;
+  userEventsRepo: Pick<UserEventRepository, 'append'>;
   channelsRepo: Pick<InMemoryChannelRepository, 'findById'>;
   restrictionsRepo: Pick<
     InMemoryChannelUserRestrictionRepository,
@@ -78,6 +84,47 @@ export class InMemoryVideoThreadRepository implements VideoThreadRepositoryPort 
     return ok(await Promise.all(visible.map((thread) => this.entryOf(thread))));
   }
 
+  async listHeld({
+    channelId,
+    authorId,
+    cursor,
+    limit,
+  }: ListHeldThreadsOptions): Promise<Result<VideoThreadEntry[], DatabaseUnavailable>> {
+    const held = [...this.threads.values()]
+      .filter((thread) => thread.channelId === channelId && thread.moderationState === 'held')
+      .filter((thread) => authorId === undefined || thread.authorId === authorId)
+      .filter(
+        (thread) =>
+          !cursor ||
+          thread.createdAt < cursor.createdAt ||
+          (thread.createdAt.getTime() === cursor.createdAt.getTime() && thread.id < cursor.id)
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id))
+      .slice(0, limit);
+
+    return ok(await Promise.all(held.map((thread) => this.entryOf(thread))));
+  }
+
+  async moderate({
+    id,
+    from,
+    outcome,
+    audit,
+    notice,
+  }: ThreadModerationWrite): Promise<Result<ThreadModerated, DatabaseUnavailable>> {
+    const thread = this.threads.get(id);
+    if (!thread) return ok({ type: 'missing' });
+    if (thread.moderationState !== from)
+      return ok({ type: 'stale', state: thread.moderationState });
+
+    thread.moderationState = outcome.state;
+    thread.moderationDisclosure = outcome.disclosure;
+    thread.heldReason = null;
+    if (!keepsPin(outcome.state)) thread.pinnedAt = null;
+    const recorded = await recordModeration(this.deps, { audit, ...(notice && { notice }) });
+    return isErr(recorded) ? recorded : ok({ type: 'applied', thread: { ...thread } });
+  }
+
   async countOpen(videoId: string, authorId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok(this.open(videoId, authorId));
   }
@@ -87,7 +134,7 @@ export class InMemoryVideoThreadRepository implements VideoThreadRepositoryPort 
     openLimit: number
   ): Promise<Result<ThreadCreated, DatabaseUnavailable>> {
     if (this.open(input.videoId, input.authorId) >= openLimit) return ok({ type: 'limit' });
-    const { moderation, ...fields } = input;
+    const { moderation, moderators = [], ...fields } = input;
     const thread: VideoThread = {
       ...fields,
       moderationState: moderation.moderationState,
@@ -98,6 +145,13 @@ export class InMemoryVideoThreadRepository implements VideoThreadRepositoryPort 
       createdAt: new Date(),
     };
     this.threads.set(thread.id, thread);
+    if (thread.moderationState === 'held') {
+      const held = commentHeld({ id: thread.id, target: { type: 'thread', id: thread.id } });
+      for (const userId of moderators.filter((id) => id !== thread.authorId)) {
+        const told = await this.deps.userEventsRepo.append({ userId, ...held });
+        if (isErr(told)) return told;
+      }
+    }
     return ok({ type: 'created', thread: { ...thread } });
   }
 

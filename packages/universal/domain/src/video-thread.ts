@@ -36,6 +36,8 @@ export interface NewVideoThreadInput {
   title: string;
   body: string;
   moderation: NewCommentModeration;
+  /** The moderators told, in the same transaction, that a held thread is waiting. */
+  moderators?: readonly string[];
 }
 
 interface ThreadAuthor {

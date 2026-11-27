@@ -155,7 +155,7 @@ describe('apps/server/worker: stage registry', () => {
     {
       name: 'notify-comment',
       data: {
-        videoId: '018f0000-0000-7000-8000-000000000001',
+        target: { type: 'video', id: '018f0000-0000-7000-8000-000000000001' },
         commentId: '018f0000-0000-7000-8000-000000000002',
       },
     },

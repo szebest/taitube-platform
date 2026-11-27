@@ -87,12 +87,12 @@ export class InMemoryCommentModerationRepository implements CommentModerationRep
     const channel = unwrapOr(await this.deps.channelsRepo.findById(stored.authorChannelId), null);
     const thread = toThreadOf(stored, channel, repliesOf(comments.values(), stored.id).length);
     const firstPublication = outcome.state === 'published' && from === 'held' && heldBefore;
-    if (firstPublication && owner.type === 'video') {
+    if (firstPublication) {
       const queued = await this.deps.outboxRepo.enqueue(
-        commentOutbox({ videoId: owner.id, commentId: stored.id })
+        commentOutbox({ target: stored.target, commentId: stored.id })
       );
       if (isErr(queued)) return queued;
-      if (owner.ownerId !== stored.authorId) {
+      if (owner.type === 'video' && owner.ownerId !== stored.authorId) {
         const told = await this.deps.userEventsRepo.append({
           userId: owner.ownerId,
           ...commentCreated(thread, { id: owner.id, title: owner.title }),

@@ -63,19 +63,19 @@ export async function countedAmong(tx: PostgresDatabase, where: SQL | undefined)
 }
 
 /**
- * What a comment on a video that becomes public tells people: the notification job, and the
- * owner's open tabs. A comment on a post tells no one yet.
+ * What a comment that becomes public tells people: the notification job, whatever it sits under,
+ * and a video owner's open tabs. A comment on a post or a thread tells no owner's tabs yet.
  */
 export async function publish(
   tx: PostgresDatabase,
   comment: CommentThread,
   target: LockedTarget
 ): Promise<void> {
+  await enqueueNotificationJobs(tx, [
+    commentOutbox({ target: comment.target, commentId: comment.id }),
+  ]);
   switch (target.type) {
     case 'video':
-      await enqueueNotificationJobs(tx, [
-        commentOutbox({ videoId: comment.target.id, commentId: comment.id }),
-      ]);
       if (target.ownerId !== comment.authorId) {
         await appendUserEvent(tx, {
           userId: target.ownerId,

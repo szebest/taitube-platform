@@ -50,7 +50,7 @@ export type RemoveThreadServiceFailure =
   | ThreadNotFound
   | DatabaseUnavailable;
 
-async function threadAndVideo(
+export async function threadAndVideo(
   deps: Pick<ThreadManageDeps, 'videos' | 'threads'>,
   threadId: string
 ): Promise<Result<{ thread: VideoThread | null; video: Video | null }, DatabaseUnavailable>> {

@@ -34,6 +34,7 @@ export function provideCommentRepositories(c: Container): Container {
         new InMemoryVideoThreadRepository({
           auditRepo: c.get(Repo.channelAudit),
           outboxRepo: c.get(Repo.outbox),
+          userEventsRepo: c.get(Repo.userEvents),
           channelsRepo: c.get(Repo.channels),
           restrictionsRepo: c.get(Repo.channelUserRestrictions),
           commentsRepo: {

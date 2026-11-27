@@ -32647,7 +32647,7 @@ paths:
       summary: The creator comment inbox
       tags:
         - Creator Studio
-      description: Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word; restricted keeps those whose author has a shadow ban or a ban on the channel that has not ended. Held and hidden comments are listed here with their moderation state, for the people who moderate.
+      description: 'Comments on the caller videos that the caller did not write, newest first, keyset-paginated. unanswered keeps those without a later reply from the caller in their thread; reported keeps those with an open report; held and hidden keep those in that moderation state; questions keeps those with a question mark or a leading question word; restricted keeps those whose author has a shadow ban or a ban on the channel that has not ended. Held and hidden comments are listed here with their moderation state, for the people who moderate. Under all and held, a held viewer thread is a row too: its id is the thread id, its target summary names the thread, and the moderate endpoint takes that id.'
       parameters:
         - schema:
             default: all
@@ -45881,7 +45881,12 @@ paths:
                               format: uuid
                               pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                             postId:
-                              description: The newest post of a `post` notification
+                              description: The newest post of a `post` notification, or the post a comment kind is under
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            threadId:
+                              description: The viewer thread a comment kind is under, on the notification `videoId`
                               type: string
                               format: uuid
                               pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
@@ -64439,10 +64444,10 @@ paths:
                 description: Problem Details (RFC 9457)
   /v1/comments/{id}/moderate:
     post:
-      summary: Hold, approve, hide, unhide or remove a comment
+      summary: Hold, approve, hide, unhide or remove a comment or a viewer thread
       tags:
         - Comment moderation
-      description: 'One endpoint for every comment action, decided by the caller permission on that action: the video owner, and members whose role moderates comments. A visible hold, hide or remove needs a reason and tells the author; a silent one tells nobody. Records the action in the channel audit log with the disclosure used. Remove deletes the comment and its replies.'
+      description: 'One endpoint for every comment action, decided by the caller permission on that action: the video owner, and members whose role moderates comments. A visible hold, hide or remove needs a reason and tells the author; a silent one tells nobody. Records the action in the channel audit log with the disclosure used. Remove deletes the comment and its replies. The id may also be a viewer thread held by the gate, which is moderated the same way and answers with a null comment.'
       requestBody:
         required: true
         content:
@@ -64903,6 +64908,7 @@ paths:
                     type: string
                     enum:
                       - COMMENT_NOT_FOUND
+                      - THREAD_NOT_FOUND
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -68881,7 +68887,12 @@ paths:
                                     format: uuid
                                     pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                                   postId:
-                                    description: The newest post of a `post` notification
+                                    description: The newest post of a `post` notification, or the post a comment kind is under
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  threadId:
+                                    description: The viewer thread a comment kind is under, on the notification `videoId`
                                     type: string
                                     format: uuid
                                     pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$

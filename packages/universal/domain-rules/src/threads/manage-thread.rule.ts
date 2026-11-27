@@ -1,5 +1,5 @@
 import { type Result, andThen, map } from '@kit/result';
-import type { Video, VideoThread } from '@vp/domain';
+import type { CommentModerationAction, ModerationOutcome, Video, VideoThread } from '@vp/domain';
 import {
   type UserContext,
   canDeleteThread,
@@ -7,6 +7,8 @@ import {
   canPinThread,
 } from '@vp/permissions';
 import { type AuthorizationFailure, authorize } from '../authorize';
+import { applyModeration } from '../comments/apply-moderation.rule';
+import type { ModerationNotApplicable } from '../comments/failures';
 import { type ReadThreadFailure, decideThreadRead } from './read-thread.rule';
 
 export interface ManageThreadInput {
@@ -71,5 +73,32 @@ export function decideThreadRemove(
         videoChannelId: video.channelId,
       }),
     { action: 'remove', subject: 'Thread' }
+  );
+}
+
+export type ModerateThreadFailure = ManageThreadFailure | ModerationNotApplicable;
+
+/** A thread is moderated by the same permission and the same state machine as a comment. */
+export function decideThreadModeration(
+  input: ManageThreadInput & { readonly action: CommentModerationAction }
+): Result<ManagedThread & { readonly outcome: ModerationOutcome }, ModerateThreadFailure> {
+  const { action, ...rest } = input;
+  return andThen(
+    decideManage(
+      rest,
+      (actor, { video }) =>
+        canModerateComment({
+          user: actor,
+          action: action.action,
+          videoOwnerId: video.ownerId,
+          videoChannelId: video.channelId,
+        }),
+      { action: action.action, subject: 'Thread' }
+    ),
+    (managed) =>
+      map(applyModeration(managed.thread.moderationState, action), (outcome) => ({
+        ...managed,
+        outcome,
+      }))
   );
 }

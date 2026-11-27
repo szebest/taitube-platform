@@ -17,10 +17,11 @@ const postHost = (overrides = {}): CommentHost => ({
   ownerId: OWNER.id,
 });
 
-const threadHost = (thread = {}, video = {}): CommentHost => ({
+const threadHost = (thread = {}, video = {}, authorShadowed = false): CommentHost => ({
   type: 'thread',
   thread: aThread(thread),
   video: aVideo(video),
+  authorShadowed,
 });
 
 describe('@vp/domain-rules: comment host', () => {
@@ -92,6 +93,11 @@ describe('@vp/domain-rules: comment host', () => {
     { name: 'a public video', host: videoHost(aVideo()), viewer: null },
     { name: 'a published post', host: postHost(), viewer: null },
     { name: 'a published thread', host: threadHost(), viewer: null },
+    {
+      name: 'a shadow banned thread, to its author',
+      host: threadHost({ authorId: STRANGER.id }, {}, true),
+      viewer: STRANGER,
+    },
   ])('lets anyone read the comments of $name', ({ host, viewer }) => {
     const result = decideCommentHostRead(viewer, host);
 
@@ -108,6 +114,12 @@ describe('@vp/domain-rules: comment host', () => {
     {
       name: 'a held thread to a stranger',
       host: threadHost({ moderationState: 'held' }),
+      viewer: STRANGER,
+      code: ErrorCodes.THREAD_NOT_FOUND,
+    },
+    {
+      name: 'the thread of a shadow banned author to a stranger',
+      host: threadHost({}, {}, true),
       viewer: STRANGER,
       code: ErrorCodes.THREAD_NOT_FOUND,
     },

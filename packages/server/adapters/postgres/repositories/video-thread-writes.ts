@@ -1,13 +1,20 @@
-import type { ThreadRemovalRecord } from '@vp/core/repositories';
-import * as schema from '@vp/db';
 import type {
-  NewChannelAuditEntry,
-  NewVideoThreadInput,
-  ThreadCreated,
-  ThreadPinOutcome,
+  ThreadModerated,
+  ThreadModerationWrite,
+  ThreadRemovalRecord,
+} from '@vp/core/repositories';
+import * as schema from '@vp/db';
+import {
+  type NewChannelAuditEntry,
+  type NewVideoThreadInput,
+  type ThreadCreated,
+  type ThreadPinOutcome,
+  commentHeld,
+  keepsPin,
 } from '@vp/domain';
 import { and, count, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { appendChannelAudit, appendModerationRecord } from './channel-audit-writes';
+import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 import { toVideoThread } from './video-thread-queries';
 
@@ -29,13 +36,47 @@ export async function createThreadWithinLimit(
     .where(and(eq(t.videoId, input.videoId), eq(t.authorId, input.authorId), isNull(t.deletedAt)));
   if ((open?.total ?? 0) >= openLimit) return { type: 'limit' };
 
-  const { moderation, ...fields } = input;
+  const { moderation, moderators = [], ...fields } = input;
   const [row] = await tx
     .insert(t)
     .values({ ...fields, ...moderation, createdAt: new Date() })
     .returning();
   if (!row) throw new Error('video thread insert returned no row');
+  if (moderation.moderationState === 'held') {
+    const held = commentHeld({ id: row.id, target: { type: 'thread', id: row.id } });
+    for (const userId of moderators.filter((id) => id !== input.authorId)) {
+      await appendUserEvent(tx, { userId, ...held });
+    }
+  }
   return { type: 'created', thread: toVideoThread(row) };
+}
+
+/** Compare and set on `moderation_state`; a thread that leaves public reads loses its pin. */
+export async function moderateThreadRow(
+  tx: PostgresDatabase,
+  { id, from, outcome, audit, notice }: ThreadModerationWrite
+): Promise<ThreadModerated> {
+  const [row] = await tx
+    .select({ state: t.moderationState })
+    .from(t)
+    .where(and(eq(t.id, id), isNull(t.deletedAt)))
+    .for('update');
+  if (!row) return { type: 'missing' };
+  if (row.state !== from) return { type: 'stale', state: row.state };
+
+  const [updated] = await tx
+    .update(t)
+    .set({
+      moderationState: outcome.state,
+      moderationDisclosure: outcome.disclosure,
+      heldReason: null,
+      ...(keepsPin(outcome.state) ? {} : { pinnedAt: null }),
+    })
+    .where(eq(t.id, id))
+    .returning();
+  if (!updated) return { type: 'missing' };
+  await appendModerationRecord(tx, { audit, ...(notice && { notice }) });
+  return { type: 'applied', thread: toVideoThread(updated) };
 }
 
 export async function setThreadPinned(

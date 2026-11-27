@@ -12,6 +12,9 @@ export const MODERATION_STATES = ['published', 'held', 'hidden'] as const;
 
 export type ModerationState = (typeof MODERATION_STATES)[number];
 
+/** A pin is public curation, so only a published comment or thread keeps one. */
+export const keepsPin = (state: ModerationState): boolean => state === 'published';
+
 export const HELD_REASONS = ['review_all', 'link', 'blocked_word'] as const;
 
 export type HeldReason = (typeof HELD_REASONS)[number];
