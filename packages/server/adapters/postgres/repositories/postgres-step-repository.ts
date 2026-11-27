@@ -23,7 +23,7 @@ export class PostgresStepRepository extends StepRepository {
   }
 
   async claim(options: ClaimStepOptions): Promise<Result<ClaimStepResult, DatabaseUnavailable>> {
-    const { id, videoId, step, rendition = '-', jobId, attempt, workerId, lockToken } = options;
+    const { id, videoId, step, rendition, jobId, attempt, workerId, lockToken } = options;
     const claimed = await fromPromise(
       () =>
         this.db
@@ -74,7 +74,7 @@ export class PostgresStepRepository extends StepRepository {
   async complete(
     options: CompleteStepOptions
   ): Promise<Result<CompleteStepResult, DatabaseUnavailable>> {
-    const { videoId, step, rendition = '-', lockToken, result = {} } = options;
+    const { videoId, step, rendition, lockToken, result = {} } = options;
     const updated = await fromPromise(
       () =>
         this.db
@@ -95,7 +95,7 @@ export class PostgresStepRepository extends StepRepository {
   }
 
   async fail(options: FailStepOptions): Promise<Result<FailStepResult, DatabaseUnavailable>> {
-    const { videoId, step, rendition = '-', lockToken, errorCode, errorMessage } = options;
+    const { videoId, step, rendition, lockToken, errorCode, errorMessage } = options;
     const updated = await fromPromise(
       () =>
         this.db

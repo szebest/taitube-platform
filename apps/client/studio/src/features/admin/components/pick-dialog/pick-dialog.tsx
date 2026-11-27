@@ -1,4 +1,4 @@
-import { fromPromise, isOk, unwrapOr } from '@kit/result';
+import { fromPromise, ignoreRejection, isOk, unwrapOr } from '@kit/result';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@kit/ui';
 import { validatePickNote } from '@vp/validation';
 import { useState } from 'react';
@@ -127,7 +127,7 @@ export function PickDialog({ pick, picks, onClose, onCancelPick }: PickDialogPro
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            submit();
+            ignoreRejection(submit(), 'submit reports a failed save through its own toast');
           }}
         >
           <ResponsiveModal.Header>

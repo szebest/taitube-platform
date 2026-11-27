@@ -1,4 +1,4 @@
-import { fromPromise, ignore, isOk } from '@kit/result';
+import { fromPromise, ignore, ignoreRejection, isOk } from '@kit/result';
 import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
@@ -82,7 +82,10 @@ export function VideoJsEngine({
     }
 
     if (control && !control.paused) {
-      startPlaying(currentTarget);
+      ignoreRejection(
+        startPlaying(currentTarget),
+        'startPlaying reports a refused play through onPause itself'
+      );
     }
   };
 

@@ -465,7 +465,6 @@
       "unsupportedLocale": "@kit/intl",
       "UnsupportedLocale": "@kit/intl",
       "uploadProgress": "@vp/intl-formats",
-      "User": "@kit/intl",
       "USER": "@kit/intl",
       "videoDuration": "@vp/intl-formats",
       "views": "@vp/intl-formats",

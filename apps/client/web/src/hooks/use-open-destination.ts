@@ -1,4 +1,4 @@
-import { assertNever } from '@kit/result';
+import { assertNever, ignoreRejection } from '@kit/result';
 import { useNavigate } from '@tanstack/react-router';
 import { useAppLink } from '@vp/queries';
 import { STUDIO_URL } from '#app/lib/config';
@@ -12,10 +12,16 @@ export function useOpenDestination(): (target: ShellTarget) => void {
   return (target) => {
     switch (target.kind) {
       case 'page':
-        navigate({ to: target.to });
+        ignoreRejection(
+          navigate({ to: target.to }),
+          'a refused navigation leaves the viewer where they are'
+        );
         return;
       case 'channel':
-        navigate({ to: '/channel/$channelId', params: { channelId: target.channelId } });
+        ignoreRejection(
+          navigate({ to: '/channel/$channelId', params: { channelId: target.channelId } }),
+          'a refused navigation leaves the viewer where they are'
+        );
         return;
       case 'studio':
         window.location.assign(appLink(STUDIO_URL));

@@ -16,11 +16,15 @@ describe('apps/client/web: usePartyCountdown', () => {
     expect(result.current).toBe(3);
 
     now = 8_100;
-    act(() => vi.advanceTimersByTime(250));
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
     expect(result.current).toBe(2);
 
     now = 10_000;
-    act(() => vi.advanceTimersByTime(250));
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
     expect(result.current).toBeNull();
   });
 

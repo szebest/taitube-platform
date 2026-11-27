@@ -208,7 +208,9 @@ describe('presets', () => {
     expect(res.statusCode).toBe(200);
     const byKey = (key: string) =>
       res.json().items.find((role: { key: string }) => role.key === key);
-    expect([...byKey('member').permissions].sort()).toEqual([...PUBLIC_MEMBER].sort());
+    expect([...byKey('member').permissions].sort((a, b) => a.localeCompare(b))).toEqual(
+      [...PUBLIC_MEMBER].sort((a, b) => a.localeCompare(b))
+    );
     expect(byKey('dj').permissions).toContain('playback.control');
     expect(byKey('owner').permissions).toHaveLength(WATCH_PARTY_PERMISSION_IDS.length);
     expect(byKey('vip').memberCount).toBe(1);

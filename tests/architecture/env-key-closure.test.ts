@@ -67,7 +67,7 @@ const LOCAL_OVERRIDES: Record<string, string> = {
 
 function undeclared(keys: string[]): string[] {
   const declared = schemaKeys();
-  return [...new Set(keys).difference(declared)].sort();
+  return [...new Set(keys).difference(declared)].sort((a, b) => a.localeCompare(b));
 }
 
 describe('architecture: the environment schema is closed over what the platform reads and sets', () => {

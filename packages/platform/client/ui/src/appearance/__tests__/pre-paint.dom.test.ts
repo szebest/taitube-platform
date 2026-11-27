@@ -1,3 +1,4 @@
+import { runInThisContext } from 'node:vm';
 import { prePaintScript } from '../pre-paint';
 import { stubMediaQueries } from './media-queries';
 
@@ -6,7 +7,7 @@ const runBeforePaint = (followsSystem: boolean, followsContrast: boolean) => {
   root.dataset.mode = 'dark';
   root.dataset.motion = 'standard';
   root.dataset.contrast = 'standard';
-  new Function(prePaintScript(followsSystem, followsContrast))();
+  runInThisContext(prePaintScript(followsSystem, followsContrast));
   return { mode: root.dataset.mode, motion: root.dataset.motion, contrast: root.dataset.contrast };
 };
 

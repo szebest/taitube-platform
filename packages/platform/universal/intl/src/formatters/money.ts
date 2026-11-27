@@ -1,5 +1,5 @@
 import { andThen, map } from '@kit/result';
-import { type User, resolveCurrency } from '../context';
+import { resolveCurrency } from '../context';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
@@ -12,7 +12,7 @@ const MONEY_OPTION_KEYS = [
 type MoneyOptions = Pick<
   Intl.NumberFormatOptions,
   Exclude<(typeof MONEY_OPTION_KEYS)[number], 'currency'>
-> & { readonly currency?: string | User };
+> & { readonly currency?: string };
 
 /** `minor` counts the currency's smallest unit (pence, öre), so `1250` GBP is £12.50. */
 export interface MoneyValue {

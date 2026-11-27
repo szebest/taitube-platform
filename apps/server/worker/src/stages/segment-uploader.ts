@@ -2,7 +2,16 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { Logger } from '@kit/logger';
 import { getHeaderMapping } from '@kit/object-storage';
-import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@kit/result';
+import {
+  type Result,
+  err,
+  fromPromise,
+  ignore,
+  ignoreRejection,
+  isErr,
+  ok,
+  unwrapOr,
+} from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import { renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
@@ -132,13 +141,29 @@ export class StreamingSegmentUploader implements SegmentUploader {
       const file = this.queue.shift();
       if (!file) break;
       this.activeWorkers++;
-      this.uploadSegment(file).then((uploaded) => {
-        if (isErr(uploaded) && !this.fatalError) this.fatalError = uploaded.error;
-        this.activeWorkers--;
-        this.checkIdle();
-        this.scheduleWork();
-      });
+      ignoreRejection(
+        this.runSegment(file),
+        'runSegment holds the upload in fromPromise, and settle only updates counters'
+      );
     }
+  }
+
+  private async runSegment(file: string): Promise<void> {
+    const uploaded = await fromPromise(this.uploadSegment(file), (cause) =>
+      mediaFailure(
+        `transcode-${this.rendition}`,
+        ErrorCodes.STORAGE_UNAVAILABLE,
+        `Segment ${file} upload threw: ${String(cause)}`
+      )
+    );
+    this.settle(uploaded.ok ? uploaded.value : uploaded);
+  }
+
+  private settle(uploaded: Result<void, MediaFailure>): void {
+    if (isErr(uploaded) && !this.fatalError) this.fatalError = uploaded.error;
+    this.activeWorkers--;
+    this.checkIdle();
+    this.scheduleWork();
   }
 
   private async uploadSegment(filename: string): Promise<Result<void, MediaFailure>> {

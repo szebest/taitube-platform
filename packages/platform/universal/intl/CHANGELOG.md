@@ -2,6 +2,7 @@
 
 ## 0.4.0
 
+- Breaking: the `User` type is removed; `USER` stays. `resolveCurrency`'s `requested`, `DisplayNameValue.value` and the money formatter's `currency` are typed `string`: the `User` member of the union was already absorbed by `string`, so no accepted value changes, and nothing else used the type.
 - `Preset`, `PresetTable`, `definePresets` and `resolveEntry`, moved from `@kit/i18n`.
 
 ## 0.3.0

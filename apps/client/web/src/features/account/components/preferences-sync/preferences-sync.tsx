@@ -83,8 +83,11 @@ function AccountMerge({
       device.setPlayback({ [field]: conflict.account });
       save({ playback: { [field]: conflict.account } });
     } else if (field === 'overrides' && group) {
-      if (conflict.account === undefined) appearance.resetOverrides(group as TokenGroup);
-      else appearance.setOverride(group as TokenGroup, String(conflict.account));
+      if (typeof conflict.account === 'string') {
+        appearance.setOverride(group as TokenGroup, conflict.account);
+      } else {
+        appearance.resetOverrides(group as TokenGroup);
+      }
     } else if (field) {
       appearance.update({ [field]: conflict.account });
     }

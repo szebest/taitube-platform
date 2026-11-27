@@ -20,7 +20,7 @@ describe('packages/api-client: client', () => {
     const seen: string[] = [];
     const client = createApiClient({
       baseUrl: 'http://localhost:3000',
-      fetch: (async (url: string | URL | Request) => {
+      fetch: (async (url: string | URL) => {
         seen.push(String(url));
         return new Response(JSON.stringify(emptyFeed), {
           headers: { 'content-type': 'application/json' },

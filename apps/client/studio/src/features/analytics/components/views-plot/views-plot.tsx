@@ -56,7 +56,7 @@ export function ViewsPlot({ points, name, tick, label }: ViewsPlotProps) {
           allowDecimals={false}
         />
         <Tooltip
-          labelFormatter={(at) => text(label(String(at)))}
+          labelFormatter={(at) => text(label(typeof at === 'string' ? at : ''))}
           formatter={(value) => count(Number(value))}
           contentStyle={{ background: theme.tooltipSurface, border: 'none' }}
         />

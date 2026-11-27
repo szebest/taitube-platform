@@ -8,7 +8,7 @@ const OPTIONS = [
   { value: 'b', label: 'Beta' },
 ];
 
-const renderSelect = (value: 'a' | 'b' | undefined = undefined) => {
+const renderSelect = (value?: 'a' | 'b') => {
   const onChange = vi.fn();
   render(<FilterSelect label="Letter" value={value} options={OPTIONS} onChange={onChange} />, {
     wrapper: AppProviders,

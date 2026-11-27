@@ -5,7 +5,7 @@ import { sendSocketResult } from '../send-socket-result';
 
 function socket() {
   const sent: unknown[] = [];
-  const fake: Pick<WebSocket, 'send'> = { send: (data) => sent.push(JSON.parse(String(data))) };
+  const fake: Pick<WebSocket, 'send'> = { send: (data: string) => sent.push(JSON.parse(data)) };
   return { fake, sent };
 }
 

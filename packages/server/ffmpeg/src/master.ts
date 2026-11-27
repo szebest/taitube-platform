@@ -1,7 +1,7 @@
 import { MS_PER_SECOND } from '@kit/primitives';
 import type { LadderEntry } from '@vp/job-contracts';
 
-function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {
+function getAvcCodecString(profile: string, level: string): string {
   const profileHex = profile === 'high' ? '6400' : '4d40';
   const levelNum = Math.round(Number.parseFloat(level) * 10);
   const levelHex = levelNum.toString(16).padStart(2, '0');

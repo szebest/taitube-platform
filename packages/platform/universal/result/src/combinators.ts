@@ -1,4 +1,5 @@
 import { type Result, ok } from './result';
+import { fromPromise } from './try-catch';
 
 export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
   return result.ok ? ok(fn(result.value)) : result;
@@ -35,3 +36,14 @@ export function ignore<S extends string>(
   _result: Result<unknown, unknown> | PromiseLike<Result<unknown, unknown>>,
   _reason: IgnoreReason<S>
 ): void {}
+
+/** `ignore` for a plain promise: a rejection is swallowed too, so nothing surfaces as unhandled. */
+export function ignoreRejection<S extends string>(
+  promise: PromiseLike<unknown>,
+  _reason: IgnoreReason<S>
+): void {
+  ignore(
+    fromPromise(promise, (cause) => cause),
+    'the caller named why it has no use for the outcome'
+  );
+}

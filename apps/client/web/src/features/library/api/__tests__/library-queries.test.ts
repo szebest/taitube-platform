@@ -100,11 +100,11 @@ describe('apps/client/web: library queries', () => {
         return HttpResponse.json({ items: [] });
       }),
       mockEndpoint(getPlaylist, ({ params }) => {
-        asked.push(`playlist ${params.id}`);
+        asked.push(`playlist ${String(params.id)}`);
         return HttpResponse.json(watchLaterPlaylist(String(params.id), []));
       }),
       mockEndpoint(listChannelVideos, ({ params, request }) => {
-        asked.push(`channel ${params.idOrHandle} ${new URL(request.url).searchParams}`);
+        asked.push(`channel ${String(params.idOrHandle)} ${new URL(request.url).searchParams}`);
         return HttpResponse.json({ items: [], nextCursor: null, total: 0 });
       })
     );

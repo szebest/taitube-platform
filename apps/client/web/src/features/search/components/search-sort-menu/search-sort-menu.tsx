@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { Button, DropdownMenu, Icon } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_SORTS } from '@vp/domain';
@@ -26,7 +27,10 @@ export function SearchSortMenu() {
           onValueChange={(next) => {
             const picked = SEARCH_SORTS.find((option) => option === next);
             if (picked) {
-              navigate({ search: (previous) => ({ ...previous, sort: picked }), replace: true });
+              ignoreRejection(
+                navigate({ search: (previous) => ({ ...previous, sort: picked }), replace: true }),
+                'a refused navigation leaves the viewer where they are'
+              );
             }
           }}
         >

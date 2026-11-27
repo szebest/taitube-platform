@@ -1,4 +1,5 @@
 import { EmptyState, NoResultsIllustration } from '@kit/components';
+import { ignoreRejection } from '@kit/result';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
@@ -32,7 +33,10 @@ export function SearchNoResults({ query }: SearchNoResultsProps) {
           value=""
           onValueChange={(name) => {
             if (typeof name === 'string') {
-              navigate({ to: '/search', search: { q: name } });
+              ignoreRejection(
+                navigate({ to: '/search', search: { q: name } }),
+                'a refused navigation leaves the viewer where they are'
+              );
             }
           }}
         >

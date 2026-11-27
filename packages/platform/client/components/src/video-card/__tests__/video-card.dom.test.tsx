@@ -10,6 +10,12 @@ import type { VideoCardRootProps } from '../video-card';
 
 const ChannelLink = (props: ComponentPropsWithRef<'a'>) => <a {...props} />;
 
+const advance = (ms: number) => {
+  act(() => {
+    vi.advanceTimersByTime(ms);
+  });
+};
+
 const VIDEO_ID = '0190a1b2-0000-7000-8000-000000000001';
 
 const renderCard = (
@@ -128,7 +134,7 @@ describe('@kit/components: VideoCard', () => {
       renderCard({ variant, expandOnHover });
 
       fireEvent.pointerOver(card(), { pointerType });
-      act(() => vi.advanceTimersByTime(after));
+      advance(after);
 
       expect(card().hasAttribute('data-expanded')).toBe(expanded);
       expect(screen.queryByText('A night walk from Alfama to the river.') !== null).toBe(expanded);
@@ -143,7 +149,7 @@ describe('@kit/components: VideoCard', () => {
     renderCard();
 
     fireEvent.pointerOver(card(), { pointerType: 'mouse' });
-    act(() => vi.advanceTimersByTime(500));
+    advance(500);
     act(cancel);
 
     expect(card()).not.toHaveAttribute('data-expanded');
@@ -174,9 +180,9 @@ describe('@kit/components: VideoCard', () => {
 
     fireEvent.pointerOver(card(), { pointerType: pointer });
     fireEvent.pointerEnter(card(), { pointerType: pointer });
-    act(() => vi.advanceTimersByTime(499));
+    advance(499);
     expect(card().querySelector('[data-slot=video-card-frames]')).toBeNull();
-    act(() => vi.advanceTimersByTime(1));
+    advance(1);
 
     expect(card().querySelector('[data-slot=video-card-frames]') !== null).toBe(plays);
   });
@@ -185,7 +191,7 @@ describe('@kit/components: VideoCard', () => {
     vi.useFakeTimers();
     renderCard({ previewOnHover: true });
     fireEvent.pointerEnter(card(), { pointerType: 'mouse' });
-    act(() => vi.advanceTimersByTime(500));
+    advance(500);
     expect(card().querySelector('[data-slot=video-card-frames]')).not.toBeNull();
 
     fireEvent.pointerLeave(card(), { pointerType: 'mouse' });
@@ -297,7 +303,7 @@ describe('@kit/components: VideoCard', () => {
     renderCard();
     render(<VideoCardSkeleton variant="shelf" />);
     fireEvent.pointerOver(card(), { pointerType: 'mouse' });
-    act(() => vi.advanceTimersByTime(500));
+    advance(500);
     vi.useRealTimers();
 
     expect(await axeViolations()).toEqual([]);

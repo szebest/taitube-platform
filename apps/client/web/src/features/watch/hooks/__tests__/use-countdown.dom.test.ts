@@ -15,13 +15,19 @@ describe('apps/client/web: useCountdown', () => {
 
     expect(result.current).toBe(3);
 
-    act(() => vi.advanceTimersByTime(1000));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
     expect(result.current).toBe(2);
 
-    act(() => vi.advanceTimersByTime(1500));
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
     expect(result.current).toBe(0);
 
-    act(() => vi.advanceTimersByTime(5000));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(result.current).toBe(0);
   });
 

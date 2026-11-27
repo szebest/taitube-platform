@@ -49,7 +49,7 @@ export interface DateValue {
 }
 export interface DisplayNameValue {
     readonly type: 'displayName';
-    readonly value: string | User;
+    readonly value: string;
     readonly of: Intl.DisplayNamesType;
 }
 export interface DurationValue {
@@ -154,7 +154,6 @@ export type Unrenderable = FailureOf<typeof FormatErrorCodes.FORMAT_UNRENDERABLE
 export type UnsupportedLocale = FailureOf<typeof FormatErrorCodes.FORMAT_UNSUPPORTED_LOCALE, {
     locale: string;
 }>;
-export type User = typeof USER;
 export type WrongKind = FailureOf<typeof FormatErrorCodes.FORMAT_WRONG_KIND, {
     formatter: string;
     received: string;
@@ -184,7 +183,7 @@ export const numberRange: Formatter<NumberRangeValue>
 export const percent: Formatter<PercentValue>
 export function pluralCategory(count: number, context: FormatContext, type?: Intl.PluralRuleType): Result<Intl.LDMLPluralRule, FormatFailure>
 export const relative: Formatter<RelativeValue>
-export function resolveCurrency(formatter: string, requested: string | User | undefined, context: FormatContext): Result<string, FormatFailure>
+export function resolveCurrency(formatter: string, requested: string | undefined, context: FormatContext): Result<string, FormatFailure>
 export function resolveEntry(presets: PresetTable, kind: string, entry: unknown, chain: readonly string[]): Resolved
 export function scale<U extends string>(value: number, step: number, units: readonly [U, ...U[]]): Scaled<U>
 export const time: Formatter<TimeValue>

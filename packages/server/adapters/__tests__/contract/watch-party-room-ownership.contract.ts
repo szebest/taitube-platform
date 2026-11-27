@@ -95,7 +95,9 @@ export function describeWatchPartyRoomOwnershipContract(
       it('upgrades once when two pods load the room at the same version', async () => {
         const outcomes = await Promise.all([upgrade(['chat.post']), upgrade(['queue.add'])]);
 
-        expect(outcomes.map((outcome) => expectOk(outcome)).sort()).toEqual([false, true]);
+        expect(
+          outcomes.map((outcome) => expectOk(outcome)).sort((a, b) => Number(a) - Number(b))
+        ).toEqual([false, true]);
         expect(await memberPermissions()).toHaveLength(1);
       });
     });

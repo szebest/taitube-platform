@@ -7,6 +7,12 @@ interface ChatSocketOptions {
   canModerate?: boolean;
 }
 
+function parseFrame(data: unknown) {
+  if (typeof data !== 'string')
+    throw new Error('The page sent a binary frame, the sockets speak JSON text');
+  return JSON.parse(data);
+}
+
 /**
  * The chat socket of any stream at the local API: it says hello, then sends `lines`. What the page
  * sends lands in `received`, and every socket it opened in `urls`.
@@ -28,7 +34,7 @@ export function mockLiveChatSocket(
     };
     urls.push(client.url.toString());
     client.addEventListener('message', ({ data }) => {
-      received.push(JSON.parse(String(data)));
+      received.push(parseFrame(data));
     });
     for (const frame of [hello, ...lines]) {
       client.send(JSON.stringify(frame));
@@ -51,7 +57,7 @@ export function mockWatchPartySocket(opening: readonly WatchPartyServerFrame[], 
     urls.push(client.url.toString());
     clients.add(client);
     client.addEventListener('message', ({ data }) => {
-      const frame = JSON.parse(String(data));
+      const frame = parseFrame(data);
       received.push(frame);
       if (frame.type === 'clock') {
         client.send(JSON.stringify({ type: 'clock', t0: frame.t0, serverNow }));
