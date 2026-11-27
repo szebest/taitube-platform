@@ -1,5 +1,5 @@
 import { ignoreRejection } from '@kit/result';
-import { useNavigate } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { useEffect, useEffectEvent, useRef } from 'react';
 
 const MIRROR_DELAY_MS = 200;
@@ -15,26 +15,38 @@ interface ShortsUrlOptions {
 
 /**
  * Keeps the URL naming the Short on screen once the feed has rested on it, replacing the entry so Back
- * leaves the player, and tells the feed when something else sent the URL to another Short.
+ * leaves the player, and tells the feed when something else sent the URL to another Short. The router
+ * renders a navigation well after the address changed, so `named` can lag the address: both the write and
+ * the reading of a rendered Short go by the address the router is heading to.
  */
 export function useShortsUrl({ activeId, named, onExternal }: ShortsUrlOptions) {
-  const navigate = useNavigate();
-  const written = useRef(new Set<string>());
+  const router = useRouter();
+  const written = useRef<string | undefined>(undefined);
+
+  const isHeadingTo = (id: string) =>
+    router.buildLocation({ to: '/shorts/$videoId', params: { videoId: id } }).pathname ===
+    router.latestLocation.pathname;
 
   const mirror = useEffectEvent((id: string) => {
-    if (id === named) {
+    if (isHeadingTo(id)) {
       return;
     }
 
-    written.current.add(id);
+    written.current = id;
     ignoreRejection(
-      navigate({ to: '/shorts/$videoId', params: { videoId: id }, replace: true }),
+      router.navigate({ to: '/shorts/$videoId', params: { videoId: id }, replace: true }),
       'a refused navigation leaves the viewer where they are'
     );
   });
 
   const follow = useEffectEvent((id: string) => {
-    if (written.current.delete(id) || id === activeId) {
+    if (!isHeadingTo(id)) {
+      return;
+    }
+
+    const own = id === written.current;
+    written.current = undefined;
+    if (own || id === activeId) {
       return;
     }
 
