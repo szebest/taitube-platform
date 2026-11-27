@@ -1,3 +1,4 @@
+import { andThen, andThenAsync, map, type Result } from '@kit/result';
 import type { OEmbedQuery } from '@vp/api-contracts';
 import type { ChannelRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { toChannelCard } from '@vp/domain';
@@ -14,7 +15,6 @@ import {
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { andThen, andThenAsync, map, type Result } from '@vp/result';
 import { cdnUrl } from './video-views';
 
 export interface OEmbedServiceDeps {
@@ -46,7 +46,7 @@ export class OEmbedService {
       async ({ videoId }): Promise<Result<OEmbedVideo, OEmbedFailure>> =>
         andThenAsync(await videos.findById(videoId), async (found) =>
           andThenAsync(decideOEmbedVideo(found, videoId), async (video) =>
-            map(await channels.findByUserId(video.ownerId), (channel) =>
+            map(await channels.findById(video.channelId), (channel) =>
               buildOEmbed({
                 video,
                 channel: channel && toChannelCard(channel),

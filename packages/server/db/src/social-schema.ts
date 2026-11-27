@@ -37,6 +37,9 @@ export const channelSubscriptions = pgTable(
     subscriberId: uuid('subscriber_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    subscriberChannelId: uuid('subscriber_channel_id')
+      .notNull()
+      .references(() => channels.id, { onDelete: 'cascade' }),
     channelId: uuid('channel_id')
       .notNull()
       .references(() => channels.id, { onDelete: 'cascade' }),
@@ -44,18 +47,26 @@ export const channelSubscriptions = pgTable(
       .$type<NotificationLevel>()
       .notNull()
       .default('all'),
+    sourceVideoId: uuid('source_video_id').references(() => videos.id, { onDelete: 'set null' }),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
-    unique('channel_subscriptions_subscriber_channel_unique').on(
-      table.subscriberId,
+    unique('channel_subscriptions_subscriber_channel_channel_unique').on(
+      table.subscriberChannelId,
       table.channelId
+    ),
+    check(
+      'channel_subscriptions_not_self',
+      sql`${table.subscriberChannelId} <> ${table.channelId}`
     ),
     index('channel_subscriptions_subscriber_created_idx').on(
       table.subscriberId,
       table.createdAt.desc()
     ),
     index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
+    index('channel_subscriptions_source_video_idx')
+      .on(table.sourceVideoId)
+      .where(sql`${table.sourceVideoId} IS NOT NULL`),
   ]
 );
 

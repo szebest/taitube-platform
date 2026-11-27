@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import {
   type CategoriesApp,
   buildCategoriesApp,
@@ -7,7 +7,7 @@ import {
   patchCategory,
   postCategory,
 } from './categories-app';
-import { ADMIN_TOKEN, TOKENS } from './test-app';
+import { ADMIN_TOKEN, TOKENS, seedPrimaryChannel } from './test-app';
 
 const FAKE_ID = '00000000-0000-7000-8000-000000000999';
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000099';
@@ -95,6 +95,7 @@ describe('admin category writes', () => {
     await ctx.repositories.videos.create({
       id: VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.userId),
       title: 'Video in Film Category',
       status: 'READY',
       sourceKey: 'raw/99.mp4',

@@ -1,9 +1,24 @@
 import { getRequestIP } from '@tanstack/react-start/server';
-import { PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
+import {
+  CHANNEL_HEADER,
+  PROBLEM_CONTENT_TYPE,
+  type ProblemInput,
+  problemDetails,
+  VIEWER_SESSION_HEADER,
+} from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { ACCOUNT_SLOT_HEADER } from './account-slots';
+import { withExpired } from './accounts';
+import { readAccounts, writeAccounts } from './accounts-cookie';
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
-import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  readVideoAccessCookies,
+  reissueVideoAccessCookies,
+  writeSessionCookie,
+} from './session-cookie';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
@@ -12,15 +27,22 @@ const PROXY_BODY_LIMIT_BYTES = 1_048_576;
 
 const PAYLOAD_TOO_LARGE = 413;
 
-/** What the browser may tell the API. Never its cookies: the session goes as the bearer, alone. */
+const FORBIDDEN = 403;
+
+/**
+ * What the browser may tell the API. Never its cookies but the video unlocks: the session goes as
+ * the bearer, alone.
+ */
 const FORWARDED_REQUEST_HEADERS = [
   'accept',
   'accept-language',
   'content-type',
   'if-none-match',
+  CHANNEL_HEADER,
   'last-event-id',
   'traceparent',
   'tracestate',
+  VIEWER_SESSION_HEADER,
 ];
 
 /** What `fetch` already consumed (the encoding it decoded, the framing) or this origin must not take. */
@@ -60,22 +82,16 @@ async function readBody(request: Request): Promise<ReadBody> {
   return { status: 'read', body: new Blob(chunks) };
 }
 
-function tooLarge(request: Request): Response {
-  const problem = problemDetails({
-    code: ErrorCodes.VALIDATION_FAILED,
-    status: PAYLOAD_TOO_LARGE,
-    title: 'Payload Too Large',
-    detail: `The body is over ${PROXY_BODY_LIMIT_BYTES} bytes`,
-    instance: new URL(request.url).pathname,
-  });
+function refusal(request: Request, refused: Omit<ProblemInput, 'instance'>): Response {
+  const problem = problemDetails({ ...refused, instance: new URL(request.url).pathname });
   return Response.json(problem, {
-    status: PAYLOAD_TOO_LARGE,
+    status: refused.status,
     headers: { 'content-type': PROBLEM_CONTENT_TYPE },
   });
 }
 
 /** The hops so far plus the browser this server answers, so the API's `TRUST_PROXY` finds the client. */
-function forwardedFor(request: Request): string | undefined {
+export function forwardedFor(request: Request): string | undefined {
   const hops = [request.headers.get('x-forwarded-for'), getRequestIP()].filter(Boolean);
   return hops.length > 0 ? hops.join(', ') : undefined;
 }
@@ -89,12 +105,21 @@ function forwardedHeaders(request: Request, token: string | undefined): Headers 
   const hops = forwardedFor(request);
   if (hops) headers.set('x-forwarded-for', hops);
   if (token) headers.set('authorization', `Bearer ${token}`);
+  const unlocks = readVideoAccessCookies();
+  if (unlocks) headers.set('cookie', unlocks);
   return headers;
 }
 
+/**
+ * The browser never sends the bearer the API varies on, so a cacheable answer also varies on the
+ * slot and channel the browser named: a tab on another account is never served this one's copy.
+ */
 function relayed(response: Response): Response {
+  reissueVideoAccessCookies(response.headers.getSetCookie());
   const headers = new Headers(response.headers);
   for (const name of DROPPED_RESPONSE_HEADERS) headers.delete(name);
+  if (headers.get('vary') !== '*')
+    headers.append('vary', `${ACCOUNT_SLOT_HEADER}, ${CHANNEL_HEADER}`);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -103,19 +128,37 @@ function relayed(response: Response): Response {
 }
 
 /**
- * Answers the browser's call to `/api/...` on this origin from the API, with the session cookie's
- * token as the bearer. A token the API refuses is refreshed once and the call retried; with no
- * refresh to be had the cookie is cleared and the 401 goes back, and the browser signs in again.
- * `refresh` is single-flight per token (`sessionMiddleware`), so parallel 401s share one.
+ * Answers the browser's call to `/api/...` on this origin from the API, with the token of `slot`
+ * (the `X-Account-Slot` the browser sent) as the bearer and the video unlock cookies, which come
+ * back re-issued on this origin. A write that names no slot is refused, so a cross-site form,
+ * which cannot set that header, writes nothing. A token the API refuses is refreshed once and the
+ * call retried; with no refresh to be had that slot alone is cleared and marked expired, the 401
+ * goes back, and the browser signs that slot in again. `refresh` is single-flight per token
+ * (`sessionMiddleware`), so parallel 401s share one.
  */
 export async function proxyToApi(
   request: Request,
-  { apiBaseUrl, cookieDomain, refresh = noRefresh }: SessionConfig
+  { apiBaseUrl, cookieDomain, refresh = noRefresh }: SessionConfig,
+  { pathname, slot }: { pathname: string; slot: number | undefined }
 ): Promise<Response> {
-  const { pathname, search } = new URL(request.url);
-  const url = `${apiBaseUrl}${pathname.slice(API_PROXY_PATH.length)}${search}`;
+  if (slot === undefined) {
+    return refusal(request, {
+      code: ErrorCodes.FORBIDDEN,
+      status: FORBIDDEN,
+      title: 'Forbidden',
+      detail: 'A write names its account slot',
+    });
+  }
+  const url = `${apiBaseUrl}${pathname.slice(API_PROXY_PATH.length)}${new URL(request.url).search}`;
   const read = await readBody(request);
-  if (read.status === 'too-large') return tooLarge(request);
+  if (read.status === 'too-large') {
+    return refusal(request, {
+      code: ErrorCodes.VALIDATION_FAILED,
+      status: PAYLOAD_TOO_LARGE,
+      title: 'Payload Too Large',
+      detail: `The body is over ${PROXY_BODY_LIMIT_BYTES} bytes`,
+    });
+  }
   const forward = (token: string | undefined) =>
     fetch(url, {
       method: request.method,
@@ -124,16 +167,17 @@ export async function proxyToApi(
       signal: request.signal,
     });
 
-  const token = readSessionToken();
+  const token = readSessionToken(slot);
   const answered = await forward(token);
   if (answered.status !== UNAUTHORIZED || token === undefined) return relayed(answered);
 
   const refreshed = await refresh(token);
   if (refreshed !== undefined) {
-    writeSessionCookie(refreshed, cookieDomain);
+    writeSessionCookie(slot, refreshed, cookieDomain);
     return relayed(await forward(refreshed));
   }
 
-  clearSessionCookie(cookieDomain);
+  clearSessionCookie(slot, cookieDomain);
+  writeAccounts(withExpired(readAccounts(), slot), cookieDomain);
   return relayed(answered);
 }

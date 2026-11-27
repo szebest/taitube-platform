@@ -1,7 +1,7 @@
-import { useT } from '@vp/intl-react';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useIsCurrent } from '#app/features/shell/hooks/use-is-current';
 import { useShellDestinations } from '#app/hooks/use-shell-destinations';
+import { useT } from '#app/lib/messages';
 import { ShellDestinationLink } from '../shell-destination-link/shell-destination-link';
 
 export function ShellRail() {

@@ -1,9 +1,11 @@
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@kit/result';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories, UserRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import { classifyVideoFormat } from '@vp/domain-rules';
-import type { CaptionsConfig } from '@vp/env-schema';
+import type { CaptionsConfig, ScreeningConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
@@ -16,9 +18,7 @@ import {
 } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { captionsOutboxEntry, enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';
@@ -36,6 +36,7 @@ export interface ProbeProcessorDeps {
   ffprobePath: string;
   maxDurationSeconds: number;
   captions: Pick<CaptionsConfig, 'enabled' | 'modelVersion'>;
+  screening: Pick<ScreeningConfig, 'enabled'>;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -284,6 +285,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         job,
         metadata,
         priority: job.opts?.priority ?? jobPriorityFor(await ownerTier(repositories, videoId)),
+        screening: deps.screening,
         flowProducer,
         getQueue,
         log,

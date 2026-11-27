@@ -1,13 +1,13 @@
 import type { IncomingMessage } from 'node:http';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import { videoStatusChanged } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent, userChannel } from '@vp/events';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { readSseUntil } from './sse-stream';
-import { TOKENS, bearer, buildTestApp } from './test-app';
+import { TOKENS, bearer, buildTestApp, seedPrimaryChannel } from './test-app';
 
 const OWNER_USER_ID = SEEDED.userId;
 const PUBLIC_VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
@@ -42,6 +42,7 @@ describe('apps/server/api SSE video event streams', () => {
     await repositories.videos.create({
       id: PUBLIC_VIDEO_ID,
       ownerId: OWNER_USER_ID,
+      channelId: await seedPrimaryChannel(repositories, OWNER_USER_ID),
       title: 'Public Test Video',
       description: 'A public video',
       visibility: 'public',
@@ -69,6 +70,7 @@ describe('apps/server/api SSE video event streams', () => {
     await repositories.videos.create({
       id: PRIVATE_VIDEO_ID,
       ownerId: OWNER_USER_ID,
+      channelId: await seedPrimaryChannel(repositories, OWNER_USER_ID),
       title: 'Private Test Video',
       description: 'A private video',
       visibility: 'private',
@@ -205,10 +207,7 @@ describe('apps/server/api SSE video event streams', () => {
     );
 
     const streams = addresses.map((address) => {
-      let snapshotSeen = () => {};
-      const ready = new Promise<void>((resolve) => {
-        snapshotSeen = resolve;
-      });
+      const { promise: ready, resolve: snapshotSeen } = Promise.withResolvers<void>();
       const done = readSseUntil(`${address}/v1/videos/${PUBLIC_VIDEO_ID}/events`, {
         onText: (text) => {
           if (text.includes('event: snapshot')) snapshotSeen();

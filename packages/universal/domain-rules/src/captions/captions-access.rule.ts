@@ -1,3 +1,4 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import {
   type CaptionResource,
@@ -5,7 +6,6 @@ import {
   canManageCaptions,
   canReadCaptions,
 } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import {
   type ReadVideoFailure,
   decideVideoRead,
@@ -26,7 +26,12 @@ export interface CaptionsAccess {
 }
 
 function captionsOf(video: Video): CaptionResource {
-  return { videoId: video.id, ownerId: video.ownerId, visibility: video.visibility };
+  return {
+    videoId: video.id,
+    ownerId: video.ownerId,
+    channelId: video.channelId,
+    visibility: video.visibility,
+  };
 }
 
 /**

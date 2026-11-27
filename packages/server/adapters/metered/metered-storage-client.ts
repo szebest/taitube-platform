@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import {
   StorageClient,
   type StorageListObjectsParams,
@@ -6,8 +7,7 @@ import {
   type StorageUploadParams,
 } from '@vp/core/ports';
 import type { StorageUnavailable } from '@vp/errors';
-import type { PipelineMetrics } from '@vp/observability';
-import type { Result } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { type StorageOp, meterStorageOp } from './storage-op-meter';
 
 type Outcome<M extends keyof StorageClient> = ReturnType<StorageClient[M]>;

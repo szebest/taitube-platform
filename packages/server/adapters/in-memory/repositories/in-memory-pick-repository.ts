@@ -1,7 +1,7 @@
+import { err, ok, type Result, unwrapOr } from '@kit/result';
 import type { PickRange, PickRepositoryPort, PickWriteFailure } from '@vp/core/repositories';
 import type { EditorPick, EditorPickEntry } from '@vp/domain';
 import { type DatabaseUnavailable, pickWindowOverlap } from '@vp/errors';
-import { err, ok, type Result, unwrapOr } from '@vp/result';
 import { channelCard, type VideoLookups } from './watchable-video';
 
 interface Window {
@@ -81,7 +81,7 @@ export class InMemoryPickRepository implements PickRepositoryPort {
     for (const pick of picks) {
       const video = unwrapOr(await this.lookups.videosRepo.findById(pick.videoId), null);
       if (!video) continue;
-      const channel = await channelCard(this.lookups, video.ownerId);
+      const channel = await channelCard(this.lookups, video.channelId);
       entries.push({ pick: { ...pick }, video, channel });
     }
     return entries;

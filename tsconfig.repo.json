@@ -1,10 +1,8 @@
 {
-  "extends": "./packages/universal/tsconfig/base.json",
+  "extends": "./packages/platform/universal/tsconfig/server.json",
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["ES2023"],
     "incremental": false,
-    "types": ["node", "vitest/globals"],
     "paths": {
       "@vp/adapters": ["./packages/server/adapters"],
       "@vp/adapters/*": ["./packages/server/adapters/*"],
@@ -12,10 +10,22 @@
       "@vp/db/*": ["./packages/server/db/src/*"],
       "@vp/domain/*": ["./packages/universal/domain/src/*"],
       "@vp/storage/*": ["./packages/server/storage/src/*"],
-      "@vp/testing/*": ["./packages/server/testing/src/*"],
+      "@kit/testing/*": ["./packages/platform/server/testing/src/*"],
+      "@vp/testing-fixtures/*": ["./packages/server/testing-fixtures/src/*"],
+      "@kit/*": [
+        "./packages/platform/universal/*/src",
+        "./packages/platform/server/*/src",
+        "./packages/platform/client/*/src"
+      ],
       "@vp/*": ["./packages/universal/*/src", "./packages/server/*/src", "./packages/client/*/src"]
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["tests/load", "tests/playwright"]
+  "exclude": [
+    "tests/load",
+    "tests/playwright",
+    "tests/fixtures/second-app",
+    "scripts/__tests__/lint-fixtures",
+    "scripts/__tests__/typecheck-fixtures"
+  ]
 }

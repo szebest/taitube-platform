@@ -1,15 +1,15 @@
+import { SectionError } from '@kit/components';
+import { Button, ResponsiveModal, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CaptionTrackView } from '@vp/api-contracts';
-import { SectionError } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, transcriptQueryOptions, useApi } from '@vp/queries';
-import { Button, Dialog, Skeleton, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { editCuesMutationOptions } from '#app/features/captions/api/caption-mutations';
 import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
 import { hasCode } from '#app/features/captions/utils/caption-failures';
+import { useT } from '#app/lib/messages';
 import { CueRows } from '../cue-rows/cue-rows';
 
 export interface CueEditorDialogProps {
@@ -93,16 +93,16 @@ export function CueEditorDialog({
 
   return (
     <>
-      <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <Dialog.Content size="lg">
-          <Dialog.Header>
-            <Dialog.Title>
+      <ResponsiveModal.Root open={open} onOpenChange={onOpenChange}>
+        <ResponsiveModal.Content size="lg">
+          <ResponsiveModal.Header>
+            <ResponsiveModal.Title>
               {tOr('studio.captionsEditorTitle', { language: languageLabel(track.language) }, '')}
-            </Dialog.Title>
-            <Dialog.Description>
+            </ResponsiveModal.Title>
+            <ResponsiveModal.Description>
               {tOr('studio.captionsEditorDescription', {}, '')}
-            </Dialog.Description>
-          </Dialog.Header>
+            </ResponsiveModal.Description>
+          </ResponsiveModal.Header>
           {transcript.isPending && <Skeleton className="h-32 w-full" />}
           {transcript.isError && (
             <SectionError.Root
@@ -127,7 +127,7 @@ export function CueEditorDialog({
               onChange={(index, text) => setDrafts((current) => ({ ...current, [index]: text }))}
             />
           )}
-          <Dialog.Footer>
+          <ResponsiveModal.Footer>
             <Button
               variant="solid"
               tone="accent"
@@ -137,9 +137,9 @@ export function CueEditorDialog({
             >
               {tOr('studio.captionsEditorSave', {}, '')}
             </Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
+          </ResponsiveModal.Footer>
+        </ResponsiveModal.Content>
+      </ResponsiveModal.Root>
       <VersionConflictDialog
         open={conflict}
         onOpenChange={setConflict}

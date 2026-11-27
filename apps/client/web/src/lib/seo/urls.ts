@@ -4,8 +4,9 @@ export function videoUrl(siteUrl: string, videoId: string): string {
   return `${siteUrl}/watch/${videoId}`;
 }
 
-export function channelUrl(siteUrl: string, channelId: string): string {
-  return `${siteUrl}/channel/${channelId}`;
+/** The one canonical address of a channel: its current handle. */
+export function channelUrl(siteUrl: string, handle: string): string {
+  return `${siteUrl}/@${handle}`;
 }
 
 export function embedUrl(siteUrl: string, videoId: string): string {

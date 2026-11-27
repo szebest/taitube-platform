@@ -4,6 +4,7 @@ import {
   levelAllows,
   mayHearAbout,
   mentionedHandles,
+  notificationIdsByUser,
   type NewNotificationInput,
   NOTIFICATION_KINDS,
   type Notification,
@@ -20,6 +21,7 @@ const NOTIFICATION: Notification = {
   actorChannelId: 'c1',
   videoId: 'v1',
   commentId: null,
+  watchPartyId: null,
   groupKey: 'upload:c1',
   payload: { count: 3, actor: null, videoTitle: 'Dinner', excerpt: null, outcome: null },
   readAt: null,
@@ -29,7 +31,10 @@ const NOTIFICATION: Notification = {
 describe('domain: notification', () => {
   it.each<{ level: NotificationLevel; allowed: NotificationKind[] }>([
     { level: 'all', allowed: [...NOTIFICATION_KINDS] },
-    { level: 'highlights', allowed: NOTIFICATION_KINDS.filter((kind) => kind !== 'live') },
+    {
+      level: 'highlights',
+      allowed: NOTIFICATION_KINDS.filter((kind) => kind !== 'live' && kind !== 'post'),
+    },
     { level: 'none', allowed: [] },
   ])('a subscriber at level $level lets through $allowed', ({ level, allowed }) => {
     expect(NOTIFICATION_KINDS.filter((kind) => levelAllows(level, kind))).toEqual(allowed);
@@ -37,7 +42,7 @@ describe('domain: notification', () => {
 
   it.each([
     { filter: 'all' as const, kinds: NOTIFICATION_KINDS },
-    { filter: 'subscriptions' as const, kinds: ['upload', 'live'] },
+    { filter: 'subscriptions' as const, kinds: ['upload', 'live', 'post'] },
     { filter: 'mentions' as const, kinds: ['reply', 'mention'] },
   ])('the $filter filter lists $kinds', ({ filter, kinds }) => {
     expect(kindsOfFilter(filter)).toEqual(kinds);
@@ -66,7 +71,7 @@ describe('domain: notification', () => {
       actorChannelId: 'c1',
       videoId: 'v1',
       commentId: null,
-      payload: NOTIFICATION.payload,
+      payload: { ...NOTIFICATION.payload, party: null },
       read: false,
       createdAt: '2026-01-02T03:04:05.000Z',
     });
@@ -114,6 +119,72 @@ describe('domain: notification', () => {
     it('changes nothing for the subject it already holds', () => {
       expect(foldNotification(NOTIFICATION, { ...NEXT, videoId: 'v1' }, NOW)).toBeNull();
     });
+
+    describe('invites to one room', () => {
+      const party = (inviteId: string) => ({
+        roomId: 'r1',
+        name: 'Movie night',
+        videoTitle: null,
+        scheduledFor: null,
+        inviteId,
+        expiresAt: '2026-01-03T03:04:05.000Z',
+        watching: { names: [], count: 0 },
+      });
+      const held: Notification = {
+        ...NOTIFICATION,
+        kind: 'party_invite',
+        videoId: null,
+        watchPartyId: 'r1',
+        groupKey: 'party_invite:r1',
+        payload: { ...NOTIFICATION.payload, party: party('i1') },
+      };
+      const invite = (inviteId: string): NewNotificationInput => ({
+        ...NEXT,
+        kind: 'party_invite',
+        videoId: null,
+        watchPartyId: 'r1',
+        groupKey: 'party_invite:r1',
+        payload: { ...NEXT.payload, party: party(inviteId) },
+      });
+
+      it('folds a second invite into the row, holding the newest', () => {
+        expect(foldNotification(held, invite('i2'), NOW)).toMatchObject({
+          watchPartyId: 'r1',
+          payload: { count: 4, party: { inviteId: 'i2' } },
+        });
+      });
+
+      it('changes nothing for an invite it already holds', () => {
+        expect(foldNotification(held, invite('i1'), NOW)).toBeNull();
+      });
+    });
+
+    describe('posts of one channel', () => {
+      const held: Notification = {
+        ...NOTIFICATION,
+        kind: 'post',
+        videoId: null,
+        groupKey: 'post:c1',
+        payload: { ...NOTIFICATION.payload, postId: 'p1' },
+      };
+      const post = (postId: string): NewNotificationInput => ({
+        ...NEXT,
+        kind: 'post',
+        videoId: null,
+        groupKey: 'post:c1',
+        payload: { ...NEXT.payload, postId },
+      });
+
+      it('folds a second post into the row, holding the newest', () => {
+        expect(foldNotification(held, post('p2'), NOW)).toMatchObject({
+          payload: { count: 4, postId: 'p2' },
+        });
+      });
+
+      it('changes nothing for a post it already holds', () => {
+        expect(foldNotification(held, post('p1'), NOW)).toBeNull();
+      });
+    });
   });
 
   describe('mayHearAbout', () => {
@@ -159,5 +230,24 @@ describe('domain: notification', () => {
     ])('$scenario: $heard', ({ changes, userId, heard }) => {
       expect(mayHearAbout({ ...video, ...changes }, userId)).toBe(heard);
     });
+  });
+});
+
+describe('@vp/domain: notificationIdsByUser', () => {
+  it('groups ids by user, users in id order and ids in the order given', () => {
+    expect(
+      notificationIdsByUser([
+        { id: 'n1', userId: 'u2' },
+        { id: 'n2', userId: 'u1' },
+        { id: 'n3', userId: 'u2' },
+      ])
+    ).toEqual([
+      ['u1', ['n2']],
+      ['u2', ['n1', 'n3']],
+    ]);
+  });
+
+  it('is empty for no notifications', () => {
+    expect(notificationIdsByUser([])).toEqual([]);
   });
 });

@@ -1,23 +1,25 @@
+import { type CountValue } from '@kit/intl';
+import { Format } from '@kit/intl-react';
 import { createColumnHelper } from '@tanstack/react-table';
 import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
-import { type CountValue, publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import type { DataTableColumnMeta, DataTableFeatures } from '#app/components/table/data-table';
 import { VideoStatusBadge } from '#app/components/video/video-status-badge';
 import type { LibrarySort } from '#app/features/videos/api/library-search';
+import { useT } from '#app/lib/messages';
 import { type CreatorVideo, LibraryVideoRow } from '../library-video-row/library-video-row';
 
 const column = createColumnHelper<DataTableFeatures, CreatorVideo>();
 
 const WIDTHS = {
-  title: { width: '36%' },
-  status: { width: '12%' },
-  visibility: { width: '10%' },
-  date: { width: '12%', numeric: true },
-  views: { width: '9%', numeric: true },
-  likes: { width: '9%', numeric: true },
-  comments: { width: '9%', numeric: true },
-  actions: { width: '3%' },
+  title: { width: 'auto' },
+  status: { width: '8rem' },
+  visibility: { width: '7rem' },
+  date: { width: '7.5rem', numeric: true },
+  views: { width: '5.5rem', numeric: true },
+  likes: { width: '5.5rem', numeric: true },
+  comments: { width: '6rem', numeric: true },
+  actions: { width: '3.5rem' },
 } as const satisfies Record<string, DataTableColumnMeta>;
 
 export const LIBRARY_SKELETON_COLUMNS = Object.values(WIDTHS).map((meta) => ({ meta }));

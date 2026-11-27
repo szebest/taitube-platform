@@ -1,3 +1,4 @@
+import { ok, type Result } from '@kit/result';
 import type {
   LiveChatAdmission,
   LiveChatAdmissionRules,
@@ -5,7 +6,6 @@ import type {
   LiveChatTicketGrant,
 } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
 
 interface Window {
   count: number;

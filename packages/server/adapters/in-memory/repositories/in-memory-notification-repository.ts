@@ -1,3 +1,5 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { isErr, ok, type Result } from '@kit/result';
 import type {
   ListNotificationsOptions,
   MarkedRead,
@@ -6,25 +8,29 @@ import type {
 } from '@vp/core/repositories';
 import {
   foldNotification,
+  sameNotificationSubject,
   kindsOfFilter,
   type NewNotificationInput,
   NOTIFICATION_GROUP_WINDOW_MS,
   type Notification,
   type NotificationReadScope,
   notificationCreated,
+  notificationIdsByUser,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { type Clock, realClock } from './clock';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryNotificationRepository implements NotificationRepositoryPort {
   private notifications = new Map<string, Notification>();
 
-  constructor(private readonly userEvents: UserEventRepository) {}
+  constructor(
+    private readonly userEvents: UserEventRepository,
+    private readonly now: Clock = realClock
+  ) {}
 
   async record(
     input: NewNotificationInput
@@ -96,8 +102,29 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
     return isErr(announced) ? announced : ok({ read, unreadCount });
   }
 
+  async withdrawUnread(
+    commentIds: readonly string[]
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    const withdrawn = [...this.notifications.values()].filter(
+      (notification) =>
+        !notification.readAt &&
+        notification.commentId &&
+        commentIds.includes(notification.commentId)
+    );
+    for (const { id } of withdrawn) this.notifications.delete(id);
+
+    for (const [userId, ids] of notificationIdsByUser(withdrawn)) {
+      const announced = await this.userEvents.append({
+        userId,
+        ...notificationRead({ scope: 'ids', ids }, this.unreadOf(userId)),
+      });
+      if (isErr(announced)) return announced;
+    }
+    return ok(withdrawn.length);
+  }
+
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = Date.now() - retentionDays * MS_PER_DAY;
+    const cutoff = this.now() - retentionDays * MS_PER_DAY;
     let pruned = 0;
     for (const [id, notification] of this.notifications) {
       if (notification.createdAt.getTime() >= cutoff) continue;
@@ -139,9 +166,8 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
   }
 
   private seenInWindow(input: NewNotificationInput, now: Date): boolean {
-    return this.inWindow(input, now).some(
-      (notification) =>
-        notification.videoId === input.videoId && notification.commentId === input.commentId
+    return this.inWindow(input, now).some((notification) =>
+      sameNotificationSubject(notification, input)
     );
   }
 
@@ -159,6 +185,7 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
       actorChannelId: input.actorChannelId,
       videoId: input.videoId,
       commentId: input.commentId,
+      watchPartyId: input.watchPartyId ?? null,
       groupKey: input.groupKey,
       payload: { ...input.payload, count: 1 },
       readAt: null,

@@ -1,5 +1,5 @@
 import { createApiClient } from '@vp/api-client';
-import { http } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 import { createEndpointMocks } from './mock-endpoint';
 
 /** Where every client app calls the API when its build-time config is unset, so where a spec's handlers answer. */
@@ -26,3 +26,10 @@ export const sameOriginApiProxy = http.all('*/api/*', async ({ request }) => {
     body: SAFE_METHODS.has(request.method) ? undefined : await request.arrayBuffer(),
   });
 });
+
+/** Each client app's own icon, which a tab off the default identity reads to draw its dotted copy. */
+export const appIcon = http.get('*/favicon.svg', () =>
+  HttpResponse.text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g/></svg>', {
+    headers: { 'content-type': 'image/svg+xml' },
+  })
+);

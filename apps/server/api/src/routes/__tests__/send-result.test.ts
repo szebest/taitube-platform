@@ -1,6 +1,6 @@
+import { err, ok } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, problemFor } from '@vp/api-contracts';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sendResult } from '../send-result';
 
@@ -70,6 +70,17 @@ describe('sendResult', () => {
     expect(sent.headers['content-type']).toBe(PROBLEM_CONTENT_TYPE);
   });
 
+  it('adds the headers the route derives from the failure', () => {
+    const { reply, sent } = fakeReply();
+
+    sendResult(reply, request, err(forbidden), { headers: () => ({ 'retry-after': '30' }) });
+
+    expect(sent.headers).toMatchObject({
+      'retry-after': '30',
+      'content-type': PROBLEM_CONTENT_TYPE,
+    });
+  });
+
   it('lets one route override one code without touching the service', () => {
     const { reply, sent } = fakeReply();
 
@@ -119,6 +130,18 @@ describe('sendResult', () => {
     });
 
     expect(sent.status).toBe(451);
+  });
+
+  it('sets the headers a failure carries, and none for a success', () => {
+    const failed = fakeReply();
+    const succeeded = fakeReply();
+    const headers = (failure: typeof forbidden) => ({ 'retry-after': failure.videoId });
+
+    sendResult(failed.reply, request, err(forbidden), { headers });
+    sendResult(succeeded.reply, request, ok({ id: 'v1' }), { headers });
+
+    expect(failed.sent.headers['retry-after']).toBe('v1');
+    expect(succeeded.sent.headers['retry-after']).toBeUndefined();
   });
 
   it('keeps an infra payload off the wire', () => {

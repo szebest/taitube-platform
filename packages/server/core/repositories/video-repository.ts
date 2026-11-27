@@ -1,15 +1,17 @@
+import type { Result } from '@kit/result';
 import type {
+  NewChannelAuditEntry,
   PublicFeedCursor,
   PublicFeedFilter,
   PublicFeedSort,
   Video,
   VideoFormat,
   VideoStatus,
+  VideoTransitionTarget,
   VideoVisibility,
 } from '@vp/domain';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';
 import type { RenditionRecord } from './rendition-repository';
@@ -21,6 +23,7 @@ export type VideoRecord = Video;
 export interface NewVideoInput {
   id: string;
   ownerId: string;
+  channelId: string;
   title?: string;
   description?: string;
   visibility?: VideoVisibility;
@@ -40,6 +43,7 @@ export interface NewVideoInput {
   likesCount?: number;
   dislikesCount?: number;
   commentsCount?: number;
+  commentsEnabled?: boolean;
   categoryId?: string | null;
   tags?: string[];
   errorCode?: ErrorCode | null;
@@ -73,11 +77,11 @@ export interface ListPublicVideosResult {
   instant: number;
 }
 
-export interface TransitionVideoOptions {
+/** One compare-and-set over the lifecycle: the update lands only while the video is in the edge's sources. */
+export type TransitionVideoOptions = VideoTransitionTarget & {
   videoId: string;
-  from: VideoStatus | VideoStatus[];
-  to: VideoStatus;
-  eventType: string;
+  /** Fences the move to this run: a job a reprocess superseded moves nothing. */
+  generation?: number;
   eventPayload?: Record<string, unknown>;
   traceId?: string | null;
   patch?: Partial<
@@ -87,7 +91,7 @@ export interface TransitionVideoOptions {
     > & { errorCode: ErrorCode | null }
   >;
   outbox?: NewOutboxInput;
-}
+};
 
 type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 
@@ -118,10 +122,19 @@ export interface VideoWithDetails {
  */
 export abstract class VideoRepository {
   abstract findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;
+  /** Of `videoIds`, the videos ready strictly after `readyAfter`, in one read. */
+  abstract listReadyAfter(
+    videoIds: readonly string[],
+    readyAfter: Date
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;
   abstract findWithDetails(
     id: string
   ): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>>;
-  abstract create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>>;
+  /** `audit` is written with the video, never without it. */
+  abstract create(
+    data: NewVideoInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<VideoRecord, DatabaseUnavailable>>;
   abstract listByOwner(
     options: ListVideosOptions
   ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;

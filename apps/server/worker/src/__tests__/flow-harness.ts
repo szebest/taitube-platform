@@ -1,5 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { createLogger, type Logger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryFlowProducer,
   InMemoryJobQueue,
@@ -13,9 +15,7 @@ import type {
   TranscodeOptions,
 } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
-import { createLogger, type Logger } from '@vp/logger';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 
 export const OWNER_ID = SEEDED.userId;
@@ -60,6 +60,7 @@ export async function uploadedVideo(
     await world.repositories.videos.create({
       id: videoId,
       ownerId: OWNER_ID,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       title: sourceKey,
       status: 'UPLOADED',
       sourceKey,
@@ -124,8 +125,20 @@ export async function encodeSegments(
   };
 }
 
-export const fixedTools: Pick<MediaTools, 'transcodeChunk' | 'concat' | 'audio' | 'live'> = {
+export const fixedTools: Pick<
+  MediaTools,
+  | 'transcodeChunk'
+  | 'concat'
+  | 'audio'
+  | 'live'
+  | 'probeChannelImage'
+  | 'channelImage'
+  | 'applyEdits'
+> = {
+  applyEdits: (options) => encodeSegments(options, 1),
   live: async () => undefined,
+  probeChannelImage: async () => ({ format: 'png', width: 800, height: 800 }),
+  channelImage: async () => [],
   transcodeChunk: async ({ outputPath }) => {
     await fs.writeFile(outputPath, Buffer.alloc(100));
   },

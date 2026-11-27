@@ -1,5 +1,5 @@
+import { Button } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '@vp/ui';
 import { ClipDeleteDialog } from '#app/components/watch/clip-delete-dialog';
 import { Stage } from '#app/components/watch/stage';
 import { ClipDetails } from '..';

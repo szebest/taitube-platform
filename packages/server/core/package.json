@@ -34,19 +34,21 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/errors": "workspace:*",
+    "@kit/ports": "workspace:*",
+    "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/permissions": "workspace:*",
-    "@vp/result": "workspace:*"
+    "@vp/permissions": "workspace:*"
   },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 3
+    "layer": 7
   }
 }

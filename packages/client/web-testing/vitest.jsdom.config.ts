@@ -1,5 +1,5 @@
-import { definePackageTestConfig } from '@vp/testing';
-import { reactPlugins } from '@vp/vite-preset/react-plugins';
+import { definePackageTestConfig } from '@kit/testing';
+import { reactPlugins } from '@kit/vite-preset/react-plugins';
 
 export default definePackageTestConfig({
   plugins: reactPlugins(),
@@ -10,8 +10,10 @@ export default definePackageTestConfig({
     include: ['src/**/__tests__/**/*.dom.test.{ts,tsx}'],
     setupFiles: [
       '@testing-library/jest-dom/vitest',
-      'src/jsdom.setup.ts',
+      '@kit/web-testing/jsdom.setup',
       'src/api-server.setup.ts',
+      '@kit/web-testing/settle.setup',
     ],
+    env: { RTL_SKIP_AUTO_CLEANUP: 'true' },
   },
 });

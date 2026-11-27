@@ -19,14 +19,19 @@
     "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
+  "dependencies": {
+    "@kit/errors": "workspace:*",
+    "@kit/intl": "workspace:*",
+    "@kit/pagination": "workspace:*"
+  },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 1
+    "layer": 5
   }
 }

@@ -1,3 +1,4 @@
+import { type Result, fromPromise, map, ok } from '@kit/result';
 import type {
   RelatedVideo,
   RelatedVideosOptions,
@@ -6,9 +7,9 @@ import type {
 import * as schema from '@vp/db';
 import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map, ok } from '@vp/result';
 import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere } from '../scopes/index';
 import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
@@ -24,7 +25,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
   constructor(private readonly db: PostgresDatabase) {}
 
   async find(options: RelatedVideosOptions): Promise<Result<RelatedVideo[], DatabaseUnavailable>> {
-    const { videoId, ownerId, categoryId, tags, excludeOwnerId, limit } = options;
+    const { videoId, channelId, categoryId, tags, excludeOwnerId, limit } = options;
 
     const eligible = drizzleWhere(
       publicFeedScope(),
@@ -70,7 +71,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
     ].flatMap((source) => (source ? [source] : []));
     const candidates = union(
       this.db.select({ id: coWatch.videoId }).from(coWatch),
-      sourceOf(eq(v.ownerId, ownerId), [desc(v.createdAt), desc(v.id)]),
+      sourceOf(eq(v.channelId, channelId), [desc(v.createdAt), desc(v.id)]),
       ...optional
     ).as('candidates');
 
@@ -80,7 +81,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
           .with(coWatch)
           .select({
             id: v.id,
-            ownerId: v.ownerId,
+            channelId: v.channelId,
             categoryId: v.categoryId,
             tags: v.tags,
             viewsCount: v.viewsCount,
@@ -103,7 +104,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
         signals: {
           coWatchers: Number(row.watchers ?? 0),
           sharedTags: row.tags.filter((tag) => wanted.has(tag)).length,
-          sameChannel: row.ownerId === ownerId,
+          sameChannel: row.channelId === channelId,
           sameCategory: categoryId !== null && row.categoryId === categoryId,
         },
       }))
@@ -128,7 +129,7 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
     );
 
     return map(found, (videos) => {
-      const byId = new Map(videos.map((video) => [video.id, video]));
+      const byId = new Map(videos.map((video) => [video.id, toVideoRecord(video)]));
       return winners.flatMap(({ id, signals }) => {
         const video = byId.get(id);
         return video ? [{ video, signals }] : [];

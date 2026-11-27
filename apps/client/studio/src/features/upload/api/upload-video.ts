@@ -1,3 +1,4 @@
+import { type Err, fromPromise, ignore, isErr, isOk } from '@kit/result';
 import type { ApiClient } from '@vp/api-client';
 import type {
   ContractBody,
@@ -6,7 +7,6 @@ import type {
   StartUpload,
   startUpload,
 } from '@vp/api-contracts';
-import { type Err, fromPromise, ignore, isErr, isOk } from '@vp/result';
 import axios from 'axios';
 import type { UploadProgress } from './upload-progress';
 
@@ -50,21 +50,34 @@ export async function uploadVideo(
     (cause) => cause
   );
   if (!isOk(transferred)) {
-    ignore(
-      await fromPromise(
-        () => api.uploads.abortUpload({ params: { uploadId: started.uploadId } }),
-        (cause) => cause
-      ),
-      'the reconciler aborts what this request could not'
-    );
+    await abandon(api, started.uploadId);
     throw transferred.error;
   }
 
   onCompleting?.();
-  return api.uploads.completeUpload({
-    params: { uploadId: started.uploadId },
-    body: transferred.value.length > 0 ? { parts: transferred.value } : {},
-  });
+  const completed = await fromPromise(
+    () =>
+      api.uploads.completeUpload({
+        params: { uploadId: started.uploadId },
+        body: transferred.value.length > 0 ? { parts: transferred.value } : {},
+      }),
+    (cause) => cause
+  );
+  if (!isOk(completed)) {
+    await abandon(api, started.uploadId);
+    throw completed.error;
+  }
+  return completed.value;
+}
+
+async function abandon(api: ApiClient, uploadId: string) {
+  ignore(
+    await fromPromise(
+      () => api.uploads.abortUpload({ params: { uploadId } }),
+      (cause) => cause
+    ),
+    'the reconciler aborts what this request could not'
+  );
 }
 
 async function putWhole(

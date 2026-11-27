@@ -1,6 +1,6 @@
-import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
-import { normalizePlainText, withinLength } from '../plain-text';
+import { type Result, err, ok } from '@kit/result';
+import { type LengthBounds, normalizePlainText, withinLength } from '@kit/validation';
+import { type InvalidField, invalidLength } from '../field-failures';
 
 export const PICK_NOTE_MAX_LENGTH = 280;
 

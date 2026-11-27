@@ -1,10 +1,10 @@
+import { type Result, ok } from '@kit/result';
 import {
   EventRepository,
   type NewVideoEventInput,
   type VideoEventRecord,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 export class InMemoryEventRepository extends EventRepository {
   private readonly eventsList: VideoEventRecord[] = [];

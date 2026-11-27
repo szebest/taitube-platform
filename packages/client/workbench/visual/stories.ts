@@ -1,17 +1,17 @@
-import { posix } from 'node:path';
+import { matchesGlob, posix } from 'node:path';
 
 /** Where Storybook runs, which `index.json`'s `importPath` is relative to. */
 const WORKBENCH = 'packages/client/workbench';
 
-/** A change under one of these can move every story's pixels, so it reruns them all. */
+/**
+ * A change one of these matches can move every story's pixels, so it reruns them all. A shared
+ * package lives under `packages/<tier>/` or `packages/platform/<tier>/`, so each glob takes both.
+ */
 const EVERY_STORY = [
-  'packages/universal/',
-  'packages/server/vite-preset/',
-  'packages/client/ui/src/styles/',
-  'packages/client/ui/src/themes/',
-  'packages/client/ui/src/tokens/',
-  'packages/client/ui/src/appearance/',
-  'packages/client/workbench/',
+  'packages/{,platform/}universal/**',
+  'packages/{,platform/}server/vite-preset/**',
+  'packages/{,platform/}client/ui/src/{styles,themes,tokens,appearance}/**',
+  `${WORKBENCH}/**`,
   'pnpm-lock.yaml',
 ];
 
@@ -58,7 +58,7 @@ export function storiesFor(
   }
   if (
     changedFiles === undefined ||
-    changedFiles.some((file) => EVERY_STORY.some((prefix) => file.startsWith(prefix)))
+    changedFiles.some((file) => EVERY_STORY.some((glob) => matchesGlob(file, glob)))
   ) {
     return stories;
   }

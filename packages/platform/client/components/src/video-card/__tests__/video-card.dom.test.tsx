@@ -1,0 +1,305 @@
+import { variantNames } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { ComponentPropsWithRef } from 'react';
+import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
+import type { VideoCardActionsProps } from '../components/video-card-actions/video-card-actions';
+import type { VideoCardRootProps } from '../video-card';
+
+const ChannelLink = (props: ComponentPropsWithRef<'a'>) => <a {...props} />;
+
+const VIDEO_ID = '0190a1b2-0000-7000-8000-000000000001';
+
+const renderCard = (
+  props: VideoCardRootProps = {},
+  actions: VideoCardActionsProps = { onSave: vi.fn(), onQueue: vi.fn() }
+) =>
+  renderWithCopy(
+    <VideoCard.Root videoId={VIDEO_ID} {...props}>
+      <VideoCard.Thumb
+        src="/poster.jpg"
+        frames={{
+          url: '/sprite.jpg',
+          columns: 4,
+          count: 8,
+          tileWidth: 160,
+          tileHeight: 90,
+          intervalSec: 5,
+        }}
+        duration="18:42"
+        spokenDuration="18 minutes 42 seconds"
+        progress={0.5}
+      />
+      <VideoCard.Byline name="Marta Reis Films" asChild>
+        <ChannelLink href="/channel/marta" />
+      </VideoCard.Byline>
+      <VideoCard.Title asChild>
+        <a href={`/watch/${VIDEO_ID}`}>Lisbon at night</a>
+      </VideoCard.Title>
+      <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
+      <VideoCard.Snippet>A night walk from Alfama.</VideoCard.Snippet>
+      <VideoCard.Reason>Viewers also watched</VideoCard.Reason>
+      <VideoCard.Menu {...actions} />
+      <VideoCard.Expanded {...actions}>A night walk from Alfama to the river.</VideoCard.Expanded>
+    </VideoCard.Root>
+  );
+
+const card = () => screen.getByRole('article');
+
+describe('@kit/components: VideoCard', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each(variantNames(videoCardStyles.variants.variant))(
+    'links the %s card to its video and its channel and prints a snippet',
+    (variant) => {
+      renderCard({ variant });
+
+      expect(card()).toHaveAttribute('data-variant', variant);
+      expect(screen.getByRole('link', { name: 'Lisbon at night' })).toHaveAttribute(
+        'href',
+        `/watch/${VIDEO_ID}`
+      );
+      expect(screen.getByRole('link', { name: 'Marta Reis Films' })).toHaveAttribute(
+        'href',
+        '/channel/marta'
+      );
+      expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
+        'data-slot',
+        'video-card-snippet'
+      );
+    }
+  );
+
+  it('shows how much was watched and says the duration in words', () => {
+    renderCard();
+
+    expect(screen.getByRole('progressbar', { name: 'watched' })).toHaveAttribute(
+      'aria-valuenow',
+      '50'
+    );
+    expect(screen.getByText('18 minutes 42 seconds')).toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      scenario: 'a mouse resting 500 ms on a shelf card',
+      variant: 'shelf' as const,
+      pointerType: 'mouse',
+      after: 500,
+      expanded: true,
+    },
+    {
+      scenario: 'a mouse passing by',
+      variant: 'shelf' as const,
+      pointerType: 'mouse',
+      after: 499,
+      expanded: false,
+    },
+    {
+      scenario: 'a touch',
+      variant: 'grid' as const,
+      pointerType: 'touch',
+      after: 500,
+      expanded: false,
+    },
+    {
+      scenario: 'a mouse on a card that does not expand on hover',
+      variant: 'shelf' as const,
+      expandOnHover: false,
+      pointerType: 'mouse',
+      after: 500,
+      expanded: false,
+    },
+    {
+      scenario: 'a mouse on a row',
+      variant: 'row' as const,
+      pointerType: 'mouse',
+      after: 500,
+      expanded: false,
+    },
+  ])(
+    'expands on $scenario: $expanded',
+    ({ variant, expandOnHover, pointerType, after, expanded }) => {
+      vi.useFakeTimers();
+      renderCard({ variant, expandOnHover });
+
+      fireEvent.pointerOver(card(), { pointerType });
+      act(() => vi.advanceTimersByTime(after));
+
+      expect(card().hasAttribute('data-expanded')).toBe(expanded);
+      expect(screen.queryByText('A night walk from Alfama to the river.') !== null).toBe(expanded);
+    }
+  );
+
+  it.each([
+    { scenario: 'the pointer leaves', cancel: () => fireEvent.pointerOut(card()) },
+    { scenario: 'the page scrolls', cancel: () => fireEvent.scroll(window) },
+  ])('collapses when $scenario', ({ cancel }) => {
+    vi.useFakeTimers();
+    renderCard();
+
+    fireEvent.pointerOver(card(), { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(500));
+    act(cancel);
+
+    expect(card()).not.toHaveAttribute('data-expanded');
+  });
+
+  it.each([
+    {
+      label: 'a mouse on a card that asked for it',
+      pointer: 'mouse',
+      previewOnHover: true,
+      plays: true,
+    },
+    {
+      label: 'a mouse on a card that did not',
+      pointer: 'mouse',
+      previewOnHover: false,
+      plays: false,
+    },
+    {
+      label: 'a touch on a card that asked for it',
+      pointer: 'touch',
+      previewOnHover: true,
+      plays: false,
+    },
+  ])('plays the frames after a rest for $label: $plays', ({ pointer, previewOnHover, plays }) => {
+    vi.useFakeTimers();
+    renderCard({ previewOnHover });
+
+    fireEvent.pointerOver(card(), { pointerType: pointer });
+    fireEvent.pointerEnter(card(), { pointerType: pointer });
+    act(() => vi.advanceTimersByTime(499));
+    expect(card().querySelector('[data-slot=video-card-frames]')).toBeNull();
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(card().querySelector('[data-slot=video-card-frames]') !== null).toBe(plays);
+  });
+
+  it('takes the frames away when the pointer leaves', () => {
+    vi.useFakeTimers();
+    renderCard({ previewOnHover: true });
+    fireEvent.pointerEnter(card(), { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(500));
+    expect(card().querySelector('[data-slot=video-card-frames]')).not.toBeNull();
+
+    fireEvent.pointerLeave(card(), { pointerType: 'mouse' });
+
+    expect(card().querySelector('[data-slot=video-card-frames]')).toBeNull();
+  });
+
+  it('saves, queues and plays next from the menu', async () => {
+    const actions = { onSave: vi.fn(), onQueue: vi.fn(), onPlayNext: vi.fn() };
+    renderCard({}, actions);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'save' }));
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'addToQueue' }));
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'playNext' }));
+
+    expect(actions.onSave).toHaveBeenCalledOnce();
+    expect(actions.onQueue).toHaveBeenCalledOnce();
+    expect(actions.onPlayNext).toHaveBeenCalledOnce();
+  });
+
+  it('shows Add to queue as a button of its own, beside the menu', async () => {
+    const actions = { onQueue: vi.fn() };
+    renderCard({}, actions);
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'addToQueue' }));
+
+    expect(actions.onQueue).toHaveBeenCalledOnce();
+  });
+
+  it('draws no menu when the card has no actions', () => {
+    renderCard({}, {});
+
+    expect(screen.queryByRole('button', { name: 'moreActions' })).toBeNull();
+  });
+
+  it('marks an unavailable video and drops its image', () => {
+    renderCard({ state: 'unavailable' });
+
+    expect(screen.getByRole('link', { name: 'Lisbon at night' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(card().querySelector('img[src="/poster.jpg"]')).toBeNull();
+  });
+
+  it('says a live video is live', () => {
+    renderCard({ state: 'live' });
+
+    expect(screen.getByText('live')).toBeInTheDocument();
+  });
+
+  it('names the frame for the morph into the stage only while the pointer or focus is on the card', async () => {
+    const user = userEvent.setup();
+    renderCard();
+    const frame = () => card().querySelector('[data-slot=video-card-thumb]');
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+
+    await user.hover(card());
+    expect(frame()).toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+    await user.unhover(card());
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+
+    await user.tab();
+    expect(frame()).toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+    await user.tab({ shift: true });
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+  });
+
+  it.each([
+    { pointerType: 'mouse', named: false },
+    { pointerType: 'touch', named: true },
+  ])(
+    'keeps the frame name after a $pointerType pointer leaves: $named',
+    ({ pointerType, named }) => {
+      renderCard();
+
+      fireEvent.pointerOver(card(), { pointerType });
+      fireEvent.pointerOut(card(), { pointerType });
+
+      const frame = card().querySelector('[data-slot=video-card-thumb]');
+      expect(frame?.getAttribute('style')?.includes(`video-${VIDEO_ID}`) ?? false).toBe(named);
+    }
+  );
+
+  it('throws a named error for a part outside its root', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    expect(() => render(<VideoCard.Meta>412K views</VideoCard.Meta>)).toThrow(
+      'VideoCard.Meta must be inside VideoCard.Root'
+    );
+  });
+
+  it.each(variantNames(videoCardStyles.variants.variant))(
+    'holds the place of three %s cards with no text',
+    (variant) => {
+      const { container } = render(<VideoCardSkeleton variant={variant} count={3} />);
+
+      expect(container.querySelectorAll('[data-slot=video-card-skeleton]')).toHaveLength(3);
+      expect(container).toHaveTextContent('');
+    }
+  );
+
+  it('passes axe, at rest, expanded and as a skeleton', async () => {
+    vi.useFakeTimers();
+    renderCard();
+    render(<VideoCardSkeleton variant="shelf" />);
+    fireEvent.pointerOver(card(), { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(500));
+    vi.useRealTimers();
+
+    expect(await axeViolations()).toEqual([]);
+  });
+});

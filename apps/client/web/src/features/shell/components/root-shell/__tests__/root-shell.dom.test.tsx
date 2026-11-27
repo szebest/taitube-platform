@@ -1,5 +1,5 @@
+import { writeCookie } from '@kit/ui';
 import { screen, within } from '@testing-library/react';
-import { writeCookie } from '@vp/ui';
 import { renderShell } from '#app/features/shell/__tests__/render-shell';
 
 afterEach(() => writeCookie('vp.sidebar', '', { maxAge: 0 }));

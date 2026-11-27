@@ -1,8 +1,8 @@
+import { type Result, ok } from '@kit/result';
 import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ok } from '@vp/result';
 import { type VideoLookups, keepWatchable } from './watchable-video';
 
 type KeysetRow = { watchedAt: Date; id: string };

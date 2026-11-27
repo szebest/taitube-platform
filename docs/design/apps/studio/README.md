@@ -1,6 +1,6 @@
 # Studio kit
 
-The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@vp/ui` primitives](../../primitives/README.md) and the [`@vp/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
+The specs for the creator studio's own components, in `apps/client/studio/src/components/<area>/<name>/` ([architecture section 1](../../architecture.md#1-five-layers), app kit layer). They are presentational and compound, built from the [`@kit/ui` primitives](../../primitives/README.md) and the [`@kit/components`](../../components/README.md) shared components, and they follow the same rules as the shared ones: `X.Root` and parts, shared option unions in a `types.ts`, tokens by role from the token sets, copy through `useUiCopy()`, formatting by the app. [Ticket 95](../../../tickets/95-design-system-2.md) section 8 builds them; [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) and [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) use them.
 
 ## Where things live
 
@@ -9,16 +9,25 @@ apps/client/studio/src/
   components/                      this kit: presentational, no data, no routes
     workspace/studio-workspace/    StudioWorkspace
     table/data-table/              DataTable
-    analytics/stat-card/           StatCard
     analytics/chart-frame/         ChartFrame and the chart helpers
+    analytics/experiment-result-card/ ExperimentResultCard
+    table/bulk-action-bar/         BulkActionBar
+    history/revision-list/         RevisionList
+    dialogs/field-dialog/          FieldDialog
+    video/timeline-range-editor/   TimelineRangeEditor
+    comments/moderation-queue/     ModerationQueue
+    section/customization-section/ CustomizationSection
+    image/image-cropper/           ImageCropper
+    developers/secret-reveal/      SecretReveal
+    developers/scope-picker/       ScopePicker
   features/<feature>/components/   smart wrappers (below): data, formatting, permissions
 ```
 
 Each folder is the standard component folder: the component, its context file, variants, `types.ts`, story, jsdom spec and `index.ts` (`pnpm gen:component <name> --kind studio [--compound]`).
 
-## Nothing here is in `@vp/components` until web needs it
+## Nothing here is in `@kit/components` until web needs it
 
-These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@vp/components` in the PR that adds web's import, and its spec moves with it. `CommentItem` is web's alone, so it is in web's kit ([comment-item](../web/comment-item.md)). What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
+These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@kit/components` in the PR that adds web's import, and its spec moves with it. `CommentItem` is web's alone, so it is in web's kit ([comment-item](../web/comment-item.md)). What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
 
 ## Catalogue
 
@@ -26,7 +35,17 @@ These components exist for the studio alone today, so they stay in the studio's 
 |---|---|---|---|
 | [StudioWorkspace](studio-workspace.md) | Navigation, toolbar, content, inspector | `ScrollArea`, `IconButton`, `Drawer`, `Dialog` (sheet), `Tooltip`, `Separator` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [93](../../../tickets/93-creator-studio-separate-app.md) |
 | [DataTable](data-table.md) | Studio table behaviour over the `Table` primitive and TanStack Table state | `Table`, `Checkbox`, `Badge`, `DropdownMenu`, `Button`, `Skeleton` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md), [61](../../../tickets/61-admin-control-panel-category-moderation-ui.md) |
-| [StatCard](stat-card.md) | One KPI with delta and sparkline | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| [StatCard](stat-card.md) | One KPI with delta and sparkline, in `@kit/components` | `Card`, `Badge`, `Icon` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| [BulkActionBar](bulk-action-bar.md) | The actions on selected rows and the disclosure they share | `Button`, `DisclosureControl` | [113](../../../tickets/113-channel-comment-moderation.md) |
+| [RevisionList](revision-list.md) | The saved versions of a record, what each changed, and a way back | `Badge`, `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [FieldDialog](field-dialog.md) | A dialog that asks for one field's value, a choice or a line of text | `ResponsiveModal`, `Field`, `Select`, `Input` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [TimelineRangeEditor](timeline-range-editor.md) | A range or a position over a video's frames, with ticks for the points already set | `Slider`, `SpriteStrip` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [ExperimentResultCard](experiment-result-card.md) | One title or thumbnail test: watch time per impression per variant, the rest in a table, the winner once applied | `StatCard`, `Table`, `Card`, `Progress`, `Badge` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [ModerationQueue](moderation-queue.md) | The held comments as a listbox, one open | none | [113](../../../tickets/113-channel-comment-moderation.md) |
+| [CustomizationSection](customization-section.md) | A settings block with its own save | `Card`, `Button` | [72](../../../tickets/72-frontend-settings-customization-system.md), [113](../../../tickets/113-channel-comment-moderation.md) |
+| [ImageCropper](image-cropper.md) | Frame a picture or banner: crop frame, zoom, safe-area guides, previews, job progress | `Dialog`, `SegmentedControl`, `Slider`, `Progress`, `Callout`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
+| [SecretReveal](secret-reveal.md) | A secret shown once: warning, value, Copy and a Done gated on "I saved it" | `Callout`, `Input`, `Button`, `Checkbox` | [118](../../../tickets/118-creator-data-portability-and-api.md) |
+| [ScopePicker](scope-picker.md) | A token's scopes as checkboxes grouped by what they touch | `Checkbox` | [118](../../../tickets/118-creator-data-portability-and-api.md) |
 | [Charts](charts.md) | `ChartFrame` and the palette helpers every chart follows | `Skeleton`, `Badge` | [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 
 ## Smart wrappers the studio needs
@@ -40,6 +59,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 | `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange` | `useChannelAnalytics`, `useFormat`, `useT` | `StatCard` |
 | `ViewsChart` | `features/analytics/components/` | `scope`, `range`, `granularity` | `useAnalytics`, `useChartTheme`, `useFormat`, `useT` | `ChartFrame` and the charting library |
 | `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics`, `useChartTheme`, `seriesColor`, `useFormat`, `useT` | `ChartFrame` and the charting library; built by [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| `ImagesSection` | `features/channel/components/` | `channel: Channel` | `useChannelImageUpload`, `useObjectUrl`, `useUpdateChannel`, `useT` | `ImageCropper`, `FileField` |
 | `StudioShell` | `features/shell/components/` | none (reads the route and session) | `useMatchRoute`, `useUploadDock`, `useCan`, `useT`, `useSelectedVideo` | `StudioWorkspace` |
 | `CategoryTable` | `features/admin/components/` | none | `useSearch`, `useSuspenseQuery`, `useReactTable`, `useCan`, `useT` | `DataTable` |
 
@@ -47,7 +67,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 
 ## Rules, as for every component
 
-- **Shared unions**: a props type never spells an inline literal union; shared ones come from `@vp/design-tokens`, `@vp/ui` types, `@vp/domain` and `@vp/api-contracts`, narrowed with `Extract` and `Exclude` in `types.ts`; a component-only union lives there too.
+- **Shared unions**: a props type never spells an inline literal union; shared ones come from `@kit/design-tokens`, `@kit/ui` types, `@vp/domain` and `@vp/api-contracts`, narrowed with `Extract` and `Exclude` in `types.ts`; a component-only union lives there too.
 - **Density is a token set, not a prop.** The studio's defaults are `spacing: compact` and `sizing: small`; every component follows through spacing roles and the sizing set.
 - **Every component owns its skeleton**, with the loaded layout's exact dimensions; each studio spec has a Skeleton section.
 - **Extension points** on every component: `className`, `asChild`, the exported context hook, `tv({ extend })`.

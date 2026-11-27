@@ -1,11 +1,10 @@
+import { EmptyState } from '@kit/components';
+import { Format } from '@kit/intl-react';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { Link, useLocation, useSearch } from '@tanstack/react-router';
-import { EmptyState } from '@vp/components';
+import { useSearch } from '@tanstack/react-router';
 import type { CommentSort } from '@vp/domain';
-import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useEffect, useRef, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import {
@@ -14,9 +13,13 @@ import {
   CommentThreadSkeleton,
 } from '#app/components/watch/comment-thread';
 import { type NewComment, usePostComment } from '#app/features/watch/hooks/use-post-comment';
+import { commentRefusal } from '#app/features/watch/utils/comment-refusal';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { useT } from '#app/lib/messages';
 import { commentsQueryOptions } from '#app/lib/query-keys/comment-keys';
+import { CommentComposer } from '../comment-composer/comment-composer';
 import { NearViewport } from '../near-viewport/near-viewport';
+import { SignInPrompt } from '../sign-in-prompt/sign-in-prompt';
 import { VideoCommentItem } from '../video-comment-item/video-comment-item';
 
 const ESTIMATED_COMMENT_HEIGHT = 110;
@@ -33,22 +36,6 @@ const toggled = (held: ReadonlySet<string>, id: string, on: boolean): ReadonlySe
   }
   return next;
 };
-
-function SignInPrompt() {
-  const { tOr } = useT();
-  const redirect = useLocation({ select: ({ href }) => href });
-
-  return (
-    <div className="flex flex-wrap items-center gap-stack">
-      <p className="m-0 text-body">{tOr('watch.discussionSignIn', {}, '')}</p>
-      <Button asChild variant="soft">
-        <Link to="/login" search={{ redirect }}>
-          {tOr('auth.signIn', {}, '')}
-        </Link>
-      </Button>
-    </div>
-  );
-}
 
 function DraftComment({ draft, onRetry, onDiscard }: DraftProps) {
   const account = useAccount();
@@ -83,7 +70,6 @@ interface CommentSectionProps {
 function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
   const api = useApi();
   const { tOr } = useT();
-  const account = useAccount();
   const [sort, setSort] = useState<CommentSort>('top');
   const [text, setText] = useState('');
   const shownSort = useDeferredValue(sort);
@@ -91,6 +77,7 @@ function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [engaged, setEngaged] = useState<ReadonlySet<string>>(new Set());
   const [focused, setFocused] = useState<string | null>(null);
+  const [waitUntil, setWaitUntil] = useState<number | null>(null);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useSuspenseInfiniteQuery(
     commentsQueryOptions(api, videoId, shownSort)
@@ -114,7 +101,8 @@ function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
     pinned,
   });
   const total = data.pages.at(-1)?.total ?? 0;
-  const draft = post.variables;
+  const refusal = commentRefusal(post.error);
+  const draft = refusal ? undefined : post.variables;
 
   useEffect(() => {
     if (!anchorLoaded) {
@@ -127,7 +115,22 @@ function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
   }, [anchor, anchorLoaded, list]);
 
   const submit = () => {
-    post.mutate({ content: text.trim() });
+    const content = text.trim();
+    post.mutate(
+      { content },
+      {
+        onError: (error) => {
+          const refused = commentRefusal(error);
+          if (refused === null) {
+            return;
+          }
+          setText(content);
+          if (refused.kind === 'slow-mode') {
+            setWaitUntil(Date.now() + refused.retryAfterMs);
+          }
+        },
+      }
+    );
     setText('');
   };
   const retry = (variables: NewComment) => post.mutate(variables);
@@ -140,12 +143,15 @@ function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
         <Format value={{ type: 'count', value: total }} />
       </CommentThread.Header>
       {canComment ? (
-        <CommentThread.Composer
+        <CommentComposer
+          videoId={videoId}
           value={text}
           onChange={setText}
           onSubmit={submit}
-          viewerAvatar={account?.channel?.avatarUrl ?? undefined}
           submitting={post.isPending}
+          refusal={refusal}
+          waitUntil={waitUntil}
+          onSubscribed={post.reset}
         />
       ) : (
         <SignInPrompt />

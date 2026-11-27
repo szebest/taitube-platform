@@ -1,6 +1,6 @@
+import { PAGE_SIZE_DEFAULT } from '@kit/pagination';
 import { SEARCH_PAGE_SIZE_MAX, SEARCH_SORTS, SEARCH_TYPES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
 import { z } from 'zod';
 import { ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
@@ -75,6 +75,16 @@ const SearchResponseSchema = z.object({
   nextCursor: z.string().nullable(),
   tookMs: z.number().nonnegative().describe('Time the page took to produce, cache hits included'),
   total: z.number().int().nonnegative().describe('Every match across the kinds searched'),
+  counts: z
+    .object({
+      video: z.number().int().nonnegative(),
+      channel: z.number().int().nonnegative(),
+      playlist: z.number().int().nonnegative(),
+    })
+    .optional()
+    .describe(
+      'Every match of each kind for the same words, on the first page only: the tabs show them whichever kind is selected'
+    ),
   fuzzyFallback: z
     .boolean()
     .describe('Nothing matched the words as typed, so these are trigram matches for a likely typo'),

@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 import { publicFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import { VideoFeed } from '../video-feed/video-feed';
 

@@ -1,11 +1,11 @@
+import type { Logger } from '@kit/logger';
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type { CacheClient, QueueJob, WebhookDispatcher } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok, unwrapOr } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createWebhookFanout } from './webhook-fanout';
 

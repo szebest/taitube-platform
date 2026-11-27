@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { describeLiveChatGateContract } from '../../__tests__/contract/live-chat-gate.contract';
 import { InMemoryLiveChatGate } from '../in-memory-live-chat-gate';
 

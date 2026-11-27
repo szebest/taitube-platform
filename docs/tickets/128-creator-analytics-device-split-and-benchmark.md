@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §9.8 Housekeeping and the views flush](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** done
 
 > **Why.** The studio's numbers rest on [43](43-high-scale-video-views-buffer-reconciler.md)'s view buffer. 123 and 124
 > made that data true: 65's playback beacon now counts the view and every second of watch time server-side through

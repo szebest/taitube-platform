@@ -22,8 +22,8 @@ echo "[minio-init] Configuring lifecycle rules on raw bucket..."
 # Clear any existing ILM rules to ensure idempotency
 mc ilm rule rm --all --force local/raw 2>/dev/null || true
 
-# Add rule: expire objects after 7 days
-mc ilm rule add --expire-days 7 local/raw
+# Add rule: expire uploads after 7 days; evidence/ is kept until its case has been closed for 30 days
+mc ilm rule add --prefix raw/ --expire-days 7 local/raw
 
 echo "[minio-init] Initialization complete:"
 mc ls local/

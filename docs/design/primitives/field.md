@@ -25,7 +25,7 @@ The wrapper that ties one control to its label, hint and error, and passes the i
 
 ```ts
 // types.ts
-import type { ControlSize } from '@vp/design-tokens';
+import type { ControlSize } from '@kit/design-tokens';
 import type { Orientation } from '../../types';
 
 export type FieldOrientation = Orientation;
@@ -43,7 +43,7 @@ interface FieldRootProps extends ComponentPropsWithRef<'div'> {
 //   -> { id, 'aria-describedby', 'aria-invalid', 'aria-required' }
 ```
 
-The root holds the whole-field options and shares them through context. A label, hint and error are parts, not strings. Today's `Field` takes `label`, `description` and `error` as props and `orientation`; the target renames `description` to `Hint` and keeps `orientation`, now typed as the shared `Orientation`. `@vp/forms` renders `Field` and feeds `invalid`. The required mark's text is `required` from `useUiCopy()` ([ui-copy-provider](ui-copy-provider.md)).
+The root holds the whole-field options and shares them through context. A label, hint and error are parts, not strings. Today's `Field` takes `label`, `description` and `error` as props and `orientation`; the target renames `description` to `Hint` and keeps `orientation`, now typed as the shared `Orientation`. `@kit/forms` renders `Field` and feeds `invalid`. The required mark's text is `required` from `useUiCopy()` ([ui-copy-provider](ui-copy-provider.md)).
 
 `Field.Control` wires `id`, `aria-describedby`, `aria-invalid` and `aria-required` onto its one child; a control that reads `useFieldControl()` itself (as `Input` does today) needs no wrapper.
 

@@ -1,11 +1,11 @@
+import { unwrapOr } from '@kit/result';
 import type { ChannelRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { type ChannelCard, type Video, toChannelCard } from '@vp/domain';
 import { type UserContext, canReadVideo } from '@vp/permissions';
-import { unwrapOr } from '@vp/result';
 
 export interface VideoLookups {
   videosRepo: Pick<VideoRepository, 'findById'>;
-  channelsRepo: Pick<ChannelRepositoryPort, 'findByUserId'>;
+  channelsRepo: Pick<ChannelRepositoryPort, 'findById' | 'findPrimaryByUserId'>;
 }
 
 export interface WatchableVideo {
@@ -22,14 +22,22 @@ export async function watchableVideo(
   const video = unwrapOr(await lookups.videosRepo.findById(videoId), null);
   if (!video || video.deletedAt || video.status === 'DELETED') return null;
   if (!canReadVideo({ user: viewer, video })) return null;
-  return { video, channel: await channelCard(lookups, video.ownerId) };
+  return { video, channel: await channelCard(lookups, video.channelId) };
 }
 
 export async function channelCard(
   lookups: VideoLookups,
+  channelId: string
+): Promise<ChannelCard | null> {
+  const channel = unwrapOr(await lookups.channelsRepo.findById(channelId), null);
+  return channel ? toChannelCard(channel) : null;
+}
+
+export async function primaryChannelCard(
+  lookups: VideoLookups,
   userId: string
 ): Promise<ChannelCard | null> {
-  const channel = unwrapOr(await lookups.channelsRepo.findByUserId(userId), null);
+  const channel = unwrapOr(await lookups.channelsRepo.findPrimaryByUserId(userId), null);
   return channel ? toChannelCard(channel) : null;
 }
 

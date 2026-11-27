@@ -1,8 +1,9 @@
-import { Icon, IconButton, Kbd, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Kbd } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { appShellStyles } from '#app/components/shell/app-shell/app-shell.variants';
 import { useHasScrolled } from '#app/components/shell/app-shell/hooks/use-has-scrolled';
 import { useMenuTarget } from '#app/components/shell/app-shell/hooks/use-menu-target';
+import { useT } from '#app/lib/messages';
 
 export interface AppShellHeaderProps extends Omit<ComponentPropsWithRef<'header'>, 'children'> {
   logo: ReactNode;
@@ -20,7 +21,8 @@ export function AppShellHeader({
   className,
   ...props
 }: AppShellHeaderProps) {
-  const { menu } = useUiCopy();
+  const { tOr } = useT();
+  const menu = tOr('ui.menu', {}, '');
   const target = useMenuTarget();
   const scrolled = useHasScrolled();
   const styles = appShellStyles();

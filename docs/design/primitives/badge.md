@@ -18,7 +18,7 @@ A small static label that classifies the thing next to it: a quality, a state, a
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type BadgeFill = Exclude<FillOption, 'ghost' | 'plain'> | 'scrim';

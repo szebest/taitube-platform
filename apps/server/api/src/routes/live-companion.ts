@@ -1,5 +1,5 @@
+import { isErr } from '@kit/result';
 import { type LiveCompanionFrame, liveCompanionSocket } from '@vp/api-contracts';
-import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';

@@ -1,8 +1,11 @@
+import type { Container } from '@kit/composition';
+import { ErrorCodeRegistry } from '@kit/errors';
+import { createLogger } from '@kit/logger';
+import { MetricsServer } from '@kit/observability';
+import { Paginator } from '@kit/pagination';
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
-import { createLogger } from '@vp/logger';
-import { MetricsServer } from '@vp/observability';
-import { Paginator } from '@vp/pagination';
+import { errorCodeRegistry } from '@vp/errors';
+import { METRICS_ROUTES } from '@vp/pipeline-metrics';
 import {
   AnalyticsService,
   CategoryService,
@@ -32,12 +35,15 @@ import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
+import { registerScreeningServices } from './screening.module';
 import { registerSearchServices } from './search.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerSseServices } from './sse.module';
 import { registerStudioServices } from './studio.module';
 import { registerTelemetryServices } from './telemetry.module';
+import { registerVideoAccessServices } from './video-access.module';
+import { registerWatchPartyServices } from './watch-party.module';
 
 export * from './service-tokens';
 
@@ -49,6 +55,8 @@ export function resolveBackground(c: Container): void {
   c.get(Services.MetricsServer);
   c.get(Services.SseHub);
   c.get(Services.LiveChatHub);
+  c.get(Services.WatchPartyHub);
+  c.get(Services.WatchPartySweep);
   c.get(Services.LiveViewerHeartbeat);
   c.get(Services.QueuePoller);
   c.get(Services.SqlPoller);
@@ -68,8 +76,14 @@ export function registerServices(c: Container): Container {
               registerCaptionServices(
                 registerNotificationServices(
                   registerStudioServices(
-                    registerCommentServices(
-                      registerSseServices(registerLiveServices(registerBootstrap(c)))
+                    registerVideoAccessServices(
+                      registerScreeningServices(
+                        registerCommentServices(
+                          registerSseServices(
+                            registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                          )
+                        )
+                      )
                     )
                   )
                 )
@@ -80,6 +94,7 @@ export function registerServices(c: Container): Container {
       )
     )
   )
+    .provide(ErrorCodeRegistry, () => errorCodeRegistry)
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -89,8 +104,10 @@ export function registerServices(c: Container): Container {
       (c) =>
         new VideoService({
           videos: repositories().videos,
+          steps: repositories().steps,
           probeQueue: c.get(Adapters.ProbeQueue),
           channels: repositories().channels,
+          chapters: repositories().videoChapters,
           cdn: config().cdn,
           sprite: config().sprite,
           reactionCache: c.get(Adapters.ReactionCache),
@@ -134,6 +151,8 @@ export function registerServices(c: Container): Container {
           videoReactions: repositories().videoReactions,
           reactionCache: c.get(Adapters.ReactionCache),
           videos: repositories().videos,
+          restrictions: repositories().channelUserRestrictions,
+          now: () => Date.now(),
         })
     )
     .provide(
@@ -142,6 +161,7 @@ export function registerServices(c: Container): Container {
         new SubscriptionService({
           subscriptions: repositories().subscriptions,
           channels: repositories().channels,
+          videos: repositories().videos,
           subscriptionCache: c.get(Adapters.SubscriptionCache),
           viewerProgress: c.get(Services.ViewerProgress),
           home: c.get(Services.HomeService),
@@ -268,6 +288,7 @@ export function registerServices(c: Container): Container {
           port: config().http.metricsPort,
           host: '0.0.0.0',
           registry: c.get(Adapters.Metrics).registry,
+          routes: METRICS_ROUTES,
         }),
       { start: (server) => server.listen(), dispose: (server) => server.close() }
     );

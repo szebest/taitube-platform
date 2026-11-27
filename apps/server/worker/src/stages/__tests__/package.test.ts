@@ -1,11 +1,11 @@
+import { createLogger } from '@kit/logger';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { CANONICAL_LADDER, type LadderEntry, type PackageJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { renditionPlaylistKey } from '@vp/storage';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { type FlowWorld, OWNER_ID, flowWorld, rungs } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
@@ -23,11 +23,13 @@ async function processingVideo(
     await repositories.videos.create({
       id: videoId,
       ownerId: OWNER_ID,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       title: 'packaged',
       status: 'PROCESSING',
       sourceKey: `raw/${videoId}`,
       sourceSizeBytes: 1_000,
       durationMs: 90_000,
+      generation,
     })
   );
   expectOk(
@@ -67,7 +69,7 @@ function packageJob(videoId: string, generation = 1) {
   return { id: `${videoId}--package--g${generation}`, name: 'package', data, attemptsMade: 0 };
 }
 
-async function observedTimeToReady(metrics: ReturnType<typeof createMetricsRegistry>) {
+async function observedTimeToReady(metrics: ReturnType<typeof createPipelineMetrics>) {
   const { values } = await metrics.timeToReady.get();
   return {
     count: values.find((v) => v.metricName === 'time_to_ready_seconds_count')?.value ?? 0,
@@ -94,6 +96,7 @@ describe('apps/server/worker/stages: package', () => {
       await world.repositories.videos.create({
         id: videoId,
         ownerId: OWNER_ID,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         title: 'Package Video',
         status: 'PROCESSING',
         sourceKey: 'raw/s60.mp4',
@@ -152,7 +155,7 @@ describe('apps/server/worker/stages: package time to ready', () => {
   it('measures time to ready from the upload completing, on the clock it was handed', async () => {
     const repositories = new InMemoryRepositories();
     const storage = new InMemoryStorageClient();
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
     const videoId = await processingVideo(repositories, storage);
     const completedAt = await completedUpload(repositories, videoId);
     const processor = createPackageProcessor({
@@ -169,10 +172,29 @@ describe('apps/server/worker/stages: package time to ready', () => {
     expect(await observedTimeToReady(metrics)).toEqual({ count: 1, sum: 42, bucket: '1-5' });
   });
 
+  it('leaves a reprocessed video PROCESSING when a package of its previous generation finishes', async () => {
+    const repositories = new InMemoryRepositories();
+    const storage = new InMemoryStorageClient();
+    const videoId = await processingVideo(repositories, storage, 2);
+    expectOk(
+      await storage.uploadObject({
+        bucket: STAGE_SETTINGS.publicBucket,
+        key: renditionPlaylistKey(videoId, RENDITION.name, 1),
+        body: '#EXTM3U\n',
+        contentType: 'application/vnd.apple.mpegurl',
+      })
+    );
+    const processor = createPackageProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
+
+    expectOk(await processor(packageJob(videoId, 1)));
+
+    expect(expectOk(await repositories.videos.findById(videoId))?.status).toBe('PROCESSING');
+  });
+
   it('observes nothing for a re-processed generation, whose upload completed long before', async () => {
     const repositories = new InMemoryRepositories();
     const storage = new InMemoryStorageClient();
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
     const videoId = await processingVideo(repositories, storage, 2);
     const completedAt = await completedUpload(repositories, videoId);
     const processor = createPackageProcessor({
@@ -192,7 +214,7 @@ describe('apps/server/worker/stages: package time to ready', () => {
   it('observes nothing for a video no upload completed, rather than guessing a start', async () => {
     const repositories = new InMemoryRepositories();
     const storage = new InMemoryStorageClient();
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
     const videoId = await processingVideo(repositories, storage);
     const processor = createPackageProcessor({
       ...STAGE_SETTINGS,

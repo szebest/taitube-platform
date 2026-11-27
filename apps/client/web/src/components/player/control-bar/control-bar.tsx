@@ -1,7 +1,6 @@
-import { videoDuration } from '@vp/intl';
-import { Format, useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
-import { Badge, IconButton } from '@vp/ui';
+import { Format } from '@kit/intl-react';
+import { Badge, IconButton } from '@kit/ui';
+import { videoDuration } from '@vp/intl-formats';
 import {
   Maximize,
   Minimize,
@@ -14,60 +13,95 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, type ReactNode, useRef } from 'react';
 import {
   LiveEdgeButton,
   usePlayerCommands,
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
-import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
+import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
 import { CaptionsButton } from './components/captions-button/captions-button';
+import { PictureInPictureButton } from './components/picture-in-picture-button/picture-in-picture-button';
+import { SeekBar } from './components/seek-bar/seek-bar';
 import { SettingsMenu } from './components/settings-menu/settings-menu';
-import { fromClipTime, toClipPlayhead } from './utils/clip-playhead';
+import { toClipPlayhead } from './utils/clip-playhead';
 
 export interface ControlBarProps {
+  /** Shown over the top of the picture, on its own scrim, while the controls are. */
+  title?: string;
   live?: boolean;
   /** A clip: the seek bar and the clock show only this range of the video. */
   range?: PlaybackRange;
+  /** Marked on the seek bar where each starts. */
+  chapters?: readonly PlayerChapter[];
+  /** Laid over the seek bar, such as the thread markers. */
+  markers?: ReactNode;
   onPrevious?: () => void;
   onNext?: () => void;
 }
 
-export function ControlBar({ live = false, range, onPrevious, onNext }: ControlBarProps) {
+export function ControlBar({
+  title,
+  live = false,
+  range,
+  chapters,
+  markers,
+  onPrevious,
+  onNext,
+}: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
 
   return (
-    <fieldset
-      aria-label={tOr('player.controls', {}, '')}
-      data-visible={visible || undefined}
-      className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-scrim to-transparent px-3 pt-12 pb-1 transition-opacity duration-200 motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
-    >
-      {!live && <SeekBar range={range} />}
-      <div className="flex items-center gap-1">
-        {onPrevious && (
-          <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
-            <SkipBack aria-hidden="true" />
-          </IconButton>
-        )}
-        <PlayButton />
-        {onNext && (
-          <IconButton aria-label={tOr('player.nextVideo', {}, '')} onClick={onNext}>
-            <SkipForward aria-hidden="true" />
-          </IconButton>
-        )}
-        <VolumeControl />
-        {live ? <LiveBadge /> : <ElapsedTime range={range} />}
-        <div className="ms-auto flex items-center gap-1">
-          <CaptionsButton />
-          <SettingsMenu />
-          <TheaterButton />
-          <FullscreenButton />
+    <>
+      {title && <TitleScrim title={title} visible={visible} />}
+      <fieldset
+        aria-label={tOr('player.controls', {}, '')}
+        data-media-controls=""
+        data-visible={visible || undefined}
+        className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-media/90 via-media/55 to-transparent px-3 pt-20 pb-1 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
+      >
+        {!live && <SeekBar range={range} chapters={chapters} markers={markers} />}
+        <div className="flex items-center gap-1">
+          {onPrevious && (
+            <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
+              <SkipBack aria-hidden="true" />
+            </IconButton>
+          )}
+          <PlayButton />
+          {onNext && (
+            <IconButton aria-label={tOr('player.nextVideo', {}, '')} onClick={onNext}>
+              <SkipForward aria-hidden="true" />
+            </IconButton>
+          )}
+          <VolumeControl />
+          {live ? <LiveBadge /> : <ElapsedTime range={range} />}
+          <div className="ms-auto flex items-center gap-1">
+            <CaptionsButton />
+            <SettingsMenu />
+            <TheaterButton />
+            <PictureInPictureControl />
+            <FullscreenButton />
+          </div>
         </div>
-      </div>
-    </fieldset>
+      </fieldset>
+    </>
+  );
+}
+
+function TitleScrim({ title, visible }: Readonly<{ title: string; visible: boolean }>) {
+  return (
+    <div
+      aria-hidden="true"
+      data-media-controls=""
+      data-visible={visible || undefined}
+      className="pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b from-media/80 via-media/40 to-transparent px-3 pt-2 pb-10 transition-opacity duration-fast ease-standard motion-reduce:transition-none not-data-visible:opacity-0"
+    >
+      <p className="m-0 truncate text-title select-text">{title}</p>
+    </div>
   );
 }
 
@@ -76,31 +110,6 @@ function useClipPlayhead(range: PlaybackRange | undefined) {
   const duration = usePlayerState((state) => state.duration);
 
   return toClipPlayhead(range, { currentTime, duration });
-}
-
-function SeekBar({ range }: Pick<ControlBarProps, 'range'>) {
-  const { currentTime, duration } = useClipPlayhead(range);
-  const videoDurationSeconds = usePlayerState((state) => state.duration);
-
-  const { seek } = usePlayerCommands();
-  const { tOr } = useT();
-  const { format } = useFormat();
-
-  return (
-    <input
-      type="range"
-      aria-label={tOr('player.seek', {}, '')}
-      aria-valuetext={unwrapOr(format(videoDuration(currentTime)), '')}
-      min={0}
-      max={duration}
-      step="any"
-      value={currentTime}
-      onChange={({ currentTarget }) =>
-        seek(fromClipTime(range, currentTarget.valueAsNumber, videoDurationSeconds))
-      }
-      className="block w-full cursor-pointer accent-accent"
-    />
-  );
 }
 
 function LiveBadge() {
@@ -180,7 +189,7 @@ function VolumeControl() {
         step={0.01}
         value={position}
         onChange={handleSlide}
-        className="w-0 cursor-pointer opacity-0 accent-fg transition-all duration-200 group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
+        className="w-0 cursor-pointer opacity-0 accent-fg transition-opacity duration-fast ease-standard group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
       />
     </div>
   );
@@ -205,6 +214,21 @@ function ElapsedTime({ range }: Pick<ControlBarProps, 'range'>) {
     <span className="px-2 text-label whitespace-nowrap tabular-nums">
       <Format value={videoDuration(currentTime)} /> / <Format value={videoDuration(duration)} />
     </span>
+  );
+}
+
+function PictureInPictureControl() {
+  const available = usePlayerState((state) => state.canPictureInPicture);
+  const active = usePlayerState((state) => state.pictureInPicture);
+  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
+
+  return (
+    <PictureInPictureButton
+      available={available}
+      active={active}
+      onRequest={requestPictureInPicture}
+      onExit={exitPictureInPicture}
+    />
   );
 }
 

@@ -14,7 +14,7 @@ test.describe('one session for both apps', () => {
 
     await page.goto(`${alongsideUrl}/upload`);
     await expect(page.getByLabel('Video title')).toBeVisible();
-    expect((await context.cookies()).find(({ name }) => name === 'vp.session')?.httpOnly).toBe(
+    expect((await context.cookies()).find(({ name }) => name === 'vp.session.0')?.httpOnly).toBe(
       true
     );
 
@@ -26,7 +26,9 @@ test.describe('one session for both apps', () => {
     await page.goto('/');
     await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Account' })).toHaveCount(0);
-    expect((await context.cookies()).map(({ name }) => name)).not.toContain('vp.session');
+    expect(
+      (await context.cookies()).filter(({ name }) => name.startsWith('vp.session'))
+    ).toHaveLength(0);
   });
 
   test('a guest on a members-only page of either app signs in on that app', async ({

@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import { WATCH_LATER_TITLE } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import {
   AN_HOUR_AGO,
@@ -43,11 +43,6 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
       await seedOwners(subject.repositories);
       playlists = subject.repositories.playlists;
       await seedVideos(ctx);
-      await subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'The Owner',
-      });
     });
 
     it('creates a user playlist and reads it back unscoped', async () => {
@@ -105,7 +100,7 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
 
       const detail = expectOk(await playlists.findDetail(P.mix, null));
 
-      expect(detail?.owner).toMatchObject({ handle: 'owner', displayName: 'The Owner' });
+      expect(detail?.owner).toMatchObject({ handle: 'owner', displayName: 'Owner' });
       expect(detail?.items).toEqual([]);
     });
 

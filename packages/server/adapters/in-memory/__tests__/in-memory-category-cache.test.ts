@@ -1,6 +1,6 @@
+import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { Category } from '@vp/domain';
-import { ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import { describeCategoryCacheContract } from '../../__tests__/contract/category-cache.contract';
 import { inMemoryCategoryCacheSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { InMemoryCategoryCache } from '../in-memory-category-cache';

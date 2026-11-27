@@ -1,3 +1,4 @@
+import type { ApiScope } from '@vp/domain';
 import type { ErrorCode } from '@vp/errors';
 import { z } from 'zod';
 
@@ -7,6 +8,15 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 
 type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
 
+/** Names the channel a studio request acts on; absent, the caller acts on their own. */
+export const CHANNEL_HEADER = 'x-channel-id';
+
+/**
+ * The one session cookie both client apps keep the API bearer token in. The API never reads a
+ * session from it, and refuses a request that carries it beside a personal access token.
+ */
+export const SESSION_COOKIE = 'vp.session';
+
 export interface EndpointContract {
   readonly method: HttpMethod;
   readonly path: string;
@@ -14,6 +24,11 @@ export interface EndpointContract {
   readonly summary: string;
   readonly description: string;
   readonly anonymous?: boolean;
+  /**
+   * Also accepts a guest's or a Discord member's party credential (`X-Party-Credential`). Only the
+   * watch party routes set it; on every other route that credential is ignored and the caller is anonymous.
+   */
+  readonly partyGuest?: boolean;
   /** Called by a sibling service on the compose network, never by a client: left out of the OpenAPI document. */
   readonly internal?: boolean;
   /**
@@ -21,6 +36,17 @@ export interface EndpointContract {
    * the OpenAPI document, so SDD §6.1 is where it is documented.
    */
   readonly socket?: boolean;
+  /**
+   * Acts on the channel `X-Channel-Id` names, which must be one whose team the caller is on: the
+   * route also answers 403 `CHANNEL_MEMBERSHIP_REQUIRED`, and `FORBIDDEN` when the caller's role
+   * there does not cover it.
+   */
+  readonly channelScoped?: true;
+  /**
+   * The scope a personal access token needs to call this route. A route without one is out of a
+   * token's reach: a token never manages tokens, the channel, its team or the session.
+   */
+  readonly scope?: ApiScope;
   readonly params?: z.ZodType;
   readonly query?: z.ZodType;
   readonly body?: z.ZodType;

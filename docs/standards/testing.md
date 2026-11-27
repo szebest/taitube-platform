@@ -24,13 +24,13 @@ rule below that can be checked by a machine is, and the check is named next to i
   picked and then released.
 - The doubles own their state and expose `.clear()`.
 - The client specs run the React Compiler's output, as the apps ship it: every client Vitest project builds with
-  `reactPlugins()` from `@vp/vite-preset`. Two more projects, `ui (jsdom, uncompiled)` and
+  `reactPlugins()` from `@kit/vite-preset`. Two more projects, `ui (jsdom, uncompiled)` and
   `studio (jsdom, uncompiled)`, run only the `*.differential.dom.test.tsx` specs (Field, Tabs, Select, Dialog,
   the studio upload dialog) without it; each records the DOM and a handler trace at every step into one
   committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
-  Select) count a part's commits with `createRenderCounter` from `@vp/web-testing/dom` while the root re-renders
+  Select) count a part's commits with `createRenderCounter` from `@kit/web-testing/dom` while the root re-renders
   with the same props; they prove what the compiler memoizes, so they run compiled only and fail without it.
-- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). It is a measurement, not a gate: CI does not run it, and the unit job keeps its time budget.
+- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). The root `vitest.config.ts` holds the 85% floor for lines, statements, functions and branches, so the command fails below it. CI does not run it, to keep the unit job's time budget.
 
 ### Integration (`pnpm test:integration`, the `integration` CI job)
 - Runs against real services: the job starts Postgres, Redis and MinIO with Docker Compose, migrates the
@@ -39,6 +39,9 @@ rule below that can be checked by a machine is, and the check is named next to i
   repository specs, and the Redis, S3 and BullMQ adapter specs (`tests/integration/vitest.config.ts`).
 - A spec there that would fall back to PGlite or a double fails instead: the setup fails any file in which no
   contract claimed a real service, and a service that is not reachable fails the file.
+- A measurement is not a gate: `*.perf.test.ts` specs stay out of every CI run and run on demand with
+  `pnpm --filter @vp/adapters test:perf` (the fingerprint lookup against 10 000 videos, its 200 ms
+  figure); the integration run keeps a 500-video variant of the same query path.
 - `make test-r2` runs the S3 contracts against the R2 bucket the `S3_*` variables you export name.
 
 ### End to end
@@ -46,7 +49,8 @@ rule below that can be checked by a machine is, and the check is named next to i
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 - `pnpm --filter @vp/web test:e2e` and `pnpm --filter @vp/studio test:e2e` (or `make e2e-web`, `make e2e-studio`,
-  the `e2e-web` and `e2e-studio` checks of the `e2e-client` CI job) for each client app's Playwright suite in its
+  the `e2e-web-<n>` and `e2e-studio-<n>` checks of the `e2e-client` CI job, each app's suite
+  in three Playwright shards) for each client app's Playwright suite in its
   `e2e/`, against the same in-process stack plus that app built and served. The stack fixture, the config
   factory and the security suites both import live in `tests/playwright/`. The specs are held to the spec
   discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
@@ -68,8 +72,17 @@ the contract against itself:
   way, against the double in unit and the real service in integration
 
 A double that drifts from the real thing fails the shared contract assertion in its own spec. The contracts
-live in `@vp/adapters` rather than `@vp/testing`, because `@vp/testing` depending on `@vp/core` would make a
-workspace cycle (every package dev-depends on `@vp/testing`).
+of the app's own ports live in `@vp/adapters` rather than `@kit/testing`, because `@kit/testing` depending on `@vp/core` would make a
+workspace cycle (every package dev-depends on `@kit/testing`).
+
+**A platform package ships its contract.** A package under `packages/platform/` that defines a port or a registry
+exports `runXContract(makeImpl)` from a `./contract` entry (vitest is a peer dependency), so any app runs it against
+its own implementation. The repository's doubles and registries run it in their own specs. A contract is part of the
+package's surface: changing one needs the version bump and changelog entry
+([platform-packages.md](platform-packages.md)). `@kit/ports/contract` holds the cache client, job queue and flow
+producer suites, written with the vitest globals so they run under `vitest` and `bun test`; the subjects that make
+them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) stay in `@vp/adapters`. Contracts for
+the app's own ports stay in `@vp/adapters`.
 
 Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
 builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
@@ -108,13 +121,13 @@ The e2e runners are the exception by nature: they poll a deployed stack on its o
 Sibling tests that differ only by input are one `it.each`.
 
 Every test config restores spies and stubbed env vars before each test (`restoreMocks`, `unstubEnvs` in
-`definePackageTestConfig`, and in the configs that do not use it; `@vp/testing`'s own spec holds every project
+`definePackageTestConfig`, and in the configs that do not use it; `@vp/testing-fixtures`' config sweep holds every project
 config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
 `vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `clientAppTestConfig`
-in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). `architecture-typed` runs on
+in `@kit/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). The two projects that run PGlite, `@vp/adapters` and `@vp/db`, use `pool: 'forks'`: PGlite is WebAssembly, and WebAssembly in worker threads races V8's process-wide JIT page registry, which aborts the whole run with `Check failed: jit_page.has_value()` (exit 133). `architecture-typed` runs on
 one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
 project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
 worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
@@ -122,7 +135,7 @@ and its module cache, which is most of what makes `unit` fit its budget. A spec 
 behind: state lives in what `beforeEach` builds, not at module level, and a mock of a package outlives the file
 that registered it, so a helper that mock reads from keeps its state where every file sees the same copy
 (`apps/client/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
-Library, the client apps' and `@vp/intl-react`'s (`isolate: true`): Testing
+Library, the client apps' and `@kit/intl-react`'s (`isolate: true`): Testing
 Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
 would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
 `tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
@@ -132,10 +145,10 @@ run on Vitest's defaults.
 
 ## 5. Shared fixtures
 
-`@vp/testing` owns what more than one package needs: `definePackageTestConfig`, `SEEDED` (the users, channels
-and videos the in-memory repositories and the development seed start with), `createMockJob`, `withEnv`,
-`expectOk` / `expectErr` (`@vp/testing/result`), log capture and `runEntrypoint` (a TypeScript entrypoint in a
-child of the runtime the spec runs on). A spec that acts as "the dev user" names `SEEDED.userId`; the literal
+`@kit/testing` owns what more than one package needs: `definePackageTestConfig`, `withEnv`,
+`expectOk` / `expectErr` (`@kit/testing/result`), log capture and `runEntrypoint` (a TypeScript entrypoint in a
+child of the runtime the spec runs on). `@vp/testing-fixtures` holds this product's `SEEDED` (the users,
+channels and videos the in-memory repositories and the development seed start with) and `createMockJob`. A spec that acts as "the dev user" names `SEEDED.userId`; the literal
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
@@ -160,6 +173,8 @@ pnpm test:bun   # Bun, over apps/server/*, packages/universal and packages/serve
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
+The server tier's ES2025 level is proven on both runtimes by `packages/platform/server/testing/src/__tests__/es2025-runtime.test.ts`; see [runtime-baseline.md](runtime-baseline.md).
+
 `pnpm test:bun` leaves out `packages/client/`: those packages are browser-only, so no runtime parity is at
 stake, and their specs lean on what only Vitest offers (jsdom, `vi.mock(import(...))`). It also skips every
 `__tests__/integration/` folder, which a package's vitest config leaves to the `integration` job too: real
@@ -175,11 +190,13 @@ encodes or real services, not a parity question.
 | Unit, as CI runs it (no architecture suite) | `pnpm test:unit` |
 | The architecture invariants | `pnpm test:architecture` |
 | Real services | `pnpm test:integration` |
+| On-demand measurements | `pnpm --filter @vp/adapters test:perf` |
 | Bun parity | `pnpm test:bun` |
 | One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
 | In-process acceptance suite | `make e2e` |
 | Browser suites (Playwright) | `make e2e-web`, `make e2e-studio` |
+| The web click path's speed (CLS and its shift source, long tasks, the worst interaction, a palette keystroke) | `pnpm perf:clicks before`, then `pnpm perf:clicks after --against before` |
 
 A package's specs run only if the root `vitest.config.ts` `projects` globs reach its `vitest*.config.ts`.
 After adding one, check the file count in the `pnpm test` summary went up.
@@ -190,33 +207,46 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 
 ---
 
-## 8. One spec per source file
+## 8. What to test
 
-Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.ts(x)` for a web
-spec that runs under jsdom) beside it, in every tier, `apps/client/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
-members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
-transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
-flat assertion with no exception list.
+The floor is 85% coverage (lines, statements, functions and branches) over the unit run. Past it, write a spec where
+behaviour can break: logic, branches, error paths, contracts, and a user flow. Put it in `__tests__/` beside the
+code it covers.
+
+**Type-level specs.** Every public generic of a platform package has a spec that proves misuse fails to compile, in
+the package's `src/__tests__/type-fixtures/`: `expectTypeOf` for what a call infers, and `// @ts-expect-error` above
+each call that must be rejected, one reason in the comment. They are not run by vitest; the package's `typecheck`
+compiles them (universal and client packages through `tsconfig.spec.json`), so an `@ts-expect-error` over code that
+now compiles fails. Nothing else in platform source may suppress the compiler (`platform-type-strictness.test.ts`).
+
+Not required:
+
+- a spec per source file, or a spec named after its source
+- a spec for a type, an interface, a constant, a barrel (`index.ts`), a re-export or generated code
+- a spec for thin wiring (composition modules, config, a route that only delegates), when a test of the
+  behaviour above it already runs it
+- a test written only to satisfy a rule or to lift a number
+
+One spec may cover several sources that make up one behaviour. No architecture test asks for a spec.
 
 ---
 
 ## 9. CI budgets, shards and retries
 
 Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, and three test steps carry their
-own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 20 s in
-`lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 120 s.
-`tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
-`unit-bun-shards` 4, `integration` 4, `e2e-smoke` 4, `e2e-client` 4, `visual` 4, `terraform` 2, the two
-aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
+own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 40 s in
+`lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 240 s.
+`tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 4, `lint-typecheck` 7, `unit-shards` 6,
+`unit-bun-shards` 5, `extractable` 9 (one job, every platform package and the second app in a sandbox of its own, four at a time), `integration` 6,
+`e2e-smoke` 6, `e2e-client` 6, `visual` 6 (24 shards), `terraform` 2, the two aggregates 1, and 13 minutes for the longest
+`needs` chain. A budget names the step it measures by its `id`, and its
 limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
-`unit` (vitest, `--shard=i/6`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/14`) and `unit-bun` (`bun test --shard=i/5`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
-and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
-files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
-`tests/timings/unit.json` (milliseconds per spec file: environment, import and tests) and deals the files out
-longest first, each to the cheapest shard so far; a file with no entry costs the median. The two suites that
-repeat 20 times under Bun run in `unit-bun-shard-1` only.
+and print which shard did not, so the required checks in branch protection keep their names. Vitest splits the spec files with its
+own `--shard=i/N`, a hash of each path, over a fixed matrix: `ci-shape` fails a matrix that does not run every
+shard of the `/N` it names. The two suites that repeat 20 times under Bun run in `unit-bun-shard-1` only.
 
 ### Budgets, shards and retries: when to change what
 
@@ -227,18 +257,13 @@ repeat 20 times under Bun run in `unit-bun-shard-1` only.
 - **Raise a budget** when `ci-health` reports a run of it at or above 85% of its limit, and only by the formula
   over the measured window, in a PR that says the window and the numbers. Never to make one change pass: a change
   that slows a step by itself is a regression to fix. Lower one when the formula says so.
-- **Regenerate the timings** (`pnpm timings:update --run <id> --run <id>`, two or more green runs, which it
-  averages) when the shards' summed cost drifts apart, when a large spec moved or `unit-timings.test.ts` fails on a
-  spec file older than 7 days that the file does not list. The sequencer balances recorded cost to within 1%;
-  what remains between shards is the runner (the same files run 0.8 to 1.15 times their recorded cost on different
-  hosted runners).
-- **Add a shard** only when the slowest shard's `unit-tests` p90 passes 70% of its budget after the timings were
-  regenerated: add its number to the `shard` list, raise the `/N` in the run step (`ci-shape` fails when they
-  differ) and regenerate the timings.
-- **One retry, always reported.** CI retries a failed test once (`--retry=1` for vitest, `retries: 1` under `CI`
-  for Playwright and the visual suite). A test that passes on its retry leaves a `passed on retry` warning naming
-  the spec and the test, a table in the job summary, and `ci-health` counts it as a flip: the nightly fails above
-  2% of commits. A pass on retry is a flaky spec to fix or quarantine, never accepted.
+- **Add specs freely; raise N when a shard nears its budget.** The vitest shard count is the matrix of
+  `unit-shards` and the `/14` of its `--shard`, set together. A shard whose `unit-tests` step passes 85% of its
+  240 s budget (`ci-health` table 3) takes a larger N in the same PR, never a larger budget.
+- **One retry, and a pass on it fails the job.** CI retries a failed test once (`--retry=1` for vitest,
+  `retries: 1` under `CI` for Playwright and the visual suite), so the report tells a flaky test from a broken
+  one. A test that passes on its retry leaves a `passed on retry` error naming the spec and the test, a table in
+  the job summary, `ci-health` counts it as a flip, and `scripts/retried/publish.ts` fails the run.
 - **Quarantine** a flaky spec only while it is being fixed: add `{ spec, owner, reason, expires, ticket }` to
   `tests/quarantine.json` (at most five, `quarantine.test.ts` fails an incomplete or expired entry). CI skips it
   (`pnpm quarantine` prints the vitest `--exclude`, `tests/playwright/config.ts` ignores it) and the nightly
@@ -247,6 +272,33 @@ repeat 20 times under Bun run in `unit-bun-shard-1` only.
 - **A jsdom test ends once its requests settle**: `@vp/web-testing` waits for the requests a test left in flight
   before it drops the test's handlers, and an unanswered request names the contract to mock
   (`mock it with mockEndpoint(getPreferences, ...)`); answer it in the app's one loader API helper.
+
+### Flaky tests: root-cause, do not retry
+
+A spec that fails on one run and passes on the next has a cause in the spec or the code: find it and fix it. A
+raised timeout, a retry, a sleep or a skip hides it and a later run finds it again; a quarantine (below) only
+buys the time to fix it.
+
+- **A test ends once its work has.** Every client app's jsdom project runs `@kit/web-testing/settle.setup` last:
+  before it unmounts, it waits for the fetching queries and pending mutations of every mounted `QueryClient`, and
+  for every `renderRoute` router, to go idle, and fails the test with what is still running after 5 s. A test
+  that holds a request on purpose releases it before it ends (`heldReply`); an upload it starts, it finishes or
+  cancels. Testing Library's own cleanup is off there (`RTL_SKIP_AUTO_CLEANUP`), since it would unmount first.
+- **A React update after the test ended fails that test** by name (`LeakedUpdateError`). Left alone it surfaces
+  after jsdom's teardown as `window is not defined`, in whichever file ran last on that worker.
+- **A request after the test ended** fails as `UnhandledRequestError ... from "<the test that made it>"`.
+- **Wait for the thing itself** (section 3), never for a proxy that settles earlier: a recorded request is not
+  its handled answer, an open room socket is not its preview, a performance entry's `element` is `null` once
+  hydration replaced the node, and `networkidle` is not a hydrated page.
+- **A browser spec acts on a hydrated page.** The shared fixtures' `context` makes every `page.goto` and
+  `page.reload` on an app origin resolve only once React has hydrated the document (`hydrateEveryPage` in
+  `tests/playwright/fixtures.ts`); `hydrated(locator)` waits for one element a later boundary hydrates. Spec
+  discipline fails `waitForTimeout`, Playwright's own `test` in an app browser spec, and a `browser.newContext`
+  whose pages skip the wait.
+- **No state shared between tests.** The e2e stack is one per run and its personas outlive a test: a spec that
+  changes what a persona sees signs in as `stranger`, a viewer no other test shares.
+- **Prove a fix by repetition**: the spec 100 times or more, in parallel and under CPU load (Playwright's
+  `--repeat-each`, copies of a vitest spec), before and after, with both pass rates in the PR.
 
 `pnpm ci:health` (`scripts/ci-health.ts`, the nightly `ci-health.yml`) prints green first time per branch, failures
 per job, every budget's margin, flips and passes on retry, merges behind main or merged red (`--merges`) and the

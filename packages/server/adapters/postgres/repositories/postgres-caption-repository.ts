@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import {
   type CaptionCommit,
   type CaptionRecord,
@@ -14,7 +15,6 @@ import * as schema from '@vp/db';
 import { SEARCH_TEXT_CONFIG, transcriptVector } from '@vp/db';
 import { captionsFailed, captionsReady, type TranscriptCue } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { type SQL, and, asc, eq, lt, ne, sql } from 'drizzle-orm';
 import {
   bumped,
@@ -68,19 +68,19 @@ export class PostgresCaptionRepository extends CaptionRepository {
     return map(rows, (updated) => updated.length > 0);
   }
 
-  channelDefault(ownerId: string) {
-    return this.read('channelDefault', () => channelDefaultOf(this.db, ownerId));
+  channelDefault(channelId: string) {
+    return this.read('channelDefault', () => channelDefaultOf(this.db, channelId));
   }
 
   async setChannelDefault(
-    ownerId: string,
+    channelId: string,
     enabled: boolean
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await this.read('setChannelDefault', () =>
       this.db
         .update(channels)
         .set({ autoCaptionsDefault: enabled })
-        .where(eq(channels.userId, ownerId))
+        .where(eq(channels.id, channelId))
         .returning({ id: channels.id })
     );
     return map(rows, (updated) => updated.length > 0);

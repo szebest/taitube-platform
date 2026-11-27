@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import {
   CDN,
   CHANNEL_1,
@@ -11,6 +11,7 @@ import {
   getAs,
   subscription,
 } from './subscriptions-app';
+import { seedPrimaryChannel } from './test-app';
 
 describe('GET /v1/feed/subscriptions', () => {
   let ctx: SubscriptionsApp;
@@ -26,6 +27,7 @@ describe('GET /v1/feed/subscriptions', () => {
       await ctx.repositories.videos.create({
         id: '77777777-7777-7777-8777-777777777771',
         ownerId: CREATOR_ID,
+        channelId: await seedPrimaryChannel(ctx.repositories, CREATOR_ID),
         title: 'Creator 1 Public Video',
         visibility: 'public',
         status: 'READY',
@@ -37,6 +39,7 @@ describe('GET /v1/feed/subscriptions', () => {
     await ctx.repositories.videos.create({
       id: '77777777-7777-7777-8777-777777777772',
       ownerId: CREATOR_ID,
+      channelId: await seedPrimaryChannel(ctx.repositories, CREATOR_ID),
       title: 'Creator 1 Private Video',
       visibility: 'private',
       status: 'READY',
@@ -46,6 +49,7 @@ describe('GET /v1/feed/subscriptions', () => {
       await ctx.repositories.videos.create({
         id: '77777777-7777-7777-8777-777777777773',
         ownerId: OTHER_CREATOR_ID,
+        channelId: await seedPrimaryChannel(ctx.repositories, OTHER_CREATOR_ID),
         title: 'Creator 2 Public Video',
         visibility: 'public',
         status: 'READY',
@@ -55,6 +59,7 @@ describe('GET /v1/feed/subscriptions', () => {
     await ctx.repositories.videos.create({
       id: '77777777-7777-7777-8777-777777777774',
       ownerId: OTHER_CREATOR_ID,
+      channelId: await seedPrimaryChannel(ctx.repositories, OTHER_CREATOR_ID),
       title: 'Creator 2 Processing Video',
       visibility: 'public',
       status: 'PROCESSING',

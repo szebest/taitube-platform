@@ -1,3 +1,4 @@
+import { type Result, assertNever, fromPromise, map, tryCatch } from '@kit/result';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -10,7 +11,6 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, assertNever, fromPromise, map, tryCatch } from '@vp/result';
 import {
   type ConnectionOptions,
   type Job,

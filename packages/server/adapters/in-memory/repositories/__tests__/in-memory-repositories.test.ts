@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '../in-memory-repositories';
 
 const OWNER = '00000000-0000-7000-8000-0000000000a1';
@@ -11,6 +11,7 @@ async function seeded(): Promise<InMemoryRepositories> {
     await repositories.videos.create({
       id: VIDEO,
       ownerId: OWNER,
+      channelId: 'owner-channel',
       title: 'Wiring fixture',
       visibility: 'public',
       status: 'UPLOADED',
@@ -50,5 +51,38 @@ describe('InMemoryRepositories', () => {
     expect(expectOk(await repositories.videos.findById(VIDEO))).toBeNull();
     expect(expectOk(await repositories.uploads.findById(UPLOAD))).toBeNull();
     expect(expectOk(await repositories.events.findByVideoId(VIDEO))).toEqual([]);
+  });
+
+  it('tells an invite expired by the clock it was given, not the real one', async () => {
+    const start = Date.parse('2026-11-01T00:00:00Z');
+    let now = start;
+    const repositories = new InMemoryRepositories({ now: () => now });
+    const id = '00000000-0000-7000-8000-0000000000b1';
+    expectOk(
+      await repositories.channelInvites.create(
+        {
+          id,
+          channelId: '00000000-0000-7000-8000-0000000000b2',
+          inviteeUserId: '00000000-0000-7000-8000-0000000000b3',
+          role: 'editor',
+          invitedBy: OWNER,
+          expiresAt: new Date(start + 3_600_000),
+        },
+        {
+          channelId: '00000000-0000-7000-8000-0000000000b2',
+          actorUserId: OWNER,
+          action: 'invite.created',
+          targetType: 'invite',
+          targetId: id,
+          meta: { inviteeUserId: '00000000-0000-7000-8000-0000000000b3', role: 'editor' },
+        }
+      )
+    );
+
+    expect(expectOk(await repositories.channelInvites.findById(id))?.status).toBe('pending');
+
+    now = start + 7_200_000;
+
+    expect(expectOk(await repositories.channelInvites.findById(id))?.status).toBe('expired');
   });
 });

@@ -1,9 +1,10 @@
-import { useT } from '@vp/intl-react';
+import { Button, Textarea, useToast } from '@kit/ui';
 import { useFailureToast } from '@vp/queries';
-import { Button, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import type { InboxComment } from '#app/features/comments/api/inbox-queries';
 import { useReplyToComment } from '#app/features/comments/hooks/use-reply-to-comment';
+import { useT } from '#app/lib/messages';
+import { SavedRepliesPicker } from '../saved-replies-picker/saved-replies-picker';
 
 export interface InboxReplyProps {
   comment: InboxComment;
@@ -16,7 +17,7 @@ export function InboxReply({ comment, onDone }: InboxReplyProps) {
   const showToast = useToast();
   const showFailure = useFailureToast();
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const reply = useReplyToComment(comment);
 
   const content = draft.trim();
@@ -44,6 +45,9 @@ export function InboxReply({ comment, onDone }: InboxReplyProps) {
         onChange={(event) => setDraft(event.target.value)}
       />
       <span className="flex justify-end gap-inline">
+        <SavedRepliesPicker
+          onPick={(body) => setDraft(draft.trim() === '' ? body : `${draft.trimEnd()} ${body}`)}
+        />
         <Button variant="ghost" size="sm" onClick={onDone}>
           {cancel}
         </Button>

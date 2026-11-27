@@ -1,3 +1,4 @@
+import { type Result, isErr, map, ok } from '@kit/result';
 import type { ReasonedVideo } from '@vp/api-contracts';
 import type {
   RecommendationFeedbackRepositoryPort,
@@ -9,7 +10,7 @@ import { RELATED_LIMIT, relatedReasonOf, withoutHidden } from '@vp/domain';
 import { decideVideoRead } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map, ok } from '@vp/result';
+import type { ExperimentOverlay } from './experiment-overlay';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import type { ViewerProgress } from './viewer-progress';
 
@@ -19,6 +20,7 @@ export interface RelatedServiceDeps {
   feedback: RecommendationFeedbackRepositoryPort;
   videoService: VideoService;
   viewerProgress: ViewerProgress;
+  experiments: ExperimentOverlay;
 }
 
 export class RelatedService {
@@ -26,7 +28,8 @@ export class RelatedService {
 
   async get(
     viewer: UserContext | null,
-    videoId: string
+    videoId: string,
+    sessionKey: string | null = null
   ): Promise<Result<ReasonedVideo[], ReadVideoServiceFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
@@ -40,7 +43,8 @@ export class RelatedService {
     const shown = await this.withoutHidden(viewer, items.value);
     if (isErr(shown)) return shown;
 
-    return ok(await this.deps.viewerProgress.attach(viewer, shown.value));
+    const marked = await this.deps.viewerProgress.attach(viewer, shown.value);
+    return ok(await this.deps.experiments.apply(marked, sessionKey));
   }
 
   /** The reasoned videos around `video`, without the caller's progress on them. */
@@ -50,7 +54,7 @@ export class RelatedService {
   ): Promise<Result<ReasonedVideo[], DatabaseUnavailable>> {
     const found = await this.deps.related.find({
       videoId: video.id,
-      ownerId: video.ownerId,
+      channelId: video.channelId,
       categoryId: video.categoryId ?? null,
       tags: video.tags ?? [],
       excludeOwnerId: viewer?.id ?? null,

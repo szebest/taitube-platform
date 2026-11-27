@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { SearchHit, SearchQuery, SearchRepositoryPort } from '@vp/core/repositories';
 import { searchKinds } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_MUSIC_ID,
   HOUR_MS,
@@ -69,27 +69,30 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
       search = repositories.search;
       await seedOwners(repositories);
       await seedCategories(repositories);
-      expectOk(
-        await repositories.channels.create({
+      const { channels } = repositories;
+      for (const input of [
+        {
           id: S.channel,
           userId: OWNER_ID,
           handle: 'jsmastery',
           displayName: 'JavaScript Mastery',
           bio: 'Weekly javascript lessons',
           subscriberCount: 5000,
-        })
-      );
-      expectOk(
-        await repositories.channels.create({
+        },
+        {
           id: S.otherChannel,
           userId: OTHER_OWNER_ID,
           handle: 'cooking',
           displayName: 'Slow Cooking',
-        })
-      );
+        },
+      ]) {
+        expectOk(await channels.createOwned(input, 5));
+        expectOk(await channels.promote(input.userId, input.id));
+      }
       const hourAgo = new Date(NOW - HOUR_MS);
       await subject.seedVideo(
         publicVideo({
+          channelId: S.channel,
           id: S.course,
           title: 'Learn JavaScript in one hour',
           tags: ['frontend'],
@@ -100,27 +103,63 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
         hourAgo
       );
       await subject.seedVideo(
-        publicVideo({ id: S.tricks, title: 'Array tricks', tags: ['javascript'], viewsCount: 900 }),
+        publicVideo({
+          channelId: S.channel,
+          id: S.tricks,
+          title: 'Array tricks',
+          tags: ['javascript'],
+          viewsCount: 900,
+        }),
         hourAgo
       );
       await subject.seedVideo(
-        publicVideo({ id: S.aside, title: 'Weekend vlog', description: 'some javascript' }),
+        publicVideo({
+          channelId: S.channel,
+          id: S.aside,
+          title: 'Weekend vlog',
+          description: 'some javascript',
+        }),
         hourAgo
       );
       await subject.seedVideo(
-        publicVideo({ id: S.secret, title: 'Private javascript', visibility: 'private' })
+        publicVideo({
+          channelId: S.channel,
+          id: S.secret,
+          title: 'Private javascript',
+          visibility: 'private',
+        })
       );
       await subject.seedVideo(
-        publicVideo({ id: S.unlisted, title: 'Unlisted javascript', visibility: 'unlisted' })
+        publicVideo({
+          channelId: S.channel,
+          id: S.unlisted,
+          title: 'Unlisted javascript',
+          visibility: 'unlisted',
+        })
       );
       await subject.seedVideo(
-        publicVideo({ id: S.encoding, title: 'Encoding javascript', status: 'PROCESSING' })
+        publicVideo({
+          channelId: S.channel,
+          id: S.encoding,
+          title: 'Encoding javascript',
+          status: 'PROCESSING',
+        })
       );
       await subject.seedVideo(
-        publicVideo({ id: S.takenDown, title: 'Taken down javascript', status: 'REJECTED' })
+        publicVideo({
+          channelId: S.channel,
+          id: S.takenDown,
+          title: 'Taken down javascript',
+          status: 'REJECTED',
+        })
       );
       await subject.seedVideo(
-        publicVideo({ id: S.deleted, title: 'Deleted javascript', deletedAt: new Date(NOW) })
+        publicVideo({
+          channelId: S.channel,
+          id: S.deleted,
+          title: 'Deleted javascript',
+          deletedAt: new Date(NOW),
+        })
       );
       const { playlists } = repositories;
       expectOk(

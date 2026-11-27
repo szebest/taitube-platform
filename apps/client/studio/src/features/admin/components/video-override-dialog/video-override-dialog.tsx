@@ -1,8 +1,7 @@
+import { fromPromise, isOk } from '@kit/result';
+import { AlertDialog, Button, Field, Textarea, useToast } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
-import { fromPromise, isOk } from '@vp/result';
-import { AlertDialog, Button, Field, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import type { AdminVideo } from '#app/features/admin/api/admin-videos';
 import {
@@ -10,6 +9,7 @@ import {
   useForcePrivate,
   useRejectVideo,
 } from '#app/features/admin/hooks/use-video-overrides';
+import { useT } from '#app/lib/messages';
 
 export type VideoOverride = 'force-private' | 'reject' | 'delete';
 
@@ -45,7 +45,7 @@ export interface VideoOverrideDialogProps {
  */
 export function VideoOverrideDialog({ action, video, onClose }: VideoOverrideDialogProps) {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const toast = useToast();
   const forcePrivate = useForcePrivate();
   const reject = useRejectVideo();

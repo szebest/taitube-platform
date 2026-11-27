@@ -1,14 +1,14 @@
+import { Button } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { canDeleteClip } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { clipQueryOptions, useApi } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { ClipDetails } from '#app/components/watch/clip-details';
 import { ClipDelete } from '#app/features/clips';
 import { WatchLayout, WatchStage } from '#app/features/watch';
+import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 

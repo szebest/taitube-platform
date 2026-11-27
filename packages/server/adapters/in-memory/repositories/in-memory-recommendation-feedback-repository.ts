@@ -1,3 +1,4 @@
+import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   ListRecommendationFeedbackOptions,
@@ -14,13 +15,12 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ok, unwrapOr } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { watchableVideo } from './watchable-video';
 
 interface FeedbackLookups {
   videosRepo: Pick<VideoRepository, 'findById'>;
-  channelsRepo: Pick<ChannelRepositoryPort, 'findById' | 'findByUserId'>;
+  channelsRepo: Pick<ChannelRepositoryPort, 'findById' | 'findPrimaryByUserId'>;
 }
 
 const keysetOf = ({ createdAt, id }: NewRecommendationFeedback) => ({ sort: createdAt, tie: id });

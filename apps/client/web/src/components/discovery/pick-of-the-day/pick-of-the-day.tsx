@@ -1,5 +1,6 @@
-import { cn, Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { cn, Skeleton, Slot } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
+import { useT } from '#app/lib/messages';
 import { PickOfTheDayContext, usePickOfTheDay } from './pick-of-the-day.context';
 import { pickOfTheDayStyles } from './pick-of-the-day.variants';
 import type { PickOfTheDayLayout } from './types';
@@ -61,7 +62,8 @@ export function PickOfTheDayKicker({
   ...props
 }: PickOfTheDayPartProps) {
   const { kickerId } = usePickOfTheDay('Kicker');
-  const { pickOfTheDay } = useUiCopy();
+  const { tOr } = useT();
+  const pickOfTheDay = tOr('ui.pickOfTheDay', {}, '');
   const Element = asChild ? Slot.Root : 'p';
 
   return (

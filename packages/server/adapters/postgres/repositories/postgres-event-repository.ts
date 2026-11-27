@@ -1,3 +1,4 @@
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   EventRepository,
   type NewVideoEventInput,
@@ -5,7 +6,6 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, desc, eq, gt } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

@@ -138,7 +138,7 @@ flowchart LR
 | Component | Runtime | Responsibility | Scales |
 |---|---|---|---|
 | `apps/server/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
-| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
+| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `screen`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
 | PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
 | Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
@@ -206,6 +206,7 @@ sequenceDiagram
     participant P as probe worker
     participant T as transcode-{1080p,720p,480p} workers
     participant TH as thumbnail worker
+    participant SC as screen worker
     participant PK as package worker
     participant N as notify worker
     participant PG as Postgres
@@ -218,7 +219,7 @@ sequenceDiagram
     P->>P: validate (duration ≤ 60min, codec allowlist, sane dims) → else throw UnrecoverableError(code)
     P->>P: compute ladder: renditions with height ≤ source height (min 1)
     P->>PG: UPDATE videos SET duration_ms, width, height, format, fps, ladder · status=PROCESSING · INSERT renditions(PENDING)
-    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail] })
+    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail, screen] })
     P->>PS: PUBLISH video:{id} {status:PROCESSING, ladder}
 
     par each rendition, independent queue & worker pool
@@ -230,11 +231,14 @@ sequenceDiagram
         T->>PG: renditions.status=DONE, segment_count, bytes, ms  · steps DONE (fencing token check)
     and thumbnails
         Q->>TH: thumbnail job → poster.jpg, sprite.jpg, sprite.vtt → S3 public
+    and screening
+        Q->>SC: screen job → fingerprints, frame scores, text rules → PG video_screenings (PASS | HOLD)
     end
 
     Note over Q,PK: parent "package" leaves waiting-children only when ALL children completed
     Q->>PK: package job
     PK->>S3: HEAD every rendition index.m3u8 + sample segments · read children results via getChildrenValues()
+    PK->>PG: screen result HOLD (or none) → CAS videos PROCESSING→HELD, no master written
     PK->>S3: PUT videos/{id}/hls/master.m3u8 (BANDWIDTH, RESOLUTION, CODECS, FRAME-RATE)
     PK->>PG: CAS videos PROCESSING→READY, master_playlist_key, ready_at  · INSERT video_events(video.ready)
     PK->>Q: add("notify", {videoId, event:"video.ready"})
@@ -243,7 +247,13 @@ sequenceDiagram
 
 Failure path (any child): BullMQ retries with backoff; when attempts are exhausted or an `UnrecoverableError` is thrown, the `failed` handler moves the job to `dlq`, marks the rendition `FAILED`, and — because `failParentOnFailure: true` is set on children — the parent `package` job fails too, which flips the video to `FAILED` with the first child error as `errorCode`. See §9.6.
 
+**Screening branch.** Unless `SCREENING_ENABLED` is off, probe adds a `screen` child to the flow, a sibling of the transcodes and the thumbnail: it reads the source only, so it overlaps the transcodes. The stage samples a 9x8 frame every 2 s and hashes it, fingerprints the audio with `fpcalc` when probe found an audio stream, looks the video up against every other stored video (§7 of ticket 112, `@vp/fingerprint`), scores a frame every 10 s (at most 120, plus the first, middle and last) with the pinned ONNX classifier, and runs the profanity, spam and blank-picture rules; `decideScreening` turns the findings into `PASS` or `HOLD` with ordered reasons, and the result is stored by video and source checksum, so a re-process of the same source reuses it. The child is `ignoreDependencyOnFailure`, and `package` fails closed: a `HOLD` result, or no result because the stage spent its retries, moves the video `PROCESSING → HELD` (reason `SCREEN_ERROR` for the second) before any master is written, so nothing plays. A video a moderator approved is not held again. A match with a video of the same owner and a partial match are flags for the moderation queue, never a hold.
+
+The queue is `GET /v1/admin/screening` (§6.1). A moderator approves (`HELD → PROCESSING` and a fresh `package` job, `ids.packageApproved`, whose `screened` gate finds the approval and writes the master), rejects with a reason (`HELD → REJECTED`, `error_code = SCREENING_REJECTED`) or dismisses a flag; every move is a CAS on `videos.status` in the repository, so a second moderator finds the video moved and gets `409`. The owner reads a plain reason and may appeal a screening rejection (`REJECTED → HELD`), and a moderator other than the one who rejected decides the appeal. Text is screened where it changes: a creator edit of the title, description or tags runs the metadata rules and raises a flag on a `READY` or `HELD` video, and a finished transcript is read for profanity by the captions stage once its track commits, raising a flag tagged `source: transcript` and never a hold; a video without cue rows is a no-op. Both leave the state of the video alone.
+
 **Captions branch.** When captions are on for the video (its `auto_captions` switch, else its channel's `auto_captions_default`, and `CAPTIONS_ENABLED`) and probe found an audio stream, probe creates the `pending` generated row in `video_captions` and puts one more flow in the outbox, committed with `PROBING → PROCESSING`: a `captions` job on the `captions` queue alone, or for a source over 300 s a `captions` merge parent over one window child per 180 s (`captionsFlow` in `@vp/job-contracts`). It is never a child of `package`, so `READY` never waits for it and a captions failure never touches `videos.status` or `videos.version`. A window extracts its slice of the raw source with ffmpeg (`-ss` before `-i`, mono 16 kHz PCM) plus a 5 s lead-in and tail, runs `whisper-cli` under `nice -n 19` with Silero VAD, keeps the cues that start in its own span and writes them to the raw bucket; the merge joins them in order, writes `captions/{lang}/captions.vtt`, the cue rows and `ready` in one compare-and-set on the track, and publishes `captions.ready` to the owner (`captions.failed` when a run spends its last attempt). A source without audio gets a `disabled` row and no job.
+
+**Replacing, trimming and blurring (ticket 116).** A `READY` video can take a new file (`POST /v1/videos/:id/replacement`, a presigned PUT into `raw/{id}/g{n}/source.{ext}`) or an edit list (`PUT /v1/videos/:id/edits`: a trim and up to 20 blurred rectangles or ellipses, on the timeline of the edit's *base* generation). Either opens a row in `video_generations` for a new generation number past every one the video has had, at most one uploading or rendering per video (a partial unique index), and puts an `apply-edits` job in the outbox in the same transaction. The job rides the `transcode-1080p` queue by name: it claims the row with a fresh UUIDv7 `lock_token`, fetches its source (the replacement's upload, or the base generation's top rendition from the public bucket, since the raw source has expired by the time an edit is made), probes it, encodes every rung of the ladder once through one filter graph (`@vp/ffmpeg`'s `editFilterGraph`: each blur a cropped `boxblur` copy of its region laid back with `overlay=...:enable='between(t,start,end)'`, an ellipse masked by `geq`, then `trim`/`atrim` and the rung's scale), writes the renditions under `hls/g{n}/` and the master last, and swaps. The video stays `READY` and plays its current master the whole time. **The swap** is one transaction (`commitGenerationSwap`): it locks the generation row by its `lock_token` (a retry or a zombie finds it swapped or claimed by another token and is fenced out) and the video row while it is still `READY` on the generation the render started over (otherwise the render is superseded and the generation fails); it records on the outgoing generation's row the playback, chapters, corrections and retention steps it played with, points `videos` at the new master, duration, dimensions and ladder, bumps `version`, gives the incoming generation the chapters and corrections an edit's trim moved (`shiftTimeline` over the base's recorded timeline), clears the retention steps, and appends `video.replaced` and a `video.generation.updated` user event. A replacement whose duration moves more than 2 s is flagged `needs_review`. Reverting an edit (`POST /v1/videos/:id/edits/revert`, under the caller's `version`) is the same swap back to the base, restoring its timeline and curve. The URL, views, likes, comments and subscribers never move. A render that spends its attempts fails its generation in the failure handler and the owner hears `video.generation.updated { status: failed }`; the video is untouched. `purge-generations` deletes a retired generation's objects 24 h after it was swapped out, or 14 days after the last edit for an edit's base; purging a base bakes the edit list into what plays and further edits render from it.
 
 ### 3.3 Playback
 
@@ -261,6 +271,8 @@ sequenceDiagram
     B->>CDN: GET 720p/index.m3u8, seg_00001.ts … (cache: immutable, 1y)
 ```
 
+`GET /v1/videos/:id` is also the access gate (§11): a share link token in `s`, the video's unlock cookie, and the tab's `x-viewer-session` key, which picks a running title or thumbnail test's variant. The answer then carries `shareLinkId` and `experiment`, which the player echoes on its beacon, and is `private, no-cache`. The video event stream (`GET /v1/videos/:id/events`) and a clip's read run the same gate. A gate on the page, the player and the API, not encryption: the segments sit in the public bucket under keys derived from the video id (`masterPlaylistKey`), so whoever holds the id can fetch them.
+
 The API is not in the playback path (P1). Playlists are cached briefly (VOD playlists are immutable once READY, but a 60 s TTL keeps re-processing cheap); segments are immutable and cached for a year.
 
 Captions are side-loaded, never a `SUBTITLES` group in the master: `GET /v1/videos/:id/captions` lists the ready tracks with the CDN URL of each `captions.vtt` (`Cache-Control: public, max-age=60`, since a creator can edit it), and the player adds them as text tracks at runtime. No captions write touches `hls/` or rewrites the master.
@@ -273,28 +285,9 @@ Workers publish to Redis channel `video:{videoId}`; each API instance holds one 
 
 ### 3.5 State machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> UPLOADING: POST /uploads
-    UPLOADING --> UPLOADED: complete + HEAD ok
-    UPLOADING --> REJECTED: HEAD mismatch / over cap / bad type
-    UPLOADING --> ABANDONED: reconciler, >24h
-    UPLOADED --> PROBING: probe job starts
-    PROBING --> PROCESSING: probe ok, flow created
-    PROBING --> FAILED: UnrecoverableError
-    PROCESSING --> READY: package ok
-    PROCESSING --> FAILED: child exhausted retries / unrecoverable
-    FAILED --> PROBING: admin re-process
-    READY --> DELETED: soft delete + purge job
-    [*] --> LIVE: a stream key publishes (ADR-29)
-    LIVE --> READY: broadcast ends, archive closed
-    LIVE --> FAILED: ended with no segment recorded
-    REJECTED --> [*]
-    ABANDONED --> [*]
-    DELETED --> [*]
-```
+The lifecycle of `videos.status` is data: `VIDEO_LIFECYCLE` in `packages/universal/domain-rules/src/videos/video-lifecycle.machine.ts`, a `defineMachine` table of every edge the pipeline takes, keyed by event, with the `video_events.type` each one writes. Its four screening edges (`hold`, `approve`, `reject`, `appeal`) are `SCREENING_TRANSITIONS`, spread in by name. `UPLOADING` and `LIVE` are the initial states, `DELETED` is final, and `REJECTED` is not, because a creator can appeal a screening rejection. The reprocess and delete eligibility lists (`REPROCESSABLE_STATUSES`, `DELETABLE_STATUSES`) are read off the table. The edge table and the diagram are generated in [docs/state-machines.md](state-machines.md#video-lifecycle), and `tests/architecture/video-transitions-are-edges.test.ts` fails when a production `transition` call writes a pair that is not an edge.
 
-Transitions are enforced in SQL with compare-and-set (`UPDATE … WHERE id = $1 AND status = $expected`), and every transition writes a `video_events` row in the same transaction.
+Transitions are enforced in SQL with compare-and-set (`UPDATE … WHERE id = $1 AND status = $expected`), and every transition writes a `video_events` row in the same transaction. The table says which edge is legal; the compare-and-set persists it.
 
 ---
 
@@ -522,7 +515,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay polls `SKIP LOCKED` and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; records older than 7 days pruned. |
+| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay claims rows with `SKIP LOCKED` in the transaction that leases them, and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; a row moves `PENDING -> PUBLISHED`, or `PENDING -> DEAD` after `OUTBOX_MAX_ATTEMPTS` failed publishes on a doubling backoff (`OUTBOX_ROW`); published records older than 7 days pruned, dead ones kept for an operator. |
 | 2 (MVP) | Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps | Superseded / Fallback | Reconciler remains as belt-and-braces fallback (`reconciler_repairs_total` stays 0 under normal outbox operation). |
 | 3 | pg-boss (queue in Postgres) | Rejected | Solves it by construction, but loses BullMQ (ADR-03). |
 
@@ -555,7 +548,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
   - Driver/connection primitives (`DatabaseClient`) are segregated from domain entities (`Repositories`: `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
   - Standard object storage (`StorageClient`) is segregated from multipart chunk lifecycle (`MultipartStorage`).
 - **Concrete SDK Isolation (`adapters/`)**:
-  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`).
+  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `onnxruntime-node`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`).
   - Domain services, controllers, and worker stages depend purely on injected port interfaces.
 - **Single Responsibility & File Length Discipline**:
   - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `packages/server/adapters/postgres/repositories/postgres-video-repository.ts`).
@@ -601,10 +594,10 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
-forms run on TanStack Form. Styling is Tailwind CSS on the `@vp/ui` design system (ticket 55).
+forms run on TanStack Form. Styling is Tailwind CSS on the `@kit/ui` design system (ticket 55).
 Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
-same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
-(`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
+same `@kit/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
+(`@kit/security-headers`) and themed document (`@kit/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
 through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`, which is also the origin web's canonical, OpenGraph and sitemap URLs are absolute on (ticket 63).
 
 ---
@@ -644,6 +637,15 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 `universal` only when something client-side actually consumes it — `storage`, `job-contracts` and `events`
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
+*Scope* answers **could a second app use this package unchanged**, and it is the package's location too: a package
+under `packages/platform/<tier>/<name>` is a **platform package**, scope `@kit/*`; any other is an app package,
+scope `@vp/*`. A platform package depends, peer-depends and dev-depends only on platform packages, and **never
+imports, depends on or names a `@vp/*` package**, in code, manifest or docs: where it needs a value the app owns, it
+takes a required typed parameter, port or prop, or a `@kit/di` token the app provides at its composition root. A
+package that is half of each is split: the generic half moves to `@kit/<name>`, the app half keeps its name and
+depends on it. The extra rules (explicit `exports`, an API snapshot, versions, type-level specs, contract suites,
+the extractability check) are in [docs/standards/platform-packages.md](standards/platform-packages.md).
+
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
 policy, T3 domain capability, T4 integration, T5 app modules (code more than one application shares, such as
 the query factories over `@vp/api-client`), T6 applications, T7 reference tools that drive one. Dependencies
@@ -651,9 +653,9 @@ point **strictly down** — a T2 package may not depend on another T2. Sibling i
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
 test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only the build tooling, none of
-which ships code, is exempt, and only on a dev edge: `@vp/tsconfig`, `@vp/testing`, `@vp/vite-preset` (the
+which ships code, is exempt, and only on a dev edge: `@kit/tsconfig`, `@kit/testing`, `@vp/testing-fixtures`, `@kit/vite-preset` (the
 Vite config of the client apps) and `@vp/web-testing` (the spec helpers of the browser packages and apps).
-`@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@vp/ui` (T2) runs its own specs
+`@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@kit/ui` (T2) runs its own specs
 on its jsdom stubs and axe helper, and the alternative to the exemption was a copy of both.
 
 **Consequences:**
@@ -662,11 +664,13 @@ on its jsdom stubs and axe helper, and the alternative to the exemption was a co
 - `pnpm boundaries` validates tier compatibility, layer direction, tier-vs-directory agreement and
   `CLAUDE.md` symlink drift. `pnpm build` and `pnpm typecheck` run it first, so a bad *declaration* — the one
   thing TypeScript cannot catch — fails the build.
-- `@vp/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
+- `@kit/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
   builtin is a type error.
 - `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
-- Package **names** are unchanged by the move, so no source import specifier changed; only `package.json`
-  paths, tsconfig `extends`, turbo globs, Docker contexts and CI paths did.
+- The tier move changed no name. Moving a package into `packages/platform/` renamed it `@kit/*`, which the
+  specifier codemod rewrote at export level, so a split package's importers took one import per half.
+- `pnpm boundaries` and `platform-never-names-app.test.ts` fail on a platform edge to an app package and on the
+  substring `@vp/` anywhere under `packages/platform/`, with no allowlist.
 - Changing a package's tier means moving it, which is a deliberate act rather than a one-word edit.
 
 ---
@@ -679,7 +683,7 @@ fourth was a non-breaking change no caller handled. It also threw `VIDEO_NOT_FOU
 for a CASL refusal, so a service three layers below HTTP had decided that a private video looks like a missing
 one and no second consumer could choose differently.
 
-**Decision.** Domain code returns `Result<T, E>` from `@vp/result`; only the edge unwraps it.
+**Decision.** Domain code returns `Result<T, E>` from `@kit/result`; only the edge unwraps it.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) takes the input and nothing else and returns
   wire-safe `InputFailure`s; `@vp/domain-rules` (T3) takes input plus an entity plus policy. The split is what
@@ -717,13 +721,13 @@ one and no second consumer could choose differently.
 **Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
 that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
 `no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
-No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@vp/result`, an adapter and
+No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@kit/result`, an adapter and
 an entrypoint's exit-code handler, and `no-discarded-result.test.ts` fails on a `Result` left unread unless it
 goes through `ignore(result, reason)`. Wire format is unchanged: a client cannot tell that the server
 stopped throwing, apart from four additive codes.
 
-`@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
-moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@vp/config` to T4. A pipeline
+`@kit/pagination` composes `@kit/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
+moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@kit/config` to T4. A pipeline
 stage reports a media verdict as `MediaFailure`, whose discriminant is the `PipelineErrorCode` the process
 reported and which `RETRY_CLASS` already classifies.
 
@@ -733,7 +737,7 @@ Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Typed tokens and a hand-written `Container` (`@vp/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
+| 1 | Typed tokens (`Token<T>` in `@kit/di`, universal) and a hand-written `Container` over them (`@kit/composition`, server) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
 | 2 | A decorator container resolving by type (`@Injectable`, NestJS-style) | Rejected | Needs `emitDecoratorMetadata` plus a `reflect-metadata` polyfill in the eager path of both deployables; TC39 decorators carry no parameter types, so it pins the legacy flag indefinitely, and transpiler-level behaviour is what dual-runtime parity (Rule 2) exists to keep out. It also trades a compile error for a runtime one |
 | 3 | Keep constructors with optional collaborators and in-service fallbacks | Rejected | Delete a line from the composition root and a different graph boots silently: that is a service locator wearing a constructor |
 
@@ -747,11 +751,19 @@ anyone who sent it. The API installed no `SIGTERM` handler, and the worker infer
 
 **Decision.**
 
-- **One mechanism.** `Token<T>`, `Container.provide / get / override / start / dispose`. A factory is
+- **One mechanism.** `Token<T>` from `@kit/di` (declared in the universal tier so a browser package can declare one),
+  `Container.provide / get / override / start / dispose`. A factory is
   synchronous; I/O a value needs before it is usable runs in its `start` hook, in construction order.
   `dispose()` runs in reverse construction order, aggregates failures, is idempotent, and releases only what
   a factory built, never an override. `shutdownOnce` is the drain both processes share.
-- **Configuration is a value.** `loadEnv()` (`@vp/config`) parses `process.env` once at `main.ts`;
+- **A platform package asks, the app answers.** A value the app hands a platform package is a required, typed
+  parameter, and a `@kit/di` token only where a container resolves it (the error code registry, the catalogues,
+  `Clock`, `Random`, `EnvSource`, `Fetch`). A token with no sensible default has none, so a missing provision is a
+  startup error. The app registers once per deployable, in its composition module; no platform package reads
+  `process.env`, a cookie name, a locale list or the clock on its own
+  ([platform-packages.md](standards/platform-packages.md)).
+- **Configuration is a value.** `loadEnv(schema, env)` (`@kit/config`, the schema is the app's) parses `process.env`
+  once at `main.ts`;
   `toAppConfig()` (`@vp/env-schema`, T3, so `@vp/adapters` at T4 can take it) shapes it into `AppConfig`.
   `CdnBase` is branded and normalised once. Nothing below `main.ts` reads the environment.
 - **`AdapterKind` is the single environment switch.** `config.kind` is derived from `NODE_ENV` in
@@ -784,7 +796,7 @@ collaborators a case touches and build the app through `buildApp({ config, adapt
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@vp/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 1 | Three packages on the platform's own `Intl`: `@kit/intl` (universal), the catalogues (`@vp/shared-messages` for the words both apps render, each client app's own under `src/lib/messages/`), `@kit/intl-react` (client) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
 | 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
 | 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
 | 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
@@ -805,32 +817,32 @@ would grow its own helper, and no home for the copy that renders a failure code 
   `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
-  `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
+  `FormatContext`; nothing in `@kit/intl` or a catalogue reads `navigator`, the clock, `process` or a
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
-  handed to `IntlProvider`; the zone and the clock are read in `@vp/intl-react` alone.
+  handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
   option type is derived from them; `withOptions` declines an unnamed key instead of letting `Intl` ignore it.
 - **`Intl` objects are memoised by an `IntlCache` value**, per `(locale, kind, options)`, bounded per kind, with
   failures cached too. The cache is created by the owner of its lifetime: `IntlProvider` makes one per locale
   in the browser. This departs from the ticket 87 note, which asked for the cache in the container:
-  `@vp/composition` is server tier and no server code formats anything yet, so a container registration would
+  `@kit/composition` is server tier and no server code formats anything yet, so a container registration would
   have no consumer. When an API call site appears, `services.module.ts` provides one `createIntlCache()` value
   like any other collaborator. It is never a module singleton either way (`no-module-state.test.ts`).
 - **Messages are typed by their template.** `dt('{count:plural}', { plural: { count: { one, other } } })`; the
   argument names and types are read off `{name:type}` tokens by template literal types, and a runtime regex
-  over the same flat grammar substitutes them through `@vp/intl`. Plural and ordinal branches select through
+  over the same flat grammar substitutes them through `@kit/intl`. Plural and ordinal branches select through
   `Intl.PluralRules`, so ordinal suffixes are catalogue copy, not formatter data. The grammar has no nesting
   and no escapes; anything richer takes a real parser.
-- **The API returns codes, the client chooses words.** `@vp/messages` is unreachable from a server package,
-  and `ERROR_COPY` is total over `ErrorCode`.
+- **The API returns codes, the client chooses words.** no server package imports a catalogue (the API reads only
+  `@vp/shared-messages/locales`, the locale list), and `ERROR_COPY` is total over `ErrorCode`.
 
 **Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
-`intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
+`intl-purity`, `no-adhoc-formatting`, `translation-layers` and `error-copy-coverage` (ARCHITECTURE.md
 §6). `javascript-time-ago` left `apps/client/web`. Ticket 86 added negotiation, Polish and RTL, and with them
-`catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
-`packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
-`LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
-`@vp/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+`catalogue-parity` and `single-locale-source`. **Adding a language** is a `<tag>/` directory beside `en/` in `@vp/shared-messages` and in each app's
+`src/lib/messages/`, holding every `en` key, plus one entry in `LOCALES` (its name in itself, its `direction`, its
+OpenGraph name) and one loader per app; Polish needed no other change to
+`@kit/intl` or the message source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
 
@@ -841,7 +853,7 @@ costs a translation in the same change, which the parity test enforces.
 | Rank | Option | Status | Reason |
 |---|---|---|---|
 | 1 | SSE for every server-to-client stream, one typed `GET /v1/me/events` per signed-in user | **Accepted** | The events are one way; `SseHub`, the Redis fan-out and `Last-Event-ID` replay already exist (ADR-10, §10); plain HTTP through the tunnel and proxies, multiplexed on HTTP/2 |
-| 2 | WebSocket | Only where the client also sends often | A second protocol stack with its own auth, heartbeats and replay; it earns that for live chat (76) and watch-together (78), not for a notification badge |
+| 2 | WebSocket | Only where the client also sends often | A second protocol stack with its own auth, heartbeats and replay; it earns that for live chat (76) and watch parties (140), not for a notification badge |
 | 3 | Polling | Rejected | Late and wasteful, and a gap between polls loses what a replay would have carried |
 | 4 | One stream per feature | Rejected | Every feature would pay for its own connection, auth and replay; a new event type is a member of one union instead |
 
@@ -854,7 +866,8 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
   its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
   `preferences.updated`, the sections a save named and the version it made, `comment.created`, the comment and
-  its video, sent to the video's owner, `notification.created`, a notification as the list returns it with the
+  its video, sent to the video's owner, `comment.held`, the ids of a comment the gate held, sent to the owner and to
+  every member who may moderate (`comment.moderate`) so an open queue and the nav badge update live, `notification.created`, a notification as the list returns it with the
   unread count it made, and `notification.read`, the ids (or `all`) marked read with the count that is left. A new
   event type is a member there,
   a producer and a client handler, nothing else.
@@ -863,7 +876,8 @@ the video envelope of every owned video, replayed from `video_events`, with no t
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
   rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
   `UserPreferencesRepository.save` for `preferences.updated`, `CommentRepository.create` for `comment.created`
-  (not when the owner wrote the comment), `NotificationRepository.record` and `markRead` for the two notification
+  (public comments only, and not when the owner wrote it) and for `comment.held` (to the moderators the service
+  names, in the same transaction; a silent action later emits nothing), `NotificationRepository.record` and `markRead` for the two notification
   events.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
@@ -882,7 +896,7 @@ an id sequence. A browser shares one connection across its tabs and feeds the qu
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| 1 | Token sets and themes as typed TypeScript values checked by Zod schemas in `@vp/design-tokens` (universal, T2); CSS, Tailwind and `tokens.json` generated from them | **Accepted** | One source per value; a missing key fails the build, a runtime theme fails a `Result`; the server render, both apps and the workbench read the same object |
+| 1 | Token sets and themes as typed TypeScript values checked by Zod schemas in `@kit/design-tokens` (universal, T2); CSS, Tailwind and `tokens.json` generated from them | **Accepted** | One source per value; a missing key fails the build, a runtime theme fails a `Result`; the server render, both apps and the workbench read the same object |
 | 2 | Hand-written CSS per theme (today's `design-system.css`) | Rejected | Every dimension of the look is welded to the theme, nothing checks a theme is complete, and the server cannot read a value |
 | 3 | `tokens.json` as the source, compiled by Style Dictionary | Rejected | A build-time dependency and a second vocabulary; the option unions and the contrast gate would be generated rather than typed, and a runtime theme (`registerTheme`) would need the compiler in the browser |
 
@@ -905,12 +919,12 @@ check said whether a theme's text was readable on its grounds.
   switches.
 - **Prop unions are the schemas' keys.** `SizeOption`, `ControlSize`, `IconSize`, `RadiusOption`,
   `ElevationOption`, `TypeStyleOption`, `SpaceStep` are `const` arrays the schemas are keyed by; `ModeOption`
-  and `ContrastOption` come from `@vp/domain/settings`, which the account preference shares with the server.
+  and `ContrastOption` come from `@kit/appearance`, which the account preference shares with the server.
 - **Contrast is a gate, not a review.** Every theme and mode clears the required role pairs (`checkRoleContrast`:
   text 4.5:1, outlines and the focus ring 3:1, translucent grounds composited over `bg`), and a viewer's
   accent is derived in OKLCH to clear its floors on every theme of its mode family (`deriveAccent`).
 
-**Consequences.** Values live in `@vp/ui` as one module per set and one folder per theme, with one registry
+**Consequences.** Values live in `@kit/ui` as one module per set and one folder per theme, with one registry
 naming what ships. `docs/design/tokens.json` becomes generated from them, with a drift check in CI, and the
 CSS a switch needs is attribute-scoped, so changing a set or a theme is an attribute change with no reload.
 [docs/design/architecture.md](design/architecture.md) is the build; [ticket 95](tickets/95-design-system-2.md)
@@ -989,7 +1003,7 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   run in the editor and in `pnpm lint`; a file that breaks one is listed in `tests/react-compiler/baseline.json`
   with the rule, a reason and an issue link, the one list the lint config and the bailout report both read.
 - **The Oxc React Compiler builds every client app, package, spec and story.** `reactPlugins()` in
-  `@vp/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
+  `@kit/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
   `@vitejs/plugin-react` 6.2.1's peer range), `'babel'` (`babel-plugin-react-compiler` through
   `@rolldown/plugin-babel`) for a package the Rust port breaks, or `false` while an Oxc issue is open; every
   compiler package is an exact version and a bump passes the guard first. The guard: `pnpm react-compiler:report`
@@ -1045,6 +1059,29 @@ points `core.hooksPath`, which every worktree of a clone shares, at a dispatcher
 branch's `.vite-hooks/pre-commit` from the worktree top level, and the hook it replaced (kept as
 `pre-commit.previous`) on a branch without one; it unsets a `core.hooksPath` that `vp config` wrote.
 
+### ADR-31 — Watch parties: a server-authoritative room clock, room roles and party principals on one socket
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | One WebSocket per member per room; the room clock in Postgres behind a compare-and-set on `playback_version` and `roles_version`; fan-out through Redis pub/sub; room roles from a closed registry enforced by a room-scoped CASL ability; guests and Discord members as party principals | **Accepted** | One ordering for sync, chat and role changes; no room state lives in a pod, so a pod dying loses nothing |
+| 2 | 98's user stream for room traffic | Rejected | One way, per user, with up to a second of outbox relay latency, for members who send constantly |
+| 3 | A second socket for chat | Rejected | Two tickets and no shared ordering, so a "now playing" line and the state change could arrive out of order |
+| 4 | Fixed control modes (host only, everyone) instead of roles | Rejected | A room needs a moderator who cannot close it and a DJ who cannot kick; a mode cannot say that |
+
+**Context.** Ticket [140](tickets/140-watch-parties.md): people watch the same video in step, with chat and roles, joining with an account, as a Discord member or as an anonymous guest.
+
+**Decision.**
+
+- **Transport.** `GET /v1/watch-parties/:id/socket?ticket=&after=` (§10.7), the mechanics of live chat's (§10.6); the hub is the shared `pattern-hub.ts`.
+- **The clock.** Postgres holds the room state; a command carries the versions it saw and a stale one is refused. Redis holds only short-lived state: tickets, presence, party credentials, budgets, votes. Pod wall clocks are the time source, with a skew metric rather than a clock service.
+- **Capacity.** Counted over present sockets of every kind by one Redis script; the ceiling is `WATCH_PARTY_MAX_MEMBERS`.
+- **Roles.** A versioned registry of room permissions, eleven built-in roles and custom ones with positions; nobody grants what they lack or touches what sits at or above their position, and a guest is clamped to `GUEST_CEILING` after every role and row.
+- **Principals and the credential boundary.** A member key (`user:`, `discord:`, `guest:`) keys everything per person. A guest's or a Discord member's party credential is read only on routes whose contract says `partyGuest: true` (§11).
+- **The sweep lives in the API.** Idle close, owner hand-over, the room gauges and the purge run on a `Poller` in every API pod, not in the worker's housekeeping stage (§9.8): the hand-over announces `owner` and `closed` frames defined in `@vp/api-contracts`, which the worker does not depend on, and the presence it reads belongs to the API. Each write is a compare-and-set, so running on every pod is safe.
+- **Passwords** are scrypt through `node:crypto` behind `PasswordHasherPort`, not argon2.
+
+**Consequences.** The API pods hold the sockets, so HPA scale-down closes them and clients reconnect with a fresh ticket. Four limits are recorded and open in §10.7: the transport-wide `maxPayload`, buffering that counts only its own pod's members, a `hello` roster without other pods' ready, sync and away flags, and a seat upgrade that applies the platform role at the next ticket.
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1059,13 +1096,21 @@ erDiagram
     videos ||--o{ video_events : emits
     videos ||--o{ video_reactions : receives
     users ||--o{ video_reactions : reacts
-    videos ||--o{ video_comments : receives
-    users ||--o{ video_comments : writes
-    video_comments ||--o{ video_comments : "replies to"
-    video_comments ||--o{ comment_reports : "is reported in"
+    videos ||--o{ comments : "receives (target_type video)"
+    channel_posts ||--o{ comments : "receives (target_type post)"
+    video_threads ||--o{ comments : "receives (target_type thread)"
+    users ||--o{ comments : writes
+    comments ||--o{ comments : "replies to"
+    comments ||--o{ comment_reports : "is reported in"
+    channels ||--o{ channel_posts : publishes
+    channel_posts ||--o{ post_reactions : "is liked in"
+    channel_posts ||--o{ post_poll_votes : "is voted in"
+    channel_posts ||--o{ post_stats_daily : "is counted in"
+    videos ||--o{ video_threads : "is discussed in"
     users ||--o{ comment_reports : files
     videos ||--o{ video_views_daily : "is viewed on"
     videos ||--o{ video_views_hourly : "is viewed in"
+    videos ||--o{ video_views_device_daily : "is viewed on a device in"
     videos ||--o{ video_retention_milestones : "is retained at"
     users ||--o{ playlists : owns
     playlists ||--o{ playlist_items : holds
@@ -1085,7 +1130,31 @@ erDiagram
     channels ||--o{ channel_subscriptions : has
     channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
+    channels ||--o{ channel_handle_history : "retired handles"
+    channels ||--o{ channel_image_uploads : "avatar and banner uploads"
+    channels ||--o| channel_page_settings : "trailer and returning video"
+    channels ||--o{ channel_localizations : "per language"
     videos ||--o{ channel_featured_videos : "is pinned in"
+    channels ||--o{ channel_members : "has on its team"
+    users ||--o{ channel_members : "works on"
+    channels ||--o{ channel_invites : invites
+    channels ||--o{ channel_audit_log : "records"
+    channels ||--o{ data_exports : "exports"
+    users ||--o{ data_exports : "requests"
+    users ||--o{ api_tokens : "holds"
+    channels ||--o{ api_tokens : "acts on"
+    api_tokens ||--o{ api_token_usage : "counted per day"
+    api_tokens ||--o{ channel_audit_log : "named in"
+    channels ||--o| channel_comment_settings : "moderates comments by"
+    channels ||--o{ channel_user_restrictions : "restricts"
+    users ||--o{ channel_user_restrictions : "is restricted on"
+    channels ||--o{ channel_trusted_commenters : "trusts"
+    channels ||--o{ channel_saved_replies : "keeps"
+    channels ||--o{ comment_removals : "removes with a reason"
+    videos ||--o{ video_screenings : "is screened as"
+    video_screenings ||--o{ screening_appeals : "is appealed in"
+    videos ||--o{ video_frame_hashes : fingerprints
+    videos ||--o{ video_audio_fingerprints : fingerprints
     processing_steps ||--o{ dlq_entries : "may park in"
 
     users {
@@ -1096,20 +1165,54 @@ erDiagram
     channels {
         uuid id PK
         uuid user_id FK
+        boolean is_primary
         text handle UK
         text display_name
         text avatar_url
         text banner_url
         text bio
         jsonb links
+        int avatar_version
+        int banner_version
+        jsonb banner_crops
+        text country
+        text contact_email
+        jsonb banner_link
+        timestamptz handle_changed_at
         int subscriber_count
         timestamptz created_at
         timestamptz updated_at
+    }
+    channel_handle_history {
+        text handle PK
+        uuid channel_id FK
+        timestamptz retired_at
+    }
+    channel_image_uploads {
+        uuid id PK
+        uuid channel_id FK
+        uuid uploaded_by FK
+        text kind
+        text status
+        jsonb crops
+        int version
+    }
+    channel_page_settings {
+        uuid channel_id PK,FK
+        uuid trailer_video_id FK
+        uuid returning_video_id FK
+    }
+    channel_localizations {
+        uuid channel_id PK,FK
+        text locale PK
+        text description
+        uuid trailer_video_id FK
     }
     channel_subscriptions {
         uuid id PK
         uuid subscriber_id FK
         uuid channel_id FK
+        uuid source_video_id FK
         timestamptz created_at
     }
     subscription_events {
@@ -1123,6 +1226,139 @@ erDiagram
         uuid video_id PK,FK
         int position
         timestamptz created_at
+    }
+    channel_members {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        text role
+        uuid invited_by FK
+        timestamptz created_at
+    }
+    channel_invites {
+        uuid id PK
+        uuid channel_id FK
+        uuid invitee_user_id FK
+        text role
+        uuid invited_by FK
+        text status
+        timestamptz created_at
+        timestamptz expires_at
+    }
+    channel_comment_settings {
+        uuid channel_id PK,FK
+        text review_mode
+        text_array blocked_words
+        text_array link_allowlist
+        int slow_mode_seconds
+        bool subscribers_only
+        int min_account_age_days
+        jsonb disclosure
+    }
+    channel_user_restrictions {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        text kind
+        text reason
+        timestamptz expires_at
+        uuid created_by FK
+    }
+    channel_trusted_commenters {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        uuid created_by FK
+    }
+    channel_saved_replies {
+        uuid id PK
+        uuid channel_id FK
+        text title
+        text body
+        int position
+    }
+    comment_removals {
+        uuid id PK
+        uuid channel_id FK
+        uuid video_id FK
+        uuid author_id FK
+        text excerpt
+        text reason
+        text disclosure
+        uuid removed_by FK
+        timestamptz created_at
+    video_screenings {
+        uuid id PK
+        uuid video_id FK
+        text source_checksum
+        text outcome
+        double score
+        jsonb reasons
+        jsonb flags
+        text decision
+        uuid decided_by FK
+        timestamptz flags_cleared_at
+        timestamptz evidence_purged_at
+    }
+    screening_appeals {
+        uuid id PK
+        uuid video_id FK
+        uuid screening_id FK
+        uuid author_id FK
+        text message
+        uuid rejected_by FK
+        timestamptz resolved_at
+    }
+    video_frame_hashes {
+        uuid video_id FK
+        integer idx
+        bigint hash
+        integer b0
+    }
+    video_audio_fingerprints {
+        uuid video_id FK
+        integer idx
+        integer term
+    }
+    channel_audit_log {
+        uuid id PK
+        uuid channel_id FK
+        uuid actor_user_id FK
+        uuid actor_token_id FK
+        text action
+        text target_type
+        uuid target_id
+        jsonb meta
+        timestamptz created_at
+    }
+    data_exports {
+        uuid id PK
+        uuid channel_id FK
+        uuid requested_by FK
+        text kind
+        jsonb params
+        text format
+        text status
+        text object_key
+        integer row_count
+        text failure
+        timestamptz expires_at
+        timestamptz created_at
+    }
+    api_tokens {
+        uuid id PK
+        uuid user_id FK
+        uuid channel_id FK
+        text name
+        text prefix
+        text secret_hash
+        text_array scopes
+        timestamptz expires_at
+        timestamptz last_used_at
+        timestamptz revoked_at
+        timestamptz created_at
+    }
+    api_token_usage {
+        uuid token_id PK
+        date day PK
+        integer requests
     }
     videos {
         uuid id PK
@@ -1143,15 +1379,21 @@ erDiagram
         text_array tags
         text custom_thumbnail_key
     }
-    video_comments {
+    comments {
         uuid id PK
-        uuid video_id FK
+        text target_type
+        uuid target_id
+        uuid channel_id FK
         uuid author_id FK
         uuid parent_id FK
         text content
         bool is_pinned
         int like_count
         timestamptz hearted_at
+        text moderation_state
+        text moderation_disclosure
+        text held_reason
+        bool looks_like_question
         timestamptz deleted_at
     }
     comment_reports {
@@ -1169,6 +1411,7 @@ erDiagram
         text title
         text visibility
         bool is_system
+        text kind
         text custom_thumbnail_key
     }
     playlist_items {
@@ -1237,6 +1480,12 @@ erDiagram
     video_views_hourly {
         uuid video_id PK
         timestamptz view_hour PK
+        int views
+    }
+    video_views_device_daily {
+        uuid video_id PK
+        date view_date PK
+        text device PK
         int views
     }
     video_retention_milestones {
@@ -1323,23 +1572,34 @@ CREATE TABLE users (
 
 CREATE TABLE channels (
   id                uuid PRIMARY KEY,
-  user_id           uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  user_id           uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- 0044: an owner holds up to CHANNELS_MAX_OWNED
+  is_primary        boolean NOT NULL DEFAULT false,     -- the one GET /v1/me/account returns and an account acts as by default
   handle            text NOT NULL UNIQUE,
   display_name      text NOT NULL,
   avatar_url        text,
   banner_url        text,
-  bio               text,
-  links             jsonb NOT NULL DEFAULT '[]',        -- [{ label, url }], up to 5, https only: validateChannelLinks in @vp/validation
+  bio               text,                               -- the default description, up to 5000 characters of plain text
+  links             jsonb NOT NULL DEFAULT '[]',        -- [{ label, url }], up to 8, https only: validateChannelLinks in @vp/validation; the platform is read off the host, never stored
+  avatar_version    integer NOT NULL DEFAULT 0,         -- 0034: the newest ready avatar upload; moved only forward, by the channel-image job
+  banner_version    integer NOT NULL DEFAULT 0,
+  banner_crops      jsonb,                              -- { desktop, mobile, tv } rectangles of the current banner
+  country           text,                               -- ISO 3166-1 alpha-2 from COUNTRIES in @vp/domain
+  contact_email     text,                               -- never in the channel resource; POST /v1/channels/:id/contact-reveal
+  banner_link       jsonb,                              -- { label <= 24, url https }
+  handle_changed_at timestamptz,                        -- the cooldown starts here (30 days)
   subscriber_count  integer NOT NULL DEFAULT 0,
   created_at        timestamptz NOT NULL DEFAULT now(),
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX channels_handle_idx ON channels (handle);
 CREATE INDEX channels_user_id_idx ON channels (user_id);
+-- one primary per owner; also what keeps two concurrent first sign-ins from provisioning two channels
+CREATE UNIQUE INDEX channels_user_primary_unique ON channels (user_id) WHERE is_primary;
 
 CREATE TABLE videos (
   id                  uuid PRIMARY KEY,               -- UUIDv7
-  owner_id            uuid NOT NULL REFERENCES users(id),
+  owner_id            uuid NOT NULL REFERENCES users(id), -- the uploader
+  channel_id          uuid NOT NULL REFERENCES channels(id), -- 0044: the channel it belongs to, the acting channel of the upload
   title               text NOT NULL DEFAULT '',
   description         text NOT NULL DEFAULT '',
   visibility          text NOT NULL DEFAULT 'private', -- private|unlisted|public
@@ -1461,6 +1721,15 @@ CREATE TABLE channel_subscriptions (
 );
 CREATE INDEX channel_subscriptions_subscriber_idx ON channel_subscriptions (subscriber_id, created_at DESC);
 CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel_id, created_at DESC);
+-- 0041 (ticket 114): the video of the channel the viewer subscribed from, for a video's "subscribers gained"
+ALTER TABLE channel_subscriptions ADD COLUMN source_video_id uuid REFERENCES videos(id) ON DELETE SET NULL;
+CREATE INDEX channel_subscriptions_source_video_idx ON channel_subscriptions (source_video_id) WHERE source_video_id IS NOT NULL;
+-- 0044 (ticket 129): a channel subscribes, so one account subscribes once per channel it acts as;
+-- subscriber_id stays for the per-account reads (feed, notifications), which name each channel once
+ALTER TABLE channel_subscriptions ADD COLUMN subscriber_channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE;
+ALTER TABLE channel_subscriptions DROP CONSTRAINT channel_subscriptions_subscriber_channel_unique;
+ALTER TABLE channel_subscriptions ADD UNIQUE (subscriber_channel_id, channel_id);
+ALTER TABLE channel_subscriptions ADD CONSTRAINT channel_subscriptions_not_self CHECK (subscriber_channel_id <> channel_id);
 
 CREATE TABLE subscription_events (                     -- appended by subscribe (+1) and unsubscribe (-1) in their transaction
   id          uuid PRIMARY KEY,
@@ -1480,12 +1749,21 @@ CREATE TABLE video_comments (
   id          uuid PRIMARY KEY,                         -- UUIDv7
   video_id    uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
   author_id   uuid NOT NULL REFERENCES users(id),
+  author_channel_id uuid NOT NULL REFERENCES channels(id),  -- 0044: the channel the comment was written as, shown as its author
   parent_id   uuid REFERENCES video_comments(id) ON DELETE CASCADE,  -- NULL for a root; a reply always points at a root
   content     text NOT NULL,
   is_pinned   boolean NOT NULL DEFAULT false,
   is_edited   boolean NOT NULL DEFAULT false,
   like_count  integer NOT NULL DEFAULT 0,
   hearted_at  timestamptz,                              -- the video owner's heart; NULL for none
+  moderation_state      text NOT NULL DEFAULT 'published' CHECK (moderation_state IN ('published','held','hidden')),
+  moderation_disclosure text CHECK (moderation_disclosure IN ('silent','visible')),   -- what the author is told, set with the state
+  moderation_reason     text CHECK (moderation_reason IN ('spam','harassment','hate','misinformation','other','off_topic')),
+  moderation_note       text,
+  moderated_by          uuid REFERENCES users(id) ON DELETE SET NULL,
+  moderated_at          timestamptz,
+  held_reason           text CHECK (held_reason IN ('review_all','link','blocked_word')),   -- why the gate held it
+  looks_like_question   boolean NOT NULL DEFAULT false,   -- written at insert, a marker for an inbox filter
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   deleted_at  timestamptz                               -- soft delete; a deleted root takes its replies with it
@@ -1494,6 +1772,93 @@ CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_p
 CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
 CREATE INDEX video_comments_author_created_idx ON video_comments (author_id, created_at DESC, id DESC) WHERE deleted_at IS NULL;  -- GET /me/comments
 CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
+CREATE INDEX video_comments_moderation_idx ON video_comments (video_id, created_at DESC, id DESC) WHERE moderation_state <> 'published';
+-- Only `published` comments of an author who is not shadow banned are public: counts, the hot cache and every read go
+-- through one scope (`publicCommentScope`). A shadow ban is read from channel_user_restrictions on every read.
+
+-- 0048 (ticket 120): comments become commentable. `video_comments` is renamed `comments`; `video_id` becomes
+-- `target_id` with `target_type IN ('video','post','thread')` and loses its foreign key; `channel_id` (backfilled from
+-- the video) is the channel that moderates the comment, and 113's gate, 103's hearts and reports, the inbox and 117's
+-- matrix read it. Every index above leads with (target_type, target_id); one pinned comment per target. An AFTER DELETE
+-- trigger per target table (videos, channel_posts, video_threads) runs delete_target_comments(type), so deleting the
+-- target takes its comments in the same transaction. The hot cache key is taitube:{targetType}:{id}:comments:top.
+CREATE TABLE channel_posts (
+  id uuid PRIMARY KEY, channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  author_user_id uuid NOT NULL REFERENCES users(id),     -- the member who wrote it; the channel is the public author
+  kind text NOT NULL CHECK (kind IN ('text','images','poll','quiz','video_share','playlist_share')),
+  payload jsonb NOT NULL CHECK (payload ->> 'kind' = kind),  -- the PostPayload tagged union of @vp/api-contracts
+  status text NOT NULL CHECK (status IN ('draft','scheduled','published')),
+  publish_at timestamptz, published_at timestamptz, pinned_at timestamptz,
+  comments_enabled boolean NOT NULL DEFAULT true, like_count integer NOT NULL DEFAULT 0,
+  comments_count integer NOT NULL DEFAULT 0, version integer NOT NULL DEFAULT 1, edited_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX channel_posts_channel_published_idx ON channel_posts (channel_id, pinned_at DESC, published_at DESC, id DESC) WHERE status = 'published';
+CREATE TABLE post_reactions (post_id uuid REFERENCES channel_posts(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  type text NOT NULL DEFAULT 'LIKE' CHECK (type = 'LIKE'), created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (post_id, user_id));
+  -- likes only; like_count moves in the same transaction by the rows really added or removed (40's counter cache)
+CREATE TABLE post_poll_votes (post_id uuid, user_id uuid, option_index smallint CHECK (option_index BETWEEN 0 AND 5), UNIQUE (post_id, user_id));
+CREATE TABLE post_stats_daily (post_id uuid, day date, opens integer, share_clicks integer, PRIMARY KEY (post_id, day));
+CREATE TABLE video_threads (id uuid PRIMARY KEY, video_id uuid REFERENCES videos(id) ON DELETE CASCADE, channel_id uuid,
+  author_id uuid, author_channel_id uuid, anchor_ms integer CHECK (anchor_ms >= 0), title text, body text, pinned_at timestamptz,
+  comments_count integer, moderation_state text, moderation_disclosure text, held_reason text, created_at timestamptz, deleted_at timestamptz);
+ALTER TABLE channel_image_uploads ADD COLUMN variant_urls jsonb;  -- the 640 and 1280 wide variants of a `post-image` upload
+-- 0048 also adds 'post-image' to channel_image_uploads.kind, 'posts' to data_exports.kind and 'posts:write' to api_tokens.scopes.
+
+ALTER TABLE videos ADD COLUMN comments_enabled boolean NOT NULL DEFAULT true;   -- PATCH /v1/creator/videos/:id
+
+CREATE TABLE channel_comment_settings (                 -- one row per channel, created on the first save; defaults when absent
+  channel_id           uuid PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  review_mode          text NOT NULL DEFAULT 'none' CHECK (review_mode IN ('none','links','all')),
+  blocked_words        text[] NOT NULL DEFAULT '{}',    -- at most 200 entries of 2-40 characters
+  link_allowlist       text[] NOT NULL DEFAULT '{}',    -- at most 50 host names
+  slow_mode_seconds    integer CHECK (slow_mode_seconds IS NULL OR slow_mode_seconds > 0),   -- 5, 10, 30, 60 or 300
+  subscribers_only     boolean NOT NULL DEFAULT false,
+  min_account_age_days integer NOT NULL DEFAULT 0 CHECK (min_account_age_days BETWEEN 0 AND 30),
+  disclosure           jsonb NOT NULL DEFAULT '{"hide":"silent","remove":"visible","manual_hold":"visible","auto.blocked_words":"silent","auto.links":"visible","auto.review_all":"visible"}',
+  updated_at           timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE channel_user_restrictions (                -- one row per (channel, user): a shadow ban or a ban
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind       text NOT NULL CHECK (kind IN ('shadow','ban')),
+  reason     text CHECK (reason IS NULL OR char_length(reason) <= 200),
+  expires_at timestamptz,                               -- an expired row counts as absent; housekeeping purges it after 30 days
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, user_id),
+  CHECK (kind = 'ban' OR expires_at IS NULL)            -- a shadow ban has no expiry
+);
+
+CREATE TABLE channel_trusted_commenters (               -- skip every automatic hold, slow mode and the account age
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, user_id)
+);
+
+CREATE TABLE channel_saved_replies (
+  id         uuid PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  title      text NOT NULL CHECK (char_length(title) BETWEEN 1 AND 40),
+  body       text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 2000),
+  position   integer NOT NULL                           -- at most 20 per channel
+);
+
+CREATE TABLE comment_removals (                         -- the reason of a removal, because the comment itself is soft deleted
+  id         uuid PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  author_id  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  excerpt    text NOT NULL,                             -- the first 200 characters
+  reason     text NOT NULL CHECK (reason IN ('spam','harassment','hate','misinformation','other','off_topic')),
+  note       text CHECK (note IS NULL OR char_length(note) <= 200),
+  disclosure text NOT NULL CHECK (disclosure IN ('silent','visible')),   -- the author's list shows `visible` rows only
+  removed_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()         -- housekeeping deletes rows past 30 days
+);
 
 CREATE TABLE comment_reports (
   id          uuid PRIMARY KEY,                         -- UUIDv7
@@ -1527,6 +1892,14 @@ CREATE TABLE video_views_hourly (                      -- written by the view fl
 );
 CREATE INDEX video_views_hourly_hour_idx ON video_views_hourly (view_hour);
 
+CREATE TABLE video_views_device_daily (                -- written by the view flush, never pruned (ticket 128)
+  video_id  uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  view_date date NOT NULL,                             -- UTC day the view was counted
+  device    text NOT NULL CHECK (device IN ('desktop', 'mobile', 'tablet', 'unknown')),
+  views     integer NOT NULL DEFAULT 0,                -- counted views only, so at most four rows a video a day
+  PRIMARY KEY (video_id, view_date, device)
+);
+
 CREATE TABLE video_retention_milestones (               -- written only by the view flush
   video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
   percent  smallint NOT NULL,                          -- 0 to 100 in steps of 5
@@ -1547,6 +1920,7 @@ CREATE TABLE playlists (
   description          text NOT NULL DEFAULT '',
   visibility           text NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
   is_system            boolean NOT NULL DEFAULT false,  -- Watch Later: never renamed, never deleted
+  kind                 text NOT NULL DEFAULT 'playlist' CHECK (kind IN ('playlist', 'series')),  -- 0034: a series holds only the owner's own videos
   custom_thumbnail_key text,
   created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at           timestamptz NOT NULL DEFAULT now()   -- moved by item writes too
@@ -1622,6 +1996,113 @@ CREATE TABLE clips (
 CREATE INDEX clips_user_created_idx ON clips (user_id, created_at DESC, id DESC);   -- GET /me/clips
 CREATE INDEX clips_video_idx ON clips (video_id);
 
+-- 0045: one history for every entity that keeps one (ticket 116). A kind adds a value to the type CHECK and a snapshot shape in @vp/domain.
+CREATE TABLE entity_revisions (
+  id             uuid PRIMARY KEY,                                       -- UUIDv7
+  entity_type    text NOT NULL,                                          -- 'video_metadata'
+  entity_id      uuid NOT NULL,
+  version        integer NOT NULL,                                       -- the entity's own version after the change
+  snapshot       jsonb NOT NULL,                                         -- video_metadata: title, description, tags, categoryId, visibility, thumbnail, chapters, commentsEnabled
+  author_user_id uuid REFERENCES users(id) ON DELETE SET NULL,           -- null for the state recorded before a video's first edit
+  restored_from_version integer,                                         -- the version a restore went back to; null for an ordinary edit
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT entity_revisions_type_check CHECK (entity_type IN ('video_metadata')),
+  CONSTRAINT entity_revisions_restored_from_check CHECK (restored_from_version IS NULL OR restored_from_version >= 0)
+);
+CREATE UNIQUE INDEX entity_revisions_entity_version_idx ON entity_revisions (entity_type, entity_id, version);
+-- Written in the edit's own transaction, after its CAS, so a lost write leaves neither a revision nor an audit row; `prune-revisions` keeps the newest 50 per entity.
+
+CREATE TABLE video_chapters (
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  position integer NOT NULL,                                             -- the order the set was saved in, which is start order
+  start_ms integer NOT NULL,
+  title    text NOT NULL,                                                -- 1 to 60 characters
+  PRIMARY KEY (video_id, position),
+  CONSTRAINT video_chapters_start_check CHECK (start_ms >= 0),
+  CONSTRAINT video_chapters_title_check CHECK (char_length(title) BETWEEN 1 AND 60)
+);
+-- The set is replaced whole inside `updateMetadata`; at least three, the first at 0, 10 seconds apart is `decideChapters`'s rule, and an empty set clears.
+
+CREATE TABLE video_corrections (
+  id         uuid PRIMARY KEY,                                           -- UUIDv7
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  start_ms   integer NOT NULL,
+  end_ms     integer NOT NULL,
+  text       text NOT NULL,                                              -- 1 to 200 characters
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT video_corrections_range_check CHECK (start_ms >= 0 AND end_ms - start_ms BETWEEN 2000 AND 30000),
+  CONSTRAINT video_corrections_text_check CHECK (char_length(text) BETWEEN 1 AND 200)
+);
+CREATE INDEX video_corrections_video_idx ON video_corrections (video_id, start_ms);   -- at most 10 per video, counted under an advisory lock
+
+-- 0046: share links, video passwords and title or thumbnail tests (ticket 116).
+ALTER TABLE videos ADD COLUMN access_password_hash text;              -- salted scrypt; read only by VideoPasswordRepository, every other read sees passwordProtected
+CREATE TABLE share_links (
+  id          uuid PRIMARY KEY,                                          -- UUIDv7
+  target_type text NOT NULL CHECK (target_type IN ('video')),
+  target_id   uuid NOT NULL,
+  token       text NOT NULL CHECK (char_length(token) = 22),             -- 16 random bytes, base64url
+  label       text CHECK (label IS NULL OR char_length(label) BETWEEN 1 AND 60),
+  expires_at  timestamptz,                                               -- null never expires
+  created_by  uuid REFERENCES users(id) ON DELETE SET NULL,
+  revoked_at  timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX share_links_token_idx ON share_links (token);
+CREATE INDEX share_links_target_idx ON share_links (target_type, target_id, created_at DESC);  -- at most 50 active per target, counted under a lock with the insert
+CREATE TABLE share_link_stats (
+  link_id uuid NOT NULL REFERENCES share_links(id) ON DELETE CASCADE,
+  day date NOT NULL, opens integer NOT NULL DEFAULT 0, views integer NOT NULL DEFAULT 0, watch_seconds bigint NOT NULL DEFAULT 0,
+  PRIMARY KEY (link_id, day)
+);
+CREATE TABLE video_experiments (
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  kind text NOT NULL CHECK (kind IN ('title', 'thumbnail', 'both')),
+  variants jsonb NOT NULL,                                               -- 2 or 3 of { id: a|b|c, title, thumbnail }; a is the control
+  status text NOT NULL DEFAULT 'running' CHECK (status IN ('running', 'finished', 'stopped')),
+  started_at timestamptz NOT NULL DEFAULT now(), ended_at timestamptz,
+  winner_variant_id text CHECK (winner_variant_id IS NULL OR winner_variant_id IN ('a', 'b', 'c'))
+);
+CREATE UNIQUE INDEX video_experiments_running_idx ON video_experiments (video_id) WHERE status = 'running';  -- five per channel, counted under a per-owner lock
+CREATE TABLE video_experiment_stats (
+  experiment_id uuid NOT NULL REFERENCES video_experiments(id) ON DELETE CASCADE,
+  variant_id text NOT NULL CHECK (variant_id IN ('a', 'b', 'c')),
+  day date NOT NULL, impressions integer NOT NULL DEFAULT 0, starts integer NOT NULL DEFAULT 0, watch_seconds bigint NOT NULL DEFAULT 0,
+  PRIMARY KEY (experiment_id, variant_id, day)
+);
+
+-- 0047: generations rendered while a video stays READY, and its edit list (ticket 116).
+CREATE TABLE video_generations (
+  video_id            uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  generation          integer NOT NULL CHECK (generation >= 1),
+  kind                text NOT NULL CHECK (kind IN ('upload', 'replacement', 'edit')),
+  status              text NOT NULL CHECK (status IN ('uploading', 'rendering', 'failed', 'active', 'retired', 'purged')),
+  source_key          text,                                              -- a replacement's upload in the raw bucket
+  base_generation     integer,                                           -- what an edit renders from
+  replaces_generation integer NOT NULL,                                  -- what played when the render started; the swap lands only while it still does
+  playback            jsonb,                                             -- master key, duration, dimensions, fps, ladder; recorded on the outgoing row by the swap
+  timeline            jsonb,                                             -- the chapters and corrections it played with, restored by a swap back
+  retention           jsonb,                                             -- its retention steps, so two files never blend into one curve
+  needs_review        boolean NOT NULL DEFAULT false,
+  error_code          text,
+  lock_token          uuid,                                              -- the render holding it; the swap matches it
+  purge_after         timestamptz,                                       -- a retired generation's grace, or an upload's expiry
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (video_id, generation)
+);
+CREATE UNIQUE INDEX video_generations_in_flight_idx ON video_generations (video_id) WHERE status IN ('uploading', 'rendering');
+CREATE INDEX video_generations_purge_idx ON video_generations (purge_after) WHERE purge_after IS NOT NULL;
+CREATE TABLE video_edits (
+  video_id        uuid PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+  base_generation integer NOT NULL,
+  generation      integer NOT NULL,                                      -- the generation the list renders into
+  trim            jsonb,                                                 -- { startMs, endMs } on the base timeline
+  blurs           jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_array_length(blurs) <= 20),  -- { startMs, endMs, shape, x, y, w, h, strength }
+  status          text NOT NULL CHECK (status IN ('rendering', 'applied', 'failed', 'reverted')),
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- 0026: pick of the day, one editor-scheduled video per window. Windows are half-open and never overlap.
 CREATE TABLE picks (
   id         uuid PRIMARY KEY,                                           -- UUIDv7
@@ -1647,6 +2128,49 @@ CREATE TABLE channel_featured_videos (
   PRIMARY KEY (channel_id, video_id),
   CONSTRAINT channel_featured_videos_channel_position_key UNIQUE (channel_id, position),
   CONSTRAINT channel_featured_videos_position_check CHECK (position BETWEEN 0 AND 5)
+);
+
+-- 0034: channel identity. A handle a channel gave up is held for its owner for 90 days and resolves to the channel meanwhile.
+CREATE TABLE channel_handle_history (
+  handle     text PRIMARY KEY,
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  retired_at timestamptz NOT NULL
+);
+CREATE INDEX channel_handle_history_retired_at_idx ON channel_handle_history (retired_at);
+
+-- One avatar or banner file from its presigned URL to the version it became.
+CREATE TABLE channel_image_uploads (
+  id           uuid PRIMARY KEY,                                        -- the upload id; also the channel-image job id
+  channel_id   uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  uploaded_by  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind         text NOT NULL,                                           -- avatar|banner
+  content_type text NOT NULL,
+  size_bytes   bigint NOT NULL,
+  status       text NOT NULL DEFAULT 'issued',                          -- issued|queued|ready|failed|superseded|purged
+  width        integer,
+  height       integer,
+  crops        jsonb,                                                   -- { kind: 'avatar', crop } | { kind: 'banner', crops: { desktop, mobile, tv } }
+  version      integer,                                                 -- assigned when queued
+  failure      text,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT channel_image_uploads_version_key UNIQUE (channel_id, kind, version)
+);
+
+CREATE TABLE channel_page_settings (
+  channel_id         uuid PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  trailer_video_id   uuid REFERENCES videos(id) ON DELETE SET NULL,
+  returning_video_id uuid REFERENCES videos(id) ON DELETE SET NULL,
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE channel_localizations (
+  channel_id       uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  locale           text NOT NULL,                                       -- one of the app's supported locales
+  description      text,
+  trailer_video_id uuid REFERENCES videos(id) ON DELETE SET NULL,
+  updated_at       timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, locale)
 );
 
 -- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
@@ -1734,7 +2258,54 @@ CREATE TABLE video_transcript_cues (
   PRIMARY KEY (caption_id, cue_index)
 );
 CREATE INDEX video_transcript_cues_text_vector_idx ON video_transcript_cues USING gin (text_vector);
+
+-- 0036, 0037: upload screening. HELD is a video_status; every move into or out of it is a CAS on videos.status plus a video_events row.
+CREATE TABLE video_screenings (                          -- one result per video and source checksum
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  source_checksum text NOT NULL,                         -- the source object's ETag; a re-process of the same source reads this row
+  outcome text NOT NULL CHECK (outcome IN ('PASS', 'HOLD')),
+  score double precision NOT NULL,
+  reasons jsonb NOT NULL DEFAULT '[]',                   -- the findings that held the video, each with its evidence
+  flags jsonb NOT NULL DEFAULT '[]',                     -- findings that only raise a case: partial match, edited text, transcript
+  model_version text, threshold_version text NOT NULL,   -- a change of either never rewrites a decided case
+  decision text CHECK (decision IS NULL OR decision IN ('approved', 'rejected', 'dismissed')),
+  decided_by uuid REFERENCES users(id) ON DELETE SET NULL, decided_at timestamptz, decision_note text,
+  flags_cleared_at timestamptz,                          -- set when a moderator reviews the flags, cleared when a new one is raised
+  evidence_purged_at timestamptz,                        -- set once housekeeping removed the frames under evidence/{videoId}/
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX video_screenings_video_checksum_idx ON video_screenings (video_id, source_checksum);
+CREATE INDEX video_screenings_open_idx ON video_screenings (created_at DESC)
+  WHERE (decision IS NULL AND outcome = 'HOLD') OR (flags <> '[]' AND flags_cleared_at IS NULL);
+CREATE INDEX video_screenings_purge_idx ON video_screenings (decided_at) WHERE decision IS NOT NULL AND evidence_purged_at IS NULL;
+CREATE TABLE screening_appeals (
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  screening_id uuid NOT NULL REFERENCES video_screenings(id) ON DELETE CASCADE,
+  author_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  message text NOT NULL,
+  rejected_by uuid REFERENCES users(id) ON DELETE SET NULL,   -- the moderator who may not decide this appeal
+  created_at timestamptz NOT NULL DEFAULT now(),
+  resolved_by uuid REFERENCES users(id) ON DELETE SET NULL, resolved_at timestamptz
+);
+CREATE UNIQUE INDEX screening_appeals_open_idx ON screening_appeals (video_id) WHERE resolved_at IS NULL;
+CREATE TABLE video_frame_hashes (                        -- a 64-bit dHash per sampled frame, split into four indexed 16-bit bands
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  idx integer NOT NULL, hash bigint NOT NULL,
+  b0 integer NOT NULL, b1 integer NOT NULL, b2 integer NOT NULL, b3 integer NOT NULL,
+  PRIMARY KEY (video_id, idx)
+);
+CREATE INDEX video_frame_hashes_b0_idx ON video_frame_hashes (b0);   -- likewise b1, b2, b3
+CREATE TABLE video_audio_fingerprints (                  -- every Nth Chromaprint term, an inverted index by value
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  idx integer NOT NULL, term integer NOT NULL,
+  PRIMARY KEY (video_id, idx)
+);
+CREATE INDEX video_audio_fingerprints_term_idx ON video_audio_fingerprints (term);
 ```
+
+Why screening is a result row and a state, not a verdict on the video: `decideScreening` is a pure function of findings, so `video_screenings` stores what it was given and what it answered, under the thresholds' version, and a person's decision is written onto the same row (`decision`, `decided_by`, `decision_note`). A case is open while a hold is undecided or a flag has not been looked at; `approve`, `reject` and `dismiss` all stamp `flags_cleared_at`, and a later flag (a creator edit, a transcript) clears it again, which is how a decided case reopens without its decision being rewritten. Frame hashes and audio terms belong to the video and nothing else: a lookup returns another video's id only to the worker that decides, and the creator is told a plain reason, never the match. Fingerprints of a `REJECTED` video stay, because the re-upload of a taken-down video is the match worth a hold; `purge-deleted` removes them with a deleted video, before the row. The evidence frames of a closed case live under `evidence/{videoId}/` in the raw bucket, outside its 7 day rule, and `purge-screening-evidence` removes them 30 days after the case closes and stamps `evidence_purged_at`.
 
 Why playlist positions are sparse: a drag-and-drop move is the common write, and dense `0..n-1` positions make one move rewrite every row between the old place and the new one. Items are spaced 1024 apart instead, so a move takes the midpoint between its new neighbours and rewrites the moved row alone; only when two neighbours sit adjacent (about ten moves into the same gap) or a key would leave the integer range is the playlist respaced, in one `UPDATE ... FROM (VALUES ...)`. Removing an item deletes one row and leaves a gap. The API never shows the stored key: `position` on the wire is the 0-based place, ranked before the viewer's scope hides any video, so a hidden video keeps its place and a reorder sent back names the same slot. A full reindex names the items the caller can see; a hidden one keeps its slot and the given order fills the others, so a video going private never blocks a reorder. Every item write, removals included, locks the playlist row first, so concurrent appends, removals and reorders serialise in one lock order, and the reorder rule runs against the slots as that transaction sees them.
 
@@ -1742,11 +2313,17 @@ Why search runs on Postgres and how it ranks: no search cluster, so the local-fi
 
 Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL), which carries the playhead and `flushedAt`, when its row was last written. While `flushedAt` is younger than `caches.playheads.flushIntervalMs` (60 s) that is all a beat does; the first beat, a beat past the interval, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. The history is therefore at most a minute behind a long session, an expired buffer loses at most a minute, and with Redis down every beat writes through. `watched_at` is stamped by the API, so the guard orders requests that arrive out of order; it does not tell a stale tab from a fresh one, and the buffer itself is last writer wins. Clearing the history deletes the rows it returns and then their buffered playheads. While the viewer's `privacy.historyPaused` preference is on, a beat that would write through writes nothing, neither the row nor the buffer, and a search records no `search_history` row (§6.1).
 
-Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. Playback beacons instead dedupe the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increment the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The web player sends one beacon, `POST /v1/telemetry/playback`: a script keeps a per-session counter (`taitube:views:session:{videoId}:{sessionUuid}`), adds the watched seconds of each event to the day's `watch` field, so watch time counts every second played, and counts the view once the session's total reaches `views.minWatchSeconds`, deduplicated by the session in the HyperLogLog. `POST /v1/videos/:id/views` remains for other clients: it counts a view through the same HyperLogLog (the account when signed in, else the session) and adds no watch time. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the view buffer to `taitube:views:flush:{batchId}` and the retention buffer to `taitube:retention:flush:{batchId}`, and records the id under `taitube:views:flushing`, in a second script; it applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)`, upserts `video_views_daily` and `video_retention_milestones`, and only then deletes both batch keys. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
+Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. Playback beacons instead dedupe the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increment the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The web player sends one beacon, `POST /v1/telemetry/playback`: a script keeps a per-session counter (`taitube:views:session:{videoId}:{sessionUuid}`), adds the watched seconds of each event to the day's `watch` field, so watch time counts every second played, and counts the view once the session's total reaches `views.minWatchSeconds`, deduplicated by the session in the HyperLogLog; the same script adds that counted view to the `{videoId}|{date}|device:{device}` field of the buffer hash, so the device split counts exactly the views the daily rows do (a beacon without a device counts as `unknown`; `POST /v1/videos/:id/views` carries none and adds no device count). `POST /v1/videos/:id/views` remains for other clients: it counts a view through the same HyperLogLog (the account when signed in, else the session) and adds no watch time. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the view buffer to `taitube:views:flush:{batchId}` and the retention buffer to `taitube:retention:flush:{batchId}`, and records the id under `taitube:views:flushing`, in a second script; it applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)`, upserts `video_views_daily`, `video_views_device_daily` and `video_retention_milestones`, and only then deletes both batch keys. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. The same buffer carries a share link and a test variant as further field components: a link's opens are deduplicated per viewer, link and day in their own day sketch (the account, else the tab's session key, else the read itself), a beacon carrying `shareLinkId` adds its watch seconds and its counted view to the link, and one carrying `experiment` adds its watch seconds to the variant, whose impressions (`POST /v1/telemetry/impressions`) and starts (a `playback_start` with `experiment`) are counted the same way; the flush writes them in the same transaction into `share_link_stats` and `video_experiment_stats`. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
 
 Why a channel's `videoCount` and `totalViews` are derived on read: `ChannelRepositoryPort.statsOf(userId)` is one aggregate (count and sum) over `videos`, filtered by `publicFeedScope` and the owner, so the rule for which videos count is the public feed's own and there is no second state to keep in step with the publish transition, a visibility edit, a soft delete or the view flush. `ChannelService` attaches the result on the three reads whose contract is `Channel` (the public channel, the account and the channel edit); the channel entity, the search hits and the suggestions do not carry it. The partial index `videos_channel_stats_idx (owner_id, views_count) WHERE status = 'READY' AND visibility = 'public' AND deleted_at IS NULL` holds exactly the counted rows, so the aggregate is an index-only scan. The in-memory double derives the same numbers over `isPublicFeedEligible`, and the repository contract suite runs both.
 
 Why `dlq_entries` exists in Postgres when BullMQ already has a `dlq` queue: Redis is not the truth (P2). The Postgres mirror survives Redis loss, is queryable ("all DLQ entries for codec X this week"), and gives the admin UI a stable, paginated view. The Redis `dlq` queue holds the replayable job; the table holds the record.
+
+Why a channel export is a row and a private file: a creator takes the comments, the videos or the analytics of a channel into a spreadsheet, and a dataset of a million rows is no API response. `data_exports` (migration 0040) holds one request: `kind` (`video_analytics`, `channel_analytics`, `comments`, `videos`, `DATA_EXPORT_KINDS` in `@vp/domain`, each with its row schema in `EXPORT_ROW_SCHEMAS` of `@vp/api-contracts`), `params` (an optional `from`/`to` day range), `format` (`csv` or `json`) and a `status` the `DATA_EXPORT` machine moves: `queued`, `running`, `ready`, `failed`, `expired`. Every move is a compare-and-set from the statuses its edge leaves, so a retried job answers instead of writing twice. The partial unique index `data_exports_one_active_idx` keeps one `queued` or `running` export per channel, so two requests racing for it cannot both win. The file lives at `exports/{channelId}/{id}.{format}` in the raw bucket until `expires_at`, seven days after it was written; `object_key` is set only while it exists. Removed comments, deleted videos and a commenter's account (email, user id) never reach a file: a commenter appears by the handle and display name their channel shows. A video analytics file is the daily rows of every video in the range, then each video's retention curve, which has no day and is always whole.
+
+Why an account owns several channels (migration 0044, ticket 129): one person runs a personal channel and a creator one without signing out. `channels.user_id` is a plain owner column, at most `CHANNELS_MAX_OWNED` per user, and exactly one is `is_primary`. The cap holds under concurrency because `createOwned` locks the owner's `users` row (`SELECT ... FOR UPDATE`) before it counts; a bare count under READ COMMITTED lets two creates both see room. `promote` unsets the old primary before it sets the new one in one transaction, since the partial unique index checks each statement. Provisioning inserts the primary only, so the same index is what turns a second concurrent first sign-in into `HANDLE_ALREADY_TAKEN`, after which it reads the winner's channel. What a channel does is keyed by the channel: `videos.channel_id`, `video_comments.author_channel_id`, `channel_subscriptions.subscriber_channel_id`, the channel analytics and the creator inbox; playlists, history, reactions, preferences and notifications stay per account. The migration backfills every row from its owner's channel, first creating a primary channel (`u-` and twelve hex characters of the user id) for a user who has videos, comments or subscriptions but none. Member grants in `@vp/permissions` are keyed by channel id (`channelsWith`), never by the owner's user id, so a member of one channel reaches nothing on the owner's others; a personal access token is pinned the same way. Creating or promoting a channel and each write made as a channel (a comment, a subscription, an upload, a handle change) writes its `channel_audit_log` row in the write's own transaction, so a stored write always has its row and a refused or failed one has none. `account_audit_log` is a user's own log (`account.signed_in` with the browser slot and a user agent cut to 200 characters; no address), read at `GET /v1/me/security/sign-ins` and written by `POST` to it on every sign-in into a slot.
+
+Why a personal access token is a hash and a grant, not a second kind of user: a creator's script needs the API without a browser, and a token must never do more than the person it acts for. `api_tokens` (migration 0041) holds one per row: the user, the channel it acts on (the acting channel it was created on), a `name` of 1 to 60 characters, an 8 hex character `prefix` shown in lists and used to find the row, the SHA-256 of 32 random bytes (`secret_hash`; the secret itself is never stored), its `scopes` (`API_SCOPES` in `@vp/domain`, checked in the database too), `expires_at` (30 days, 90 by default, or a year; never unlimited), `last_used_at` and `revoked_at`. The token is `tt_pat_{prefix}_{secret}` and only the create response carries it. Its status (`API_TOKEN` in `@vp/domain-rules`: `active`, `expired`, `revoked`) is derived from the two timestamps, so expiry needs no job; revoking writes `revoked_at` where it is still null. A user holds at most 10 active tokens. `api_token_usage` counts requests per token and UTC day for the developer page, and `channel_audit_log.actor_token_id` names the token a write was made with beside the member who owns it, so a change made by a script still names a person.
 
 ### 5.3 Key queries that encode the guarantees
 
@@ -1775,17 +2352,39 @@ WHERE v.status = 'UPLOADED' AND v.updated_at < now() - interval '5 minutes' AND 
 FOR UPDATE SKIP LOCKED LIMIT 100;
 ```
 
+### 5.4 Watch parties (ticket 140)
+
+One migration, `0035_watch_parties`, holds every table of ticket [140](tickets/140-watch-parties.md), including the two discovery tables slice 140c fills. Drizzle lives in `watch-parties-schema.ts` (the room, its seats, roles and bans) and `watch-party-activity-schema.ts` (invites, queue, chat, personal controls, interest, reports). The room search vector and its GIN and trigram indexes are SQL only, as 47's are.
+
+| Table | Holds | Keys and notes |
+|---|---|---|
+| `watch_party_rooms` | The room: `owner_key` (a member key, never a guest's), `name`, `visibility` (`public`, `unlisted`, `private`), `password_hash` (`scrypt$...`), `capacity`, `allow_guests`, chat settings, `buffer_policy`, `autoplay`, `skip_vote_percent`, `idle_close`, `language`, `accent`, `scheduled_for`, `phase`, the room clock in `playback` (jsonb) beside its indexed copy `phase`, `playback_version`, `roles_version`, `permissions_version`, `queue_length`, `queue_version`, `current_video_id`, `present_count`, `status` (`open`, `closed`), `closed_reason`, `version` (settings), timestamps | `capacity >= 2`; `(owner_key) WHERE status = 'open'` serves the open-rooms limit |
+| `watch_party_members` | One seat: `member_key`, `kind` (`user`, `discord`, `guest`), `user_id` for accounts, snapshots of name and avatar for the other two kinds, `joined_via`, `joined_at`, `left_at` | PK `(room_id, member_key)` |
+| `watch_party_roles` / `watch_party_role_permissions` | A role (`key` for a built-in one, `kind` grant or restrict, `name`, `colour`, `position`) and its permission ids | unique `(room_id, position)`; permission ids are checked against the registry on write and carry no `CHECK`, so a new permission needs no migration |
+| `watch_party_member_roles` | A role held by a member, with `granted_by` and an optional `expires_at` | PK `(room_id, member_key, role_id)`; Owner, Member and Guest are never rows |
+| `watch_party_bans` | A ban for the room's life; a guest's row also keeps a salted IP hash | PK `(room_id, member_key)` |
+| `watch_party_invites` / `watch_party_invite_links` | A per-account invite with its `watching` snapshot, and a bearer link stored as a SHA-256 `token_hash` with `max_uses`, `uses` and `revoked_at` | unique `(room_id, invitee_id)` |
+| `watch_party_queue_items` | The shared queue, ordered by a sparse `position` | `removed_at` and `played_at` instead of deletes |
+| `watch_party_messages` | Chat lines and system lines, with `video_id` and `position_ms` as to where the room was | UUIDv7 ids, so `id > after` is the replay; one pinned line per room; kept 7 days |
+| `watch_party_personal_controls` | What one account muted or hid about one member key, for one room or everywhere | unique `(user_id, target_key, room_id)`, nulls not distinct |
+| `watch_party_interest`, `watch_party_reports` | "Interested" on a scheduled room, and reports | written by 140c |
+| `notifications` | gains `watch_party_id` (FK, `ON DELETE CASCADE`) | |
+
+**The room clock.** `playback` is `{ itemId, phase, positionMs, rate, anchorAt }`. The expected position at server time `t` is `positionMs + (t - anchorAt) * rate` while `playing`, else `positionMs`. Every change is one compare-and-set on `playback_version` and `roles_version` together, so a command sent against an older state, or by a member whose permission was revoked since, is refused as stale and re-checked against the new roles. There is no row per seek. Settings are optimistic on `version`, like video edits (`VERSION_CONFLICT`).
+
+**Lifecycle.** A room is `open` until its owner or a holder of `room.close` closes it, a platform moderator closes it, or the sweep (§10.7) closes it for idleness. A closed room keeps its row 30 days, its chat lines 7 days (`WATCH_PARTY.closedRoomRetentionDays`, `messageRetentionDays`); room-scoped personal controls and guest ban hashes go with the room.
+
 ---
 
 ## 6. API Contract
 
-Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/server/dev-token` seed is accepted only outside production). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/platform/server/dev-token` seed is accepted only outside production), or `Authorization: Bearer tt_pat_...`, a personal access token, on a route whose contract names a `scope` (the OpenAPI document lists it as the role the `personalAccessToken` scheme needs; §11). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
 
 ### 6.1 Endpoints
 
 | Method & path | Purpose | Request | Response | Notes |
 |---|---|---|---|---|
-| `POST /uploads` | Start upload | `{ filename, sizeBytes, contentType, sha256? , title? }` | `201 { videoId, uploadId, strategy, partSizeBytes, parts:[{partNumber,url,expiresAt}], singleUrl?, expiresAt }` | ≤ 100 MB → `single` (one presigned PUT). Else multipart; first 100 part URLs inline. Rate limit 30/min/user. |
+| `POST /uploads` | Start upload | `{ filename, sizeBytes, contentType, sha256? , title? }` | `201 { videoId, uploadId, strategy, partSizeBytes, parts:[{partNumber,url,expiresAt}], singleUrl?, expiresAt }` | ≤ 100 MB → `single` (one presigned PUT). Else multipart; first 100 part URLs inline. Rate limit 30/min/user. The video belongs to the acting channel (`X-Channel-Id`, default the primary; `upload`: owner, manager, editor) and appends `video.uploaded` to its audit log. |
 | `GET /uploads/:uploadId` | Resume info | — | `200 { status, partSizeBytes, partsExpected, uploadedParts:[{partNumber, etag, size}] }` | Backed by `ListParts`. |
 | `POST /uploads/:uploadId/parts?from=&count=` | More part URLs | — | `200 { parts:[…] }` | `count ≤ 100`. |
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
@@ -1793,57 +2392,122 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
 | `GET /feed?sort=&format=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending), `format` (`standard`, the default, or `short`) & categoryId filter, so the main grid carries no Shorts; single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis under `taitube:feed:public:{sort}:{format}:{categoryId}` with singleflight & ETag 304; the cache holds the cards without their channel, which every request reads, so the ETag changes with a rename. A signed-in caller's cards also carry `viewer: { progressSeconds, watchedAt } \| null`, read for the whole page in one query on `watch_history`; that page is `Cache-Control: private` and every feed answer says `Vary: Authorization`. The same `viewer` field is on every `VideoSummary` the API returns for a signed-in caller: feed, search, subscription feed, playlist items, home and related. Search caches its page for everyone and adds `viewer` after the cache read. |
 | `GET /v1/shorts?cursor=&limit=` | Shorts feed | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 VALIDATION_FAILED` / `400 INVALID_CURSOR` | Anonymous. The public `READY` videos with `format = 'short'` for the swipe player, ranked as trending times a freshness boost, `(views_count + 1) / (ageHours + 2) ^ 1.5 * (1 + 2 * max(0, 1 - ageHours / 48))` (`SHORTS_FRESHNESS`, `public-feed.ts`), keyset on `(rank, id)`. The opaque cursor carries the last row's rank inputs, the walk's instant and `seen`, the ids already served (at most 60, newest last, comma-joined); the repository leaves `seen` ids out, so a walk never shows a Short twice. Cached and conditional like `GET /feed`, first page only. |
-| `GET /home` | Home shelves | — | `200 { shelves:[{ kind, subject?, items:[VideoSummary & { reason }] }] }` | Anonymous allowed. `kind` is `continue`, `subscriptions`, `because-searched`, `because-watched`, `category`, `rising` or `trending`; `subject` is `{ kind: video\|channel\|category\|query, id, name }` for the shelves that are about one. Heuristics over data the platform already has, no model: `continue` is the viewer's partly watched videos, newest first; `subscriptions` the recent uploads of subscribed channels; `because-searched` (signed in) the viewer's latest `search_history` row of the last 48 hours (`HOME_SHELVES.searchedWindowHours`) as one shelf, `subject: { kind: 'query', id: <row id>, name: <query text> }`, filled by `SearchService.search` for `type=video` with `record=false` (47's ranking and its page cache, so no history row is written) minus videos the viewer has watched (any with a `viewer` playhead), each item's reason `{ kind: 'searched', subjectId: <row id> }`; a new search shows on the next build, at most five minutes later, because searches do not drop the cached page; `because-watched` one shelf for each of the last three videos watched to at least half, filled from that video's related ranking minus what the viewer already watched; `category` one shelf for each of the two categories the viewer watches most, topped up from the categories of the trending page (signed out: those alone); `rising` (everyone) public ready videos created in the last 14 days by channels with at most 1000 subscribers (`channels.subscriber_count`) and at least 20 retention sessions (`video_retention_milestones` at 0 percent), ordered by completion ratio (viewers at the 90 percent step over viewers at 0 percent), ties by newest, one video per channel, never the viewer's own uploads or videos in their watch window, read through `RisingVideosRepositoryPort.find` with the public feed's read scope (the constants, `completionRatio`, `isRisingEligible` and `rankRising` are in `packages/universal/domain/src/rising.ts`, so the Postgres and in-memory implementations rank identically); `trending` the feed's trending ranking. `reason.kind` is data (`continue`, `subscription`, `co-watched`, `shared-tags`, `same-channel`, `same-category`, `category`, `trending`, `searched`, `rising`, with the video, channel, category, search row or channel in `subjectId`); the web app turns it into copy through `@vp/messages`. The page is cached in Redis for five minutes under `taitube:home:{userId}` (`taitube:home:anonymous` signed out) and the viewer's key is dropped by a watch history write, a removal, a clear, a subscribe, an unsubscribe and a recommendation feedback write or undo. What the viewer marked with `PUT /me/recommendation-feedback` (a video, or every video of a channel) is removed from every shelf except `continue` and `subscriptions` (`applyFeedback` in `packages/universal/domain/src/recommendation-feedback.ts`), after the viewer-independent reads: a shelf that loses items shows fewer than twelve and is not back-filled, and an emptied shelf is dropped. One `hiddenOf` read per build, none for a signed-out visitor. `Cache-Control: private, no-cache`, `Vary: Authorization`. |
+| `GET /home` | Home shelves | — | `200 { shelves:[{ kind, subject?, items:[VideoSummary & { reason }] }] }` | Anonymous allowed. `kind` is `continue`, `subscriptions`, `because-searched`, `because-watched`, `category`, `rising` or `trending`; `subject` is `{ kind: video\|channel\|category\|query, id, name }` for the shelves that are about one. Heuristics over data the platform already has, no model: `continue` is the viewer's partly watched videos, newest first; `subscriptions` the recent uploads of subscribed channels; `because-searched` (signed in) the viewer's latest `search_history` row of the last 48 hours (`HOME_SHELVES.searchedWindowHours`) as one shelf, `subject: { kind: 'query', id: <row id>, name: <query text> }`, filled by `SearchService.search` for `type=video` with `record=false` (47's ranking and its page cache, so no history row is written) minus videos the viewer has watched (any with a `viewer` playhead), each item's reason `{ kind: 'searched', subjectId: <row id> }`; a new search shows on the next build, at most five minutes later, because searches do not drop the cached page; `because-watched` one shelf for each of the last three videos watched to at least half, filled from that video's related ranking minus what the viewer already watched; `category` one shelf for each of the two categories the viewer watches most, topped up from the categories of the trending page (signed out: those alone); `rising` (everyone) public ready videos created in the last 14 days by channels with at most 1000 subscribers (`channels.subscriber_count`) and at least 20 retention sessions (`video_retention_milestones` at 0 percent), ordered by completion ratio (viewers at the 90 percent step over viewers at 0 percent), ties by newest, one video per channel, never the viewer's own uploads or videos in their watch window, read through `RisingVideosRepositoryPort.find` with the public feed's read scope (the constants, `completionRatio`, `isRisingEligible` and `rankRising` are in `packages/universal/domain/src/rising.ts`, so the Postgres and in-memory implementations rank identically); `trending` the feed's trending ranking. `reason.kind` is data (`continue`, `subscription`, `co-watched`, `shared-tags`, `same-channel`, `same-category`, `category`, `trending`, `searched`, `rising`, with the video, channel, category, search row or channel in `subjectId`); the web app turns it into copy through its catalogue. The page is cached in Redis for five minutes under `taitube:home:{userId}` (`taitube:home:anonymous` signed out) and the viewer's key is dropped by a watch history write, a removal, a clear, a subscribe, an unsubscribe and a recommendation feedback write or undo. What the viewer marked with `PUT /me/recommendation-feedback` (a video, or every video of a channel) is removed from every shelf except `continue` and `subscriptions` (`applyFeedback` in `packages/universal/domain/src/recommendation-feedback.ts`), after the viewer-independent reads: a shelf that loses items shows fewer than twelve and is not back-filled, and an emptied shelf is dropped. One `hiddenOf` read per build, none for a signed-out visitor. `Cache-Control: private, no-cache`, `Vary: Authorization`. |
 | `GET /videos/:id/related` | Related videos | — | `200 { items:[VideoSummary & { reason }] }` / `404 VIDEO_NOT_FOUND` | Anonymous allowed, readable videos only (a private video of someone else is a 404). Up to 20 public ready videos ranked by viewers who watched both, shared tags, same channel, same category, then views (`compareRelated` in `packages/universal/domain/src/related.ts`; the Postgres query orders by the same signals). `reason.kind` is the strongest signal a video matched on, with the asked video in `subjectId`. The video itself and the caller's own uploads never appear, nor do the videos and channels the caller marked with `PUT /me/recommendation-feedback`. |
 | `PUT /me/recommendation-feedback` | Stop recommending | `{ kind: 'not_interested', videoId } \| { kind: 'hide_channel', channelId }` | `200 { id, kind, videoId \| channelId, createdAt }` / `404 VIDEO_NOT_FOUND` / `404 CHANNEL_NOT_FOUND` | Authenticated. Idempotent: the same target answers the row already there. `VIDEO_NOT_FOUND` for a video the caller may not read (`decideVideoRead`), whatever the reason. It is an explicit act, so it is stored while `privacy.historyPaused` is set. The caller keeps their newest 1000 rows (`RECOMMENDATION_FEEDBACK_LIMIT`): a write that adds one past that deletes the oldest in the same statement. Drops the caller's cached home page. Feedback filters only the home shelves (not `continue` or `subscriptions`) and "More like this"; `/feed`, search, channel pages, playlists and the subscriptions feed never apply it. |
 | `GET /me/recommendation-feedback?kind=&cursor=&limit=` | What I stopped recommending | — | `200 { items:[{ id, kind, videoId \| channelId, createdAt, video?, channel }], nextCursor }` | Authenticated. Newest first, keyset on `(created_at, id)`; `kind` is `not_interested` or `hide_channel`. A `not_interested` row carries the `VideoSummary` (`null` once the caller may no longer watch it) and the channel of the video, a `hide_channel` row its channel card. |
 | `DELETE /me/recommendation-feedback/:id` | Undo | — | `204` / `404 RECOMMENDATION_FEEDBACK_NOT_FOUND` | Authenticated. Keyed by the caller's id, so another user's row answers `404`. Drops the caller's cached home page. |
-| `GET /v1/search?q=&type=&categoryId=&sort=&cursor=&limit=&record=` | Search | — | `200 { items:[{ type:"video"\|"channel"\|"playlist", data }], nextCursor, tookMs, total, fuzzyFallback }` / `400` / `422 VALIDATION_FAILED` / `429 RATE_LIMITED` | Anonymous, 60 a minute per caller (the user, else the IP). `q` is 1-100 characters after trimming, lowercased before anything else, and needs one word that is not an `or` or a `-` exclusion; a query `websearch_to_tsquery` still reduces to match-everything (`querytree(...) = 'T'`, as `-"lo fi"` does) is the same `422`. `type` is `all` (default), `video`, `channel` or `playlist`; `sort` is `relevance` (default), `date` or `views` (views, subscribers, or the summed views of a playlist's watchable videos); `categoryId` narrows videos only; `limit` 1-50; `record=false` (default `true`) marks a preview that is not a search: no history entry and no suggestion count, and the same cached page. Ranking and fallback in §5.2. Keyset on `(key, kind, id)` with channel before video before playlist at equal keys; the cursor carries `{ sort, mode, instant, key, kind, id }`, is refused under another sort, and every field is checked (`id` a UUID, `instant` a date in 1970-9999) before any of it reaches SQL. A playlist's `videoCount`, cover and views count its `public` `READY` videos only. Pages are cached in Redis under `taitube:search:q:{type}:{sha256}` for 120 s behind singleflight, with `X-Cache: HIT\|MISS`. |
+| `GET /v1/search?q=&type=&categoryId=&sort=&cursor=&limit=&record=` | Search | — | `200 { items:[{ type:"video"\|"channel"\|"playlist", data }], nextCursor, tookMs, total, counts?, fuzzyFallback }` / `400` / `422 VALIDATION_FAILED` / `429 RATE_LIMITED` | Anonymous, 60 a minute per caller (the user, else the IP). `q` is 1-100 characters after trimming, lowercased before anything else, and needs one word that is not an `or` or a `-` exclusion; a query `websearch_to_tsquery` still reduces to match-everything (`querytree(...) = 'T'`, as `-"lo fi"` does) is the same `422`. `type` is `all` (default), `video`, `channel` or `playlist`; `sort` is `relevance` (default), `date` or `views` (views, subscribers, or the summed views of a playlist's watchable videos); `categoryId` narrows videos only; `limit` 1-50; `record=false` (default `true`) marks a preview that is not a search: no history entry and no suggestion count, and the same cached page. `counts` is `{ video, channel, playlist }`, every match of each kind for the same words and category, whichever `type` is asked for, so the result tabs show all three at once; it is on the first page only (a cursor page omits it) and costs one `limit 1` search per kind, cached with the page. Ranking and fallback in §5.2. Keyset on `(key, kind, id)` with channel before video before playlist at equal keys; the cursor carries `{ sort, mode, instant, key, kind, id }`, is refused under another sort, and every field is checked (`id` a UUID, `instant` a date in 1970-9999) before any of it reaches SQL. A playlist's `videoCount`, cover and views count its `public` `READY` videos only. Pages are cached in Redis under `taitube:search:q:{type}:{sha256}` for 120 s behind singleflight, with `X-Cache: HIT\|MISS`. |
 | `GET /v1/search/suggestions?q=` | Autocomplete | — | `200 { items:[{ type:"channel", text, channelId, handle, avatarUrl } \| { type:"query", text }] }` / `429 RATE_LIMITED` | Anonymous, 120 a minute per caller. Up to 3 channels whose handle or display name starts with `q`, then the most searched queries under `taitube:search:suggest:{prefix}` (a sorted set per prefix of up to 20 characters, 1000 members kept by space-saving: a full set drops its least searched member and the newcomer starts at that count plus one; 10 served, 7-day TTL), 10 in all. A first page that found something as typed, with letters and digits only, records its query, and a text counts once per 10 minutes (`SET NX` on `taitube:search:counted:{text}`). |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
 | `GET /v1/bootstrap` | Initial app context | — | `200 { user: Channel \| null, categories:[Category], featureFlags: Record<string, boolean> }` | Anonymous allowed; a valid bearer adds the caller's channel, an invalid one is 401. Categories come from the same L1/L2 cache as `GET /v1/categories`; `featureFlags` holds each name in `FEATURE_FLAGS` as `true`. One round trip for the web root loader. |
-| `GET /v1/me/account` | The caller's account | — | `200 { id, email, tier, createdAt, role, user, channel }` (`channel` is the owner's view: a `Channel` plus `autoCaptionsDefault`, read through `CaptionRepository.channelDefault`, which no public channel read carries) / `401 UNAUTHORIZED` / `404 CHANNEL_NOT_FOUND` | Authenticated caller. `role` is the verified token's role claim read through `parseRole` (`GUEST` for an unknown claim), the role the API authorizes with; no table stores it. The client apps' session comes from this call (§11). |
-| `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `channel`, `viewsCount`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
-| `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
+| `GET /v1/me/account` | The caller's account | — | `200 { id, email, tier, createdAt, role, user, channel, channels }` (`channels` is every channel the account owns as a `ChannelCard`, the primary first; `channel` is the primary in the owner's view: a `Channel` plus `autoCaptionsDefault`, read through `CaptionRepository.channelDefault`, which no public channel read carries) / `401 UNAUTHORIZED` / `404 CHANNEL_NOT_FOUND` | Authenticated caller. `role` is the verified token's role claim read through `parseRole` (`GUEST` for an unknown claim), the role the API authorizes with; no table stores it. The client apps' session comes from this call (§11). |
+| `GET /videos/:id?s=` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `channel`, `viewsCount`, `likesCount`, `dislikesCount`, `passwordProtected`, `shareLinkId?`, `experiment?`, `error?`) / `403 VIDEO_PASSWORD_REQUIRED` / `404` / `410 SHARE_LINK_EXPIRED` | Owner or public/unlisted, or a live share link token in `s`, which grants `read` on that video and nothing else (a token of another video proves nothing; a dead one of this video is `410`). A password-protected unlisted video answers `403 VIDEO_PASSWORD_REQUIRED` until its unlock cookie (`vp.video-access.{id}`), a live link, or the right to edit it comes with the request. A read let through by a link carries `shareLinkId` and counts one open. With `x-viewer-session`, a running test's variant replaces the title and thumbnail and `experiment` names it. Always `private, no-cache`, `Vary: Authorization, Cookie, x-viewer-session`. |
+| `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` / `403 COMMENTS_BANNED` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. A visible ban on the owning channel refuses it with `COMMENTS_BANNED` and the ban's reason and end; a shadow ban takes no part. |
 | `POST /v1/videos/:id/views` | View beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` / `400` / `413` / `429 RATE_LIMITED` | Anonymous allowed, 120 a minute per address, body limit 2 KiB, also accepted as `text/plain` for `navigator.sendBeacon`. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). `watchSeconds` only qualifies the view and adds no watch time. Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
-| `POST /v1/telemetry/vitals` | Core Web Vitals beacon | `{ app: "web"\|"studio", vitals:[{ name: "LCP"\|"INP"\|"CLS"\|"FCP"\|"TTFB", value, route }] }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 60 a minute per address. 1-32 vitals; `value` is what the browser reported (milliseconds, the unitless score for CLS), finite and 0-600000; `route` is the TanStack Router route id (`/watch/$videoId`), never the URL. Also accepted as `text/plain`, which `navigator.sendBeacon` sends without a preflight. Body limit 16 KiB. No database access: each vital is one observation in the `frontend_*` histograms (§13.1); an app records at most 32 distinct route ids per process, and the rest land under `route="other"`. |
-| `POST /v1/telemetry/playback` | Playback QoS and retention beacon | `{ videoId, sessionUuid, eventType: "playback_start"\|"heartbeat"\|"rebuffer"\|"quality_change"\|"playback_ended", currentTime, duration, rebufferingMs?, watchedSeconds?, rendition? }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 120 a minute per address, body limit 2 KiB. `sessionUuid` is generated by the player for each video load and never reused; nothing else identifies the viewer. `rebufferingMs` and `watchedSeconds` cover the time since the previous event. Also accepted as `text/plain` for `navigator.sendBeacon`. No database access: it feeds the `video_playback_*` and `video_rebuffering_ratio` metrics (§13.1), adds `watchedSeconds` to the day's watch time, counts the view once the session has watched 5 s (or the whole of a shorter video), and counts the session once at each 5 percent step it reached into the view buffer (`taitube:retention:*` in Redis). The `flush-video-views` housekeeping task moves both buffers in one batch into `video_views_daily`, `videos.views_count` and `video_retention_milestones`, so a failed write leaves the batch pending and loses no step. |
+| `POST /v1/telemetry/vitals` | Core Web Vitals beacon | `{ app: "web"\|"studio", vitals:[{ name: "LCP"\|"INP"\|"CLS"\|"FCP"\|"TTFB"\|"LONG_TASKS", value, route, source? }] }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 60 a minute per address. 1-32 vitals; `value` is what the browser reported (milliseconds, the unitless score for CLS, the total milliseconds of the tasks over 50 ms for `LONG_TASKS`), finite and 0-600000; `source` is optional, on a CLS vital only, and names the kit `data-slot` of the element that moved most (`^[a-z][a-z0-9-]{0,63}$`, never a selector or text); `route` is the TanStack Router route id (`/watch/$videoId`), never the URL. Also accepted as `text/plain`, which `navigator.sendBeacon` sends without a preflight. Body limit 16 KiB. No database access: each vital is one observation in the `frontend_*` histograms (§13.1); an app records at most 32 distinct route ids and 32 distinct sources per process, and the rest land under `route="other"` and `source="other"`. |
+| `POST /v1/telemetry/playback` | Playback QoS and retention beacon | `{ videoId, sessionUuid, eventType: "playback_start"\|"heartbeat"\|"rebuffer"\|"quality_change"\|"playback_ended", currentTime, duration, rebufferingMs?, watchedSeconds?, rendition?, device?: "desktop"\|"mobile"\|"tablet"\|"unknown", shareLinkId?, experiment?:{ experimentId, variantId } }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 120 a minute per address, body limit 2 KiB. `sessionUuid` is generated by the player for each video load and never reused; nothing else identifies the viewer. `rebufferingMs` and `watchedSeconds` cover the time since the previous event. Also accepted as `text/plain` for `navigator.sendBeacon`. No database access for a plain beacon (one carrying `shareLinkId` or `experiment` reads the link or the video's running test): it feeds the `video_playback_*` and `video_rebuffering_ratio` metrics (§13.1), adds `watchedSeconds` to the day's watch time, counts the view once the session has watched 5 s (or the whole of a shorter video) under the `device` the player reported (`unknown` when absent: a coarse pointer and the screen's short side decide it client side, no user agent is read), and counts the session once at each 5 percent step it reached into the view buffer (`taitube:retention:*` in Redis). The `flush-video-views` housekeeping task moves both buffers in one batch into `video_views_daily`, `video_views_device_daily`, `videos.views_count` and `video_retention_milestones`, so a failed write leaves the batch pending and loses no step. `shareLinkId` and `experiment` echo the video read: the link gets the watch seconds and the counted view, the variant the watch seconds, and a `playback_start` counts one start for it. A link that targets another video, or a test that is not the one running on this video with that variant, is dropped from the beacon, which still counts. |
+| `POST /v1/telemetry/impressions` | Test variant impressions | `{ items:[{ videoId, experimentId, variantId }] }` (1 to 50) | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, the playback rate limit, body limit 8 KiB, also `text/plain` for `navigator.sendBeacon`. A card whose `experiment` tag came into view; buffered like views and dropped, never refused, when Redis is down. An item whose test is not the one running on its video, or whose variant that test lacks, is dropped (one `runningFor` read per batch). The feed, Shorts, search, related and home answers carry the same tag after their caches when the request has `x-viewer-session`, and are then private; oEmbed, OpenGraph and the sitemap always carry the control. |
 | `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d\|lifetime` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], hourly:[{viewHour, views}], rangeViews, rangeWatchSeconds, totalViews, averageDailyViews, averageRetention, previous:{ rangeViews, rangeWatchSeconds } \| null }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. `lifetime` starts at the first day with views (today when none) and has no `previous`; a fixed range's `previous` is the as-long period just before it. `hourly` is the last 48 UTC hours, the current one included, zero-filled, whatever the range; `video_views_hourly` keeps only those. |
 | `GET /v1/creator/videos/:id/retention` | Audience retention curve | — | `200 { videoId, curve:[{ percent, viewers }] }` | Owner or admin (`read Analytics`), 403 and 404 as for analytics. 21 points, `percent` 0 to 100 in steps of 5, `viewers` the sessions that reached that step; a step nobody reached is 0. Reads what the last flush committed. |
+| `GET /v1/creator/videos/:id/audience?range=7d\|30d\|90d\|lifetime` | Device split of a video's views | — | `200 { videoId, range, from, to, devices:[{ device:"desktop"\|"mobile"\|"tablet"\|"unknown", views, share }] }` | Owner or admin (`read Analytics`), 401, 403 and 404 as for analytics; a range outside the analytics ranges is `400`. Reads `video_views_device_daily` over the range (default `30d`, the same ranges as the analytics read, `lifetime` from the first day the table can hold, today included), most viewed first, `share` the part of the counted device views (a view recorded through `POST /v1/videos/:id/views` has no device and is not in it), so the shares sum to 1; an empty list while nothing is counted. Reads what the last flush committed. |
+| `GET /v1/creator/videos/:id/benchmark` | First week against the channel's earlier first weeks | — | `200 { videoId, publishedAt, peerCount, days:[{ day, views, p25, median, p75 }] }` | Owner or admin (`read Analytics`), 401, 403 and 404 as for analytics. `day` 0 to 6 counts UTC days from the day of `ready_at`; `views` is the video's cumulative views by the end of that day, `null` for a day not begun yet (today counts as begun), all `null` while the video has no `ready_at`. The envelope is `cumulativeFirstWeek` of up to ten peers, the channel's most recent public ready videos that became ready at least seven days ago, never this one, summarised per day by `benchmarkEnvelope` (percentiles by linear interpolation); `p25`, `median` and `p75` are `null` on every day while `peerCount` is under three. One query reads the first seven days of every video from `video_views_daily`. |
+| `GET /v1/videos/:id/creator-stats` | The channel team's numbers on the watch page | — | `200 { videoId, generatedAt, lifetime:{ views, watchSeconds, likes, comments, subscribersGained }, last30Days:{ views, watchSeconds, averageViewDurationSeconds, daily:[{ date, views }] }, first48Hours:{ hours:[{ hour, views }], windowEndsAt } \| null, retention:{ average, dropOffs:[{ percent, positionSeconds, lostShare }] } }` | `read VideoStats`: the owner and members whose role carries `analytics.read` (manager, editor, analytics viewer; a moderator does not), plus an admin. A guest gets `401`; a signed-in caller who can see the video but lacks the ability `403`; one who cannot see the video `404 VIDEO_NOT_FOUND`. `Cache-Control: private, no-store`; the numbers never enter the public video resource, the Redis caches or an anonymous render. One request for what the panel shows: `lifetime` totals use the studio's lifetime figures (`views` is `videos.views_count`), `last30Days` is the `30d` range with `averageViewDurationSeconds` its watch seconds over its views, `subscribersGained` is the net count of `channel_subscriptions.source_video_id` (§5.2). `first48Hours` reads `video_views_hourly` from the hour the video became ready (`ready_at`), zero-filled, and is `null` once 48 hours have passed or while the video is not ready. `dropOffs` are `dropOffMoments` over the retention curve: the three largest drops between consecutive 5 percent points after the first step (the bounce, part of `average`), largest first, each at the start of its bucket with the share of the viewers who began that left there. Reads what the last flush committed; `video.stats.updated` (§10.3) tells an open panel to refetch. |
 | `GET /v1/creator/channel/analytics?range=7d\|30d\|90d\|lifetime` | Channel analytics | — | `200 { range, from, to, timeline, hourly, rangeViews, rangeWatchSeconds, netSubscribers, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}], previous:{ rangeViews, rangeWatchSeconds, netSubscribers } \| null }` | Authenticated caller, over the videos they own. Range, `hourly` and `previous` as for video analytics. `netSubscribers` is gains minus losses of the caller's channel over the range, from `subscription_events`, which each subscribe and unsubscribe appends in its own transaction. |
+| `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags, commentsEnabled }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, commentsEnabled?, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. `commentsEnabled: false` refuses new comments with `COMMENTS_DISABLED` for everyone but the owner and the channel team, and is audited `video.comments.toggled { enabled }`; the other fields are audited as `video.updated`. |
 | `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `GET /v1/creator/videos/:id/screening` | Why a video is on hold | — | `200 { videoId, status, reasons:[DUPLICATE\|NSFW\|BLANK\|METADATA_SPAM\|SCREEN_ERROR], decision:"rejected"\|null, decisionNote, canAppeal, appeal:{ message, createdAt, resolved }\|null }` / `401` / `403` / `404` | Owner (`update Video`); a caller who cannot read the video gets `404`. A plain reason only: a match with a taken-down video reads as `DUPLICATE`, a partial match is never told, and neither the matched video nor a score or threshold is on the wire. |
+| `POST /v1/creator/videos/:id/screening/appeal` | Appeal a screening rejection | `{ message }` (1 to 1000 characters) | `201` the same view / `400` / `403` / `404` / `409 VERSION_CONFLICT` / `422` | Owner (`appeal Video`: a `HELD` video or a `REJECTED` one whose `error_code` is `SCREENING_REJECTED`). `REJECTED → HELD` and the appeal row in one CAS; a takedown by a moderator is `403`, a video still on hold `422`. The case returns to the queue and a moderator other than the one who rejected decides. |
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
+| `POST /v1/creator/videos/bulk` | Edit up to 100 videos | `{ ids (1 to 100), patch:{ visibility?, categoryId?, addTags?, removeTags?, commentsEnabled? } }` | `200 { items:[{ id, ok, code? }] }` / `400` / `401` / `422 VALIDATION_FAILED` | Each distinct id is its own studio edit (at most 4 in flight): its own `update Video` rule, its own read of the current `version` and its own CAS, so one refusal or conflict fails that item only and the answer is `200` even when every item failed. `code` is what the single edit would have answered; a video the caller cannot read answers `VIDEO_NOT_FOUND`. Tags are merged per video (`addTags` joins, `removeTags` leaves, case-insensitively). |
+| `GET /v1/creator/videos/:id/revisions?cursor=&limit=` | Metadata history | — | `200 { items:[{ id, version, snapshot, authorUserId, restoredFromVersion, createdAt }], nextCursor }` / `403` / `404` | Needs `update Video`. Newest first, keyset on `version`. Every saved edit appends one `video_metadata` revision at the video's new `version` in the edit's own transaction, and the first edit of a video also records the state before it; a lost CAS writes none. The snapshot holds title, description, tags, category, visibility, thumbnail, chapters and `commentsEnabled`. Housekeeping keeps the newest 50 per video. |
+| `POST /v1/creator/videos/:id/revisions/:revisionId/restore` | Restore a revision | `{ version }` | `200 Video` / `404 REVISION_NOT_FOUND` / `409 VERSION_CONFLICT` / `422` | A normal studio edit under the caller's `version`, writing only the fields that differ from the current state, so a field rule such as a takedown's visibility lock still applies. Appends a new revision and is audited `video.restored { fromVersion }` beside the `video.updated` row. |
+| `GET /v1/creator/videos/:id/chapter-suggestions` | Suggest chapters | — | `200 { items:[{ startMs, title }] }` | Needs `update Video`. A pure function over the cues of the ready transcript (an edited or uploaded track before a generated one): windows of about 30 seconds, a term-frequency vector per window without the stop words of the track's language (English; a language without a list cuts at pauses only), a boundary where the cosine similarity of adjacent windows is under 0.2 and at least 90 seconds have passed, moved to a silence of 2.5 seconds or more within 15 seconds, at most 12, each titled with its three highest-weighted terms. Saves nothing; empty without a transcript. |
+| `PUT /v1/videos/:id/chapters` | Replace the chapters | `{ chapters:[{ startMs, title }], version }` | `200 Video` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Needs `update Video`. The whole set, sorted by time: empty to clear, else at least 3, the first at 0, at least 10 seconds apart, the last before the video ends, titles 1 to 60 characters. A normal studio edit under `version`, so it appends a revision and is audited as `video.updated` with the `chapters` field. The `Video` resource carries `chapters`; the description-timestamp parser stays the fallback when none are stored. |
+| `GET /v1/videos/:id/corrections?s=` | List corrections | — | `200 { items:[{ id, videoId, startMs, endMs, text, createdAt }] }` / `403 VIDEO_PASSWORD_REQUIRED` / `404` / `410 SHARE_LINK_EXPIRED` | Anyone who can watch the video, in playback order, behind the same share link and password gate as `GET /v1/videos/:id`. |
+| `POST /v1/videos/:id/corrections` | Add a correction | `{ startMs, endMs, text }` | `201 Correction` / `409 CORRECTION_LIMIT` / `422 VALIDATION_FAILED` | Needs `update Video`. 2 to 30 seconds inside the video, `text` 1 to 200 characters, at most 10 per video (counted under an advisory lock, so two writers cannot pass it together). |
+| `PATCH /v1/videos/:id/corrections/:correctionId` | Change a correction | `{ startMs?, endMs?, text? }` (at least one) | `200 Correction` / `404 CORRECTION_NOT_FOUND` / `422 VALIDATION_FAILED` | Needs `update Video`. The same range and text rules as adding one, over the merged values; the limit does not apply. |
+| `DELETE /v1/videos/:id/corrections/:correctionId` | Remove a correction | — | `204` / `404 CORRECTION_NOT_FOUND` | Needs `update Video`. |
+| `GET /v1/creator/videos/:id/share-links` | List share links | — | `200 { items:[{ id, token, label, expiresAt, revokedAt, createdAt, state:"active"\|"expired"\|"revoked", stats:{ opens, views, watchSeconds } }] }` | Needs `update Video`. Newest first, the dead ones included; `stats` adds up every flushed day. |
+| `POST /v1/creator/videos/:id/share-links` | Create a share link | `{ label?, expiresIn:"1h"\|"24h"\|"7d"\|"30d"\|"never" }` | `201 ShareLink` / `409 SHARE_LINK_LIMIT` / `422 VALIDATION_FAILED` | Needs `update Video`. The link opens `/watch/:id?s=token`; at most 50 active per video, counted under a lock with the insert; a label of up to 60 characters. |
+| `DELETE /v1/creator/videos/:id/share-links/:linkId` | Revoke a share link | — | `204` / `404 SHARE_LINK_NOT_FOUND` | Needs `update Video`. The link answers `410` from the next request on. |
+| `PUT /v1/creator/videos/:id/password` | Protect an unlisted video | `{ password }` (4 to 128 characters) | `200 { passwordProtected:true }` / `409 VIDEO_PASSWORDS_OFF` / `422 VALIDATION_FAILED` | Needs `update Video`; only an unlisted video. A salted scrypt hash is stored and neither it nor the password is ever answered or logged. `409` without `VIDEO_ACCESS_SECRET`. A new password ends every unlock made under the old one. |
+| `DELETE /v1/creator/videos/:id/password` | Remove the password | — | `204` | Needs `update Video`. Every unlock ends with it. |
+| `POST /v1/videos/:id/unlock` | Unlock a password-protected video | `{ password }` | `204` + `Set-Cookie: vp.video-access.{id}` / `403 VIDEO_PASSWORD_INVALID` / `404` / `409 VIDEO_PASSWORDS_OFF` / `429 RATE_LIMITED` | Anonymous. 5 attempts a minute per client address and video (`@fastify/rate-limit` route config). A video the caller cannot read is `404`. The cookie is `HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`, `Secure` over https; its value is `<expiry>.<HMAC-SHA256 with VIDEO_ACCESS_SECRET over the video id, the expiry and the current password hash>`, compared in constant time. The web's `/api` proxy re-issues it on the web origin and forwards `vp.video-access.*` cookies back. |
+| `GET /v1/creator/videos/:id/experiments` | List title and thumbnail tests | — | `200 { items:[Experiment] }` | Needs `update Video`. Each with `results: { enoughData, variants:[{ variantId, impressions, starts, watchSeconds, watchSecondsPerImpression, clickThrough, averageViewSeconds }] }`; every ratio is null until each variant has 1000 impressions. |
+| `POST /v1/creator/videos/:id/experiments` | Start a test | `{ kind:"title"\|"thumbnail"\|"both", variants:[{ title?, thumbnail?:{ source:"poster" } }] }` (2 or 3) | `201 Experiment` / `409 EXPERIMENT_LIMIT` / `422 VALIDATION_FAILED` | Needs `update Video`. One running test per video and five per channel (the video's owner), checked again under a per-owner lock with the insert. A thumbnail test needs two thumbnails of the video. |
+| `POST /v1/creator/videos/:id/experiments/:experimentId/stop` | Stop a test | — | `200 Experiment` / `404 EXPERIMENT_NOT_FOUND` / `409 EXPERIMENT_NOT_RUNNING` | Needs `update Video`. No winner; the numbers stay. |
+| `POST /v1/creator/videos/:id/experiments/:experimentId/apply` | Apply the winner | `{ variantId, version }` | `200 Video` / `404 EXPERIMENT_NOT_FOUND` / `409 EXPERIMENT_NOT_RUNNING` / `409 VERSION_CONFLICT` / `422` | Needs `update Video`. The winner's title (and thumbnail) is written through the studio edit under `version`, one revision and one audit row, then the test finishes with that winner. A stale version changes nothing. A concurrent stop that ended the test first still answers the written video. Nothing is ever applied automatically. |
+| `GET /v1/creator/videos/:id/generations` | Generations and the edit list | — | `200 { activeGeneration, editBase:{ generation, durationMs }, edit, revertible, items:[{ generation, kind, status, durationMs, needsReview, errorCode, purgeAfter, createdAt }] }` | Needs `update Video`. `editBase` is the generation a new edit renders from and whose timeline its ranges are on; `edit` is the list saved over it; `revertible` says the edit that plays can go back to its base. |
+| `POST /v1/videos/:id/replacement` | Replace the file | `{ filename, sizeBytes, contentType }` | `201 { generation, uploadUrl, headers, expiresAt }` / `409 GENERATION_IN_PROGRESS` / `422 UPLOAD_TOO_LARGE\|UNSUPPORTED_CONTENT_TYPE` | Needs `update Video`; only a `READY` video with nothing uploading or rendering. A single presigned PUT into the raw bucket under the new generation; the video keeps playing its current file. |
+| `POST /v1/videos/:id/replacement/complete` | Render an uploaded replacement | `{ generation }` | `202 { generation, status:"rendering" }` / `409 REPLACEMENT_NOT_UPLOADED` | Needs `update Video`. Checks the object is in the raw bucket and queues `apply-edits` through the outbox in the same transaction (§3.2). |
+| `PUT /v1/videos/:id/edits` | Trim and blur | `{ trim:{ startMs, endMs }\|null, blurs:[{ startMs, endMs, shape:"rect"\|"ellipse", x, y, w, h, strength }] }` | `202 VideoEdit` / `409 GENERATION_IN_PROGRESS` / `422 VALIDATION_FAILED` | Needs `update Video`. Ranges on the base generation's timeline; `x`, `y`, `w`, `h` are shares of the frame; up to 20 blurs of strength 1 to 20; a trim keeps at least a second. Renders from the base's top rendition, one re-encode. |
+| `POST /v1/videos/:id/edits/revert` | Revert the edits | `{ version }` | `200 { generation, version }` / `409 NO_EDIT_TO_REVERT` / `409 VERSION_CONFLICT` | Needs `update Video`. Swaps the base of the edit that plays back in with its chapters, corrections and retention, while the base is kept (14 days after the last edit); a later edit that failed to render does not block it, a render in flight does. |
+| `GET /v1/creator/videos/:id/clip-suggestions` | Suggest clips | — | `200 { items:[{ startMs, endMs, lostShare, chapterTitle }] }` | Needs `update Video`. Up to 3 non-overlapping windows of 15, 30 or 45 seconds over the retention curve of the generation playing, ranked by how much less they lost than the same length before and after them; saves nothing. A suggestion becomes a clip through `POST /v1/videos/:id/clips`. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
-| `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
+| `GET /v1/creator/comments?filter=all\|unanswered\|reported\|held\|hidden\|questions\|restricted&authorId=&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report; `held` and `hidden` keep comments in that moderation state, `questions` those with a question mark or a leading question word (`looks_like_question`). A new comment on one of their videos arrives live as `comment.created` (§10.3). |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
-| `GET /v1/channels/:idOrHandle` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `brandColor`, `bio`, `links:[{ label, url }]`, `subscriberCount`, `videoCount`, `totalViews`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
-| `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, avatarKey?, bannerKey?, brandColor?, bio?, links? }` | `200 Channel` plus `autoCaptionsDefault` / `400 INVALID_HANDLE_FORMAT` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN` / `422 VALIDATION_FAILED` | Authenticated caller. `avatarKey` and `bannerKey` are the keys `POST /v1/me/channel/images` returned: each must sit under the caller's own `channels/<channelId>/<kind>/` prefix and name an uploaded object (else `422 VALIDATION_FAILED` naming the field), and replaces the address of the same field with its public URL. `links` replaces the list: up to 5 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`, the `ACCENT_PATTERN` check the account's accent uses): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`, which steps it until every contrast pair passes. |
-| `POST /v1/me/channel/images` | Presign an avatar or banner upload | `{ kind: 'avatar' \| 'banner', contentType, sizeBytes }` | `201 { key, uploadUrl, headers, expiresAt }` / `400` / `401` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | Authenticated caller, their own channel (resolved from the token, never from an id in the request). A presigned `PUT` into the public bucket at `channelImageKey` (`channels/<channelId>/<kind>/<id>.<ext>` in `@vp/storage`); `image/jpeg`, `image/png` or `image/webp`, at most 5 MB for an avatar and 10 MB for a banner (`validateChannelImage` in `@vp/validation`, so the form runs the same rule); the size is signed into the URL. The upload is saved to the channel by `PATCH /v1/me/channel`. |
+| `GET /v1/channels/:idOrHandle?locale=` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `avatar: { sizes }`, `banner: { desktop, mobile, tv }`, `bannerLink`, `country`, `hasContact`, `brandColor`, `bio`, `links:[{ label, url, platform }]`, `subscriberCount`, `videoCount`, `totalViews`, `redirectedFrom`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`; a handle the channel gave up in the last 90 days resolves to it with `redirectedFrom` set, and the web app answers that handle's page with a `301` to the new one. `bio` is the description in the negotiated locale (`locale`, else `Accept-Language`) when the channel wrote one, else the default. `platform` is read off the link's host by `LINK_PLATFORMS` in `@vp/domain`, `website` for an unknown host. The contact email is never in the resource. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
+| `POST /v1/me/channels` | Create another owned channel | `{ handle, displayName }` | `201 { ...ChannelCard, isPrimary }` / `400 INVALID_HANDLE_FORMAT` / `401` / `409 CHANNEL_LIMIT_REACHED \| HANDLE_ALREADY_TAKEN \| HANDLE_RESERVED` / `422 VALIDATION_FAILED` | Signed in, account-level (no `X-Channel-Id`). `decideCreateChannel` checks the cap (`CHANNELS_MAX_OWNED`) before the handle (38's rules); `createOwned` holds the cap under concurrency. Not primary unless it is the account's first. Appends `channel.created` to the new channel's audit log. |
+| `PATCH /v1/me/channels/:id` | Make an owned channel the primary | `{ isPrimary: true }` | `200 { ...ChannelCard, isPrimary }` / `401` / `403 CHANNEL_NOT_OWNED` / `404 CHANNEL_NOT_FOUND` / `422 VALIDATION_FAILED` | The owner only (`own Channel`, `decidePromote`); a manager of the channel gets `403 CHANNEL_NOT_OWNED`. The old primary steps down in the same transaction. Appends `channel.promoted`. |
+| `GET /v1/me/identities` | Every identity the caller can act as | — | `200 { account: { id, email }, owned: [{ ...ChannelCard, isPrimary }], member: [{ ...ChannelCard, role, ownerId }] }` / `401` | Signed in. Owned channels primary first, then the channels whose team the caller is on with the role there; each may be named in `X-Channel-Id`. |
+| `POST /v1/me/security/sign-ins` | Record a sign-in into a browser slot | `{ slot, added }` | `201 { id, action, slot, userAgent, createdAt }` / `400` / `401` / `429 RATE_LIMITED` | Signed in with the token the slot now holds; called by a client app's server on every sign-in into a slot, never by a browser. Appends `account.signed_in` with the slot and the user agent. An add (`added: true`) is limited to 5 per client address in 10 minutes (`@fastify/rate-limit`, `rateLimitProblem`). |
+| `GET /v1/me/security/sign-ins?cursor&limit` | My sign-in history | — | `200 { items: [{ id, action, slot, userAgent, createdAt }], nextCursor }` / `400 INVALID_CURSOR` / `401` | Signed in; the caller's own `account_audit_log` rows, newest first, keyset-paginated. |
+| `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, brandColor?, bio?, links?, country?, contactEmail?, bannerLink? }` | `200 OwnerChannel` / `400 INVALID_HANDLE_FORMAT` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN \| HANDLE_CHANGE_TOO_SOON \| HANDLE_RESERVED` / `422 VALIDATION_FAILED` | The acting channel (`X-Channel-Id`, default the caller's primary): the owner, a manager or an editor (`edit-channel`, `decideChannelTask`); a moderator gets `403`. `avatarUrl` and `bannerUrl` take an external image address, which stays until an upload replaces it (`POST /v1/me/channel/images/:kind/upload` and `/complete`), or `null` to remove the image. A handle changes at most once every 30 days (`HANDLE_CHANGE_TOO_SOON`, `decideHandleChange`); the one it leaves goes to `channel_handle_history` in the same transaction and stays reserved for its old owner for 90 days (`HANDLE_RESERVED`, `decideHandleClaim`). `bio` up to 5000 characters of plain text. `links` replaces the list: up to 8 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. `country` is an ISO 3166-1 alpha-2 code in `COUNTRIES` or `null`; `contactEmail` is a validated address or `null`; `bannerLink` is `{ label <= 24, url }`, `https` only, or `null`. `brandColor` is `#rrggbb` in any case, stored lowercase, or `null` to clear it (`validateBrandColor` in `@vp/domain-rules`): a malformed value is `422 VALIDATION_FAILED`, any well-formed one is accepted, a hostile one too, because the web app derives the channel's accent from it with `deriveAccent`. A save that changes anything appends one `channel.updated` row to the channel audit log naming the fields. |
+| `GET /v1/me/channel` | Read my channel for editing | — | `200 OwnerChannel` (the channel resource plus `contactEmail`, `bannerCrops`, `handleChangeAvailableAt`, `autoCaptionsDefault`) / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | The acting channel, for the roles that may edit it (`edit-channel`): the owner, a manager and an editor; a moderator gets `403`. The studio's customisation page reads this, so an editor edits the channel they switched to and not their own. |
+| `POST /v1/me/channel/images/:kind/upload` | Presign an avatar, banner or post image upload (`post-image`: variants 640 and 1280 wide, no crop, many ready side by side) | `{ contentType, sizeBytes }` | `201 { uploadId, uploadUrl, headers, expiresAt }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 UNSUPPORTED_CONTENT_TYPE \| UPLOAD_TOO_LARGE` | The acting channel (`edit-channel`). A presigned `PUT` into the private `raw` bucket at `channelImageUploadKey` (`channel-images/<channelId>/<kind>/<uploadId>`); `image/jpeg`, `image/png` or `image/webp`, at most 2 MB for an avatar and 6 MB for a banner (`validateChannelImageUploadRequest` in `@vp/validation`); the size is signed into the URL. Records a `channel_image_uploads` row at `issued`. |
+| `POST /v1/me/channel/images/:kind/complete` | Crop an uploaded image and start processing it | `{ uploadId, width, height, crop }` for an avatar, `{ uploadId, width, height, crops: { desktop, mobile, tv } }` for a banner | `202 { uploadId, version }` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND \| IMAGE_UPLOAD_NOT_FOUND` / `422 VALIDATION_FAILED \| UPLOAD_TOO_LARGE \| UPLOAD_SIZE_MISMATCH \| UNSUPPORTED_CONTENT_TYPE \| IMAGE_TOO_SMALL` | The acting channel. Heads the object for its stored size and type, checks the dimensions (an avatar at least 200 x 200, a banner at least 1024 x 576) and every crop against the image (`decideImageCrops`: an avatar square, a banner desktop 6:1, mobile 3:1, tv 16:9, each inside the image), stores the crops on the upload row and enqueues a `channel-image` job on the `thumbnail` queue under `jobId = <uploadId>--channel-image`. Completing the same upload again answers the same version. The channel keeps its image until the job succeeds; `channel.image.ready` or `channel.image.failed` arrives on `GET /v1/me/events` (§10.3). |
+| `GET /v1/channels/:idOrHandle/spotlight?locale=` | The video a channel page shows first | — | `200 { source: 'returning' \| 'trailer' \| null, video: VideoSummary \| null }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. A subscriber (§5.2, `channel_subscriptions`) gets the returning-subscriber video, the trailer when none is set; anyone else gets the trailer. A localized trailer for the negotiated locale wins over the default. Judged on every read (`isSpotlightable`: the channel's own, `READY`, `public`, not deleted), so a trailer made private drops out without a save. It is the only viewer-dependent block of a channel page, fetched on its own so the rest stays cacheable. |
+| `GET /v1/me/channel/spotlight` | Read the spotlight settings | — | `200 { trailerVideoId, returningVideoId, localizations: [{ locale, description, trailerVideoId }] }` / `401` / `403` / `404` | The acting channel (`edit-channel`). What was saved, whatever state each video is in since. |
+| `PUT /v1/me/channel/spotlight` | Set the trailer, the returning-subscriber video and the per-language overrides | `{ trailerVideoId, returningVideoId, localizations }` | `200` (the settings as saved) / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `422 VALIDATION_FAILED \| INVALID_SPOTLIGHT_VIDEO` | The acting channel (`edit-channel`). Replaces all three in one transaction. Every video is the channel's own, `READY` and `public` (`decideSpotlightVideo` in `@vp/domain-rules`; `INVALID_SPOTLIGHT_VIDEO` names the field and why); every locale one of the supported set, once. Audited as `channel.updated { fields: ['spotlight'] }`. |
+| `POST /v1/channels/:id/contact-reveal` | Reveal a channel's contact email | — | `200 { email }` / `400` / `401` / `404 CHANNEL_NOT_FOUND` / `429 RATE_LIMITED` | A signed-in caller, at most 20 a day each (`CONTACT_REVEALS_PER_DAY`). `404` when the channel set none, the same answer as for a channel that is not there. Nothing sends email. |
 | `GET /v1/channels/:idOrHandle/videos?format=&cursor=&limit=` | Channel videos | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then its `public` `READY` videos of one `format` (`standard` by default, `short` for the channel's Shorts tab) newest first: the public feed read narrowed to the owner (`ListPublicVideosOptions.ownerId`), keyset on `(created_at, id)`, read in order from `videos_owner_created_id_idx` (its `NULLS FIRST` matches the plain `DESC` of the `ORDER BY`, or Postgres sorts the owner's rows on every page). Every item carries the channel the lookup found, so it costs no `findByUserIds`. Not cached. |
 | `GET /v1/channels/:idOrHandle/playlists?cursor=&limit=` | Channel playlists | — | `200 { items:[{ id, title, description, thumbnailUrl, thumbnailUrls, videoCount, updatedAt }], nextCursor }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle` (the lookup `GET /v1/channels/:idOrHandle/videos` uses), then its `public`, non-system playlists, most recently changed first: keyset on `(updated_at truncated to milliseconds, id)`, the stored `now()` carrying microseconds a cursor cannot. `videoCount` and `thumbnailUrls` (the first three video posters in playlist order) count only the videos an anonymous visitor may watch; `thumbnailUrl` is the custom thumbnail, else the first poster. Not cached. |
 | `GET /v1/channels/:idOrHandle/featured` | Channel Start here shelf | — | `200 { source: 'pinned' \| 'popular', items:[VideoSummary] }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then the videos its creator pinned that are still `public` and `READY`, in the order they chose, with `source: 'pinned'`; a video that turned private or unlisted or was deleted drops out on the next read, its row staying until the creator saves again or the video is purged. When none qualify, the channel's six most-viewed public uploads of the standard format (`ListPublicVideosOptions` with `sort: 'popular'` narrowed to the owner) with `source: 'popular'`. The fallback is decided here and the web app only renders `source`. Not cached, so the `PUT` has nothing to invalidate. |
 | `PUT /v1/me/channel/featured` | Replace the Start here shelf | `{ videoIds: [uuid] }` in display order | `200 { source, items }` (the shelf as a visitor now reads it) / `400` / `401` / `403 FORBIDDEN` (another creator's video) / `404 CHANNEL_NOT_FOUND \| VIDEO_NOT_FOUND` (an unknown video, or a private one of someone else, which a 403 would confirm) / `422 VALIDATION_FAILED` (a seventh video, a repeat, or a video of the caller that is not `public` and `READY`) | Authenticated; the caller's own channel. Replaces the set in one transaction that locks the channel row; an empty list clears it. The owner check is declaratively the `pin` action on `Video` in `@vp/permissions` (`{ ownerId: user.id }`) beside the rule that the video belongs to the channel's owner, so an admin cannot pin someone else's video either. Up to six pins, `position` 0 to 5; the cap and the `pin` vocabulary are shared with the other pinned surfaces. |
-| `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
+| `POST /channels/:id/subscribers` | Subscribe | optional `{ fromVideoId }` | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). `fromVideoId` is stored in `channel_subscriptions.source_video_id` when the call creates the subscription and the video is a public video of this channel (`subscriptionSourceOf`); any other id, a forged one included, stores nothing and is no error. An unsubscribe deletes the row, so a video's subscribers gained is a net count. The subscriber is the acting channel (`subscribe-as`: the owner or a manager), so an account subscribes once per channel it acts as; a channel cannot subscribe to itself. A new subscription appends `channel.subscribed` to the acting channel's audit log. |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
-| `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
+| `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller, answered for the acting channel (`X-Channel-Id`): another channel of the same account may differ. Served from the acting channel's Redis O(1) set (`taitube:channel:{channelId}:subscriptions`); a miss primes that whole set from Postgres. |
 | `PATCH /v1/channels/:id/subscribers/me` | Set a subscription's notification level | `{ level: "all" \| "highlights" \| "none" }` | `200 { channelId, level }` / `400` / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | Authenticated caller, who must be subscribed (an unsubscribed caller gets the `404`). `highlights` is uploads only, no live; `none` is nothing. A subscription starts at `all`. Not cached, because the fan-out reads the table. See §10.4. |
 | `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. Each item carries its `notificationLevel`. |
 | `GET /v1/me/notifications?filter=&cursor=&limit=` | My notifications | — | `200 { items:[Notification], nextCursor }` / `400 INVALID_CURSOR` / `401 UNAUTHORIZED` | Authenticated, through `read Notification { ownerId }`. Newest first, keyset on `(created_at, id)`; `filter` is `all` (default), `subscriptions` (`upload`, `live`) or `mentions` (`reply`, `mention`). A `Notification` is `{ id, kind, actorChannelId, videoId, commentId, payload: { count, actor, videoTitle, excerpt, outcome }, read, createdAt }`; the payload is a snapshot written when the row is, so a list needs no join. See §10.4. |
 | `GET /v1/me/notifications/unread-count` | The badge number | — | `200 { unreadCount }` / `401 UNAUTHORIZED` | Authenticated. Served from `notifications_user_unread_idx`; the same number `hello` carries as `unreadNotifications`. |
 | `POST /v1/me/notifications/read` | Mark read | `{ ids: [uuid] }` (1 to 100) or `{ all: true }` | `200 { unreadCount }` / `400` / `401` / `403 FORBIDDEN` | `update Notification { ownerId }` on every named row: an id of someone else's notification refuses the whole request, an id already gone is skipped, one already read is a no-op. Emits `notification.read` on the user stream, so the caller's other tabs and devices clear their badge. |
 | `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
-| `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. |
+| `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. Every `Comment` carries `status` (`published`, `held`, `hidden`) and `moderation`: `null` for a published comment and for a silently moderated one, `{ state, reason? }` for the author of a visibly moderated one, and `{ state, reason, disclosure, heldReason, by, at }` for a moderator. A signed-in reader also gets their own held, hidden or shadowed comments merged into the page and added to `total`, so their count matches their list; the shared hot page is never written with them. |
 | `GET /comments/:id/replies?cursor=&limit=` | Comment replies | — | `200 { items:[Comment], nextCursor }` | Anonymous allowed. Oldest first, keyset on `(created_at, id)`. |
-| `POST /videos/:id/comments` | Comment or reply | `{ content, parentId? }` | `201 Comment` | Authenticated (`comment:create`). 1-2000 characters of plain text. A reply to a reply joins the root thread. Increments `comments_count`, purges the hot page. |
-| `PATCH /comments/:id` | Edit comment | `{ content }` | `200 Comment` | Author only (`comment:update`); sets `isEdited`. |
+| `POST /videos/:id/comments` | Comment or reply | `{ content, parentId? }` | `201 Comment` / `403 COMMENTS_BANNED \| COMMENTS_DISABLED \| COMMENTS_SUBSCRIBERS_ONLY \| COMMENTS_ACCOUNT_TOO_NEW` / `429 COMMENTS_SLOW_MODE` | Authenticated (`comment:create`). 1-2000 characters of plain text. A reply to a reply joins the root thread. One context lookup (settings, restriction, subscription, team membership, trusted list, account age) feeds `evaluateCommentGate`, which refuses in this order: a visible ban, comments off, subscribers only, account age; then slow mode is claimed last in Redis (`SET NX EX`, released when the insert fails, fail-open when Redis is down). `COMMENTS_BANNED` carries `errors: [{ reason, expiresAt }]`, `COMMENTS_ACCOUNT_TOO_NEW` `[{ opensAt }]` and `COMMENTS_SLOW_MODE` `[{ retryAfter }]` plus a `Retry-After` header. A held comment answers `201` too; the owner, managers, moderators and trusted commenters are never held. A shadow ban takes no part: the comment is stored and answered as any other. A public comment increments `comments_count` and purges the hot page; a held, hidden or shadowed one does neither. Written as the acting channel (`X-Channel-Id`, default the primary; `comment-as`: the owner or a manager, `403 FORBIDDEN` for the other roles, `403 CHANNEL_MEMBERSHIP_REQUIRED` for a channel the caller has no tie to), stored as `author_channel_id` and shown as the author; appends `comment.posted` to that channel's audit log. |
+| `PATCH /comments/:id` | Edit comment | `{ content }` | `200 Comment` / `403 COMMENTS_BANNED` and the other gate refusals | Author only (`comment:update`); sets `isEdited` and rewrites `looks_like_question`. The gate's content checks run again: a published comment edited into a blocked word, a link off the allowlist or a `review_all` channel is held with that rule's disclosure, takes it and its replies off `comments_count` in the same transaction, purges the hot cache, tells the moderators and withdraws the unread notifications of the thread; trusted commenters and channel members are exempt, a held or hidden comment keeps its state, and an author under a visible ban is refused. |
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
 | `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
 | `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). |
 | `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
-| `POST /playlists` | Create playlist | `{ title, description?, visibility? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
-| `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. |
+| `GET /v1/posts/:id/comments?sort=&cursor=&limit=` | Post comments | — | `200 { items:[Comment], nextCursor, total }` / `404 POST_NOT_FOUND` | Anonymous allowed. The video comments listing over `{ type: 'post' }`: same sort, keyset, hot cache (`taitube:post:{id}:comments:top`) and one-level replies; a post that is not published is `404`. `Comment.target` names what the comment sits under; `videoId` is null off a video. |
+| `POST /v1/posts/:id/comments` | Comment on a post or reply | `{ content, parentId? }` | `201 Comment` / the gate refusals of `POST /videos/:id/comments` / `404 POST_NOT_FOUND` | Channel-scoped. 113's gate on the post's channel and the post's `comments_enabled`; `PATCH`, `DELETE`, pin, heart and report by comment id are unchanged. |
+| `GET /v1/channels/:idOrHandle/posts?cursor=&limit=` | A channel's posts | — | `200 { items:[Post], nextCursor }` / `404 CHANNEL_NOT_FOUND` | Anonymous allowed. Published posts, pinned first then newest, keyset; each with `likedByViewer`. A post shows the channel as its author, never the member who wrote it. A shared video or playlist that is gone or not public is the card `{ type: 'unavailable' }` and nothing of it. |
+| `GET /v1/posts/:id` | One post | — | `200 Post` / `404 POST_NOT_FOUND` | Anonymous allowed; a post that is not published is `404`. |
+| `POST /v1/me/channel/posts` | Publish, schedule or draft a post | `{ payload: text\|images\|poll\|quiz\|video_share\|playlist_share, commentsEnabled?, timing? }`, `timing` is `{ mode: 'now' }`, `{ mode: 'draft' }` or `{ mode: 'schedule', publishAt }` | `201 ManagedPost` / `403` / `422 VALIDATION_FAILED \| POST_SHARE_NOT_PUBLIC \| POST_IMAGE_NOT_READY \| POST_SCHEDULE_INVALID` / `429 POST_DAILY_LIMIT \| POST_DRAFT_LIMIT` | Scope `posts:write`, channel-scoped, `create Post` (owner, manager, editor). 20 posts a day per channel (UTC day, drafts count), 50 drafts and scheduled posts held. A poll has 2 to 6 options of 60 characters and a question of 140, a close time within 30 days; a quiz adds `correctIndex` and an `explanation` of 300. Every image must be a ready `post-image` of the channel. A published post writes the post, its `post.published` audit row (naming the member) and the `notify-post-subscribers` job in one transaction; a draft or a scheduled post announces nothing until the housekeeping task `publish-due-posts` (every minute) or an edit to `now` promotes it with a compare-and-set on `status`, so it publishes once however many runs find it. Subscribers on `all` get a `post` notification grouped by channel within an hour, `highlights` skips it. |
+| `PATCH /v1/me/channel/posts/:id` | Edit a post | `{ payload, commentsEnabled?, timing?, version }` | `200 ManagedPost` / `404 POST_NOT_FOUND` / `409 VERSION_CONFLICT \| POST_POLL_LOCKED` / `422` | Scope `posts:write`, `update Post`. Applies only at `version`; a published post shows edited. `timing` moves a draft or scheduled post (`now` publishes it); a published post refuses `draft` and `schedule` with `POST_SCHEDULE_INVALID`. Once anyone voted, a poll's question and options (and a quiz's answer) cannot change: `409 POST_POLL_LOCKED`; its close time and explanation can. |
+| `DELETE /v1/me/channel/posts/:id` | Delete a post | — | `204` / `404 POST_NOT_FOUND` | Scope `posts:write`, `delete Post`. Its comments, likes, votes and stats go with it in the same transaction. |
+| `PUT /v1/posts/:id/reactions`, `DELETE /v1/posts/:id/reactions` | Like or unlike a post | — | `200 { postId, liked, likeCount }` / `404 POST_NOT_FOUND` | Signed in. Idempotent; likes only, `post_reactions`. |
+| `GET /v1/me/channel/posts?status=&cursor=&limit=` | The studio list | — | `200 { items:[ManagedPost], nextCursor }` | Channel-scoped, `create Post`. Every status, newest created first, keyset; `ManagedPost` is `Post` with `status`, `publishAt`, `createdAt` and a nullable `publishedAt`. A draft is visible only here, never to a reader. |
+| `POST /v1/me/channel/posts/:id/pin`, `DELETE /v1/me/channel/posts/:id/pin` | Pin or unpin a post | — | `200 ManagedPost` / `404 POST_NOT_FOUND` / `409 POST_PIN_LIMIT` | Scope `posts:write`, `pin Post` (owner, manager, editor). Published posts only, up to 3 a channel, newest pin first, checked in the transaction that pins; unpinning is idempotent. |
+| `GET /v1/me/channel/posts/:id/revisions?cursor=&limit=`, `POST /v1/me/channel/posts/:id/revisions/:revisionId/restore` | Edit history and restore | `{ version }` | `200 { items:[PostRevision], nextCursor }` / `200 ManagedPost` / `404 POST_NOT_FOUND \| REVISION_NOT_FOUND` / `409 VERSION_CONFLICT \| POST_POLL_LOCKED` / `422` | Scope `posts:write`, channel-scoped, `update Post`. Editing a published post appends a `channel_post` revision in 116's `entity_revisions` in the same transaction as the edit (the state before the first edit is kept too, and the last 50 stay); a draft or scheduled post keeps none. Restore is a normal edit under the caller's `version` that records `restoredFromVersion`, so history is appended to, never rewritten; a poll that has votes cannot be restored to different options. The public post keeps showing `isEdited`. |
+| `GET /v1/videos/:id/threads` | A video's viewer threads | — | `200 { items:[Thread], markers:[{ anchorMs, threadId, threadIds, count }] }` / `404 VIDEO_NOT_FOUND` | Anonymous allowed, the read rules of the video. Pinned first, then by `anchorMs`, up to 200. A thread held for review is listed to its author only. `markers` is `placeThreadMarkers` of `@vp/domain-rules`: a thread earns one with at least 2 replies from at least 2 distinct viewers (shadow banned and banned repliers do not count) or a pin, markers within 1 percent of the duration merge into one with a `count`, at most 20 are drawn. |
+| `POST /v1/videos/:id/threads` | Start a thread at a moment | `{ anchorMs, title, body? }` | `201 Thread` / `422 THREAD_ANCHOR_INVALID \| VALIDATION_FAILED` / `429 THREAD_LIMIT \| COMMENTS_SLOW_MODE` / the gate refusals of `POST /videos/:id/comments` | Channel-scoped. Title 1 to 100 characters, body up to 1000, `anchorMs` inside the video's duration. The title and body go through 113's gate on the video's channel as one comment would (hold, blocked words, slow mode, shadow bans, bans, account age, comments off). At most 5 open threads per viewer per video, counted under a lock on the video row. |
+| `GET /v1/threads/:id` | One thread | — | `200 Thread` / `404 THREAD_NOT_FOUND` | Anonymous allowed. A held or hidden thread is `404` to everyone but its author and the video channel's moderators. |
+| `GET /v1/threads/:id/comments?sort=&cursor=&limit=`, `POST /v1/threads/:id/comments` | Replies of a thread | `{ content, parentId? }` | `200 { items:[Comment], nextCursor, total }` / `201 Comment` / `404 THREAD_NOT_FOUND` | The video comments endpoints over `{ type: 'thread' }`: same sort, keyset, hot cache (`taitube:thread:{id}:comments:top`), one-level replies and 113's gate on the video's channel. |
+| `POST /v1/threads/:id/pin`, `DELETE /v1/threads/:id/pin` | Pin or unpin a thread | — | `200 Thread` / `404 THREAD_NOT_FOUND` / `409 THREAD_PIN_LIMIT` | `pin Thread` (owner, manager, editor through `content.pin`). Up to 3 a video, checked in the transaction that pins; unpinning is idempotent. A pinned thread draws a marker whatever its replies. |
+| `POST /v1/threads/:id/remove` | Remove a thread | `{ disclosure?, reason?, note? }` | `204` / `404 THREAD_NOT_FOUND` / `409 MODERATION_NOT_APPLICABLE` | The thread's author, or `remove` on `Comment` for the video's channel. A moderator's removal is silent or visible; a visible one needs a reason and lands in the author's removals list. The replies go with the row, and the audit log gets `comment.removed` with the thread id. |
+| `GET /v1/me/channel/posts/:id/stats` | Stats of a post | — | `200 { opens, shareClicks, likes, replies, votesByOption, quizCorrectShare }` / `404 POST_NOT_FOUND` | Channel-scoped, `read PostStats` (owner, manager, editor, analytics). Never on a public response and outside every token scope. |
+| `PUT /v1/posts/:id/vote` | Vote or answer | `{ optionIndex }` | `200 Post` / `403 FORBIDDEN \| COMMENTS_BANNED` / `404 POST_NOT_FOUND` / `409 POST_ALREADY_VOTED \| POST_POLL_CLOSED` / `422` | Signed in, not a guest. One final vote per viewer (unique `(post_id, user_id)`); a banned user is refused with `COMMENTS_BANNED`, a shadow ban takes the vote silently. The returned `Post` carries the results (counted from `post_poll_votes`, the source of truth) and a quiz's answer and explanation; before voting a reader sees neither unless the poll closed or the reader is in the team. |
+| `POST /v1/posts/:id/open`, `POST /v1/posts/:id/share-click` | Post beacons | — | `204` / `404 POST_NOT_FOUND` | Anonymous allowed. An open is counted once per viewer (the account, else the address) and day through a Redis HyperLogLog and written to `post_stats_daily.opens`; a share click adds one to `share_clicks`. |
+| `GET /v1/feed/community?cursor=&limit=` | Community feed | — | `200 { items:[Post], nextCursor }` | Channel-scoped (`subscribe-as`). Published posts of the channels the acting channel subscribes to, newest first, keyset; separate from `/v1/feed/subscriptions`, whose items are videos. |
+| `POST /playlists` | Create playlist | `{ title, description?, visibility?, kind? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
+| `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. `kind` is `playlist` or `series`; a series holds only its owner's own videos (`decideSeriesMembership`, `SERIES_VIDEO_NOT_OWNED`). For a signed-in viewer a series carries each item's `episode` (its position from 1) and `progress` (percent from `watch_history`, §5.2) and `nextEpisodeVideoId`: the first item after the last one watched that is below 92 percent, else the first unfinished one, else `null`. |
 | `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:update`). |
 | `DELETE /playlists/:id` | Delete playlist | — | `204` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:delete`). Items go with it. |
 | `POST /playlists/:id/items` | Add video | `{ videoId }` | `201 Playlist` | Owner or admin (`playlist:update`). Appends after the last item; a video already there changes nothing; a video the caller may not watch is `VIDEO_NOT_FOUND`. |
@@ -1865,7 +2529,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /me/clips?cursor=&limit=` | My clips | — | `200 { items:[Clip], nextCursor }` | Authenticated and private. Newest first, keyset on `(created_at, id)` (`clips_user_created_idx`); a clip of a video the caller can no longer watch drops out. |
 | `DELETE /clips/:id` | Delete a clip | — | `204` / `401` / `403` / `404 CLIP_NOT_FOUND` | Its creator or an admin, declaratively through `@vp/permissions` (`delete` on `Clip`), also once the video turned private. |
 | `GET /v1/picks/current` | Pick of the day | — | `200 { source: 'scheduled' \| 'fallback', video: VideoSummary, note, startsAt, endsAt }` / `304` / `404 VIDEO_NOT_FOUND` | Anonymous. The pick whose window holds now, while its video is still public and `READY`, with its editorial `note` (up to 280 characters, `PICK_NOTE_MAX_LENGTH` in `@vp/validation`) and `endsAt`. Otherwise the fallback: the feed's top trending video (`GET /feed?sort=trending`), `source: 'fallback'` with `note`, `startsAt` and `endsAt` all `null`; `404` only when nothing is scheduled and no video trends. Windows never overlap, so a pick whose video turned private gives way to the fallback until its window ends. The scheduled pick is cached in Redis (`taitube:picks:current:v1`) until its `endsAt` or the feed cache TTL, whichever is sooner, and `Cache-Control` and `ETag` follow it; every write below drops the entry. |
-| `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `customGround` and `customAccent` `#rrggbb` or `null` (the viewer's own built theme: with `theme` set to `custom` the client builds a theme from the two over the default theme's remaining roles, registers it through `registerTheme`, and falls back to the default theme when it is missing or fails the contrast gate), `contrast` standard/more, `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview`, `captionsOn`, `captionsLanguage` BCP 47 or `null`, `captionsSize` small/medium/large/xlarge, `captionsBackground` none/translucent/solid, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent`, `customGround`, `customAccent` and `captionsLanguage` `null`, `mode` system, `contrast` standard, no overrides, `quality` auto, `speed` 1, `autoplayNext` and `hoverPreview` on, captions and the stats overlay off, `captionsSize` medium, `captionsBackground` translucent, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. |
+| `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `customGround` and `customAccent` `#rrggbb` or `null` (the viewer's own built theme: with `theme` set to `custom` the client builds a theme from the two over the default theme's remaining roles, registers it through `registerTheme`, and falls back to the default theme when it is missing or fails the contrast gate), `contrast` auto/standard/more (`auto` follows the system's `prefers-contrast` until the viewer picks one), `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview` (the expanding card), `hoverPlay` (the muted frame preview on a card, forced off on the client under save-data, 2g and reduced motion whatever it says), `captionsOn`, `captionsLanguage` BCP 47 or `null`, `captionsSize` small/medium/large/xlarge, `captionsBackground` none/translucent/solid, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent`, `customGround`, `customAccent` and `captionsLanguage` `null`, `mode` system, `contrast` auto, no overrides, `quality` auto, `speed` 1, `autoplayNext`, `hoverPreview` and `hoverPlay` on, captions and the stats overlay off, `captionsSize` medium, `captionsBackground` translucent, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. Each device-held field names its backend in the catalogue (`device`: `cookie` for the appearance, which the server reads before the first paint, `storage` for playback, which only the page reads); on sign-in the web client merges per field, uploading a field changed on the device while signed out and keeping the account's value for the rest, and it is the same PATCH, which already merges by key. |
 | `PATCH /v1/me/preferences` | Save preferences | `{ version, appearance?, playback?, privacy?, notifications? }`, each section partial | `200` the document / `400` / `401` / `403 FORBIDDEN` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | `update Preferences { ownerId }`. A section left out stays as stored and `null` clears it; inside a section a field left out stays and `null` resets it to its default; a section's first save fills the rest from the defaults; `overrides` merge by token group, a group set to `null` dropping its override. Ids are checked for shape only (the server knows no theme registry), so an unknown theme or set id is stored as sent. Any other `version` than the stored one (0 with nothing stored) is a 409 whose `errors[0]` is `{ field: "version", current }` with the stored document, and nothing is written. The merged document is checked against the catalogue, so a refused value is a 422 naming `section.field`. The save is one transaction. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | CAS to `DELETED` with `deleted_at` and a `video.deleted` event; the `purge-deleted` housekeeping job removes the objects later (§9.8). |
@@ -1890,9 +2554,43 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PATCH /v1/admin/picks/:id` | Edit a pick | `{ videoId?, startsAt?, endsAt?, note? }` | `200 Pick` / `404 PICK_NOT_FOUND \| VIDEO_NOT_FOUND` / `409 PICK_WINDOW_OVERLAP` / `422` | `manage Pick`. An omitted field keeps its value, `note: null` clears it; the merged pick passes the rules of scheduling. |
 | `DELETE /v1/admin/picks/:id` | Cancel a pick | — | `204` / `404 PICK_NOT_FOUND` | `manage Pick`. Also a running one. |
 | `GET /v1/oembed?url=&format=&maxwidth=&maxheight=` | oEmbed provider | — | `200 OEmbedVideo` / `400 VALIDATION_FAILED \| OEMBED_URL_UNSUPPORTED` / `404 VIDEO_NOT_FOUND` / `501 OEMBED_FORMAT_UNSUPPORTED` | Anonymous. The oEmbed 1.0 `video` response for a watch page of this site (`WEB_URL` origin, `/watch/<video id>`): the `<iframe>` on `/embed/<id>`, 16:9, at most 640 wide and within `maxwidth` and `maxheight`, the channel as author, the 1280x720 poster as thumbnail. Public, `READY` videos only; any other answers `404` as if absent. Only `json` is served. The watch page advertises it with a `link rel="alternate" type="application/json+oembed"`. |
-| `POST /v1/me/webhooks` | Register a webhook | `{ url, events: [video.ready \| live.started] }` | `201 { id, url, events, createdAt, secret }` / `400` / `401` / `409 WEBHOOK_LIMIT_REACHED` / `422` | Signed in (`create Webhook`). `https` on a public host without credentials (`WEBHOOK_ALLOW_PRIVATE_HOSTS` lifts both for local receivers), at most 10 per user. The HMAC key `secret` is returned here once. `video.ready` fires from the notify stage once a video is published; `live.started` is stored and reserved until a live backend exists. |
+| `POST /v1/me/webhooks` | Register a webhook | `{ url, events: [video.ready \| live.started \| export.ready \| comment.held] }` | `201 { id, url, events, createdAt, secret }` / `400` / `401` / `409 WEBHOOK_LIMIT_REACHED` / `422` | Signed in (`create Webhook`). `https` on a public host without credentials (`WEBHOOK_ALLOW_PRIVATE_HOSTS` lifts both for local receivers), at most 10 per user. The HMAC key `secret` is returned here once. `video.ready` fires from the notify stage once a video is published, `export.ready { exportId, channelId, kind, format, rowCount, expiresAt }` from the export job once a channel export of the owner can be downloaded, `comment.held { commentId, videoId, channelId }` from the `announce-comment-held` notify job to each moderator the comment gate told (the owner and the members with `comment.moderate`, never the author), with ids and the channel only, never the text; `live.started` is stored and reserved until a live backend exists. |
 | `GET /v1/me/webhooks` | List my webhooks | — | `200 { items: Webhook[] }` / `401` | The caller's webhooks, oldest first, without secrets. |
 | `DELETE /v1/me/webhooks/:id` | Remove a webhook | — | `204` / `400` / `401` / `404 WEBHOOK_NOT_FOUND` | Another user's webhook is not found. |
+| `POST /v1/me/webhooks/:id/test` | Send a test delivery | — | `200 { outcome: delivered } \| { outcome: failed, reason: timeout \| network \| status \| blocked-host \| redirect, status }` / `400` / `401` / `404 WEBHOOK_NOT_FOUND` | Signed in or a token with `webhooks:manage`. One signed delivery of `webhook.test { webhookId, sentAt }` through the same `WebhookDispatcher` as every event, sent from the API at once, so the studio's Send test says what the receiver did. `webhook.test` is not one of the events a webhook subscribes to. |
+| `POST /v1/me/api-tokens` | Create a personal access token | `{ name, scopes: ApiScope[], expiry?: 30d \| 90d \| 1y }` | `201 { id, name, prefix, channelId, scopes, expiresAt, lastUsedAt, requestsToday, status, createdAt, token }` / `400` / `401` / `403` / `409 API_TOKEN_LIMIT_REACHED` | A session only (`create ApiToken`; no scope grants it, so a token is `403`). The token acts on the acting channel (`X-Channel-Id`), as the caller, with the scopes given; `token` is `tt_pat_{prefix}_{secret}` and is returned here once. `expiry` defaults to `90d`. At most 10 active per user. |
+| `GET /v1/me/api-tokens` | List my personal access tokens | — | `200 { items: ApiToken[] }` / `401` / `403` | A session only. Active and expired tokens of every channel, newest first, with `lastUsedAt` and the requests made today (UTC); revoked ones are gone, and no secret is ever returned. |
+| `DELETE /v1/me/api-tokens/:id` | Revoke a personal access token | — | `204` / `400` / `401` / `403` / `404 API_TOKEN_NOT_FOUND` | A session only. The next request made with it is a `401`. Another user's token, or one already revoked, is not found. |
+| `GET /v1/me/channel/members` | List the channel team | — | `200 { members: Member[], invites: Invite[] }` / `401` / `403 FORBIDDEN \| CHANNEL_MEMBERSHIP_REQUIRED` | `read ChannelMember` on the acting channel (`X-Channel-Id`, default the caller's primary): the owner and managers. Members oldest first with their own channel's `profile`; pending, unexpired invites oldest first. The owner is no member row. |
+| `POST /v1/me/channel/invites` | Invite to the team | `{ handle, role: manager \| editor \| moderator \| analytics }` | `201 Invite` / `400` / `401` / `403` / `404 CHANNEL_NOT_FOUND` / `409 CHANNEL_MEMBER_EXISTS \| CHANNEL_INVITE_ALREADY_PENDING` / `422` | `create ChannelInvite` with the offered role, so a manager cannot offer `manager` (`decideChannelInvite`). The handle names the invitee's channel; the owner and current members are refused. Expires after 14 days. The invite, its `invite.created` audit row and the `notify-team-invite` outbox row are one transaction; the worker writes the invitee's `team_invite` notification. |
+| `DELETE /v1/me/channel/invites/:id` | Revoke an invite | — | `204` / `400` / `401` / `403` / `404 CHANNEL_INVITE_NOT_FOUND` / `409 CHANNEL_INVITE_NOT_PENDING` | `delete ChannelInvite`; an invite to another channel is not found. Audited `invite.revoked`. |
+| `GET /v1/me/invites?cursor=&limit=` | List my pending invites | — | `200 { items: [{ id, channel: { id, handle, displayName, avatarUrl }, role, invitedByName, expiresAt }], nextCursor }` / `400 VALIDATION_FAILED \| INVALID_CURSOR` / `401` | Signed in. Only the caller's own invites that are pending and unexpired, newest first, keyset on `(created_at, id)` (§6.1.1); a declined, accepted, revoked or expired invite and anyone else's never appear. `invitedByName` is the inviter's own channel name, null once their account is gone. The `team_invite` notification's `payload.inviteId` names one of these rows, which the studio's `/invites` page answers through the two endpoints below. |
+| `POST /v1/invites/:id/accept` | Accept an invite | — | `200 { channelId, ownerId, role, channel: { handle, displayName, avatarUrl } }` / `400` / `401` / `403` / `404 CHANNEL_INVITE_NOT_FOUND` / `409 CHANNEL_INVITE_NOT_PENDING` | The invitee only (`decideInviteAnswer`); an invite to someone else is not found. A compare-and-set from `pending` and unexpired that inserts the member row and audits `invite.accepted` in one transaction; a revoked, declined or expired invite answers `409`. |
+| `POST /v1/invites/:id/decline` | Decline an invite | — | `204` / `400` / `401` / `403` / `404 CHANNEL_INVITE_NOT_FOUND` / `409 CHANNEL_INVITE_NOT_PENDING` | The invitee only. Audited `invite.declined`. |
+| `PATCH /v1/me/channel/members/:userId` | Change a member role | `{ role }` | `200 Member` / `400 VALIDATION_FAILED \| CHANNEL_OWNER_IMMUTABLE` / `401` / `403` / `404 CHANNEL_MEMBER_NOT_FOUND` / `422` | `update ChannelMember` asked for the role held and for the role given, so a manager neither changes a manager nor makes one (`decideMemberRoleChange`). The owner has no role to change. A compare-and-set on the role read; audited `member.role_changed { from, to }`. |
+| `DELETE /v1/me/channel/members/:userId` | Remove a member, or leave | — | `204` / `400 VALIDATION_FAILED \| CHANNEL_OWNER_IMMUTABLE` / `401` / `403` / `404 CHANNEL_MEMBER_NOT_FOUND` | `delete ChannelMember`: the owner, a manager (not another manager), or the member themselves, who names the channel they leave in `X-Channel-Id`. Audited `member.left` when the caller is the member, `member.removed` otherwise. The next request of the removed member no longer reaches the channel. |
+| `GET /v1/me/memberships` | List my channel memberships | — | `200 { items: [{ channelId, ownerId, role, channel: { handle, displayName, avatarUrl } }] }` / `401` | Signed in. The channels whose team the caller is on, which the studio joins with the session to judge the acting channel's role; the caller's own channel is not listed. The switcher lists teams from `GET /v1/me/identities`. |
+| `GET /v1/me/channel/audit?cursor=&limit=&actorUserId=&action=` | Read the channel audit log | — | `200 { items: AuditEntry[], nextCursor }` / `400 VALIDATION_FAILED \| INVALID_CURSOR` / `401` / `403` | `read ChannelAudit`: the owner and managers. Keyset on `(created_at, id)`, newest first (§6.1.1), narrowed to one actor or one action. Each entry carries `action`, `targetType`, `targetId`, `meta`, the `actorUserId` (null once deleted) and the `actor` (their profile, null with the account). Append-only: no route changes or deletes a row; housekeeping purges rows past 365 days. |
+| `POST /v1/me/channel/exports` | Request an export of channel data | `{ kind: video_analytics \| channel_analytics \| comments \| videos, format: csv \| json, params?: { from?, to? } }` | `202 DataExport` / `400 VALIDATION_FAILED` / `401` / `403 FORBIDDEN \| CHANNEL_MEMBERSHIP_REQUIRED` / `409 EXPORT_IN_PROGRESS` / `429 EXPORT_DAILY_LIMIT` | `create ChannelExport` on the acting channel: the owner and managers (`data.export`) every kind, an analytics viewer (`analytics.export`) the analytics kinds; an editor and a moderator get `403`. One `queued` or `running` export per channel, 10 requested in the last 24 hours, at most 1,000,000 rows or 500 MB. Inserts the row, its `export.requested` audit entry and an `export` job on the `notify` queue (`jobId = <exportId>--export`) in one transaction. `export.ready` or `export.failed` arrives on `GET /v1/me/events` (§10.3), and `export.ready` reaches the owner's webhooks. |
+| `GET /v1/me/channel/exports?cursor=&limit=` | List the channel exports | — | `200 { items: DataExport[], nextCursor }` / `400 VALIDATION_FAILED \| INVALID_CURSOR` / `401` / `403` | `read ChannelExport`: newest first, only the kinds the caller may export; a caller who may export none gets `403`. |
+| `GET /v1/me/channel/exports/:id` | Read one export | — | `200 { ...DataExport, downloadUrl }` / `400` / `401` / `403` / `404 EXPORT_NOT_FOUND` | `read ChannelExport` on its kind. `downloadUrl` is a presigned GET of `S3_PRESIGN_TTL_SEC` while the file exists, `null` otherwise. An export of another channel is not found. |
+| `DELETE /v1/me/channel/exports/:id` | Delete an export and its file | — | `204` / `400` / `401` / `403` / `404 EXPORT_NOT_FOUND` | `delete ChannelExport` on its kind. The file goes first, so a storage failure leaves the export listed; the row goes with an `export.deleted` audit entry. A job still writing it finds the row gone and deletes its upload. |
+| `GET /v1/me/channel/comment-settings` | Read the comment settings | — | `200 CommentSettings` / `401` / `403` | `update CommentSettings` on the acting channel: the owner and managers (a moderator, an editor and an analytics viewer get `403`). The defaults for a channel that never saved. |
+| `PUT /v1/me/channel/comment-settings` | Replace the comment settings | `{ reviewMode: "none"\|"links"\|"all", blockedWords, linkAllowlist, slowModeSeconds: null\|5\|10\|30\|60\|300, subscribersOnly, minAccountAgeDays: 0..30, disclosure: { hide, remove, manual_hold, "auto.blocked_words", "auto.links", "auto.review_all": "silent"\|"visible" } }` | `200 CommentSettings` / `400` / `401` / `403` / `422 VALIDATION_FAILED` | Same rule as the read. `@vp/validation` normalises words (case and accent folded, one spelling kept) and hosts, and checks the bounds. A save that changes nothing writes nothing; otherwise it is one transaction with the audit row `settings.comments.updated { fields }`. |
+| `POST /v1/comments/:id/moderate` | Hold, approve, hide, unhide or remove a comment | `{ action: "hold"\|"hide"\|"remove", disclosure?: "silent"\|"visible", reason?, note? }` or `{ action: "approve"\|"unhide" }` | `200 { state, comment }` / `400` / `401` / `403` / `404 COMMENT_NOT_FOUND`, `404 THREAD_NOT_FOUND` / `409 MODERATION_NOT_APPLICABLE` | `hold`, `approve`, `hide`, `unhide`, `remove` on `Comment` by the video owner and by members whose role has `comment.moderate`; each action is its own check. The disclosure is the body's, else the channel default (`manual_hold`, `hide`, `remove`); a visible one needs a `reason`. The write compares and sets on `moderation_state` under the video lock and moves `comments_count` by the exact change in what is public (the comment and its public replies), unpins what leaves public reads, purges the hot cache and withdraws the unread notifications that refer to the thread. The first approval of a comment the gate held enqueues the comment notification (job id `<commentId>--notify-comment`) and emits `comment.created`; an unhide or a later approval does not. `remove` is 42's soft delete plus a `comment_removals` row. One audit row per action with `meta.disclosure`. The id may be a viewer thread the gate held (it lists in the creator inbox under `all` and `held`, and tells the moderators with `comment.held` as a held comment does): the same permission and state machine apply, `remove` is the thread's removal, and the answer carries `comment: null`. 42's pin refuses a held or hidden comment (`409 COMMENT_NOT_PINNABLE`) and writes `comment.pinned`; a moderator's `DELETE` writes a silent `comment.removed`. |
+| `GET /v1/me/channel/restrictions` | List the restricted users | `?cursor&limit` | `200 { items: [{ userId, kind: "shadow"\|"ban", reason, expiresAt, createdBy, createdAt, user }], nextCursor }` / `400` / `401` / `403` | `restrict ChannelUser` on the acting channel: the owner, managers and moderators. Shadow bans and bans that have not ended, newest first; an ended ban is absent whether or not housekeeping purged it. |
+| `PUT /v1/me/channel/restrictions/:userId` | Shadow ban or ban a user | `{ action: "shadow_ban" }` or `{ action: "ban", reason?: ≤200, expiresAt?: future ISO\|null }` | `200 Restriction` / `400` / `401` / `403` / `409 CANNOT_RESTRICT_MEMBER` / `422 VALIDATION_FAILED` | Same rule as the list. The owner and the team cannot be restricted. One transaction: the restriction row (a ban over a shadow ban replaces it), an exact recount of `comments_count` on every video of the channel the user commented on, the audit row `user.shadow_banned` or `user.banned { expiresAt }` and, for a ban, the `moderation` notification job. The hot cache of those videos is purged, and a shadow ban withdraws the unread notifications about the user's comments. A ban affects writes only (comments and video reactions, `403 COMMENTS_BANNED` with its reason and end); only a shadow ban affects reads. |
+| `DELETE /v1/me/channel/restrictions/:userId` | Lift the restriction | - | `204` / `400` / `401` / `403` / `404 RESTRICTION_NOT_FOUND` | Same rule. Recounts like the apply and writes `user.restriction_lifted { kind }`; nothing else is rewritten. |
+| `GET /v1/channels/:id/me/restriction` | The own visible ban on a channel | - | `200 { reason, expiresAt }` / `400` / `401` / `404 RESTRICTION_NOT_FOUND` | Signed in. `404` for none, for an ended ban and for a shadow ban, which is never told. |
+| `POST /v1/creator/comments/bulk` | Moderate up to 100 comments | `{ ids: uuid[1..100], action }` where `action` is any moderation action (`hold`, `approve`, `hide`, `unhide`, `remove`, `shadow_ban`, `ban`, `lift`) with its `disclosure`, `reason` and `note` | `200 { results: [{ id, ok, code? }] }` / `400` / `401` | Acting channel. Each id is decided by the permission and the state rule of its own action, in the order sent, so one refusal is one id's `code` and never fails the batch. A user action applies once per author and answers for each of their comments; it refuses a comment outside the acting channel with `COMMENT_NOT_FOUND`. Every applied action writes its own audit row. |
+| `GET /v1/me/comment-removals` | The own comments removed visibly | `?cursor&limit` | `200 { items: [{ id, videoId, excerpt, reason, note, createdAt }], nextCursor }` / `400` / `401` | The author. Visible removals of the last 30 days, newest first; a silent removal is never listed. Housekeeping deletes `comment_removals` rows older than 30 days. |
+| `GET /v1/me/channel/trusted-commenters` | List the trusted commenters | `?cursor&limit` | `200 { items: [{ userId, createdBy, createdAt, user }], nextCursor }` / `400` / `401` / `403` | `update CommentSettings` on the acting channel: the owner and managers. Newest first. |
+| `PUT /v1/me/channel/trusted-commenters/:userId` | Trust a commenter | - | `204` / `400` / `401` / `403` / `422 VALIDATION_FAILED` | Same rule. Idempotent; writes `trusted.added` only when the list changed. A trusted commenter skips every automatic hold, slow mode and the account age check. |
+| `DELETE /v1/me/channel/trusted-commenters/:userId` | Stop trusting a commenter | - | `204` / `400` / `401` / `403` | Same rule; writes `trusted.removed` only when the list changed. |
+| `GET /v1/me/channel/saved-replies` | List the saved replies | - | `200 { items: [{ id, title, body, position }] }` / `401` / `403` | `read-inbox` on the acting channel: the owner, managers and moderators. By position. |
+| `POST /v1/me/channel/saved-replies` | Save a reply | `{ title: 1-40, body: 1-2000 }` | `201 SavedReply` / `400` / `401` / `403` / `409 SAVED_REPLY_LIMIT` | `update CommentSettings`: the owner and managers. Appended after the last position; a channel keeps at most 20, counted under a per-channel lock. Not audited. |
+| `PATCH /v1/me/channel/saved-replies/:id` | Edit or move a reply | `{ title?, body?, position? }`, at least one | `200 SavedReply` / `400` / `401` / `403` / `404 SAVED_REPLY_NOT_FOUND` | Same rule. A reply of another channel is not found. |
+| `DELETE /v1/me/channel/saved-replies/:id` | Delete a reply | - | `204` / `400` / `401` / `403` / `404 SAVED_REPLY_NOT_FOUND` | Same rule. |
 | `POST /v1/me/live` | Open my live stream | — | `200 LiveStream` / `401` / `404 CHANNEL_NOT_FOUND` | Signed in. The caller's channel stream that is `IDLE` or `LIVE`, minted on the first call with a stream key; `ingest` carries the RTMP server URL (`LIVE_RTMP_PUBLIC_URL`), the key and the WHIP endpoint (`LIVE_WHIP_PUBLIC_URL/{key}/whip`). The key outlives a broadcast: ending one moves it to the next `IDLE` row (ADR-29). |
 | `GET /v1/me/live` | Get my live stream | — | `200 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` | The open stream, without minting one. |
 | `PATCH /v1/me/live/:id` | Edit my live stream | `{ title?, description?, visibility?, archiveVisibility?, chatSlowModeSeconds?, chatSubscribersOnly? }` | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `422` | `update LiveStream` (`decideLiveStreamUpdate`); someone else's stream is not found. `archiveVisibility` is what the recording becomes when the broadcast ends. While `LIVE`, the title (unless empty), description and visibility reach the video in the same transaction. A chat mode change reaches the open chat sockets as a `mode` frame. `ingest` also carries the overlay and control tokens. |
@@ -1904,10 +2602,52 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/live/:id/chat?ticket=&after=` (WebSocket) | Live chat socket | client frames `send { message, ref? }`, `remove { id, ref? }` | `101` then frames `hello`, `message`, `removed`, `mode`, `ack`, `error` / `401 LIVE_CHAT_TICKET_INVALID` / `403 FORBIDDEN` (origin) / `404 LIVE_STREAM_NOT_FOUND` | Anonymous reads, a ticket sends. The upgrade is refused with a Problem before it happens: a browser `Origin` outside `CORS_ORIGINS`, a spent ticket, a stream the caller may not watch. `?after=` resumes after the last line the client has (§10.6). A refused line is an `error` frame carrying the Problem, the socket stays open (`sendSocketResult`, ADR-24). Hidden from the OpenAPI document by `@fastify/websocket`; the frames are typed as `LiveChatServerFrame` in `@vp/api-contracts`. |
 | `GET /v1/live/:id/chat/replay?fromMs=&toMs=` | Replay live chat | — | `200 { items: LiveChatMessage[] }` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` | Anonymous, as `GET /v1/live/:id`. Lines with `fromMs <= offset_ms < toMs`, in offset order, at most 500; removed lines are left out. A recording's player asks for the window ahead of `currentTime`. |
 | `GET /v1/live/companion?token=` (WebSocket) | Stream Deck companion socket | commands `stop`, `chat.mode { slowModeSeconds?, subscribersOnly? }`, `marker { label? }`, each with `ref?` | `101` then `hello`, one `ack` or `error` per command / `400` / `404 LIVE_STREAM_NOT_FOUND` | The control token is the credential; every command finds the stream by it again, so a deck left open across broadcasts drives the current one. `stop` is the creator's stop; `marker` appends `{ offsetMs, label }` to `live_streams.markers`. Starting is OBS publishing, so there is no start command. |
+| `POST /v1/watch-parties/:id/close` | Close a watch party | body | `200` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` / `410 WATCH_PARTY_CLOSED` | Ends the room for everyone (room.close). Sockets get closed and are closed. |
+| `POST /v1/watch-parties` | Create a watch party | body | `201` / `400` / `401 UNAUTHORIZED` / `409 WATCH_PARTY_LIMIT_REACHED` / `422 VALIDATION_FAILED | WATCH_PARTY_VIDEO_NOT_SHAREABLE` / `429 RATE_LIMITED` | Creates a room in the lobby with the eleven built-in roles, Member set by the preset, and the queue from the source. |
+| `GET /v1/watch-parties/:id` | Read a watch party | — | `200` / `400` / `404 WATCH_PARTY_NOT_FOUND` | The room preview. A private room answers 404 to anyone without a seat or a grant, as if it did not exist. |
+| `GET /v1/watch-parties/:id/roster` | Read the roster | — | `200` / `404 WATCH_PARTY_NOT_FOUND` | Members get the roster, guests counted unless they hold members.kick; anyone else who can read the room gets its preview. |
+| `POST /v1/watch-parties/:id/join` | Join a watch party | body | `200` / `400` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_BANNED | WATCH_PARTY_PASSWORD_REQUIRED | WATCH_PARTY_PASSWORD_INVALID | WATCH_PARTY_INVITE_INVALID | WATCH_PARTY_GUESTS_OFF` / `404 WATCH_PARTY_NOT_FOUND` / `409 WATCH_PARTY_FULL` / `410 WATCH_PARTY_CLOSED` / `429 WATCH_PARTY_PASSWORD_LOCKED` | Takes a seat: as a member already, by invite, invite link, password or the link alone. Idempotent for a member. An invite skips the password, never the capacity. |
+| `POST /v1/watch-parties/:id/leave` | Leave a watch party | — | `204` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `404 WATCH_PARTY_NOT_FOUND` | Gives up the seat. The owner leaving keeps ownership through a 60 s grace. |
+| `GET /v1/me/watch-parties` | My watch parties | — | `200` / `401 UNAUTHORIZED` | The open rooms the caller owns, holds a seat in, or is interested in. |
+| `PATCH /v1/watch-parties/:id` | Edit a watch party | body | `200` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` / `409 VERSION_CONFLICT` / `410 WATCH_PARTY_CLOSED` / `422 VALIDATION_FAILED | WATCH_PARTY_VIDEO_NOT_SHAREABLE` | Changes the given settings (room.edit; the schedule needs room.schedule) against the version read. Sockets get a settings frame. |
+| `GET /v1/me/watch-party-controls` | My personal controls | — | `200` / `400` / `401 UNAUTHORIZED` | Every everywhere control, and with roomId the ones for that room too. |
+| `PUT /v1/me/watch-party-controls` | Set a personal control | body | `200` / `400` / `401 UNAUTHORIZED` / `422` | Sets what the viewer chose about one member; choosing nothing deletes the row. Other signed-in devices get party.controls.updated. |
+| `POST /v1/watch-parties/:id/guest` | Watch as a guest | body | `201` / `400` / `403 WATCH_PARTY_GUESTS_OFF | WATCH_PARTY_BANNED | WATCH_PARTY_INVITE_INVALID` / `404 WATCH_PARTY_NOT_FOUND` / `409 WATCH_PARTY_FULL` / `410 WATCH_PARTY_CLOSED` / `429 RATE_LIMITED` | Issues a guest party credential, set as the httpOnly vp.party-guest cookie, and its seat in one step, where the room allows guests. The nickname is generated. 5 credentials per IP an hour, 30 guest joins per room a minute. |
+| `POST /v1/watch-parties/:id/seat/upgrade` | Upgrade a guest seat | — | `200` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_BANNED` / `404 WATCH_PARTY_NOT_FOUND` | Moves the guest's seat to the signed-in account (or a Discord party credential) in place: the socket stays open and gets you. |
+| `POST /v1/watch-parties/:id/invite-links` | Create an invite link | body | `201` / `400` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` / `410 WATCH_PARTY_CLOSED` | A bearer link that skips the password, never the capacity (members.invite). The token is shown once. |
+| `POST /v1/me/watch-party-invites/:inviteId/decline` | Decline an invite | — | `204` / `401 UNAUTHORIZED` / `404 WATCH_PARTY_INVITE_INVALID` | The invitee declines and its notification is marked read. Nobody is told. |
+| `POST /v1/watch-parties/:id/invites` | Invite people | body | `201` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` / `410 WATCH_PARTY_CLOSED` / `429 RATE_LIMITED` | Sends a party_invite to each account (members.invite). A second invite inside the group window folds; an invitee whose settings refuse it is listed in refused, without a reason. |
+| `GET /v1/watch-parties/:id/invite-candidates` | People to invite | — | `200` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Recent co-watchers, owners of channels the caller subscribes to, and a handle or name prefix match (members.invite). |
+| `GET /v1/watch-parties/:id/invite-links` | List invite links | — | `200` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Every link of the room, without its token (members.invite). |
+| `GET /v1/watch-parties/:id/invites` | List invites | — | `200` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Pending and joined invites (members.invite). |
+| `DELETE /v1/watch-parties/:id/invites/:inviteId` | Revoke an invite | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Stops an invite from admitting anyone (members.invite). |
+| `DELETE /v1/watch-parties/:id/invite-links/:linkId` | Revoke an invite link | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Stops new joins through the link; nobody who joined by it is removed (members.invite). |
+| `PUT /v1/watch-parties/:id/bans/:memberKey` | Ban a member | body | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION` / `404 WATCH_PARTY_NOT_FOUND` | Bans a member below you for the room's life (members.ban); a guest ban also keeps the guest's IP hash. |
+| `POST /v1/watch-parties/:id/members/:memberKey/kick` | Kick a member | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION` / `404 WATCH_PARTY_NOT_FOUND` | Removes a member below you (members.kick); they may rejoin. Their socket gets kicked. |
+| `POST /v1/watch-parties/:id/guests/remove` | Remove all guests | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Every guest seat goes (members.kick); each guest socket gets kicked. |
+| `POST /v1/watch-parties/:id/owner` | Transfer ownership | body | `200` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_ROLE_ESCALATION` / `404 WATCH_PARTY_NOT_FOUND` | The owner hands the room to a non-guest member and holds Co-host from then on. |
+| `DELETE /v1/watch-parties/:id/bans/:memberKey` | Lift a ban | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Lets a banned member join again (members.ban). |
+| `POST /v1/watch-parties/:id/queue` | Add to the queue | body | `201` / `400` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` / `409 WATCH_PARTY_QUEUE_FULL` / `422 WATCH_PARTY_VIDEO_NOT_SHAREABLE` | Appends a video, or a playlist copied once (queue.add; 3 pending items each without queue.reorder). Sockets get a queue frame. |
+| `GET /v1/watch-parties/:id/queue` | Read the queue | — | `200` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `404 WATCH_PARTY_NOT_FOUND` | The shared queue in play order, for members. |
+| `PATCH /v1/watch-parties/:id/queue/:itemId` | Move a queue item | body | `200` / `400` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Puts an item at a new index (queue.reorder). |
+| `DELETE /v1/watch-parties/:id/queue/:itemId` | Remove a queue item | — | `204` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Removes anyone's item (queue.remove), or one's own pending item (queue.add). |
+| `POST /v1/watch-parties/:id/roles/preset` | Apply a preset | body | `200` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING` / `404 WATCH_PARTY_NOT_FOUND` | Resets every built-in role but Owner to the preset (roles.manage). Custom roles and assignments stay. |
+| `PUT /v1/watch-parties/:id/members/:memberKey/roles/:roleId` | Assign a role | body | `204` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION | WATCH_PARTY_ROLE_PROTECTED` / `404 WATCH_PARTY_NOT_FOUND | WATCH_PARTY_ROLE_NOT_FOUND` | Gives a member below you a role below you (roles.assign; chat.moderate for Chat muted, voice.moderate for Voice muted). expiresIn is for the mutes only. |
+| `POST /v1/watch-parties/:id/roles` | Create a role | body | `201` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION | WATCH_PARTY_ROLE_PROTECTED` / `404 WATCH_PARTY_NOT_FOUND` / `409 WATCH_PARTY_ROLE_LIMIT` / `422` | A custom role below your own (roles.manage), holding only permissions you hold. At most 14 custom roles. |
+| `DELETE /v1/watch-parties/:id/roles/:roleId` | Delete a role | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION | WATCH_PARTY_ROLE_PROTECTED` / `404 WATCH_PARTY_NOT_FOUND | WATCH_PARTY_ROLE_NOT_FOUND` | A custom role below your own (roles.manage); its holders lose it. Built-in roles stay. |
+| `GET /v1/watch-parties/:id/roles` | List the roles | — | `200` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `404 WATCH_PARTY_NOT_FOUND` | Every role of the room with its permissions and holders, for members. |
+| `DELETE /v1/watch-parties/:id/members/:memberKey/roles/:roleId` | Revoke a role | — | `204` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION | WATCH_PARTY_ROLE_PROTECTED` / `404 WATCH_PARTY_NOT_FOUND | WATCH_PARTY_ROLE_NOT_FOUND` | Takes a role back under the same rules; anyone may drop a grant role they hold, never their own mute. |
+| `PATCH /v1/watch-parties/:id/roles/:roleId` | Edit a role | body | `200` / `400` / `401 UNAUTHORIZED` / `403 WATCH_PARTY_PERMISSION_MISSING | WATCH_PARTY_ROLE_ESCALATION | WATCH_PARTY_ROLE_PROTECTED` / `404 WATCH_PARTY_NOT_FOUND | WATCH_PARTY_ROLE_NOT_FOUND` / `409 VERSION_CONFLICT` / `422` | Renames, recolours, moves or changes a role's permissions, guarded by its updatedAt. Owner's name and colour are the owner's alone; Guest never passes its ceiling. |
+| `POST /v1/watch-parties/:id/socket-ticket` | Get a room socket ticket | — | `201` / `401 UNAUTHORIZED | WATCH_PARTY_CREDENTIAL_INVALID` / `403 WATCH_PARTY_BANNED` / `404 WATCH_PARTY_NOT_FOUND` / `410 WATCH_PARTY_CLOSED` / `503 CACHE_UNAVAILABLE` | A one-time ticket, valid 30 s, the room socket opens with. Members only; an account, a guest or a Discord member alike. |
+| `GET /v1/watch-parties/:id/socket?ticket=&after=` (WebSocket) | Room socket | client frames per section 5 | `101` then the room frames / `401 WATCH_PARTY_TICKET_INVALID` / `403 WATCH_PARTY_BANNED` / `404 WATCH_PARTY_NOT_FOUND` / `409 WATCH_PARTY_FULL` / `410 WATCH_PARTY_CLOSED` | Upgrades with a one-time ticket; every pod fans changes out through Redis. Hidden from the OpenAPI document by `@fastify/websocket`; the frames are typed in `@vp/api-contracts`. |
 | `POST /v1/internal/live/auth?secret=` | Ingest auth hook | MediaMTX's `{ user, password, action, path, protocol, id, ip, query }` | `204` / `401 LIVE_INGEST_REFUSED` | MediaMTX only, and left out of the OpenAPI document. `secret` must equal `LIVE_HOOK_SECRET` (compared in constant time; unset refuses everything). `publish` on `live/{key}`: an `IDLE` stream goes `LIVE` in one transaction with its `LIVE` video, a `video.live` event, the `live` job and the subscribers' `live` notification (`decideLiveGatewayCall`); a `LIVE` one admits the reconnect unless a stop is pending. `read` admits the live worker (`vp-worker` with the secret) and nobody else. |
 | `GET /v1/admin/videos?cursor=&limit=&sort=&order=&status=&visibility=&categoryId=&q=` | List every video | — | `200 { items:[id, ownerId, title, visibility, status, posterUrl?, thumbnailUrl?, channel, viewsCount?, likesCount?, categoryId?, version, createdAt, updatedAt], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Admin (`access Admin`). Every owner's videos except `DELETED`. `sort` is `newest` (default), `views`, `likes`, `comments` or `title` (by character code), `order` is `desc` (default) or `asc`; `q` is a case-insensitive title substring. Same keyset walk as `GET /v1/creator/videos` with an optional owner; a cursor only continues the sort and order it came from. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
+| `GET /v1/admin/screening?cursor=&limit=&state=open\|decided` | Held and flagged videos | — | `200 { items:[ScreeningCase], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Moderator (`moderate Video`). A case is `{ id, videoId, title, status, channel, thumbnailUrl?, outcome, score, open, reasons:[Finding], flags:[Finding], decision, decidedBy, decidedAt, decisionNote, appeal, modelVersion, thresholdVersion, createdAt }`; a finding is `{ reason, score, match:{ id, title, channel, thumbnailUrl?, status, sameChannel, mirrored, videoCoverage, audioCoverage, sourceRange, matchedRange } \| null, frames:[{ url, timestampSeconds, score }], flaggedShare, signals, profanity }` with each frame a signed URL (`presignTtlSeconds`), empty once the evidence is purged. Open cases first, each group newest first; keyset on `(open, created_at, id)`. The same listing shape as the comment report queue, so the admin table shows both. |
+| `POST /v1/admin/videos/:id/screening/approve` | Approve a held video | — | `200 { videoId, status:"PROCESSING" }` / `403` / `404` / `409 VERSION_CONFLICT` | Moderator (`moderate Video`). `HELD → PROCESSING` and a `package` job (`ids.packageApproved`, `screened: true`) in the outbox row of the same transaction, with a fast-path enqueue after; the existing path writes the master and reaches `READY`. The moderator who rejected a video may not decide its appeal. A video not `HELD` (a stale moderator) is `409`. A moderator-approved video is not held again, also on a re-process. |
+| `POST /v1/admin/videos/:id/screening/reject` | Reject a held video | `{ reason }` (1 to 500 characters) | `200 { videoId, status:"REJECTED" }` / `400` / `403` / `404` / `409` | Moderator. `HELD → REJECTED` with `error_code = SCREENING_REJECTED`, the reason in the event and on the case; the fingerprints stay. Same appeal rule and stale-actor `409` as approve. |
+| `POST /v1/admin/videos/:id/screening/dismiss` | Dismiss the flags on a video | — | `200 { videoId, status }` / `403` / `404` / `409` | Moderator. Closes the flags of a video that stayed public, appends `video.screening_dismissed`, changes no state; `409` when there is nothing open. The same finding is not raised again. |
 | `GET /v1/admin/reports?cursor=&limit=` | Comment report queue | — | `200 { items:[CommentReport + { reporterId, comment:{ id, videoId, authorId, content, removed } }], nextCursor }` | Admin (`access Admin`). Open reports first, each group newest first; keyset on `(resolved_at IS NULL, created_at, id)`. |
 | `POST /v1/admin/reports/:id/resolve` | Resolve a report | `{ resolution: removed\|dismissed }` | `200 CommentReport` / `404 REPORT_NOT_FOUND` / `409 REPORT_ALREADY_RESOLVED` | Admin. `removed` goes through the same delete as `DELETE /comments/:id` (replies, `comments_count`, hot page) and closes every open report on that comment; `dismissed` closes this one. |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
@@ -1922,7 +2662,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 
 ### 6.1.1 Keyset pagination & cursors
 
-Every paginated endpoint shares one mechanism, in `@vp/pagination`, rather than
+Every paginated endpoint shares one mechanism, in `@kit/pagination`, rather than
 re-deriving page maths per service:
 
 - **`Paginator`** owns the page bounds and the cursor codec. `limit(requested)` clamps a
@@ -1935,7 +2675,7 @@ re-deriving page maths per service:
   opaque URL-safe token; `JsonCursorCodec` renders it readable for tests and debugging.
   Swapping the codec changes no call site. It uses `btoa`/`atob` rather than `Buffer`, so the
   same code runs under Node, Bun and the browser.
-- **Bounds are configuration over one shared default.** `@vp/pagination` exports
+- **Bounds are configuration over one shared default.** `@kit/pagination` exports
   `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX` (100); `@vp/api-contracts` builds
   `PageLimitSchema` from them and `@vp/env-schema` uses them as the defaults of the env keys of
   the same name, which the composition root (`apps/server/api/src/app.ts`) reads once and injects.
@@ -1959,7 +2699,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `REVISION_NOT_FOUND`, `CORRECTION_NOT_FOUND`, `CORRECTION_LIMIT`, `SHARE_LINK_NOT_FOUND`, `SHARE_LINK_EXPIRED`, `SHARE_LINK_LIMIT`, `VIDEO_PASSWORD_REQUIRED`, `VIDEO_PASSWORD_INVALID`, `VIDEO_PASSWORDS_OFF`, `EXPERIMENT_NOT_FOUND`, `EXPERIMENT_LIMIT`, `EXPERIMENT_NOT_RUNNING`, `GENERATION_IN_PROGRESS`, `REPLACEMENT_NOT_UPLOADED`, `NO_EDIT_TO_REVERT`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `EXPORT_NOT_FOUND`, `EXPORT_IN_PROGRESS`, `EXPORT_DAILY_LIMIT`, `POST_NOT_FOUND`, `POST_SHARE_NOT_PUBLIC`, `POST_DAILY_LIMIT`, `POST_ALREADY_VOTED`, `POST_POLL_CLOSED`, `POST_POLL_LOCKED`, `POST_PIN_LIMIT`, `POST_DRAFT_LIMIT`, `POST_SCHEDULE_INVALID`, `POST_IMAGE_NOT_READY`, `THREAD_NOT_FOUND`, `THREAD_LIMIT`, `THREAD_PIN_LIMIT`, `THREAD_ANCHOR_INVALID`, `EXPORT_TOO_LARGE`, `API_TOKEN_NOT_FOUND`, `API_TOKEN_LIMIT_REACHED`, `API_TOKEN_SCOPE_MISSING`, `API_TOKEN_WITH_SESSION`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `COMMENTS_BANNED`, `COMMENTS_DISABLED`, `COMMENTS_SUBSCRIBERS_ONLY`, `COMMENTS_ACCOUNT_TOO_NEW`, `COMMENTS_SLOW_MODE`, `MODERATION_NOT_APPLICABLE`, `RESTRICTION_NOT_FOUND`, `CANNOT_RESTRICT_MEMBER`, `SAVED_REPLY_NOT_FOUND`, `SAVED_REPLY_LIMIT`, `SCREENING_REJECTED`, `WATCH_PARTY_NOT_FOUND`, `WATCH_PARTY_CLOSED`, `WATCH_PARTY_FULL`, `WATCH_PARTY_BANNED`, `WATCH_PARTY_GUESTS_OFF`, `WATCH_PARTY_PASSWORD_REQUIRED`, `WATCH_PARTY_PASSWORD_INVALID`, `WATCH_PARTY_PASSWORD_LOCKED`, `WATCH_PARTY_INVITE_INVALID`, `WATCH_PARTY_LIMIT_REACHED`, `WATCH_PARTY_VIDEO_NOT_SHAREABLE`, `WATCH_PARTY_QUEUE_FULL`, `WATCH_PARTY_STATE_STALE`, `WATCH_PARTY_PERMISSION_MISSING`, `WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`, `WATCH_PARTY_ROLE_NOT_FOUND`, `WATCH_PARTY_ROLE_LIMIT`, `WATCH_PARTY_SLOW_MODE`, `WATCH_PARTY_CHAT_OFF`, `WATCH_PARTY_TICKET_INVALID`, `WATCH_PARTY_CREDENTIAL_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `SCREEN_MODEL_INVALID`, `SCREEN_MODEL_FAILED`, `LIVE_INGEST_UNAVAILABLE`, `CHANNEL_MEMBERSHIP_REQUIRED`, `CHANNEL_INVITE_NOT_FOUND`, `CHANNEL_INVITE_NOT_PENDING`, `CHANNEL_INVITE_ALREADY_PENDING`, `CHANNEL_MEMBER_EXISTS`, `CHANNEL_MEMBER_NOT_FOUND`, `CHANNEL_OWNER_IMMUTABLE`, `HANDLE_CHANGE_TOO_SOON`, `HANDLE_RESERVED`, `INVALID_SPOTLIGHT_VIDEO`, `IMAGE_TOO_SMALL`, `IMAGE_UPLOAD_NOT_FOUND`, `SERIES_VIDEO_NOT_OWNED`, `CHANNEL_LIMIT_REACHED`, `CHANNEL_NOT_OWNED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -1969,6 +2709,8 @@ A code is declared in `@vp/errors` and carries two properties, each declared onc
 | `'permanent'` or `'transient'` (ADR-18) | `RETRY_CLASS` | `@vp/errors/src/retry-class.ts` |
 
 `VERSION_CONFLICT` carries no payload except on `PATCH /v1/me/preferences`, where `errors[0]` is `{ field: "version", current }` with the stored document (`PreferencesConflictError` in `@vp/api-contracts`), so the client merges onto it and retries without another read.
+
+The creator audience and benchmark reads (§6.1) add no code: a guest is `UNAUTHORIZED`, a caller who can see the video but may not read its analytics `FORBIDDEN`, a video the caller cannot see `VIDEO_NOT_FOUND`, a range outside the analytics ranges `VALIDATION_FAILED`.
 
 Those two maps are the authority; this list is the enumeration, and `tests/architecture/error-code-drift.test.ts` fails if they disagree.
 
@@ -2024,12 +2766,20 @@ To maintain strict modularity, testability, and separation of concerns, the API 
 Two buckets, deterministic keys, no per-request randomness — this is what makes re-running any step safe.
 
 ```
-raw/                                   (private; lifecycle: expire objects after 7 days; abort incomplete multipart after 1 day)
+raw/                                   (private; lifecycle on this prefix: expire objects after 7 days; abort incomplete multipart after 1 day)
 └── {videoId}/
-    └── source.{ext}                   ← original upload
+    ├── source.{ext}                   ← original upload
+    └── g{n}/source.{ext}              ← a replacement's upload, rendered into generation n
+evidence/{videoId}/frame-{n}.jpg       ← small JPEGs of the frames that held or flagged a video; private, outside the 7-day rule
+exports/{channelId}/{exportId}.{csv|json}   ← a channel export; private, handed out by presigned GET, purged by `purge-exports` 7 days after it was written
 tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
+raw/channel-images/{channelId}/{kind}/{uploadId}    ← an avatar or banner file until the channel-image job has cut it (7-day lifecycle)
+
 public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
+└── channel-images/{channelId}/{kind}/v{version}/      (kind: avatar | banner; written by the `channel-image` job)
+    ├── 48.webp 72.webp 128.webp 256.webp              ← avatar, square, metadata stripped
+    └── desktop-1280.webp desktop-2560.webp mobile-1280.webp mobile-2560.webp tv-1280.webp tv-2560.webp   ← banner, one crop per target
 └── videos/{videoId}/
     ├── hls/
     │   ├── master.m3u8                ← written last by `package`; presence == READY
@@ -2058,6 +2808,7 @@ public/                                (private bucket, public read via CDN cust
 Rules:
 
 - Segment naming is zero-padded and derived from FFmpeg's `%05d` — a retry overwrites identical keys with identical bytes (same encoder settings, same source, deterministic `-fflags +bitexact` where practical).
+- A channel image version is immutable: the `channel-image` job writes each variant of `v{n}` as `image/webp` with `public, max-age=31536000, immutable`, strips every metadata tag (`-map_metadata -1`, so no EXIF position), and only then moves `channels.avatar_version` or `banner_version` forward in one compare-and-set; a failed or superseded upload leaves the served image alone, and housekeeping purges a superseded version's prefix.
 - Every writer uses `Content-Type` (`application/vnd.apple.mpegurl`, `video/MP2T`, `image/jpeg`, `text/vtt`) and `Cache-Control` (`public, max-age=60` for playlists, `public, max-age=31536000, immutable` for segments and images).
 - A re-process that changes the ladder writes into a new *generation* prefix `hls/g{n}/` and `master_playlist_key` is switched atomically in the DB; the old generation is purged by housekeeping. MVP: `g1` implied (no prefix); the generation column exists from day one.
 - Local dev: MinIO console at `:9001`; the `public` bucket gets an anonymous `download` policy so hls.js can fetch directly from `http://localhost:9000/public/...`.
@@ -2162,9 +2913,10 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `transcode-1080p` | probe (as Flow child) | `transcode-1080p` | 1 | 4 | exp 10 s, jitter 0.5 | 120 s | 1–25 min |
 | `transcode-720p` | probe | `transcode-720p` | 1 | 4 | exp 10 s | 120 s | 0.5–12 min |
 | `transcode-480p` | probe | `transcode-480p` | 1 (or 2) | 4 | exp 10 s | 120 s | 0.3–6 min |
-| `thumbnail` | probe | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `thumbnail` | probe; API (`channel-image`, `jobId = <uploadId>--channel-image`) | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `screen` | probe (Flow child of `package`) | `screen` | 2 | 4 | exp 10 s, jitter 0.5 | 120 s | 10–60 s for 10 min of 1080p |
 | `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
-| `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
+| `notify` | package, failure handler; API (`export`, through the outbox) | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
 | `captions` | probe (outbox), API (switch, generate), `reconcile-captions` | `captions` (own pods, `nice -n 19`) | 1 | 3 | exp 30 s, jitter 0.5 | 600 s | 0.5–1× the audio |
 | `live` | API (going live, through the outbox) | `live` (ADR-29) | 4 | 5 | fixed 3 s | 60 s, `maxStalledCount` 10 | the broadcast |
@@ -2187,6 +2939,7 @@ export const stagePolicies = {
   'transcode-720p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'transcode-480p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'thumbnail':      { attempts: 4, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
+  'screen':         { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
   'package':        { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
   'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
   'captions':       { attempts: 3, backoff: { type: 'exponential', delay: 30_000, jitter: 0.5 }, priority: 1_000_000 },
@@ -2206,7 +2959,9 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 | probe | `${videoId}--probe--g${generation}` | `{ videoId, sourceKey, generation, traceparent }` |
 | transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
 | thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
-| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
+| screen | `${videoId}--screen--g${generation}` | `{ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }` |
+| channel-image | `${uploadId}--channel-image` | `{ type: 'channel-image', uploadId, channelId, kind, traceparent }` on the `thumbnail` queue, which routes it by `type`; the crops are read from the upload row, so a retry cuts the same image |
+| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, screened?, traceparent }` |
 | captions | `${videoId}--captions--${modelVersion}--v${captionVersion}`, a window `…--w${n}` | `{ videoId, captionId, captionVersion, sourceKey, durationMs, modelVersion, language, plan: single \| merge(windowCount) \| window(index, windowCount), traceparent }` |
 | notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
 | dlq | `${originQueue}--${originJobId}--a${attemptsMade}` | `{ originQueue, originJobId, payload, error, attemptsMade, workerId, failedAt }` |
@@ -2239,6 +2994,12 @@ await flowProducer.add({
       data: ThumbnailJob.parse({ videoId, sourceKey, generation, durationMs, traceparent }),
       opts: { jobId: ids.thumbnail(videoId, generation), ...stagePolicies.thumbnail, ...defaultJobOptions,
               failParentOnFailure: false, ignoreDependencyOnFailure: true },   // a missing sprite must not block READY
+    },
+    {
+      name: 'screen', queueName: 'screen',                       // only when SCREENING_ENABLED
+      data: ScreenJob.parse({ videoId, sourceKey, generation, durationMs, hasAudio, traceparent }),
+      opts: { jobId: ids.screen(videoId, generation), ...stagePolicies.screen, ...defaultJobOptions,
+              failParentOnFailure: false, ignoreDependencyOnFailure: true },   // `package` holds a video with no screen result
     },
   ],
 });
@@ -2341,17 +3102,28 @@ Rules:
 
 BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) replace legacy repeatables — the API upserts them on boot, so restarting the API is safe.
 
+The watch party sweep (idle close, owner hand-over, purge) is not a scheduler: it runs on a `Poller` in every API pod (§10.7, ADR-31).
+
 | Scheduler ID | Cron | Action |
 |---|---|---|
 | `reconcile-uploads` | `*/15 * * * *` | Abort `UPLOADING > 24h` (→ `ABANDONED`); re-enqueue `UPLOADED` with no probe step > 5 min; release admission-held videos. |
-| `reconcile-processing` | `*/10 * * * *` | Videos `PROCESSING > 3h` with no RUNNING step and no waiting job → mark `FAILED('ORPHANED')` + DLQ entry (belt-and-braces for lost Redis state). |
+| `reconcile-processing` | `*/10 * * * *` | Videos `PROBING` or `PROCESSING > 3h` with no RUNNING step and no waiting job → mark `FAILED('ORPHANED')` + DLQ entry (belt-and-braces for lost Redis state). |
+| `reconcile-live` | `*/10 * * * *` | Videos `LIVE > 3h` since their last update whose stream is off air and has no live job left → mark `FAILED('ORPHANED')` + DLQ entry (a finalize that ran out of attempts). |
 | `purge-deleted` | `0 * * * *` | Delete objects for `DELETED` videos older than 1 h (paginated `DeleteObjects`), then hard-delete rows. |
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 | `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
+| `purge-comment-moderation` | `0 4 * * *` | Delete `comment_removals` rows older than 30 days (`COMMENT_REMOVAL_RETENTION_DAYS`) and `channel_user_restrictions` bans that ended more than 30 days ago (`RESTRICTION_RETENTION_DAYS`); an ended ban reads as absent before that, so a purge changes no answer. |
+| `purge-screening-evidence` | `0 4 * * *` | Remove `evidence/{videoId}/` from the raw bucket for every case decided more than 30 days ago (`SCREENING_EVIDENCE_RETENTION_DAYS`) and stamp `evidence_purged_at`; the result row and the fingerprints stay. |
+| `purge-channel-audit` | `45 3 * * *` | Delete `channel_audit_log` rows written more than 365 days ago (`CHANNEL_AUDIT_RETENTION_DAYS`); nothing else deletes or changes an audit row. |
+| `purge-channel-images` | `0 4 * * *` | Delete the raw file of a `channel_image_uploads` row settled for 7 days (`CHANNEL_IMAGE_RETENTION_DAYS`) and every variant of a version nothing shows any more, then mark the row `purged`; a row whose files are not all gone stays listed for the next run. |
+| `purge-handle-history` | `15 4 * * *` | Delete `channel_handle_history` rows retired more than 90 days ago (`HANDLE_RESERVATION_DAYS`), which frees the handle for anyone. |
+| `purge-exports` | `30 * * * *` | Fail every export still `queued` or `running` a day after it was asked for (`DATA_EXPORT_STALE_AFTER_MS`), whose job died without settling it, so the channel's one slot frees; then delete the file of every `ready` export past `expires_at` from the raw bucket, move the row to `expired` and clear `object_key`. An export whose file could not be deleted stays `ready` for the next run. |
+| `prune-revisions` | `30 4 * * *` | Keep the newest 50 `entity_revisions` of every entity (`ENTITY_REVISION_KEEP`) and delete the older ones; a video's history is never rewritten, only truncated. |
+| `purge-generations` | `45 * * * *` | Delete the renditions and master of every retired generation past its grace (24 h after a swap, 14 days after the last edit for an edit's base; generation 1 rendition by rendition, since later generations live under its `hls/`), then mark it `purged`; purging an edit's base bakes the list into what plays. Fails a replacement whose upload lapsed. |
 | `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
-| `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count` and `video_views_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then forget ledger batches older than a day. |
+| `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count`, `video_views_daily` and `video_views_device_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then announce `video.stats.updated` for videos in their first 48 hours (§10.3) and forget ledger batches older than a day. |
 
 ---
 
@@ -2425,6 +3197,9 @@ event: video.processing
 data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"progress","rendition":"720p","percent":40,"overall":20}}}
 ```
 
+- **Channel images**: the `channel-image` job appends `channel.image.ready { uploadId, channelId, kind, version }` or `channel.image.failed { uploadId, channelId, kind, reason }` to the uploader's log in the transaction that settles the upload, so the studio learns the outcome of `POST /v1/me/channel/images/:kind/complete` on this stream.
+- **Video stats**: after each views flush (§9.8) `video.stats.updated { videoId }` is appended to the log of the owner and of every channel member whose role carries `analytics.read`, for each video the flushed batch counted hourly views for that is still inside the 48 hours after its `ready_at`. It carries the id only, so a replayed batch announces again at the cost of one refetch, and a client invalidates its creator-stats query on it. The stream coalesces pending frames of one video.
+- **Exports**: the `export` job appends `export.ready { exportId, channelId, kind, format, rowCount, expiresAt }` or `export.failed { exportId, channelId, kind, reason }` to the requester's log in the transaction that settles the export.
 - **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live.
 - **Live events come from the log too.** A numbered message on `user:{userId}` is a cue: the connection reads `user_events` after the last id it wrote and writes what it finds, in id order, so the relay delivering late, twice or out of order changes nothing. `appendUserEvent` takes a per-user advisory lock (`pg_advisory_xact_lock`) held to commit, so one user's ids commit in id order and a read that saw id N has seen every id below it; `id > Last-Event-ID` on reconnect therefore misses nothing. A fresh or expired stream starts that cursor at the user's newest id. Progress ticks carry no id and are written as they come.
 - **`hello`** carries `unreadNotifications`, the bell's badge, read after the newest log id so a notification created in between is both counted and replayed (each `notification.created` carries the absolute count, so a repeat changes nothing). It carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
@@ -2438,13 +3213,15 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 The bell is `notifications` rows, written by jobs on the `notify` queue and announced on the user stream (§10.3).
 
 - **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
-  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
-  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
+  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY`,
+  `FAILED` or `HELD`, and when a moderator moves it out of `HELD` (`approved`, `rejected`) and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
   subscribers heard `live` at go-live;
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
   comment's first heart. `LiveStreamRepository.goLive` writes `notify-subscribers` (kind `live`) when a public
-  stream goes live (ADR-29).
+  stream goes live (ADR-29). `WatchPartyInviteRepository.create` writes `notify-party-invite` (kind `party_invite`,
+  job id `<inviteId>--notify-party-invite`); `party_starting` joins the kinds now and gets its producer, the
+  reminders of a scheduled room, in 140c (§10.7).
 - **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
   24 hour completed-job retention is dropped by BullMQ.
 - **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
@@ -2454,8 +3231,8 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   `comment` and `heart`, `processingFinished` for `processing`; an account that never saved is on the defaults, all on).
   `notify-comment` gives each person one notification for a comment, the most specific kind: a `mention` (an
   `@handle` in the text, up to 10), else a `reply` to their comment, else a `comment` on their video (top-level
-  comments only); the author is never told about their own comment. `notify-heart` tells a comment's author the
-  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader.
+  comments only); the author is never told about their own comment. The job carries the comment's target (`{ type: 'video' | 'post' | 'thread', id }`): a reply under a post or a thread tells the parent comment's author, with `payload.postId`, or `videoId` plus `payload.threadId`, as the link, and a root comment there tells no owner. `notify-heart` tells a comment's author the
+  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader how processing ended or how its screening went (`ready`, `failed`, `held`, `approved`, `rejected`); the moderators learn of an appeal from the queue, since a notification has one recipient and a team of moderators has no target.
 - **Never about what the recipient can't read.** A video's owner hears about it while it exists; anyone else only
   while it is `public` and `READY` (`mayHearAbout` in `@vp/domain`), so a mention on an unlisted or private video
   reaches nobody but the owner.
@@ -2465,7 +3242,14 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   of the list. The same subject again (same video and comment) in the group inside the hour, read or not, changes
   nothing, so a retried job never counts twice.
   Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
-  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`. A read row is never folded into.
+  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`, `party_invite:<roomId>`,
+  `party_starting:<roomId>`. A read row is never folded into.
+- **Party invites.** `notify-party-invite` tells one invitee while the invite still stands: a revoked, declined or
+  expired invite, a closed room and an invitee who switched `preferences.notifications.watchParties` off say nothing.
+  `watchPartyInvites` (`everyone`, `subscriptions`, `nobody`) and the invitee's `block_invites` control are applied
+  when the invite is sent, where the refusal is reported to the inviter without a reason. The row carries
+  `payload.party` (`roomId`, `name`, `videoTitle`, `scheduledFor`, `inviteId`, `expiresAt`, `watching`), a snapshot
+  taken at send time, and the video title only when the invitee may hear about that video (`mayHearAbout`).
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).
@@ -2538,26 +3322,93 @@ flowchart LR
   player.
 - **Load**: one pattern subscription per pod; fan-out is O(sockets on the stream on that pod).
 
+### 10.7 Watch parties
+
+A room is a shared playback state, a roster, roles and a chat that every member sees at once. Every member sends often (commands, clock pings, chat, reactions, ready, buffering and away flags), so it is a WebSocket per member per room, like live chat (§10.6) and not the one-way user stream (ADR-27, ADR-31). Slice 140a builds the server side; the party page that drives it is 140b.
+
+```mermaid
+flowchart LR
+    B[browser] -- "POST /v1/watch-parties/:id/socket-ticket" --> A1[api pod 1]
+    B -- "WS /v1/watch-parties/:id/socket?ticket=&after=" --> A2[api pod 2<br/>room hub]
+    A2 -- "CAS watch_party_rooms, INSERT watch_party_messages" --> P[(Postgres)]
+    A2 -- "PUBLISH watch-party:{roomId}" --> R[(Redis Pub/Sub)]
+    R -- "PSUBSCRIBE watch-party:*" --> A1
+    R --> A2
+```
+
+- **One socket per member per room.** A second one for the same member key (another tab or device) supersedes the first, which gets `superseded` and closes. The pattern-subscribing hub is `services/pattern-hub.ts`, shared with `LiveChatHub`; each pod holds one `watch-party:*` subscription and writes to the sockets it holds, so there are no sticky sessions.
+- **Tickets and the origin rule are §10.6's.** `POST /v1/watch-parties/:id/socket-ticket` returns a one-time ticket valid 30 s (`WATCH_PARTY.ticketTtlSeconds`) for an account, a guest or a Discord member alike; the grant carries the member key and the account's platform role. A browser `Origin` outside `CORS_ORIGINS` is refused, and a refusal before the upgrade is an HTTP Problem.
+- **Order on connect**: redeem the ticket, check the seat, the ban and the phase, admit to presence (capacity), join the hub, read the chat backlog after `?after=`, then write `hello` (room, roles and `rolesVersion`, `you`, the room clock with `serverNow`, the queue, the roster, the chat mode and the pinned line), the backlog, and what arrived meanwhile, each once. `hello` is a full snapshot, so a reconnect replays only chat (the latest 200 lines, or everything after `?after=`).
+- **Frames.** Client to server: `clock`, `play`, `pause`, `seek`, `rate`, `next`, `start`, `ended`, `ready`, `buffering`, `away`, `skipVote`, `request`, `chat.send`, `chat.remove`, `chat.pin`, `react`, `stats`. Server to client: `hello`, `you`, `clock`, `state`, `countdown`, `queue`, `votes`, `chat.message`, `chat.removed`, `chat.pinned`, `chat.mode`, `reactions`, `roster.patch`, `settings`, `roles`, `member.roles`, `owner`, `request`, `closed`, `ack`, `error`, `kicked`, `superseded`. They are typed once in `@vp/api-contracts` (`watch-party-socket.ts`). A frame over `WATCH_PARTY.frameMaxBytes` (4 KB), an unknown type and a malformed frame are `error` frames carrying a Problem and the frame's `ref`, never a crash.
+- **The clock.** The server's playback state is `{ itemId, phase, positionMs, rate, anchorAt, version }` (§5.4), and the time source is the pod's wall clock. A client sends `clock { t0 }` on connect and every 30 s, the server answers with `serverNow`, and the client keeps the offset of the lowest round trip of its last 8 samples. `watch_party_clock_skew_seconds` (each pod against Postgres `clock_timestamp()`, sampled by the sweep every minute) shows when pod clocks stop agreeing.
+- **Commands** (`playback.control`): `play`, `pause`, `seek`, `rate` (0.5 to 2), `next`, `start` (lobby to playing after a 3 s countdown). Each carries the `version` and `rolesVersion` the sender saw; the pod applies it as one compare-and-set and publishes `state { playback, version, by, reason }`, and the sender gets `ack`. A stale version is `WATCH_PARTY_STATE_STALE` with the current state; a missing permission is `WATCH_PARTY_PERMISSION_MISSING` naming it. Commands are budgeted per member across pods by `WatchPartyGatePort` (6 in 5 s, with the other budgets in `WATCH_PARTY.budgets`). The `ready`, `away`, `buffering` and `stats` frames spend the same rule from a scope of their own, so a flood of them never starves a command.
+- **Drift** (`watch-party-drift.ts`, `WATCH_PARTY_DRIFT`): under 250 ms nothing, up to 2 s a 5 percent rate nudge until within 100 ms, above 2 s a hard seek then 3 s without correction. The client runs it once a second (140b); the server only records the `stats { driftMs, hardSeeks }` frame a client sends every 30 s.
+- **Buffering.** With `buffer_policy = wait` and at most 12 present, a member buffering for 1.5 s makes the room pause with `reason: buffering`; it resumes when nobody buffers or after 10 s, and only from the pause this pod wrote. A guest never pauses the room. The wait is tracked on the pod that holds the buffering sockets (see the open items below).
+- **Capacity.** `WatchPartyPresencePort` admits a member with one Lua script over a sorted set by last touch, so two pods admitting the last spot admit exactly one. A seat that misses three keepalives (`keepaliveMs` 15 s, `staleAfterMs` 45 s) stops counting, so a dead pod frees its seats. The count is every kind of present socket; the owner is never refused, `members.joinWhenFull` holders pass `capacity` but not `WATCH_PARTY_MAX_MEMBERS`, and lowering `capacity` kicks nobody.
+- **Fan-out and batching.** A pod batches what it hears per room: reactions fold into one `reactions` frame per 250 ms, and roster changes into one `roster.patch` per 500 ms. Each frame is published on `watch-party:{roomId}`; `watch_party_fanout_seconds` is the time from publish to the write on a pod.
+- **Roles and principals.** The permission registry (`WATCH_PARTY_PERMISSIONS`, versioned by `WATCH_PARTY_PERMISSIONS_VERSION`) is closed; eleven built-in roles (Owner, Co-host, Moderator, Chat muted, Voice muted, Spectator, DJ, Speaker, VIP, Member, Guest) and up to 14 custom ones are rows of `watch_party_roles`. `effectivePermissions` derives what a member may do now from the roles held, ignoring an expired mute, clamping a guest to `GUEST_CEILING` and never restricting the owner. `upgradeRoomRoles` adds a registry entry added at a later version to every room on load, so extending the registry needs no migration. A principal is `user:<uuid>`, `discord:<snowflake>` or `guest:<id>`, and that member key keys every seat, role, ban, budget and personal-control target. Every REST and socket action is checked against the room-scoped CASL ability (`getWatchPartyPermissions` in `@vp/permissions`), and nobody grants what they lack or touches a role or member at or above their own position (`WATCH_PARTY_ROLE_ESCALATION`, `WATCH_PARTY_ROLE_PROTECTED`), proven by the tables in `privilege-escalation.test.ts`. A platform MODERATOR can kick, ban, mute and close in any room and cannot touch roles.
+- **Live role changes.** A role or assignment change publishes `roles` or `member.roles` in the same broadcast, and bumps `roles_version`, so a command sent with the pre-change versions is refused as stale and then re-checked. A mute carries its own expiry, evaluated on read, so it lifts with no job running.
+- **Ownership.** An owner whose socket closes keeps the room for `ownerGraceMs` (60 s). After it, the present non-guest member with the highest position becomes owner as one compare-and-set, with an `owner` frame and a system line, and the previous owner holds Co-host. The pod that saw the close times the grace; the sweep catches a pod that died.
+- **The roster and its privacy projection.** One roster whatever path a member came by, with source, roles, `ready`, `sync` and `away`. Members who hold `members.kick` see guests as entries; everyone else sees them as a count. Outside the room only `toRosterPreview` is used: at most 5 faces, only of accounts with `showInParties` on, Discord members and guests counted by source, and no faces for a private room.
+- **Personal controls.** `watch_party_personal_controls` is per account, per target member key, for one room or everywhere. A change is announced to the account's other devices as `party.controls.updated` on the user stream (§10.3) and applied by the client, so the target is never told and no control is visible in any response to them. It never touches moderation or roles.
+- **Chat, reactions and requests.** A line is validated by `validateChatMessage` (shared with live chat), checked against `chat.post`, slow mode and the per-member budget, and stored before it is published. `react` is limited to the room's emoji set. `request` (`seek`, `skip`, `start`) lets a member without `playback.control` ask whoever holds it.
+- **The sweep.** `WatchPartySweep` (`services/watch-party/watch-party-sweep.ts`) runs once a minute on every API pod, on a `Poller`, and each of its writes is a compare-and-set, so concurrent pods are safe. It reads each open room's presence, records `present_count`, closes a room nobody was in for its `idle_close` (a scheduled room is exempt until an hour past `scheduled_for`), hands over an owner absent past the grace, publishes the room gauges and the clock skew, and purges closed rooms after 30 days and chat lines after 7. It lives in the API and not in the worker's housekeeping stage (§9.8) because the owner hand-over announces `owner` and `closed` frames in `@vp/api-contracts`, which the worker does not depend on, and because the presence it reads is the API's.
+- **Invites.** `POST /v1/watch-parties/:id/invites` writes one `watch_party_invites` row per account and a `notify-party-invite` outbox row in the same transaction (§10.4), so a rollback notifies nobody. The worker's `notify-party-invite` stage writes the bell row and 98's `notification.created` follows. An invite or invite link skips the password and never the capacity.
+
+#### Metrics, traces and logs
+
+`createWatchPartyMetrics` (`packages/server/pipeline-metrics/src/watch-party-metrics.ts`) registers these on the API's registry. They are not in the §13.1 table: `pipeline-metrics.test.ts` diffs that table against `createPipelineMetrics` and fails on a name found in one and not the other.
+
+| Metric | Type | Labels | Source |
+|---|---|---|---|
+| `watch_party_rooms` | gauge | `phase` | sweep, every minute |
+| `watch_party_present_members` | gauge | `kind` (`user`, `discord`, `guest`) | sweep |
+| `watch_party_sockets` | gauge | none | API, per pod |
+| `watch_party_joins_total` | counter | `kind`, `outcome` (`joined`, `full`, `guests_off`, `password_required`, `password_invalid`, `locked`, `banned`, `closed`, `not_found`) | API |
+| `watch_party_seat_upgrades_total` | counter | `to` (`user`, `discord`) | API |
+| `watch_party_commands_total` | counter | `command`, `result` (`applied`, `stale`, `forbidden`, `refused`) | API |
+| `watch_party_permission_denials_total` | counter | `permission`, `kind` | API |
+| `watch_party_role_changes_total` | counter | `action`, `result` (`applied`, `escalation`) | API |
+| `watch_party_drift_seconds` | histogram | none | API, from `stats` frames (buckets 0.05 to 5 s) |
+| `watch_party_hard_seeks_total` | counter | none | API, from `stats` frames |
+| `watch_party_fanout_seconds` | histogram | none | API, publish to socket write |
+| `watch_party_chat_messages_total` | counter | `source`, `outcome` (`sent`, `refused`) | API |
+| `watch_party_invites_total` | counter | `outcome` (`sent`, `folded`, `refused`) | API |
+| `watch_party_clock_skew_seconds` | gauge | none | sweep (pod clock minus Postgres `clock_timestamp()`) |
+
+`watch_party.join`, `watch_party.command`, `watch_party.roles` and `watch_party.seat_upgrade` spans carry the room, the action and the result. A create, close, ownership transfer, seat upgrade, role change or moderation action logs one line with the room and actor keys; refusals count in the metrics and are not logged one by one, and personal controls are never logged. The dashboard, alerts and S8 land with 140c.
+
+#### Open items after 140a
+
+- **Global WebSocket `maxPayload`.** `@fastify/websocket` is registered once, with live chat's `maxFrameBytes` as the transport limit, so the room's 4 KB frame cap is enforced on the parsed frame and not by the transport.
+- **Buffering across pods.** The room-size check reads presence across pods, but the stalls and the resume are tracked per pod, from the buffering flags of the sockets that pod holds: in a room spread over pods, the pod that paused it resumes it once its own members stop buffering, whatever a member on another pod is doing.
+- **The `hello` roster across pods.** The roster in `hello` is built from seats and roles, so the `ready`, `sync` and `away` flags of members on other pods read as defaults until their next `roster.patch`.
+- **Seat upgrade and the platform role.** A guest who signs in keeps the open socket, which holds the grant it opened with, so the account's platform role (a MODERATOR's room powers) applies from its next ticket, not at the upgrade.
+
 ---
 
 ## 11. Security
 
 | Area | Control |
 |---|---|
-| Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `pnpm dev` also starts `pnpm dev-token serve` on loopback port 3002, which mints the token of a dev persona (`user`, `creator` or `admin`, each its own user) at `GET /token?persona=`, for the client apps' dev-only persona switcher; a guest is no token at all. `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
+| Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `pnpm dev` also starts `pnpm dev-token serve` on loopback port 3002, which mints the token of a demo persona (`user`, `creator`, `creator2`, `moderator` or `admin`, each its own user) at `GET /token?persona=`, for the client apps' persona switcher; a guest is no token at all. `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
 | Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/server/api` and `apps/client/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In both client apps, `PermissionsProvider` (filled by `SessionProvider` with the account's user and the role `GET /v1/me/account` reports), `useCan` and `<Can />` gate the UI from the same rules: the edit and delete actions on a video through `canUpdateVideo` and `canDeleteVideo`, the admin link in the account menu through `canAccessAdmin`. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner or an admin may update or delete it. Only an admin may take one down (`moderate`), and its owner may then edit it but not change its visibility; `getUserPermissions` applies the admin rules last so `manage all` overrides that `cannot`. |
 | Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
 | Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's and the worker's both read and write `raw` and `public` (the API writes `public` only for the caption `.vtt` a creator uploads, edits or deletes). The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Creators register outgoing webhooks (`/v1/me/webhooks`); each has its own secret, so no global signing key is declared. A delivery is one POST with `X-Taitube-Event`, `X-Taitube-Delivery` (also `Idempotency-Key`), `X-Taitube-Timestamp` and `X-Taitube-Signature-256: sha256=<hex>`, the HMAC-SHA256 of `<timestamp>.<body>`. `https` to public hosts only, no redirects followed, `WEBHOOK_ALLOW_PRIVATE_HOSTS` is the local-development override. |
-| Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica until a shared limiter store lands (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names (`uniquelocal` in compose and the k8s base: the ingress and the client apps' `/api` proxy; kept as is, because spoofing the header needs a foothold inside the private network and only skews the rate-limit identity, and per-environment CIDRs belong with the forwarded-header follow-up of ticket 47), and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
-| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The browser never calls the API itself: each client app's server answers `/api/...` on the app's own origin (`sessionMiddleware` in `@vp/queries`, mounted from `src/start.ts` after the CSRF check and the security headers) and forwards the call to the API at `SSR_API_BASE_URL`, else `VITE_API_BASE_URL`, where the server render calls it too. The proxy forwards an allowlist of request headers (`accept`, `accept-language`, `content-type`, `if-none-match`, `last-event-id`, `traceparent`, `tracestate`), never the app origin's cookies or the browser's own `Authorization`, sends the session cookie's token as the bearer, appends the browser's address to `X-Forwarded-For`, and drops `Set-Cookie` and the framing headers `fetch` consumed from the answer. It holds a write's body whole to retry it after a refresh, so it answers 413 itself once the body passes 1 MiB (the API's `HTTP_BODY_LIMIT_BYTES` default, mirrored in the proxy because a client package cannot read `@vp/env-schema`), by the declared `Content-Length` before reading or by the bytes that arrive when the body is chunked. A token the API refuses (401) goes through one refresh seam (`refresh` in `sessionMiddleware`'s config): a fresh token is written to the cookie and the call retried once, and the seam is single-flight per refused token, so parallel 401s on one token make one refresh call; with none to be had the cookie is cleared and the 401 passes on, and the browser's client sends a viewer it believed signed in to `/login?redirect=<where they were>` without a reload. A write through it (any method but `GET` and `HEAD`) passes the same `Sec-Fetch-Site`/`Origin` check as a server function. The API trusts that header from `TRUST_PROXY`, which compose and the k8s base set to `uniquelocal`, the private network the app servers call from; without it every viewer's anonymous search would share the app server's rate-limit bucket. The single-flight is per app-server process: across replicas two refreshes of one rotating refresh token can still race, so the OIDC client must absorb it (accept the previous refresh token's result for a short grace, or refresh near expiry rather than on the first 401). `CORS_ORIGINS` still lists both client origins for a caller that reaches the API directly. |
-| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@vp/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. The session is one cookie, `vp.session`, holding the API bearer token: `HttpOnly` (no script reads it), `SameSite=Lax`, `Secure` off localhost, `Path=/`, eight hours, and the same `Domain` as the theme cookie, so both apps read it and a sign-out on either clears it for both. Only the apps' servers write it, through server functions (`signOut`, the dev personas' sign-in) and the `/api` proxy; the browser learns whether there is one from the `hasSession` server function, and the root route loads the account it reaches (`GET /v1/me/account`) on the server, so the server renders the signed-in page and the session lands in router context as `auth`. A guest on a members-only page is sent to that app's own `/login?redirect=<path>` (the studio never sends one to web), and a `redirect` that would leave the origin is dropped. In development `/login` offers the dev personas, which `dev-token serve` mints; the switcher sits in `@vp/queries/dev-personas` behind `import.meta.env.DEV`, and the bundle guard fails a build whose client or server chunks carry it. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
+| Channel exports | `create`, `read` and `delete` on `ChannelExport` (`@vp/permissions`) through the channel roles: the owner and `data.export` (managers) every kind, `analytics.export` (the analytics role) the analytics kinds; an editor and a moderator get `403`, and every request and deletion is in the channel audit log. A file is private in the raw bucket and reachable only through a presigned GET of `S3_PRESIGN_TTL_SEC`. A comment is text anyone can write and the file will be opened in a spreadsheet, so the CSV writer prefixes a text cell that starts with `=`, `+`, `-`, `@` or a tab with an apostrophe. A commenter appears by public handle and display name only, never an email or an account id. The job reads a keyset page at a time and streams to a scratch file, and stops with `EXPORT_TOO_LARGE` past 1,000,000 rows or 500 MB. |
+| Personal access tokens | `Authorization: Bearer tt_pat_{prefix}_{secret}` acts as the user who made it, on the channel it was made on, and never as more: `getUserPermissions` in `@vp/permissions` is the one place a token is narrowed, building the user's ability with only their role on the token's channel and keeping each rule only for the actions its scopes grant (`SCOPE_ABILITIES`: `videos:read`, `videos:write`, `analytics:read`, `comments:read`, `comments:moderate`, `exports:read`, `exports:create`, `webhooks:manage`). Memberships and the user's role are read on every request, so a demoted member's token shrinks with them and a removed member's token is a `401` on its next request. A route a token may call names its `scope` in its contract; the auth hook answers a token on any other route, or without that scope, `403 API_TOKEN_SCOPE_MISSING`, so a token never manages tokens, changes the handle or the team, opens the event stream or a chat ticket. A malformed, unknown, expired or revoked token is `401 UNAUTHORIZED`; a request carrying a token and the `vp.session` cookie is `400 API_TOKEN_WITH_SESSION`; an `X-Channel-Id` naming another channel is `403 CHANNEL_MEMBERSHIP_REQUIRED`. The secret is compared by SHA-256 in constant time (`timingSafeEqual`) against every row with its prefix. Each token is limited to 60 requests a minute by its id in `@fastify/rate-limit`'s store (per API process, like the other limits), answered `429 RATE_LIMITED` with `Retry-After`. A token request gets no CORS headers, so a page cannot read what it answers. A write made with a token is audited with the member and `actor_token_id`. |
+| Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits each personal access token to 60 requests a minute by its id, and four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica until a shared limiter store lands (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names (`uniquelocal` in compose and the k8s base: the ingress and the client apps' `/api` proxy; kept as is, because spoofing the header needs a foothold inside the private network and only skews the rate-limit identity, and per-environment CIDRs belong with the forwarded-header follow-up of ticket 47), and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
+| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The browser never calls the API itself: each client app's server answers `/api/...` on the app's own origin (`sessionMiddleware` in `@vp/queries`, mounted from `src/start.ts` after the CSRF check and the security headers) and forwards the call to the API at `SSR_API_BASE_URL`, else `VITE_API_BASE_URL`, where the server render calls it too. The proxy forwards an allowlist of request headers (`accept`, `accept-language`, `content-type`, `if-none-match`, `last-event-id`, `traceparent`, `tracestate`, and `x-channel-id`, which the studio sets from its acting-channel cookie on channel-scoped calls and the API checks against the caller's memberships), never the app origin's cookies or the browser's own `Authorization`, sends the session cookie's token as the bearer, appends the browser's address to `X-Forwarded-For`, and drops `Set-Cookie` and the framing headers `fetch` consumed from the answer. It holds a write's body whole to retry it after a refresh, so it answers 413 itself once the body passes 1 MiB (the API's `HTTP_BODY_LIMIT_BYTES` default, mirrored in the proxy because a client package cannot read `@vp/env-schema`), by the declared `Content-Length` before reading or by the bytes that arrive when the body is chunked. A token the API refuses (401) goes through one refresh seam (`refresh` in `sessionMiddleware`'s config): a fresh token is written to the cookie and the call retried once, and the seam is single-flight per refused token, so parallel 401s on one token make one refresh call; with none to be had the cookie is cleared and the 401 passes on, and the browser's client sends a viewer it believed signed in to `/login?redirect=<where they were>` without a reload. A write through it (any method but `GET` and `HEAD`) passes the same `Sec-Fetch-Site`/`Origin` check as a server function. The API trusts that header from `TRUST_PROXY`, which compose and the k8s base set to `uniquelocal`, the private network the app servers call from; without it every viewer's anonymous search would share the app server's rate-limit bucket. The single-flight is per app-server process: across replicas two refreshes of one rotating refresh token can still race, so the OIDC client must absorb it (accept the previous refresh token's result for a short grace, or refresh near expiry rather than on the first 401). `CORS_ORIGINS` still lists both client origins for a caller that reaches the API directly. |
+| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@kit/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. The session is one cookie per signed-in account, `vp.session.<slot>` (slots 0 to 9, at most `ACCOUNTS_MAX`, default 10), each holding that account's API bearer token: `HttpOnly` (no script reads it), `SameSite=Lax`, `Secure` off localhost, `Path=/`, eight hours, and the same `Domain` as the theme cookie, so both apps read it and a sign-out on either clears it for both. A browser that signed in before slots carries `vp.session`, which the request middleware moves into slot 0 once. Beside them sits the non-secret JSON slot list: one `vp.accounts.<slot>` per row (user id, label, avatar, the acting channel, `expired`) and `vp.accounts` for what the slots share (the default slot a tab with no prefix opens as, accents, pins). A write sets only the cookies that changed and clears only ones its request carried, so two tabs changing different slots never undo each other (two writes to the same slot, or to `vp.accounts`, still race, last one wins). Each row has a fixed share of 4 KB so all ten and the shared cookie fit what one cookie held before (a label is bounded, and a row's avatar hint is dropped when it would not fit), and a pre-split `vp.accounts` that still carries its rows is read as before and split on the next write. A tab acts as one identity, `{ slot, channel }`, named in its URL as `/u/<slot>[/c/<handle>]`: the router strips the prefix on the way in and adds it on the way out, the request middleware resolves it before any loader runs, and with one account on its primary channel no prefix appears; with two or more, a page with no prefix is a 302 to the default identity's, and a prefix for a slot with no cookie a 302 to `/login?slot=<n>&reason=expired`; back or forward onto an entry made under another identity acts as that identity again. The browser's API client names the slot on every proxied call in `X-Account-Slot`, a custom header no cross-site form sends (the CSRF check still runs first), and the proxy refuses a write without it; the user event stream, which an `EventSource` cannot give a header, names it in its path (`/u/<slot>/api/...`, a GET). The proxy sends that slot's token as the bearer, and a refresh that fails clears that slot alone and marks it expired. Each identity has its own `QueryClient`: a switch builds the next one and drops the last, cancelling its loads, so a response in flight for the old identity lands in a cache nobody reads; the stream's lock and `BroadcastChannel` are named per identity, and the permissions provider is keyed by it. A signed-in page is `Cache-Control: private, no-store`. One switcher (`AccountSwitcher` and `IdentitySwitcherDialog` in `@vp/queries` over the kit's `IdentitySwitcher`, `IdentityRow`, `AccentRing` and `ActingAs`) lists the tab's account, its owned channels and its teams from `GET /v1/me/identities`, and each other slot from `vp.accounts`; `vp.accounts` also keeps each identity's ring colour (one of the theme's six categorical colours, at most 10 picked, else derived from the slot) and up to 8 pinned identities, still inside the 4 KB budget. What waits on the other accounts is one server function, `glanceAccounts`, which asks every other slot's `GET /v1/me/notifications/unread-count` and newest notifications in parallel with that slot's token, 1.5 s each; a slow or failing slot gets no count and a refused token marks its row expired, so no token reaches the browser and no stream is opened per account. A switch is client-side in place: the next identity's cache (filled ahead by a hover or focus on its row, at most once per 5 s), the URL replaced under its prefix, the page kept when the new identity can see it and the app's home otherwise. A composer that writes as a channel names the identity and holds a write fired after the identity changed (`useIdentityGuard`). The studio's `/for/<handle>` opens a channel as the identity that acts on it: the slot this browser last used it as, else the first whose account owns it or works on its team, asked in parallel. Adding an account (`/login?add=1`) binds the flow to a one-time nonce in a ten-minute httpOnly cookie, `vp.add-nonce.<slot>`, which also holds the first slot free of sessions and of other adds' nonces, so two adds at once take two slots; it takes a new token from the provider into that slot, or the first free one if it was taken meanwhile (never a token from the request), ends on the existing slot when the user already holds one (signed in or expired), and records `account.signed_in` through `POST /v1/me/security/sign-ins`, which rate-limits adds to 5 per client address in 10 minutes. Only the apps' servers write these cookies, through server functions (`signOut`, `signOutAll`, `expireSession`, `rememberIdentity`, the sign-in callback) and the `/api` proxy; the browser learns whether its slot has a session from the `hasSession` server function, and the root route loads the account its token reaches (`GET /v1/me/account`) on the server, so the server renders the signed-in page and the session lands in router context as `auth`. A `BroadcastChannel` tells this origin's tabs of an add or a sign-out, and a tab coming back into focus asks again, which is how the other app sees a sign-out. A guest on a members-only page is sent to that app's own `/login?redirect=<path>` (the studio never sends one to web), and a `redirect` that would leave the origin is dropped. `/login` offers the demo personas, which `dev-token serve` mints, in the dev servers and in a build that sets `VITE_DEMO_PERSONAS=true` (the demo stack, `demo/start.sh`); the switcher sits in `@vp/queries/demo-personas` behind that flag, which a build leaves off everywhere else, and the bundle guard fails a build with the flag off whose client or server chunks carry it. Its server function reaches `dev-token serve` at `SSR_DEV_TOKEN_URL`. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
+| Share links and video passwords | Gates on the page, the player and the API (the watch read, its event stream, a clip's read, the corrections), not encryption: the segments of a linked or protected video sit in the public bucket under keys derived from the video id, exactly as for an unlisted video, so whoever holds the id can fetch them, and the studio says so. A share link token (22 base64url characters from 16 random bytes) grants `read` on its one video through the `@vp/permissions` share-link rule and nothing else: no comment, reaction, stats or edit rides on it. Expired or revoked, it is `410 SHARE_LINK_EXPIRED`. A password guards an unlisted video only; it is a salted scrypt hash behind `PasswordHasherPort` that only `VideoPasswordRepository` reads, and neither it nor the password reaches a response or a log. The unlock cookie is an HMAC-SHA256 under `VIDEO_ACCESS_SECRET` (no default; production refuses the local value; unset, setting a password is `409 VIDEO_PASSWORDS_OFF`) over the video id, the expiry and the current password hash, compared with `timingSafeEqual`, so a new or removed password, or a rotated secret, ends every unlock. Unlock attempts are 5 a minute per client address and video. A gated or link-opened read is `private, no-cache`. |
+| Watch party credentials | A guest or a Discord member holds an opaque, Redis-backed party credential (`PartyGuestSessionsPort`), set as the httpOnly `vp.party-guest` cookie and sent as `x-party-credential`. The auth plugin resolves it only on a route whose contract says `partyGuest: true`, so on every other route it is never read and the caller is anonymous; one that resolves to nothing is `WATCH_PARTY_CREDENTIAL_INVALID` rather than dropped. `tests/architecture/party-guest-confined.test.ts` fails on `partyGuest: true` outside the watch party contracts. A guest IP is only ever stored as a salted hash (`WATCH_PARTY_GUEST_SALT`), for a ban, and the password hasher is scrypt behind `PasswordHasherPort`. |
 | Supply chain | Renovate (`renovate.json`); `pnpm install --frozen-lockfile` in CI; images built in CI and scanned with Trivy (`images.yml`); MinIO images pinned by digest (`minio-images-pinned.test.ts`). The app images are referenced by tag (`latest`), not digest, in the k8s manifests. |
-| Privacy | No PII beyond email. `@vp/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
+| Privacy | No PII beyond email. `@kit/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
 
 ---
 
@@ -2652,6 +3503,10 @@ services:
     <<: *worker
     environment: { WORKER_STAGE: transcode-480p, FFMPEG_THREADS: "1" }
   worker-thumbnail:      { <<: *worker, environment: { WORKER_STAGE: thumbnail } }
+  worker-screen:
+    <<: *worker
+    environment: { WORKER_STAGE: screen, FFMPEG_THREADS: "2" }
+    deploy: { resources: { limits: { cpus: "2", memory: 1500m } } }
   worker-package:        { <<: *worker, environment: { WORKER_STAGE: package } }
   worker-notify:         { <<: *worker, environment: { WORKER_STAGE: notify } }
   worker-housekeeping:   { <<: *worker, environment: { WORKER_STAGE: housekeeping } }
@@ -2696,19 +3551,21 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The studio does the
+drops that read from the client bundle, which the bundle guard in `@kit/vite-preset` holds. The studio does the
 same on `:5174`. The API's CORS default (`http://localhost:5173`, `:5174`, `:8080`) already allows both
 containers' origins.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
-**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
+**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/platform/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
 **One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
-`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side.
+`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side. The base
+images are pinned by digest (`NODE_IMAGE`, `BUN_IMAGE`): CI builds from main's layer cache, which a moved tag misses
+from the first layer on, so a base image moves only in a commit of its own.
 
 ```dockerfile
-FROM node:24-slim AS toolchain             # pnpm and turbo
+FROM ${NODE_IMAGE} AS toolchain            # node:24-slim@sha256:..., pnpm and turbo
 FROM toolchain AS pruner                   # turbo prune: once for the four apps, once per app
 FROM toolchain AS deps                     # ONE pnpm install, from the joint pruned manifests
 FROM deps AS build-api                     # each app builds from its own pruned source, then
@@ -2716,12 +3573,12 @@ FROM deps AS build-worker                  #   scripts/bundle-app.sh writes what
 FROM deps AS build-web
 FROM deps AS build-studio
 FROM scratch AS api-bundle                 # CI swaps these for bundles it built on the runner
-FROM node:24-slim AS node-runtime          # tini, curl, no npm or corepack, user 10001
+FROM ${NODE_IMAGE} AS node-runtime         # tini, curl, no npm or corepack, user 10001
 FROM node-runtime AS api                   # CMD node --import ./dist/instrument.js dist/main.js
 FROM node-runtime AS client-runtime        # CMD node --run start
 FROM client-runtime AS web                 # srvx on :5173
 FROM client-runtime AS studio              # srvx on :5174
-FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-slim, plus ffmpeg
+FROM worker-base-${WORKER_RUNTIME} AS worker   # BUN_IMAGE or NODE_IMAGE, plus ffmpeg
 ```
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with
@@ -2812,7 +3669,7 @@ Guardrails: R2 Class A ops are the metric to watch (every segment upload is one 
 
 ### 13.1 Metrics catalogue
 
-Exposed by `packages/server/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
+Exposed by `@kit/observability`, with the metrics of `@vp/pipeline-metrics` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
 
 | Metric | Type | Labels | Source | Used for |
 |---|---|---|---|---|
@@ -2843,12 +3700,16 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `video_view_flush_duration_seconds` | histogram | — | housekeeping | buffer drain latency |
 | `frontend_lcp_seconds` / `frontend_inp_seconds` / `frontend_fcp_seconds` / `frontend_ttfb_seconds` | histogram | `app ∈ {web, studio}, route` (route id, at most 32 per app, then `other`) | API (`POST /v1/telemetry/vitals`) | real-user Core Web Vitals, p75 per route |
 | `frontend_cls_ratio` | histogram | `app, route` | API (`POST /v1/telemetry/vitals`) | real-user layout shift, p75 per route |
+| `frontend_long_tasks_seconds` | histogram | `app, route` | API (`POST /v1/telemetry/vitals`) | total time of the tasks over 50 ms a page ran, per route |
+| `frontend_layout_shift_sources_total` | counter | `app, route, source` (a kit `data-slot`, at most 32 per app, then `other`) | API (`POST /v1/telemetry/vitals`) | which element a page's layout shift moved, so a shift is found without a trace |
 | `video_playback_starts_total` | counter | — | API (`POST /v1/telemetry/playback`) | playbacks that began |
 | `video_watch_time_seconds_total` | counter | — | API (`POST /v1/telemetry/playback`) | seconds actually played |
 | `video_rebuffering_ratio` | histogram | — | API (`POST /v1/telemetry/playback`) | stalled share of each reported segment; the Grafana `video_buffering_ratio` panel is its mean and p95 |
 | `captions_realtime_factor` | histogram | `model` | captions | audio-seconds per whisper wall-second (>1 = faster than realtime) |
 | `captions_time_to_ready_seconds` | histogram | — | captions | from the generated track being asked for at probe to `ready` |
 | `captions_jobs_total` | counter | `outcome ∈ {ready, failed, disabled}` | captions | how runs end; queue age is `bullmq_queue_oldest_waiting_age_seconds{queue="captions"}` |
+| `screen_seconds` | histogram | `outcome ∈ {PASS, HOLD}` | screen | seconds the stage takes for one video; the target is under 60 s for 10 minutes of 1080p |
+| `screening_outcomes_total` | counter | `outcome, reason` | screen | videos by outcome and strongest reason (`none` for a pass); the hold rate is `HOLD` over the total |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 
@@ -2883,20 +3744,20 @@ Every API replica polls every queue and exports the same depth, so the query tak
 
 The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4) on the same query, so caption pods scale apart from the transcodes and never take their jobs.
 
-**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
+**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/platform/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
+- `initTracing` in `@kit/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
 - BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
 - Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
-- The browser is the first span. `@vp/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
-- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
+- The browser is the first span. `@kit/web-telemetry` starts `@opentelemetry/sdk-trace-web` in each client app after hydration, from a dynamic import, with the fetch instrumentation: it adds `traceparent` to calls to the API origin (`propagateTraceHeaderCorsUrls`) and to the page's own origin, which the instrumentation always does, and to no other host, so the API's request span is the browser span's child. Spans go over OTLP/HTTP to the build-time `VITE_OTEL_TRACES_URL`; with the key unset no tracer loads. Browser tracing is local only: each app's `.env.development` and the compose build set it to the local collector (`http://localhost:4318/v1/traces`, whose receiver allows the two app origins through CORS), and cloud builds leave it unset. Turning it on in the cloud takes a build arg and a CORS block on the Alloy OTLP receiver. The span attributes are the fetch instrumentation's own (method, URL with its query string dropped, status) and `service.name` `taitube-web` or `taitube-studio`: no user id, no session, nothing a viewer typed.
+- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@kit/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 
-One `createLogger` in `@vp/logger` (`packages/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
+One `createLogger` in `@kit/logger` (`packages/platform/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
 
 ### 13.5 Dashboards & alerts (committed under `infra/observability/`)
 
@@ -2916,6 +3777,7 @@ Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Promethe
 | `R2ClassABudget` | `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000` | 1h | info |
 | `APILatencyHigh` | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.2` | 10m | warning |
 | `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
+| `ScreeningHoldRateHigh` | `sum(increase(screening_outcomes_total{outcome="HOLD"}[24h])) / sum(increase(screening_outcomes_total[24h])) > 0.2`, with at least 20 screened | 1h | warning |
 
 The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes by severity to placeholder webhooks on `http://localhost:5001`; no chat or paging receiver is configured, locally or in cloud.
 
@@ -3026,7 +3888,7 @@ video-pipeline/
 │       ├── events/                         # Redis Pub/Sub channels, SSE envelope schemas, cache keys
 │       ├── ffmpeg/                         # probe, transcode/thumbnail/sprite args, runFfmpeg, error classification, master playlist
 │       ├── job-contracts/                  # job payload schemas, jobId builders, stage policies, queue names, the rendition ladder
-│       ├── logger/                         # @vp/logger: pino, json and pretty formats, LogContext
+│       ├── logger/                         # @kit/logger: pino, json and pretty formats, LogContext
 │       ├── observability/                  # prom-client registry and metrics server, OpenTelemetry bootstrap
 │       ├── storage/                        # keys.ts, mime.ts, multipart.ts (part math/constants)
 │       ├── testing/                        # vitest config factory + shared fixtures and helpers
@@ -3122,7 +3984,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
-| Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
+| Logging | pino 10 through `@kit/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest 5 through `vp test`, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
@@ -3169,7 +4031,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
+One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/platform/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
 Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `platform-env.json` is the short list of keys this repo hands to something else, each naming the consumer beside it: data, since no code of ours reads them. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
 
@@ -3244,9 +4106,10 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` · `captions` · `live` |
+| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `screen` · `package` · `notify` · `housekeeping` · `captions` · `live` |
 | `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
+| `FPCALC_PATH` | `fpcalc` | the Chromaprint binary the `screen` stage runs for the audio fingerprint, `libchromaprint-tools` in the worker image |
 | `FFMPEG_THREADS` | `2` | k8s sets it from the container's CPU limit (`resourceFieldRef`) |
 | `X264_PRESET` | `veryfast` | load-test variable |
 | `HLS_SEGMENT_SECONDS` | `6` | `-hls_time` |
@@ -3265,12 +4128,32 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
+| `SCREENING_ENABLED` | `true` | platform kill switch for upload screening; off, probe adds no `screen` child and nothing is held |
+| `SCREENING_MODEL_PATH` | `.models/vit-base-nsfw-detector-int8.onnx` | the upload-screening classifier, baked into the image at `/opt/screening/` at build, SHA-256 checked against `screening.lock`; the adapter checks it again at start and refuses a file that is not the pinned one. `pnpm models:fetch` fills `.models/` for a run outside Docker |
+| `WATCH_PARTY_MAX_MEMBERS` | `200` | the ceiling on a room's capacity (at least 2); a room with none set holds this many, and a larger `capacity` is `VALIDATION_FAILED` |
+| `WATCH_PARTY_MAX_OPEN_PER_USER` | `3` | open rooms one owner key holds before a create is `WATCH_PARTY_LIMIT_REACHED` |
+| `WATCH_PARTY_GUEST_SALT` 🔒 | none; `.env.example` ships `change-me-party-salt` | keys the guest IP hash kept for a ban (§10.7); unset, `loadEnv` fails, and production refuses the local value |
 | `LIVE_HOOK_SECRET` 🔒 | none; `.env.example` ships `change-me-live-hook` | MediaMTX sends it on every auth call (ADR-29) and the live worker reads with it; unset refuses every publisher; production refuses the shipped value |
+| `VIDEO_ACCESS_SECRET` 🔒 | none; `.env.example` ships `change-me-video-access` | signs the 12-hour unlock cookie of a password-protected video (§11); unset, setting a password is `409 VIDEO_PASSWORDS_OFF`; rotating it ends every unlock; production refuses the shipped value |
 | `LIVE_INGEST_URL` | `rtsp://localhost:8554` | where the live worker reads a publisher |
 | `LIVE_GATEWAY_API_URL` | `http://localhost:9997` | MediaMTX's control API: who is publishing, and the kick |
 | `LIVE_RTMP_PUBLIC_URL` / `LIVE_WHIP_PUBLIC_URL` | `rtmp://localhost:1935/live` / `http://localhost:8889/live` | what `POST /v1/me/live` hands a creator for OBS and the browser |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
+
+The screening numbers are constants, not keys (the schema is closed, and an operator does not tune a Hamming distance): `SCREENING_THRESHOLDS`, `SCREENING_SAMPLING`, `SCREENING_PROCESS` and `SCREENING_MODEL` in `packages/server/env-schema/src/tuning.ts`, reaching the stage as `AppConfig.screening`. Each stored result names the `version` of the thresholds it was decided under, so a change is a new version and never rewrites a decided case.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `frameMaxHamming` | `3` | two frame hashes this close are the same frame; the four 16-bit bands make the lookup four index hits |
+| `duplicateCoverage` | `0.9` | a match covering this much of the new video holds it as `DUPLICATE` (or `KNOWN_REJECTED`) |
+| `partialCoverage` / `partialRunSeconds` | `0.3` / `30` | a smaller overlap is a `PARTIAL_MATCH` flag, never a hold |
+| `audioMaxBitErrorRate` | `0.35` | the audio fingerprint's agreement bar |
+| `nsfwFrameThreshold` / `nsfwShareThreshold` | `0.85` / `0.1` | a hold needs a frame over the first and this share of frames over it |
+| `blankFrameShare` | `0.95` | share of frames within `blankMaxHamming` 2 and `blankMaxLumaRange` 8 of the first, judged only when at least `blankMinFrames` 3 were sampled (a clip under 5 s has too few to call it frozen) |
+| `hashIntervalSeconds`, `classifyIntervalSeconds`, `classifyMaxFrames` | `2`, `10`, `120` | one hashed frame every 2 s; one classified frame every 10 s, at most 120, plus first, middle and last |
+| `audioIndexStride` | `8` | every 8th Chromaprint term is indexed, about 3 600 rows per hour of video |
+
 
 ### 16.7 Observability
 
@@ -3293,6 +4176,8 @@ Handed to something other than the API and the worker, and declared so the schem
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
 | `SSR_API_BASE_URL` | each client app's SSR server (`apps/client/web`, `apps/client/studio`), read at start and parsed by the app's own schema in its `src/config` through `resolveApiBaseUrl` (`@vp/queries`): the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
+| `ACCOUNTS_MAX` | each client app's SSR server, read at start and parsed by `parseClientEnv` in `@vp/queries` from the app's `src/lib/config`: how many accounts one browser holds signed in at once, 1 to 10, default 10; adding one more is refused. Not `VITE_`-prefixed: only the server enforces it |
+| `SSR_DEV_TOKEN_URL` | each client app's SSR server, read at start and parsed by the app's own schema in its `src/lib/config`, and `demo/start.sh`: where the server reaches `dev-token serve` to mint a demo persona's token, for a build that sets `VITE_DEMO_PERSONAS=true`. Unset, it is `http://localhost:3002`. Not `VITE_`-prefixed for the reason `SSR_API_BASE_URL` is not. `VITE_DEMO_PERSONAS` itself (`true` or `false`, default `false`) is a build-time key outside `@vp/env-schema`, as every `VITE_*` key is |
 | `VITE_WEB_URL` | `apps/client/web` and `apps/client/studio` at build time, parsed by each app's `src/config` (default `http://localhost:5173`): the web app's public origin, the value the API reads as `WEB_URL`. The studio links back to it; web's canonical, OpenGraph, Twitter player card, sitemap and feed URLs are absolute on it, and the card's `/embed/<video id>` URL with them. Mirrored in `.env.example` |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
@@ -3334,7 +4219,7 @@ Each phase ends with a demo and a **Definition of Done** that is binary. Estimat
 
 ### Phase 0 — Bootstrap (≈ 1 week)
 
-Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/platform/server/dev-token`, `tools/hls-test-page`.
 
 **DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
 
@@ -3352,7 +4237,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/platform/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 
@@ -3394,7 +4279,7 @@ Open issues carried from PRD §12: auth provider, public vs signed playback, sou
 import { z } from 'zod';
 
 export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
-  'thumbnail', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
+  'thumbnail', 'screen', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
 export type QueueName = (typeof QUEUES)[number];
 export const RENDITIONS = ['1080p', '720p', '480p'] as const;
 export type RenditionName = (typeof RENDITIONS)[number];
@@ -3428,6 +4313,7 @@ export const HousekeepingJob = z.object({
   task: z.enum([
     'reconcile-uploads',
     'reconcile-processing',
+    'reconcile-live',
     'purge-deleted',
     'expire-raw',
     'tmp-sweep',
@@ -3454,6 +4340,7 @@ export const ids = {
   probe:     (v: string, g: number) => `${v}--probe--g${g}`,
   transcode: (v: string, r: RenditionName, g: number) => `${v}--transcode--${r}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen:    (v: string, g: number) => `${v}--screen--g${g}`,
   package:   (v: string, g: number) => `${v}--package--g${g}`,
   notify:    (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,
   dlq:       (q: string, j: string, a: number) => `${q}--${j}--a${a}`,

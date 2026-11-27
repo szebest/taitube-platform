@@ -1,11 +1,12 @@
+import { LIVE_PLAYLIST_HEADERS } from '@kit/object-storage';
+import { andThenAsync, map, ok, type Result } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { LiveStream } from '@vp/domain';
 import type { LivePackaging } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
-import { andThenAsync, map, ok, type Result } from '@vp/result';
-import { LIVE_PLAYLIST_HEADERS, liveMasterKey } from '@vp/storage';
+import { liveMasterKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { type LiveArchive, writeLiveArchive } from './live-session';
 import type { LiveUploader } from './live-uploader';
@@ -67,9 +68,7 @@ export async function finalizeBroadcast(
         const transitioned = recorded
           ? await repositories.videos.transition({
               videoId,
-              from: 'LIVE',
-              to: 'READY',
-              eventType: 'video.ready',
+              edge: 'finalizeLive',
               eventPayload: { liveStreamId: stream.id },
               patch: {
                 masterPlaylistKey: liveMasterKey(stream.id),
@@ -82,9 +81,7 @@ export async function finalizeBroadcast(
             })
           : await repositories.videos.transition({
               videoId,
-              from: 'LIVE',
-              to: 'FAILED',
-              eventType: 'video.failed',
+              edge: 'failLive',
               eventPayload: { liveStreamId: stream.id },
               patch: {
                 errorCode: ErrorCodes.LIVE_INGEST_UNAVAILABLE,

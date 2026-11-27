@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { PickRepositoryPort } from '@vp/core/repositories';
 import type { EditorPick } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -51,11 +51,6 @@ export function describePickRepositoryContract(makeSubject: MakeRepositoriesSubj
       await seedOwners(subject.repositories);
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
-      await subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'The Owner',
-      });
       picks = subject.repositories.picks;
     });
 

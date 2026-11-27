@@ -1,7 +1,7 @@
+import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
 import { registerServices, Services } from '../services.module';
 
 const OWNER = { id: '00000000-0000-7000-8000-00000000f501', role: 'CREATOR' } as const;
@@ -13,11 +13,14 @@ describe('apps/server/api/composition: channel module', () => {
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))
     );
     const { videos, channels } = c.get(Adapters.Repositories);
-    expectOk(await channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' }));
+    const channel = expectOk(
+      await channels.create({ userId: OWNER.id, handle: 'owner', displayName: 'Owner' })
+    );
     expectOk(
       await videos.create({
         id: VIDEO,
         ownerId: OWNER.id,
+        channelId: channel.id,
         title: 'Match',
         visibility: 'public',
         status: 'READY',
@@ -25,12 +28,15 @@ describe('apps/server/api/composition: channel module', () => {
       })
     );
 
-    const view = expectOk(await c.get(Services.ChannelFeaturedService).replace(OWNER, [VIDEO]));
+    const { user, acting } = expectOk(await c.get(Services.RequestIdentity).resolve(OWNER));
+    const view = expectOk(
+      await c.get(Services.ChannelFeaturedService).replace(user, expectOk(acting), [VIDEO])
+    );
 
     expect(view).toMatchObject({ source: 'pinned', items: [{ id: VIDEO, title: 'Match' }] });
-    expect(expectOk(await c.get(Services.ChannelService).getPublicChannel('@owner')).handle).toBe(
-      'owner'
-    );
+    expect(
+      expectOk(await c.get(Services.ChannelService).getPublicChannel('@owner', ['en'])).handle
+    ).toBe('owner');
     expectOk(await c.dispose());
   });
 });

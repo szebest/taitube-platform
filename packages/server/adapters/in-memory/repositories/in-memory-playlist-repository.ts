@@ -1,3 +1,4 @@
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
   ListPublicPlaylistsOptions,
@@ -22,9 +23,8 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canReadPlaylist } from '@vp/permissions';
-import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
-import { type VideoLookups, channelCard, watchableVideo } from './watchable-video';
+import { type VideoLookups, primaryChannelCard, watchableVideo } from './watchable-video';
 
 interface StoredItem {
   id: string;
@@ -56,6 +56,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     const now = new Date();
     const playlist: Playlist = {
       ...input,
+      kind: input.kind ?? 'playlist',
       isSystem: false,
       customThumbnailKey: null,
       createdAt: now,
@@ -79,6 +80,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
       title: WATCH_LATER_TITLE,
       description: '',
       visibility: 'private',
+      kind: 'playlist',
       isSystem: true,
       customThumbnailKey: null,
       createdAt: now,
@@ -118,7 +120,7 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     );
     return ok({
       playlist: { ...playlist },
-      owner: await channelCard(this.lookups, playlist.ownerId),
+      owner: await primaryChannelCard(this.lookups, playlist.ownerId),
       items: entries.filter((entry): entry is PlaylistEntry => entry !== null),
     });
   }
@@ -182,6 +184,17 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
         })
       )
     );
+  }
+
+  async listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
+    const videos = await Promise.all(
+      this.itemsOf(playlistId).map(async ({ videoId }) =>
+        unwrapOr(await this.lookups.videosRepo.findById(videoId), null)
+      )
+    );
+    return ok(videos.filter((video) => video !== null).map(({ id, ownerId }) => ({ id, ownerId })));
   }
 
   async update(

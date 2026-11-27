@@ -1,8 +1,8 @@
 import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { type WhisperRunOptions, runWhisper } from '../run-whisper';
 
 const TRANSCRIPT = JSON.stringify({

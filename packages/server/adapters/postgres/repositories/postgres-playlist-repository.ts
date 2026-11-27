@@ -1,3 +1,4 @@
+import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
   ListPublicPlaylistsOptions,
@@ -20,7 +21,6 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@vp/result';
 import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
@@ -81,7 +81,7 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
         this.db
           .select({ playlist: getTableColumns(p), ...channelCardColumns })
           .from(p)
-          .leftJoin(ch, eq(ch.userId, p.ownerId))
+          .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
           .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer))),
       databaseUnavailable.during('findPlaylist')
     );
@@ -140,6 +140,20 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     return await fromPromise(
       () => publicPlaylistsOf(this.db, ownerId, options),
       databaseUnavailable.during('listPublicPlaylists')
+    );
+  }
+
+  async listItemOwners(
+    playlistId: string
+  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db
+          .select({ id: v.id, ownerId: v.ownerId })
+          .from(pi)
+          .innerJoin(v, eq(v.id, pi.videoId))
+          .where(eq(pi.playlistId, playlistId)),
+      databaseUnavailable.during('listPlaylistItemOwners')
     );
   }
 

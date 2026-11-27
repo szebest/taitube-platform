@@ -1,0 +1,42 @@
+# AGENTS.md - @kit/web-telemetry (real-user vitals and browser traces)
+
+> Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md) · spec: [SDD §13.1, §13.3](../../../../docs/SDD.md#13-autoscaling--observability)
+
+Owner: ticket [64](../../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md).
+`client` tier, layer T4 (it depends on `@kit/result`).
+
+## What it holds
+
+- `useWebTelemetry({ app, serviceName, apiBaseUrl, vitals, tracesUrl })`, called once from each client app's root route. After
+  hydration its effect loads the two modules below with dynamic imports, so neither reaches the server
+  render or the entry chunk.
+- `start-web-vitals.ts`: `web-vitals` (`onLCP`, `onINP`, `onCLS`, `onFCP`, `onTTFB`) into one queue per
+  page (`vitals-queue.ts`), each vital tagged with the TanStack Router route id the page is on, never the
+  URL. The queue flushes on `visibilitychange` to hidden and on `pagehide`, through `navigator.sendBeacon`
+  with a `fetch` `keepalive` retry (`send-json-beacon.ts`), to the `vitals.path` the app hands it.
+- `observe-page-health.ts`: the page's long tasks and the `data-slot` of the element its largest layout shift
+  moved. `start-web-vitals.ts` adds the slot to the CLS vital (`source`) and reports the long task time as the
+  `LONG_TASKS` vital when the page is hidden, so a regression is found by element, not only by score.
+- `start-web-tracing.ts`: `@opentelemetry/sdk-trace-web` with the fetch instrumentation. `traceparent`
+  goes to the API origin and the page's own origin only; spans export over OTLP/HTTP to `tracesUrl`.
+  `drop-url-query.ts` strips the query string from every span's URL.
+
+## Tokens and registries
+
+None. The app passes `app`, `serviceName`, `vitals` (`path`, `maxBatchSize`) and `tracesUrl` to the hook; the
+package names no product and imports no contract.
+
+## Rules
+
+- **No host literal here.** Each app's `src/config` owns its API and collector defaults, both local.
+- **The beacon is not an API client call.** `sendBeacon` cannot go through the app's API client; each app
+  hands the path and batch limit from its own route contract, so they cannot drift from the route.
+- **No user data in a span.** No user id, no session, no query string.
+- **App specs run without it.** Each app's `vitest.jsdom.config.ts` loads `@kit/web-telemetry/off.setup`, which
+  mocks the hook, so no jsdom file loads the OpenTelemetry SDK; this package's specs and each app's
+  `e2e/web-telemetry.test.ts` (web) cover it.
+
+```bash
+pnpm --filter @kit/web-telemetry typecheck
+pnpm --filter @kit/web-telemetry test
+```

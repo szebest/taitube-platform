@@ -1,13 +1,9 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { openMyLiveStream } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, LIVE_VIDEO_ID, mockEndpoint, problemReply } from '@vp/web-testing';
-import {
-  axeViolations,
-  mockLiveChatSocket,
-  renderRoute,
-  stubEventSource,
-} from '@vp/web-testing/dom';
+import { mockLiveChatSocket, renderRoute, stubEventSource } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
 import {
@@ -16,7 +12,10 @@ import {
   liveNow,
   liveStream,
 } from '#app/features/live/__tests__/live-api.fixture';
+import { LazyLiveViewersPlot } from '#app/features/live/components/live-viewers-plot/live-viewers-plot.lazy';
 import { getRouter } from '#app/router';
+
+beforeAll(() => LazyLiveViewersPlot.preload());
 
 type Stream = ReturnType<typeof liveStream>;
 

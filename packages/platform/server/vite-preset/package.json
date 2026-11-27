@@ -1,0 +1,63 @@
+{
+  "name": "@kit/vite-preset",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/client-app-config.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/client-app-config.d.ts",
+      "import": "./src/client-app-config.ts"
+    },
+    "./bundle-guard": {
+      "types": "./src/bundle-guard.ts",
+      "import": "./src/bundle-guard.ts"
+    },
+    "./react-plugins": {
+      "types": "./src/react-plugins.ts",
+      "import": "./src/react-plugins.ts"
+    },
+    "./vitest": {
+      "types": "./dist/client-app-test-config.d.ts",
+      "import": "./src/client-app-test-config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@babel/core": "8.1.0",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@rolldown/plugin-babel": "0.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-start": "^1.168.60",
+    "@types/node": "^24.19.1",
+    "@vitejs/plugin-react": "6.2.1",
+    "babel-plugin-react-compiler": "1.0.0",
+    "browserslist": "^4.29.6",
+    "browserslist-to-esbuild": "^2.1.1",
+    "oxc-transform-react": "0.156.0",
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-start": "^1.168.60",
+    "@vitejs/plugin-react": "6.2.1",
+    "browserslist": "^4.29.6",
+    "browserslist-to-esbuild": "^2.1.1",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  },
+  "vp": {
+    "layer": 1
+  }
+}

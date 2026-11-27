@@ -13,7 +13,7 @@ this repo:
 - `pnpm knip` already fails an unused export; dead fields still go in the report.
 - **Generated files are read only where you touch them**: `pnpm-lock.yaml`,
   `packages/universal/api-contracts/openapi.yaml` (`pnpm gen:contracts`), `docs/design/tokens.json` and
-  `packages/client/ui/src/styles/generated/` (`pnpm gen:tokens`), the generated sections of `docs/tickets/README.md`.
+  `packages/platform/client/ui/src/styles/generated/` (`pnpm gen:tokens`), the generated sections of `docs/tickets/README.md`.
 
 ## Code shape, here
 
@@ -22,12 +22,35 @@ dependency on its current major) are `senior-engineering-practices`, section 4. 
 
 - **Parsers in use**: PromQL through `@prometheus-io/lezer-promql`, YAML through `js-yaml`, TypeScript through
   the compiler API, as a devDependency when only tests need them.
-- **A tagged union** ends its `switch` in `assertNever` from `@vp/result`. `PostgresRepositoriesConfig` in
+- **A tagged union** ends its `switch` in `assertNever` from `@kit/result`. `PostgresRepositoriesConfig` in
   `packages/server/adapters/postgres/repositories/postgres-repositories.ts` is the shape;
   `no-in-probes.test.ts` rejects the `'x' in value` alternative.
 - **A dependency's current major** (`senior-engineering-practices`, section 4): check it with `npm view <pkg> version`.
 - **A rule that slipped gets a check, not louder prose**: the assertion goes into `tests/architecture/` with a
   fixture proving it fires, and its row into [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement).
+
+## Platform packages, here
+
+Before touching or adding a package under `packages/`, ask whether a second app could use it unchanged. If so it is
+a platform package (`packages/platform/<tier>/<name>`, `@kit/*`) and [platform-packages.md](../standards/platform-packages.md)
+applies:
+
+- **It never names an app package**, in code, manifest or docs: take the app's value as a required typed parameter,
+  prop or option, or move the generic piece into a `@kit` package. Never copy it.
+- **Extend, never edit.** A change adds a token, a registry entry, a plugin or an option whose default keeps the
+  old behaviour.
+- **A surface change** (`pnpm gen:api` rewrites `api/<name>.api.txt`) comes with a `CHANGELOG.md` entry and a version
+  bump, and a type-level spec for a new public generic.
+
+## Setup & environment
+
+A change that adds an environment key, a service, a port, a migration, a queue, a seed entity or a demo scenario
+updates, in the same PR: the schema entry **and its `ENV_DOCS` entry** (`description`, `example`,
+`secret`/`public`, `readBy`) in `packages/server/env-schema`, `.env.example`, `docs/ENVIRONMENT.md` (`pnpm gen:env-docs`),
+`docs/GETTING_STARTED.md` for anything a newcomer must know, `docs/DEMO.md` and the seed in
+`packages/server/demo` for new demo-visible features, and `infra/environments/<env>/environment.yaml` for a key
+production requires. The architecture suite fails the key, `.env.example`, generated-doc and production-environment
+parts; review holds the rest.
 
 ## Docs
 

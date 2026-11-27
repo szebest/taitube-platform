@@ -1,7 +1,6 @@
+import { type Result, andThen, err, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { type UserContext, canReadAnalytics } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
-import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
 import { analyticsForbidden } from './failures';
 
@@ -21,19 +20,11 @@ export function decideVideoAnalyticsRead(
   return andThen(
     decideVideoRead({ viewer: input.viewer, video: input.video, videoId: input.videoId }),
     (video) =>
-      canReadAnalytics({ user: input.viewer, analytics: { ownerId: video.ownerId } })
+      canReadAnalytics({
+        user: input.viewer,
+        analytics: { ownerId: video.ownerId, channelId: video.channelId },
+      })
         ? ok(video)
         : err(analyticsForbidden(input.videoId))
-  );
-}
-
-/** A channel's analytics are its owner's, so the caller asks about their own. */
-export function decideChannelAnalyticsRead(
-  viewer: UserContext | null
-): Result<UserContext, AuthorizationFailure> {
-  return authorize(
-    viewer,
-    viewer !== null && canReadAnalytics({ user: viewer, analytics: { ownerId: viewer.id } }),
-    { action: 'read', subject: 'Analytics' }
   );
 }

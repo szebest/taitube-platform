@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryLiveGateway } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 
 const OWNER_ID = '11111111-1111-7111-8111-111111111111';
@@ -14,17 +14,18 @@ const AS = {
 };
 
 describe('creator live routes', () => {
+  let channelId: string;
   let ctx: TestApp;
 
   beforeEach(async () => {
     ctx = await buildTestApp();
-    expectOk(
+    channelId = expectOk(
       await ctx.repositories.channels.create({
         userId: OWNER_ID,
         handle: 'owner',
         displayName: 'Owner',
       })
-    );
+    ).id;
   });
 
   afterEach(async () => {
@@ -44,7 +45,7 @@ describe('creator live routes', () => {
     expectOk(
       await ctx.repositories.liveStreams.goLive({
         streamId: opened.id,
-        video: { id: videoId, ownerId: OWNER_ID, sourceKey: 'live/' },
+        video: { id: videoId, ownerId: OWNER_ID, channelId, sourceKey: 'live/' },
         startedAt: new Date(),
         outbox: [],
       })

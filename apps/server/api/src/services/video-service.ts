@@ -1,12 +1,17 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  VideoChapterRepository,
+  VideoRecord,
+  VideoWithDetails,
+} from '@vp/core/repositories';
 import { PUBLIC_FEED_SEEN_LIMIT, type VideoFormat, type VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
-import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   type FeedCursor,
   type FeedSort,
@@ -42,6 +47,7 @@ export interface VideoServiceDeps extends VideoLifecycleDeps {
   cdn: CdnBase;
   sprite: SpriteGeometry;
   channels: ChannelRepositoryPort;
+  chapters: VideoChapterRepository;
   reactionCache: ReactionCachePort;
   authorization: AuthorizationPort;
   paginator: Paginator;
@@ -80,25 +86,25 @@ export class VideoService {
 
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      rows.value.map((v) => v.ownerId)
+      rows.value.map((v) => v.channelId)
     );
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows.value, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.ownerId)),
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.channelId)),
       })
     );
   }
 
-  /** Attaches each owner's channel to cards read from a page cache, in one read. */
+  /** Attaches each video's channel to cards read from a page cache, in one read. */
   async withChannels(
     cards: readonly VideoCardView[]
   ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      cards.map((card) => card.ownerId)
+      cards.map((card) => card.channelId)
     );
-    return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.ownerId) })));
+    return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.channelId) })));
   }
 
   async summarize(
@@ -106,11 +112,11 @@ export class VideoService {
   ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      videos.map((video) => video.ownerId)
+      videos.map((video) => video.channelId)
     );
     return map(channelOf, (of) =>
       videos.map((video) =>
-        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId))
+        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.channelId))
       )
     );
   }
@@ -118,7 +124,7 @@ export class VideoService {
   async listPublic(options: {
     sort?: FeedSort;
     categoryId?: string;
-    ownerId?: string;
+    channelId?: string;
     format?: VideoFormat;
     cursor?: string;
     limit?: number;
@@ -133,7 +139,7 @@ export class VideoService {
     const found = await this.deps.videos.listPublic({
       sort,
       categoryId: options.categoryId,
-      ownerId: options.ownerId,
+      channelId: options.channelId,
       format: options.format,
       cursor: cursor.value,
       limit,
@@ -163,39 +169,38 @@ export class VideoService {
     const found = await this.deps.videos.findWithDetails(videoId);
     if (isErr(found)) return found;
 
-    const decided = decideVideoRead({
-      viewer,
-      video: found.value?.video ?? null,
-      videoId,
-    });
+    const decided = decideVideoRead({ viewer, video: found.value?.video ?? null, videoId });
     if (isErr(decided)) return decided;
+    return found.value ? this.detail(found.value) : err(videoNotFound(videoId));
+  }
 
-    const details = found.value;
-    if (!details) return err(videoNotFound(videoId));
-
+  /** The view of a video its caller was let read, with its live counters, channel and chapters. */
+  async detail(details: VideoWithDetails): Promise<Result<VideoDetailView, DatabaseUnavailable>> {
+    const { video } = details;
     const view = toVideoDetailView(
-      decided.value,
+      video,
       details.renditions,
       this.deps.cdn,
       this.deps.sprite,
       details.events
     );
 
-    const stored = {
-      likesCount: decided.value.likesCount ?? 0,
-      dislikesCount: decided.value.dislikesCount ?? 0,
-    };
+    const stored = { likesCount: video.likesCount ?? 0, dislikesCount: video.dislikesCount ?? 0 };
     // A dead cache costs the stored counters their refresh, not the video its response.
     const counts = unwrapOr(
-      await this.deps.reactionCache.getCounts(videoId, async () => ok(stored)),
+      await this.deps.reactionCache.getCounts(video.id, async () => ok(stored)),
       stored
     );
     view.likesCount = counts.likesCount;
     view.dislikesCount = counts.dislikesCount;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [view.ownerId]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [view.channelId]);
     if (isErr(channelOf)) return channelOf;
-    view.channel = channelOf.value(view.ownerId);
+    view.channel = channelOf.value(view.channelId);
+
+    const chapters = await this.deps.chapters.listFor([video.id]);
+    if (isErr(chapters)) return chapters;
+    view.chapters = chapters.value.get(video.id) ?? [];
 
     return ok(view);
   }

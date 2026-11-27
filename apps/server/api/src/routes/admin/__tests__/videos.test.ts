@@ -1,9 +1,15 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp, seedVideo } from '../../../__tests__/test-app';
+import {
+  TOKENS,
+  bearer,
+  buildTestApp,
+  seedPrimaryChannel,
+  seedVideo,
+} from '../../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-0000000000a1';
@@ -30,6 +36,7 @@ describe('two consumers of VideoService.get render the same failure differently'
       await repositories.videos.create({
         id: PRIVATE_VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: 'Private',
         status: 'READY',
         visibility: 'private',
@@ -127,6 +134,7 @@ describe('POST /v1/admin/videos/:id/takedown', () => {
       await repositories.videos.create({
         id: PRIVATE_VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: 'Public for now',
         status: 'READY',
         visibility: 'public',

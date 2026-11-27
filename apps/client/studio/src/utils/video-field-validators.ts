@@ -1,5 +1,5 @@
-import { validateWith } from '@vp/forms';
-import { ok } from '@vp/result';
+import { validateWith } from '@kit/forms';
+import { ok } from '@kit/result';
 import { ALLOWED_CONTENT_TYPES, validateContentType, validateVideoMetadata } from '@vp/validation';
 
 export const VIDEO_FILE_ACCEPT = {

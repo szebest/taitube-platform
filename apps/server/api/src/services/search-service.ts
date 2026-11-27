@@ -1,11 +1,24 @@
 import { createHash } from 'node:crypto';
+import type { Singleflight } from '@kit/concurrency';
+import type { Paginator } from '@kit/pagination';
+import {
+  andThen,
+  andThenAsync,
+  err,
+  ignore,
+  isErr,
+  isOk,
+  map,
+  ok,
+  parseJson,
+  unwrapOr,
+} from '@kit/result';
 import {
   type SearchRequest,
   type SearchResponse,
   type SearchSuggestionsResponse,
   search,
 } from '@vp/api-contracts';
-import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient, SearchSuggestionIndexPort } from '@vp/core/ports';
 import type {
   ChannelRepositoryPort,
@@ -18,6 +31,7 @@ import {
   SEARCH_SUGGESTIONS,
   type SearchCursor,
   type SearchMode,
+  type SearchResultKind,
   type SearchSort,
   searchHandleOf,
   searchKinds,
@@ -26,23 +40,11 @@ import {
 import { decideSearchHistoryRecord } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
-import type { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import {
-  andThen,
-  andThenAsync,
-  err,
-  ignore,
-  isErr,
-  isOk,
-  map,
-  ok,
-  parseJson,
-  unwrapOr,
-} from '@vp/result';
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
+import type { ExperimentOverlay } from './experiment-overlay';
 import type { HistoryPause } from './history-pause';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 import { loadChannelsOf, type SpriteGeometry } from './video-views';
@@ -55,6 +57,7 @@ export interface SearchServiceDeps {
   singleflight: Singleflight;
   paginator: Paginator;
   viewerProgress: ViewerProgress;
+  experiments: ExperimentOverlay;
   history: SearchHistoryRepositoryPort;
   pause: HistoryPause;
   cdn: CdnBase;
@@ -71,6 +74,11 @@ export interface SearchResult {
 }
 
 type SearchBody = Omit<SearchResponse, 'tookMs'>;
+
+interface SearchReader {
+  viewer: UserContext | null;
+  sessionKey: string | null;
+}
 
 const CachedBodySchema = search.result.omit({ tookMs: true });
 
@@ -90,18 +98,23 @@ interface Plan {
 export class SearchService {
   constructor(private readonly deps: SearchServiceDeps) {}
 
-  async search(request: SearchRequest, viewer: UserContext | null = null) {
+  async search(
+    request: SearchRequest,
+    viewer: UserContext | null = null,
+    sessionKey: string | null = null
+  ) {
     const startedAt = this.deps.now();
+    const reader = { viewer, sessionKey };
     return andThenAsync(this.plan(request), async (plan) => {
       if (request.record) await this.recordHistory(request.q, plan.cursor, viewer);
       const cached = await this.readCache(plan.key);
-      if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
+      if (cached) return ok(await this.timed(cached, 'HIT', startedAt, reader));
 
       const computed = await this.deps.singleflight.do(plan.key, () =>
         this.searchUncached(request, plan)
       );
       if (isErr(computed)) return computed;
-      return ok(await this.timed(computed.value, 'MISS', startedAt, viewer));
+      return ok(await this.timed(computed.value, 'MISS', startedAt, reader));
     });
   }
 
@@ -187,40 +200,70 @@ export class SearchService {
     const mode: SearchMode = fallBack ? 'fuzzy' : firstMode;
     const found = fallBack ? await this.deps.search.search(query(mode)) : first;
 
-    return andThenAsync(found, async (page) => {
-      const owners = page.hits.flatMap((hit) => (hit.kind === 'video' ? [hit.video.ownerId] : []));
-      const channelOf = await loadChannelsOf(this.deps.channels, owners);
-      return map(channelOf, (of): SearchBody => ({
-        ...this.deps.paginator.paginate(page.hits, limit, {
-          cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
-          toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
-        }),
-        total: page.total,
-        fuzzyFallback: mode === 'fuzzy',
-      }));
-    });
+    const counts = cursor ? ok(undefined) : await this.countKinds(query(mode));
+
+    return andThenAsync(
+      andThen(found, (page) => map(counts, (kinds) => ({ page, kinds }))),
+      async ({ page, kinds }) => {
+        const channelIds = page.hits.flatMap((hit) =>
+          hit.kind === 'video' ? [hit.video.channelId] : []
+        );
+        const channelOf = await loadChannelsOf(this.deps.channels, channelIds);
+        return map(channelOf, (of): SearchBody => ({
+          ...this.deps.paginator.paginate(page.hits, limit, {
+            cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
+            toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
+          }),
+          total: page.total,
+          counts: kinds,
+          fuzzyFallback: mode === 'fuzzy',
+        }));
+      }
+    );
+  }
+
+  private async countKinds(query: SearchQuery) {
+    const count = (kind: SearchResultKind) =>
+      this.deps.search.search({ ...query, kinds: [kind], limit: 1 });
+    const [video, channel, playlist] = await Promise.all([
+      count('video'),
+      count('channel'),
+      count('playlist'),
+    ]);
+
+    return andThen(video, (videos) =>
+      andThen(channel, (channels) =>
+        map(playlist, (playlists) => ({
+          video: videos.total,
+          channel: channels.total,
+          playlist: playlists.total,
+        }))
+      )
+    );
   }
 
   private async timed(
     body: SearchBody,
     cache: CacheOutcome,
     startedAt: number,
-    viewer: UserContext | null
+    reader: SearchReader
   ): Promise<SearchResult> {
-    const items = await this.withProgress(body.items, viewer);
+    const items = await this.forReader(body.items, reader);
     return { data: { ...body, items, tookMs: this.deps.now() - startedAt }, cache };
   }
 
-  private async withProgress(
+  /** The caller's progress and test variants, over a page any searcher may have cached. */
+  private async forReader(
     items: SearchBody['items'],
-    viewer: UserContext | null
+    { viewer, sessionKey }: SearchReader
   ): Promise<SearchBody['items']> {
     const videos = items.flatMap((item) => (item.type === 'video' ? [item.data] : []));
-    const marked = new Map(
-      (await this.deps.viewerProgress.attach(viewer, videos)).map((video) => [video.id, video])
+    const marked = await this.deps.viewerProgress.attach(viewer, videos);
+    const shown = new Map(
+      (await this.deps.experiments.apply(marked, sessionKey)).map((video) => [video.id, video])
     );
     return items.map((item) =>
-      item.type === 'video' ? { ...item, data: marked.get(item.data.id) ?? item.data } : item
+      item.type === 'video' ? { ...item, data: shown.get(item.data.id) ?? item.data } : item
     );
   }
 

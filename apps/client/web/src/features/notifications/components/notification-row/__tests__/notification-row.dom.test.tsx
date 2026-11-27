@@ -23,4 +23,19 @@ describe('apps/client/web: notification row', () => {
     expect(marked).toEqual([{ ids: [notification().id] }]);
     expect(screen.queryByRole('dialog', { name: 'Notifications' })).not.toBeInTheDocument();
   });
+
+  it('opens a team invite in the studio, on the invite', async () => {
+    const inviteId = '0190c3a0-5e1d-7000-8000-0000000dd002';
+    const { openBell } = await renderBell({
+      unreadCount: 1,
+      items: [notification({ kind: 'team_invite', videoId: null }, { inviteId })],
+    });
+
+    const panel = await openBell();
+
+    expect(await within(panel).findByRole('link', { name: /Night Kitchen/ })).toHaveAttribute(
+      'href',
+      `http://localhost:5174/invites?invite=${inviteId}`
+    );
+  });
 });

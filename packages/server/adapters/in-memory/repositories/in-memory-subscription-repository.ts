@@ -1,3 +1,4 @@
+import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   ListSubscribersOptions,
   ListSubscriptionsOptions,
@@ -8,6 +9,8 @@ import type {
 import {
   type ChannelSubscriber,
   type ChannelSubscription,
+  type NewChannelAuditEntry,
+  NOTIFICATION_LEVELS,
   type NotificationLevel,
   type SubscribedChannelItem,
   type SubscriptionChangeResult,
@@ -15,8 +18,8 @@ import {
   viewDateOf,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
@@ -24,6 +27,7 @@ import { byKeysetDesc, isKeysetBefore } from './keyset';
 export interface InMemorySubscriptionRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
+  auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
 }
 
 export class InMemorySubscriptionRepository implements SubscriptionRepositoryPort {
@@ -31,14 +35,16 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   private readonly events: { channelId: string; delta: 1 | -1; occurredAt: Date }[] = [];
   private readonly channelsRepo: InMemoryChannelRepository;
   private readonly videosRepo: InMemoryVideoRepository;
+  private readonly auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
 
   constructor(options: InMemorySubscriptionRepositoryOptions) {
     this.channelsRepo = options.channelsRepo;
     this.videosRepo = options.videosRepo;
+    this.auditRepo = options.auditRepo;
   }
 
-  private key(subscriberId: string, channelId: string): string {
-    return `${subscriberId}:${channelId}`;
+  private key(subscriberChannelId: string, channelId: string): string {
+    return `${subscriberChannelId}:${channelId}`;
   }
 
   /**
@@ -51,19 +57,22 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   /**
-   * One await, then nothing. The claim and the counter move together with no yield between them,
-   * the way the Postgres adapter's transaction moves them, so ten concurrent subscribes cannot
-   * observe a half-step - which is exactly what they did when the counter update sat behind its
+   * One await before the claim, the audit row's after it. The claim and the counter move together
+   * with no yield between them, the way the Postgres adapter's transaction moves them, so ten
+   * concurrent subscribes cannot observe a half-step - which is exactly what they did when the counter update sat behind its
    * own `await` and every loser reported zero.
    */
   async subscribe(
     subscriberId: string,
-    channelId: string
+    subscriberChannelId: string,
+    channelId: string,
+    sourceVideoId: string | null = null,
+    audit?: NewChannelAuditEntry
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     const channel = await this.findChannel(channelId);
     if (!channel) return ok({ subscriberCount: 0, changed: false });
 
-    const key = this.key(subscriberId, channelId);
+    const key = this.key(subscriberChannelId, channelId);
     if (this.subscriptions.has(key)) {
       return ok({ subscriberCount: channel.subscriberCount, changed: false });
     }
@@ -71,24 +80,30 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     this.subscriptions.set(key, {
       id: uuidv7(),
       subscriberId,
+      subscriberChannelId,
       channelId,
       notificationLevel: 'all',
+      sourceVideoId,
       createdAt: new Date(),
     });
     channel.subscriberCount += 1;
     channel.updatedAt = new Date();
     this.events.push({ channelId, delta: 1, occurredAt: new Date() });
+    if (audit) {
+      const appended = await this.auditRepo.append(audit);
+      if (isErr(appended)) return appended;
+    }
     return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
   async unsubscribe(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     const channel = await this.findChannel(channelId);
     if (!channel) return ok({ subscriberCount: 0, changed: false });
 
-    const key = this.key(subscriberId, channelId);
+    const key = this.key(subscriberChannelId, channelId);
     if (!this.subscriptions.delete(key)) {
       return ok({ subscriberCount: channel.subscriberCount, changed: false });
     }
@@ -100,10 +115,20 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async isSubscribed(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    return ok(this.subscriptions.has(this.key(subscriberId, channelId)));
+    return ok(this.subscriptions.has(this.key(subscriberChannelId, channelId)));
+  }
+
+  async getChannelSubscriptionChannelIds(
+    subscriberChannelId: string
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    return ok(
+      [...this.subscriptions.values()]
+        .filter((sub) => sub.subscriberChannelId === subscriberChannelId)
+        .map((sub) => sub.channelId)
+    );
   }
 
   async getUserSubscriptionChannelIds(
@@ -113,11 +138,11 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async setNotificationLevel(
-    subscriberId: string,
+    subscriberChannelId: string,
     channelId: string,
     level: NotificationLevel
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    const subscription = this.subscriptions.get(this.key(subscriberId, channelId));
+    const subscription = this.subscriptions.get(this.key(subscriberChannelId, channelId));
     if (!subscription) return ok(false);
 
     subscription.notificationLevel = level;
@@ -129,29 +154,46 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     options: ListSubscribersOptions
   ): Promise<Result<ChannelSubscriber[], DatabaseUnavailable>> {
     const { after } = options;
+    const loudest = new Map<string, NotificationLevel>();
+    for (const sub of this.subscriptions.values()) {
+      if (sub.channelId !== channelId || (after && sub.subscriberId <= after)) continue;
+      const held = loudest.get(sub.subscriberId);
+      const louder =
+        held === undefined ||
+        NOTIFICATION_LEVELS.indexOf(sub.notificationLevel) < NOTIFICATION_LEVELS.indexOf(held);
+      if (louder) loudest.set(sub.subscriberId, sub.notificationLevel);
+    }
     return ok(
-      Array.from(this.subscriptions.values())
-        .filter((sub) => sub.channelId === channelId && (!after || sub.subscriberId > after))
-        .sort((a, b) => a.subscriberId.localeCompare(b.subscriberId))
+      [...loudest]
+        .sort(([a], [b]) => a.localeCompare(b))
         .slice(0, options.limit)
-        .map(({ subscriberId, notificationLevel }) => ({ subscriberId, notificationLevel }))
+        .map(([subscriberId, notificationLevel]) => ({ subscriberId, notificationLevel }))
     );
+  }
+
+  subscriptionEvents(): { channelId: string; delta: 1 | -1; occurredAt: Date }[] {
+    return this.events.map((event) => ({ ...event }));
   }
 
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok((await this.findChannel(channelId))?.subscriberCount ?? 0);
   }
 
+  async countFromVideo(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    return ok(
+      Array.from(this.subscriptions.values()).filter((sub) => sub.sourceVideoId === videoId).length
+    );
+  }
+
   async netSubscribers(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<number, DatabaseUnavailable>> {
     let net = 0;
     for (const event of this.events) {
       const day = viewDateOf(event.occurredAt);
       if (day < range.from || day > range.to) continue;
-      const channel = await this.findChannel(event.channelId);
-      if (channel?.userId === ownerId) net += event.delta;
+      if (event.channelId === channelId) net += event.delta;
     }
     return ok(net);
   }
@@ -189,17 +231,13 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     subscriberId: string,
     options: SubscriptionFeedOptions
   ): Promise<Result<{ items: VideoRecord[]; total: number }, DatabaseUnavailable>> {
-    const ownerIds = new Set<string>();
-    for (const channelId of unwrapOr(await this.getUserSubscriptionChannelIds(subscriberId), [])) {
-      const channel = unwrapOr(await this.channelsRepo.findById(channelId), null);
-      if (channel) ownerIds.add(channel.userId);
-    }
+    const followed = new Set(this.userSubscriptions(subscriberId).map((sub) => sub.channelId));
 
     const matching = this.videosRepo
       .getAllVideos()
       .filter(
         (v) =>
-          ownerIds.has(v.ownerId) &&
+          followed.has(v.channelId) &&
           v.visibility === 'public' &&
           v.status === 'READY' &&
           !v.deletedAt
@@ -220,10 +258,15 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     return ok({ items, total: matching.length });
   }
 
+  /** The account's first subscription to each channel, however many of its channels subscribe. */
   private userSubscriptions(subscriberId: string): ChannelSubscription[] {
-    return Array.from(this.subscriptions.values()).filter(
-      (sub) => sub.subscriberId === subscriberId
-    );
+    const first = new Map<string, ChannelSubscription>();
+    for (const sub of this.subscriptions.values()) {
+      if (sub.subscriberId !== subscriberId) continue;
+      const held = first.get(sub.channelId);
+      if (!held || sub.createdAt < held.createdAt) first.set(sub.channelId, sub);
+    }
+    return [...first.values()];
   }
 
   clear(): void {

@@ -1,4 +1,4 @@
-import { isErr, isOk } from '@vp/result';
+import { isErr, isOk } from '@kit/result';
 import { validateVideoTags } from '../tags';
 
 const tags = (count: number) => Array.from({ length: count }, (_, i) => `tag-${i}`);

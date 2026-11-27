@@ -1,48 +1,77 @@
-import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
-import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
+import type { Channel, ChannelSpotlight } from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
+import { channelPostsQueryOptions, createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
-import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
+import { post } from '#app/__tests__/post-fixtures';
+import { AppProviders, signedIn, withToasts } from '#app/__tests__/providers';
+import {
+  channelQueryOptions,
+  channelSpotlightQueryOptions,
+} from '#app/lib/query-keys/channel-keys';
 import { ChannelPage } from '../channel-page';
+
+const ToastedProviders = withToasts(AppProviders);
 
 function viewerWithAccent(accent: string) {
   return ({ children }: PropsWithChildren) => (
-    <AppProviders>
+    <ToastedProviders>
       <AppearanceProvider
-        stored={{ preference: { ...DEFAULT_APPEARANCE, accent }, source: 'appearance' }}
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, accent },
+          source: 'appearance',
+          storage: APPEARANCE_COOKIES,
+        }}
       >
         {children}
       </AppearanceProvider>
-    </AppProviders>
+    </ToastedProviders>
   );
 }
 
 interface ChannelOptions {
-  Providers?: typeof AppProviders;
+  Providers?: typeof ToastedProviders;
   bio?: string | null;
   brandColor?: string | null;
+  fields?: Partial<Channel>;
+  spotlight?: ChannelSpotlight;
+  search?: string;
 }
 
 function renderChannel({
-  Providers = AppProviders,
+  Providers = ToastedProviders,
   bio = null,
   brandColor = null,
+  fields = {},
+  spotlight,
+  search = '',
 }: ChannelOptions = {}) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(
     channelQueryOptions(api, CHANNEL_ID).queryKey,
-    channel({ bio, brandColor })
+    channel({ bio, brandColor, ...fields })
   );
+  if (spotlight) {
+    queryClient.setQueryData(
+      channelSpotlightQueryOptions(api, CHANNEL_ID, 'en', null).queryKey,
+      spotlight
+    );
+  }
   queryClient.setQueryData(
     myVideosQueryOptions(api).queryKey,
     feedPages([videoSummary({ title: 'My upload' })])
   );
 
-  return renderPage(<ChannelPage />, Providers, {
+  queryClient.setQueryData(channelPostsQueryOptions(api, CHANNEL_ID, null).queryKey, {
+    pages: [{ items: [post({ body: { kind: 'text', text: 'Posted here' } })], nextCursor: null }],
+    pageParams: [undefined],
+  });
+
+  return renderPage(<ChannelPage channelId={CHANNEL_ID} />, Providers, {
     queryClient,
-    url: `/channel/${CHANNEL_ID}`,
+    url: `/channel/${CHANNEL_ID}${search}`,
     route: '/channel/$channelId',
   });
 }
@@ -56,11 +85,28 @@ describe('apps/client/web: channel page', () => {
   });
 
   it("adds the video list on the viewer's own channel", async () => {
-    const markup = await renderChannel({ Providers: signedIn() });
+    const markup = await renderChannel({ Providers: withToasts(signedIn()) });
 
     expect(markup).toContain('>Your videos</h2>');
     expect(markup).toContain('My upload');
   });
+
+  it.each([
+    { search: '', open: 'Home', other: 'Posts', onPosts: false },
+    { search: '?tab=home', open: 'Home', other: 'Posts', onPosts: false },
+    { search: '?tab=posts', open: 'Posts', other: 'Home', onPosts: true },
+    { search: '?tab=videos', open: 'Home', other: 'Posts', onPosts: false },
+  ])(
+    'opens the $open section for "$search" and links to the other',
+    async ({ search, open, other, onPosts }) => {
+      const markup = await renderChannel({ search, fields: { country: 'PL' } });
+
+      expect(markup).toMatch(new RegExp(`<a[^>]*aria-current="page"[^>]*>${open}</a>`));
+      expect(markup).toContain(`>${other}</a>`);
+      expect(markup.includes('Posted here')).toBe(onPosts);
+      expect(markup.includes('>About</h2>')).toBe(!onPosts);
+    }
+  );
 
   it('draws the bio when the channel has one', async () => {
     expect(await renderChannel({ bio: 'Films about trams' })).toContain('Films about trams');
@@ -77,7 +123,7 @@ describe('apps/client/web: channel page', () => {
   );
 
   it.each([
-    { name: 'a channel with no brand colour', brandColor: null, Providers: AppProviders },
+    { name: 'a channel with no brand colour', brandColor: null, Providers: ToastedProviders },
     {
       name: "a viewer's own accent",
       brandColor: '#3366cc',
@@ -88,5 +134,32 @@ describe('apps/client/web: channel page', () => {
 
     expect(markup).toContain('The Creator');
     expect(markup).not.toContain('data-brand');
+  });
+
+  it('opens with the spotlight the API chose for the viewer', async () => {
+    const markup = await renderChannel({
+      spotlight: { source: 'trailer', video: videoSummary({ title: 'Two minutes' }) },
+    });
+
+    expect(markup).toContain('Channel trailer');
+    expect(markup).toContain('>Two minutes</a>');
+  });
+
+  it('lists About with the links, the country and the contact button, or nothing without them', async () => {
+    const about = await renderChannel({
+      Providers: ToastedProviders,
+      fields: {
+        links: [{ label: 'Code', url: 'https://github.com/marta', platform: 'github' }],
+        country: 'PL',
+        hasContact: true,
+      },
+    });
+    const bare = await renderChannel();
+
+    expect(about).toContain('>About</h2>');
+    expect(about).toContain('>Code</a>');
+    expect(about).toContain('>Poland</dd>');
+    expect(about).toContain('Sign in to see the contact email');
+    expect(bare).not.toContain('>About</h2>');
   });
 });

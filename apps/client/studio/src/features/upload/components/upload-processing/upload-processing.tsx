@@ -1,12 +1,13 @@
+import { Format } from '@kit/intl-react';
+import { Button, Progress } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
-import { uploadProgress } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
-import { useApi, videoQueryOptions } from '@vp/queries';
-import { Button, Progress } from '@vp/ui';
+import { uploadProgress } from '@vp/intl-formats';
+import { useApi, useAppLink, videoQueryOptions } from '@vp/queries';
 import { VideoStatusBadge } from '#app/components/video/video-status-badge';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 interface UploadStageProps {
   title: string;
@@ -37,6 +38,7 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
   const api = useApi();
   const { data: video, isError } = useQuery(videoQueryOptions(api, videoId));
   const { tOr } = useT();
+  const appLink = useAppLink();
 
   if (isError) {
     return <p role="alert">{tOr('studio.uploadProcessingFailed', {}, '')}</p>;
@@ -71,7 +73,7 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
         </Button>
         {video.status === 'READY' && (
           <Button asChild variant="outline" size="sm">
-            <a href={`${WEB_URL}/watch/${videoId}`}>{tOr('studio.watchOnWeb', {}, '')}</a>
+            <a href={appLink(WEB_URL, `/watch/${videoId}`)}>{tOr('studio.watchOnWeb', {}, '')}</a>
           </Button>
         )}
       </div>

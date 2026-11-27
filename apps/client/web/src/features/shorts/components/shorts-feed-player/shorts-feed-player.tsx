@@ -6,7 +6,7 @@ import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube
 
 export interface ShortsFeedPlayerProps extends Pick<
   TaitubePlayerProps,
-  'control' | 'onPlay' | 'onPause' | 'onWaiting' | 'onTimeUpdate'
+  'control' | 'captionTracks' | 'onPlay' | 'onPause' | 'onWaiting'
 > {
   short: VideoSummary;
 }

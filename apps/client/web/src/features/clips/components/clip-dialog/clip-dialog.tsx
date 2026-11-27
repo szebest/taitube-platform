@@ -1,11 +1,11 @@
+import { useAppForm } from '@kit/forms';
+import { useFormat } from '@kit/intl-react';
+import { fromPromise, isOk, unwrapOr } from '@kit/result';
+import { ResponsiveModal, useToast } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { useAppForm } from '@vp/forms';
-import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { ResponsiveModal, useToast } from '@vp/ui';
+import { videoDuration } from '@vp/intl-formats';
 import { Suspense, useState } from 'react';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { LazyTaitubePreview } from '#app/components/player/taitube-preview/taitube-preview.lazy';
@@ -17,6 +17,7 @@ import { ClipEditor } from '#app/components/watch/clip-editor';
 import { useClipValidators } from '#app/features/clips/hooks/use-clip-validators';
 import { useCreateClip } from '#app/features/clips/hooks/use-create-clip';
 import { initialClipRange } from '#app/features/clips/utils/clip-defaults';
+import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 

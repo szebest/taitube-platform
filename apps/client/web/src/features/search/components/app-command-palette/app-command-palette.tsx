@@ -1,8 +1,7 @@
+import { SectionError } from '@kit/components';
+import { Icon, useMediaQuery } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
-import { Icon, useMediaQuery } from '@vp/ui';
 import { useState } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { useCommandActions } from '#app/features/search/hooks/use-command-actions';
@@ -12,6 +11,8 @@ import { type PaletteResult, paletteResultKey } from '#app/features/search/utils
 import { useOpenDestination } from '#app/hooks/use-open-destination';
 import { useShellDestinations } from '#app/hooks/use-shell-destinations';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
+import { useT } from '#app/lib/messages';
+import { LazyIdentityPaletteGroup } from '../identity-palette-group/identity-palette-group.lazy';
 import { PaletteActionItem } from '../palette-action-item/palette-action-item';
 import { PaletteResultItem } from '../palette-result-item/palette-result-item';
 import { RecentSearchGroup } from '../recent-search-group/recent-search-group';
@@ -20,10 +21,10 @@ const DIALOG_FITS = '(min-width: 600px)';
 
 /** The header's command palette: results as you type, the shell's places and actions, and the words go to the search page. */
 export function AppCommandPalette() {
-  const { open } = useCommandPaletteStore();
-  const { q = '' } = useSearch({ strict: false });
+  const { session } = useCommandPaletteStore();
+  const q = useSearch({ strict: false, select: (search) => search.q ?? '' });
 
-  return <Palette key={open ? 'open' : 'closed'} initialQuery={q} />;
+  return <Palette key={session} initialQuery={q} />;
 }
 
 function Palette({ initialQuery }: { initialQuery: string }) {
@@ -118,6 +119,7 @@ function Palette({ initialQuery }: { initialQuery: string }) {
             {tOr('search.noResults', { query: words }, '')}
           </CommandPalette.Empty>
         )}
+        {account && open && <LazyIdentityPaletteGroup words={words} />}
         {matching.length > 0 && (
           <CommandPalette.Group heading={tOr('search.group', { kind: 'action' }, '')}>
             {matching.map((action) => (

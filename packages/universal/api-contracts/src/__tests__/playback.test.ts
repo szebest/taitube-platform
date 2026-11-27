@@ -26,7 +26,16 @@ describe('packages/api-contracts: playback', () => {
     });
   });
 
+  it.each(['desktop', 'mobile', 'tablet', 'unknown'])('takes the %s device class', (device) => {
+    expect(recordPlayback.body.parse({ ...event, device }).device).toBe(device);
+  });
+
+  it('leaves the device out when the client sent none', () => {
+    expect(recordPlayback.body.parse(event).device).toBeUndefined();
+  });
+
   it.each([
+    ['a device class of its own making', { device: 'watch' }],
     ['an unknown event type', { eventType: 'seek' }],
     ['a zero duration', { duration: 0 }],
     ['a negative position', { currentTime: -1 }],

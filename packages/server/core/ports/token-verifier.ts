@@ -1,5 +1,6 @@
-import type { ErrorCodes, Failure } from '@vp/errors';
-import type { Result } from '@vp/result';
+import type { Failure } from '@kit/errors';
+import type { Result } from '@kit/result';
+import type { ErrorCodes } from '@vp/errors';
 
 export interface Principal {
   readonly sub: string;

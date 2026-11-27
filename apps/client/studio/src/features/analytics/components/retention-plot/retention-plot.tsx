@@ -1,8 +1,9 @@
+import { seriesColor } from '@kit/components';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import type { VideoRetention } from '@vp/api-contracts';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
+import { useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;
 

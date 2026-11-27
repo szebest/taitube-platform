@@ -1,27 +1,37 @@
+import { Logo } from '@kit/ui';
 import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
-import { Logo } from '@vp/ui';
+import { useAppLink, useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { type ReactNode, useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
 import { SelectedVideoContext } from '#app/hooks/use-selected-video';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 
 export type StudioShellProps = {
   /** The toolbar's action beside the account menu. */
   toolbarAction: ReactNode;
+  /** The navigation's pages ahead of the admin entry, told whether a comment arrived off the inbox. */
+  navigation: (state: { newComments: boolean }) => ReactNode;
   /** What the inspector shows for the video the library selected. */
   inspector: (videoId: string) => ReactNode;
+  /** The account menu's entries for the channel the studio acts on: a team to leave. */
+  accountItems?: ReactNode;
 };
 
 /** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
-export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
+export function StudioShell({
+  toolbarAction,
+  navigation,
+  inspector,
+  accountItems,
+}: StudioShellProps) {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
+  const appLink = useAppLink();
   const { tOr } = useT();
   const [videoId, setVideoId] = useState<string>();
   const [newComments, setNewComments] = useState(false);
@@ -46,39 +56,7 @@ export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
       }}
     >
       <StudioWorkspace.Nav>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="video"
-          active={Boolean(matchRoute({ to: '/videos', fuzzy: true }))}
-        >
-          <Link to="/videos" search={{}}>
-            {tOr('studio.navLibrary', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chart"
-          active={Boolean(matchRoute({ to: '/analytics' }))}
-        >
-          <Link to="/analytics" search={{}}>
-            {tOr('studio.navAnalytics', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="chat"
-          active={onComments}
-          badge={newComments ? tOr('studio.commentsNavNew', {}, '') : undefined}
-        >
-          <Link to="/comments" search={{}}>
-            {tOr('studio.commentsNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>
-          <Link to="/live" search={{}}>
-            {tOr('studio.liveNav', {}, '')}
-          </Link>
-        </StudioWorkspace.NavItem>
+        {navigation({ newComments })}
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild
@@ -88,7 +66,7 @@ export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
             <Link to="/admin">{tOr('studio.adminNav', {}, '')}</Link>
           </StudioWorkspace.NavItem>
         </Can>
-        <StudioWorkspace.NavItem icon="home" href={WEB_URL}>
+        <StudioWorkspace.NavItem icon="home" href={appLink(WEB_URL)}>
           {tOr('studio.backToWeb', {}, '')}
         </StudioWorkspace.NavItem>
       </StudioWorkspace.Nav>
@@ -98,12 +76,14 @@ export function StudioShell({ toolbarAction, inspector }: StudioShellProps) {
           search={{}}
           className="flex items-center gap-inline text-fg no-underline"
         >
-          <Logo />
-          <span className="text-label">{tOr('studio.title', {}, '')}</span>
+          <Logo name="Taitube" className="[&>span]:hidden medium:[&>span]:block" />
+          <span className="sr-only text-label medium:not-sr-only">
+            {tOr('studio.title', {}, '')}
+          </span>
         </Link>
         <div className="ms-auto flex items-center gap-inline">
           {toolbarAction}
-          <ShellAccountMenu />
+          <ShellAccountMenu>{accountItems}</ShellAccountMenu>
         </div>
       </StudioWorkspace.Toolbar>
       <SelectedVideoContext value={{ videoId, open: setVideoId }}>

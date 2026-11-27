@@ -21,3 +21,9 @@ export const WEB_URL = env.webUrl;
 export const COOKIE_DOMAIN = env.cookieDomain;
 
 export const OTEL_TRACES_URL = env.tracesUrl;
+
+/** Where this app's server reaches `dev-token serve`, which mints the personas' tokens; unset means its local address. */
+export const DEV_TOKEN_URL = env.devTokenUrl;
+
+/** How many accounts one browser may hold at once (`ACCOUNTS_MAX`, read by this app's server alone). */
+export const ACCOUNTS_MAX = env.accountsMax;

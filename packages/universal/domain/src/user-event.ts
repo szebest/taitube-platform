@@ -1,6 +1,13 @@
 import type { CaptionKind } from './captions';
 import type { ChannelCard } from './channel';
-import type { CommentThread, CommentVideoSummary } from './comment';
+import type { ChannelImageKind } from './channel-images';
+import {
+  type Comment,
+  type CommentThread,
+  type CommentVideoSummary,
+  commentVideoId,
+} from './comment';
+import type { DataExportFormat, DataExportKind } from './data-export';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
 import type { VideoStatus } from './status-vocabulary';
@@ -36,12 +43,67 @@ export type UserEvent =
         video: CommentVideoSummary;
       };
     }
+  | { type: 'comment.held'; payload: { commentId: string; videoId: string | null } }
   | {
       type: 'captions.ready';
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
     }
   | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
-  | { type: 'live.started'; payload: LiveStartedPayload };
+  | { type: 'live.started'; payload: LiveStartedPayload }
+  | { type: 'channel.image.ready'; payload: ChannelImageReadyPayload }
+  | { type: 'channel.image.failed'; payload: ChannelImageFailedPayload }
+  | { type: 'party.controls.updated'; payload: PartyControlsUpdatedPayload }
+  | { type: 'video.stats.updated'; payload: { videoId: string } }
+  | { type: 'video.generation.updated'; payload: VideoGenerationUpdatedPayload }
+  | { type: 'export.ready'; payload: ExportReadyPayload }
+  | { type: 'export.failed'; payload: ExportFailedPayload };
+
+/** A replacement or an edit swapped in (`active`) or failed, leaving the video as it was. */
+export interface VideoGenerationUpdatedPayload {
+  videoId: string;
+  generation: number;
+  status: 'active' | 'failed';
+}
+
+/** An export's file can be downloaded until `expiresAt` (ISO 8601). */
+export interface ExportReadyPayload {
+  exportId: string;
+  channelId: string;
+  kind: DataExportKind;
+  format: DataExportFormat;
+  rowCount: number;
+  expiresAt: string;
+}
+
+/** The job gave up on an export; `reason` is what the requester is told. */
+export interface ExportFailedPayload {
+  exportId: string;
+  channelId: string;
+  kind: DataExportKind;
+  reason: string;
+}
+
+/** An avatar or banner upload became the channel's image at `version`. */
+export interface ChannelImageReadyPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  version: number;
+}
+
+/** The job gave up on an upload; the channel keeps the image it had. */
+export interface ChannelImageFailedPayload {
+  uploadId: string;
+  channelId: string;
+  kind: ChannelImageKind;
+  reason: string;
+}
+
+/** The target and scope of a personal control that changed; `roomId` is `null` for everywhere. */
+interface PartyControlsUpdatedPayload {
+  targetKey: string;
+  roomId: string | null;
+}
 
 /** A channel the person subscribes to went live; `startedAt` is ISO 8601. */
 export interface LiveStartedPayload {
@@ -50,6 +112,10 @@ export interface LiveStartedPayload {
   title: string;
   startedAt: string;
   channel: ChannelCard;
+}
+
+export function videoGenerationUpdated(payload: VideoGenerationUpdatedPayload): UserEvent {
+  return { type: 'video.generation.updated', payload };
 }
 
 export function videoStatusChanged(videoId: string, status: VideoStatus): UserEvent {
@@ -88,6 +154,14 @@ export function commentCreated(thread: CommentThread, video: CommentVideoSummary
   };
 }
 
+/** Ids only: a held comment is for moderators, who read it through the inbox. */
+export function commentHeld(comment: Pick<Comment, 'id' | 'target'>): UserEvent {
+  return {
+    type: 'comment.held',
+    payload: { commentId: comment.id, videoId: commentVideoId(comment.target) },
+  };
+}
+
 export function captionsReady(
   videoId: string,
   track: { id: string; language: string; kind: CaptionKind }
@@ -101,4 +175,29 @@ export function captionsFailed(videoId: string, captionId: string, reason: strin
 
 export function liveStarted(payload: LiveStartedPayload): UserEvent {
   return { type: 'live.started', payload };
+}
+
+export function channelImageReady(payload: ChannelImageReadyPayload): UserEvent {
+  return { type: 'channel.image.ready', payload };
+}
+
+export function channelImageFailed(payload: ChannelImageFailedPayload): UserEvent {
+  return { type: 'channel.image.failed', payload };
+}
+
+export function partyControlsUpdated(targetKey: string, roomId: string | null): UserEvent {
+  return { type: 'party.controls.updated', payload: { targetKey, roomId } };
+}
+
+/** The id only: whoever holds the panel refetches the numbers, so none travel on the stream. */
+export function videoStatsUpdated(videoId: string): UserEvent {
+  return { type: 'video.stats.updated', payload: { videoId } };
+}
+
+export function exportReady(payload: ExportReadyPayload): UserEvent {
+  return { type: 'export.ready', payload };
+}
+
+export function exportFailed(payload: ExportFailedPayload): UserEvent {
+  return { type: 'export.failed', payload };
 }

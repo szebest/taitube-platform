@@ -1,7 +1,17 @@
 /** `live.started` is accepted and stored; nothing emits it until a live backend exists. */
-export const WEBHOOK_EVENTS = ['video.ready', 'live.started'] as const;
+export const WEBHOOK_EVENTS = [
+  'video.ready',
+  'live.started',
+  'export.ready',
+  'comment.held',
+] as const;
 
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+/** What a creator's Send test delivers. Nothing subscribes to it, so it stays out of `WEBHOOK_EVENTS`. */
+export const WEBHOOK_TEST_EVENT = 'webhook.test';
+
+export type WebhookDeliveryEvent = WebhookEvent | typeof WEBHOOK_TEST_EVENT;
 
 export const MAX_WEBHOOKS_PER_USER = 10;
 

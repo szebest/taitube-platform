@@ -16,7 +16,7 @@ const other = videoSummary({ id: '0190c3a0-5e1d-7000-8000-00000000c009', title: 
 const playing = (video: typeof a, overrides: Partial<PlaybackSession> = {}): PlaybackSession => ({
   ...EMPTY_SESSION,
   videos: [a, b, c],
-  current: { video, startTime: undefined },
+  current: { video, startTime: undefined, shareToken: undefined },
   played: [video.id],
   ...overrides,
 });
@@ -31,6 +31,7 @@ const open = (overrides: Partial<Extract<PlaybackAction, { type: 'open' }>> = {}
     playlist: undefined,
     startTime: undefined,
     autoplay: false,
+    shareToken: undefined,
     ...overrides,
   }) satisfies PlaybackAction;
 
@@ -129,6 +130,41 @@ describe('apps/client/web: playback session reducer', () => {
 
   it.each([
     {
+      scenario: 'a new video goes right after the one playing',
+      session: playing(a),
+      video: other,
+      order: ['a', 'other', 'b', 'c'],
+    },
+    {
+      scenario: 'a video later in the queue moves up to it',
+      session: playing(a),
+      video: c,
+      order: ['a', 'c', 'b'],
+    },
+    {
+      scenario: 'a new video goes after a video in the middle',
+      session: playing(b),
+      video: other,
+      order: ['a', 'b', 'other', 'c'],
+    },
+    {
+      scenario: 'the video playing stays where it is',
+      session: playing(a),
+      video: a,
+      order: ['a', 'b', 'c'],
+    },
+    {
+      scenario: 'a new video leads a queue nothing plays in',
+      session: { ...EMPTY_SESSION, videos: [b] },
+      video: other,
+      order: ['other', 'b'],
+    },
+  ])('plays next: $scenario', ({ session, video, order }) => {
+    expect(titles(playbackReducer(session, { type: 'playNext', video }).videos)).toEqual(order);
+  });
+
+  it.each([
+    {
       scenario: 'seeds the queue with a video opened from nowhere',
       state: { ...EMPTY_SESSION, videos: [b] },
       action: open({ video: other, autoplay: true }),
@@ -211,6 +247,19 @@ describe('apps/client/web: playback session reducer', () => {
     expect(next.current?.video.title).toBe(current);
     expect(next.paused).toBe(paused);
   });
+
+  it.each([
+    { scenario: 'a video it opens', state: playing(a), video: b },
+    { scenario: 'the video that already plays', state: playing(a), video: a },
+  ])(
+    "keeps the share link's token of $scenario, and drops it for the next in the queue",
+    ({ state, video }) => {
+      const opened = playbackReducer(state, open({ video, shareToken: 'abcdefghijklmnopqrstuv' }));
+      expect(opened.current?.shareToken).toBe('abcdefghijklmnopqrstuv');
+
+      expect(playbackReducer(opened, { type: 'go', video: c }).current?.shareToken).toBeUndefined();
+    }
+  );
 
   it('plays the video it goes to, and forgets it on the way back', () => {
     const forward = playbackReducer(playing(a), { type: 'go', video: b });

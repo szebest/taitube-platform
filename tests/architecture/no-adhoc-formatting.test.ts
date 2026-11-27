@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { packageDir, runsInBrowser } from '../../scripts/workspace-packages';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
@@ -6,7 +7,7 @@ import { productionSources, read } from './repo-files';
  * User-facing formatting has one home. `toLocaleString()` with no locale renders in whatever
  * locale the runtime has, and a hand-built `Intl` object skips the cache and the allowlists.
  */
-const FORMATTING_HOME = 'packages/universal/intl/';
+const FORMATTING_HOME = `${packageDir('@kit/intl')}/`;
 
 /**
  * Detection, not formatting: the browser binding reads the runtime's own time zone
@@ -14,12 +15,9 @@ const FORMATTING_HOME = 'packages/universal/intl/';
  * (`Intl.Locale`). Each is the one module allowed to.
  */
 const DETECTION = [
-  'packages/client/intl-react/src/browser-environment.ts',
+  `${packageDir('@kit/intl-react')}/src/browser-environment.ts`,
   'packages/client/queries/src/request-locale.ts',
 ];
-
-/** Where a `toFixed` result can only be text a person reads; server-side it builds FFmpeg arguments. */
-const BROWSER_REACHABLE = ['apps/client/', 'packages/client/', 'packages/universal/'];
 
 function isMethodCall(node: ts.Node, matches: (name: string) => boolean): boolean {
   return (
@@ -60,7 +58,7 @@ function outsideTheHome(): string[] {
   );
 }
 
-describe('architecture: user-facing formatting happens in @vp/intl and nowhere else', () => {
+describe('architecture: user-facing formatting happens in @kit/intl and nowhere else', () => {
   it.each([
     { shape: 'a locale-less date', source: 'const s = new Date(x).toLocaleDateString();' },
     { shape: 'a locale-less number', source: 'const s = views.toLocaleString();' },
@@ -88,13 +86,9 @@ describe('architecture: user-facing formatting happens in @vp/intl and nowhere e
     expect(outsideTheHome()).toContain('apps/client/studio/src/routes/__root.tsx');
   });
 
-  it('finds no locale method, hand-built Intl object or displayed toFixed outside @vp/intl', () => {
+  it('finds no locale method, hand-built Intl object or displayed toFixed outside @kit/intl', () => {
     const offenders = outsideTheHome().flatMap((file) =>
-      adhocFormatting(
-        file,
-        read(file),
-        BROWSER_REACHABLE.some((root) => file.startsWith(root))
-      )
+      adhocFormatting(file, read(file), runsInBrowser(file))
     );
 
     expect(offenders).toEqual([]);

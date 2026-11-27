@@ -1,3 +1,4 @@
+import { type Result, ignore, isErr, ok, unwrapOr } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
@@ -8,7 +9,6 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ProbeFailureContext {
   repositories: Repositories;

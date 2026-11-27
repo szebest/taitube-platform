@@ -1,6 +1,6 @@
+import { Badge, type BadgeTone, Icon, type IconId } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { Badge, type BadgeTone, Icon, type IconId } from '@vp/ui';
+import { useT } from '#app/lib/messages';
 
 type VideoStatus = VideoSummary['status'];
 
@@ -15,6 +15,7 @@ const STATUS_LOOK = {
   ABANDONED: { tone: 'warning', icon: 'alert' },
   DELETED: { tone: 'neutral', icon: 'trash' },
   LIVE: { tone: 'live', icon: 'live' },
+  HELD: { tone: 'warning', icon: 'shield' },
 } as const satisfies Record<VideoStatus, { tone: BadgeTone; icon: IconId }>;
 
 export function VideoStatusBadge({ status }: { status: VideoStatus }) {

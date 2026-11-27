@@ -31,7 +31,7 @@ export function decideVideoMetadataUpdate(
 }
 ```
 
-`assertCan` is still exported from `@vp/permissions` for `apps/client/web`, whose provider builds
+`assertCan` comes from `@kit/permissions` (the generic engine `@vp/permissions` builds on) for `apps/client/web`, whose provider builds
 `usePermissions().assertCan` on it. It has no place in a rule, a service or a route.
 
 ---
@@ -42,7 +42,9 @@ The permission engine is a pure domain package (`packages/universal/permissions`
 
 ### Strict Typing & Boundary Role Parsing
 - **`Role`**: Strictly typed union `'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'`. Zero `any`, zero loose string fallbacks.
-- **`UserContext`**: `{ readonly id: string; readonly role: Role; readonly email?: string; }`.
+- **`UserContext`**: `{ readonly id: string; readonly role: Role; readonly email?: string; readonly memberships?: Readonly<Record<channelId, { role: ChannelRole; ownerId: string }>> }`.
+  `memberships` is the caller's channel team roles, loaded by the API's auth hook once per request (never from the
+  token), so a member removed mid-session loses access on the next request.
 - **`parseRole(value: unknown): Role`**: Sanitizes external JWT/HTTP inputs at the boundary. Internal domain code never uses defensive role fallbacks.
 
 ### Pure Functional Ability Builders
@@ -51,12 +53,14 @@ The permission engine is a pure domain package (`packages/universal/permissions`
   - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin, heart (video owner), report (any signed-in viewer).
   - `rules/channel.rules.ts`: Channel update and management.
   - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
-  - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`).
+  - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`), and the stats panel of a video of the channels where their role reads analytics (`read VideoStats { ownerId }`).
   - `rules/preferences.rules.ts`: A signed-in caller reads and saves their own preferences (`read` and `update Preferences { ownerId }`).
   - `rules/recommendation-feedback.rules.ts`: A signed-in caller reads, creates and deletes their own recommendation feedback (`read`, `create` and `delete RecommendationFeedback { ownerId }`).
   - `rules/caption.rules.ts`: A video's captions are read where the video is and managed by its owner (`read` and `manage Caption { videoId, ownerId, visibility }`).
+  - `rules/channel-team.rules.ts`: The channel owner manages `ChannelMember` and `ChannelInvite` and reads `ChannelAudit`; a manager does the same on rows whose `role` is not `manager`; a member deletes their own `ChannelMember` row (leaves); an invitee updates their own `ChannelInvite` (answers).
+  - Channel team roles: `CHANNEL_ROLES` in `@vp/domain` maps each role to its capabilities, and `rules/memberships.ts` turns the caller's memberships into `{ $in }` conditions (`channelsWith` on the channel id, which videos, comments (`videoChannelId`), analytics, captions, uploads and `Channel` carry, so a role on one channel never reaches the owner's other channels; the owner's own rules stay on `ownerId`). Each rule file adds its member rules beside its owner rules, and `rules/__tests__/channel-matrix.ts` generates one cell per capability, action and persona for every rule spec.
   - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`), except the creator's heart: an admin hearts only on a video they own.
-- Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
+- Global builder `getUserPermissions(user: UserContext | null): AppAbility` hands the rule sets, in order, to `createAbilityFactory` from `@kit/permissions`, which compiles them into an immutable `MongoAbility` with zero class inheritance.
 
 ### Resource Normalizers (`packages/universal/permissions/src/normalizers/`)
 Centralized normalizers eliminate ad-hoc object spreads and provide canonical CASL subject wrappers:
@@ -65,7 +69,7 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 - `comment.normalizer.ts`: Maps `authorId ?? userId` and resolves `videoOwnerId`.
 - `upload.normalizer.ts`: Maps `ownerId` across upload and video fallbacks.
 - `subject-wrapper.ts`: Type-safe CASL `subject(name, normalized)` builders.
-- Every normalizer maps 1:1 to a dedicated test file in `__tests__/`.
+- Normalizers are covered by specs in `__tests__/` where they hold logic.
 
 ---
 

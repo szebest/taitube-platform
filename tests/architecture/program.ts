@@ -1,9 +1,10 @@
 import { dirname, join } from 'node:path';
 import ts from 'typescript';
+import { SERVER } from './ecmascript-baseline';
 import { productionSources, ROOT } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
-function workspacePaths(): Record<string, string[]> {
+export function workspacePaths(): Record<string, string[]> {
   return Object.fromEntries(
     workspaceSources().flatMap(({ name, root, src }) => [
       [name, [join(src, 'index.ts')]],
@@ -13,12 +14,12 @@ function workspacePaths(): Record<string, string[]> {
 }
 
 const OPTIONS: ts.CompilerOptions = {
-  target: ts.ScriptTarget.ES2022,
+  target: SERVER.target,
   /**
    * No DOM: `lib.dom.d.ts` is most of what the program parses, and none of the assertions asks about a
    * browser global. In `apps/client/web` one reads as an error type, which is not a `Result` or a config leaf.
    */
-  lib: ['lib.es2022.d.ts'],
+  lib: [...SERVER.lib],
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
   jsx: ts.JsxEmit.ReactJSX,
@@ -54,6 +55,11 @@ function libSource(file: string, version: ts.ScriptTarget): ts.SourceFile | unde
   return source;
 }
 
+const WORKSPACE_PACKAGES = new Set(workspaceSources().map(({ name }) => name));
+
+const isWorkspaceModule = (specifier: string) =>
+  WORKSPACE_PACKAGES.has(specifier.split('/').slice(0, 2).join('/'));
+
 /**
  * Only this repo's modules and Fastify resolve: a third-party import reads as `any`, which keeps the
  * SDK declarations out of the program. Fastify stays, because `app.config` is typed by augmenting it.
@@ -63,10 +69,10 @@ function workspaceOnlyHost(): ts.CompilerHost {
   const resolutions = ts.createModuleResolutionCache(ROOT, (name) => name, OPTIONS);
   const parse = host.getSourceFile.bind(host);
   host.getSourceFile = (file, version, ...rest) =>
-    libSource(file, ts.ScriptTarget.ES2022) ?? parse(file, version, ...rest);
+    libSource(file, SERVER.target) ?? parse(file, version, ...rest);
   host.resolveModuleNameLiterals = (literals, containingFile, redirected, options) =>
     literals.map(({ text }) =>
-      text.startsWith('.') || text.startsWith('@vp/') || text === 'fastify'
+      text.startsWith('.') || isWorkspaceModule(text) || text === 'fastify'
         ? ts.resolveModuleName(text, containingFile, options, host, resolutions, redirected)
         : { resolvedModule: undefined }
     );
@@ -109,7 +115,7 @@ function buildFixtureProgram(files: Record<string, string>): ts.Program {
   host.directoryExists = (dir) =>
     Object.keys(files).some((file) => file.startsWith(`${dir}/`)) || ts.sys.directoryExists(dir);
   host.getSourceFile = (file, version) => {
-    const lib = files[file] === undefined ? libSource(file, ts.ScriptTarget.ES2022) : undefined;
+    const lib = files[file] === undefined ? libSource(file, SERVER.target) : undefined;
     if (lib) return lib;
     const text = files[file] ?? ts.sys.readFile(file);
     return text === undefined ? undefined : ts.createSourceFile(file, text, version, true);

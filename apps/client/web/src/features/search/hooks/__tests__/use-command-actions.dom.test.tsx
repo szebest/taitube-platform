@@ -1,6 +1,6 @@
+import { appearance } from '@kit/ui/appearance/registry';
 import { RouterContextProvider } from '@tanstack/react-router';
 import { renderHook } from '@testing-library/react';
-import { appearance } from '@vp/ui/appearance/registry';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { asViewer } from '#app/__tests__/providers';
 import { APPEARANCE_MODES } from '#app/features/search/utils/command-actions';

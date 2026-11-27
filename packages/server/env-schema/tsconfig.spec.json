@@ -1,4 +1,7 @@
 {
-  "extends": "@vp/tsconfig/spec.json",
+  "extends": "@kit/tsconfig/server.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
   "include": ["src/**/*"]
 }

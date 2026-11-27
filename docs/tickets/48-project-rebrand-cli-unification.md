@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#48](https://github.com/szebest/taitube-platform/issues/48) |
 | Size | L |
-| Blocked by | 01 — Repo skeleton · 92 — Apps grouped by tier · 93 — Creator Studio as its own app |
+| Blocked by | 01 — Repo skeleton · 92 — Apps grouped by tier · 93 — Creator Studio as its own app · 170 — Platform packages |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -18,11 +18,12 @@
 > SDD §6.2 together, or it does not compile. Authority:
 > [docs/standards/error-handling.md](../standards/error-handling.md).
 
-> **Ticket 85 note:** the rename sweep must also cover `@vp/intl`, `@vp/messages` and `@vp/intl-react`,
-> introduced by [85](85-universal-intl-formatting-message-core.md).
-
-> **Ticket 84 note:** the rename sweep must cover `@vp/result`, `@vp/validation` and `@vp/domain-rules`
-> (all under `packages/universal/`), introduced by [84](84-result-typed-error-handling-shared-domain-rules.md).
+> **Ticket 170 note:** [170](170-platform-packages-open-closed-extractable.md) moved the reusable packages to
+> `@kit/*` under `packages/platform/`, and they keep that scope: this ticket renames the app side only, and
+> `@kit/*` never names `@vp/*` or `@taitube/*`. The app halves that stay (`@vp/errors`, `@vp/validation`,
+> `@vp/permissions`, `@vp/queries`, `@vp/messages`, `@vp/domain-rules`) are in the sweep, as are the packages
+> [84](84-result-typed-error-handling-shared-domain-rules.md) and
+> [85](85-universal-intl-formatting-message-core.md) added on the app side.
 
 ## What to build
 
@@ -33,7 +34,7 @@ Executing this rebrand **early** (before starting remaining Phase 5 feature tick
 This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification**:
 
 1. **Every Monorepo Package & App Renamed to `@taitube/*`**:
-   - **All Shared Packages & Domain Layers:**
+   - **All App Packages & Domain Layers** (the `@kit/*` platform packages keep their scope):
      - `@vp/core` &rarr; `@taitube/core`
      - `@vp/adapters` &rarr; `@taitube/adapters`
      - `@vp/api-contracts` &rarr; `@taitube/api-contracts`
@@ -42,12 +43,8 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
      - `@vp/db` &rarr; `@taitube/db`
      - `@vp/storage` &rarr; `@taitube/storage`
      - `@vp/ffmpeg` &rarr; `@taitube/ffmpeg`
-     - `@vp/observability` &rarr; `@taitube/observability`
      - `@vp/events` &rarr; `@taitube/events`
-     - `@vp/config` &rarr; `@taitube/config`
      - `@vp/errors` &rarr; `@taitube/errors`
-     - `@vp/testing` &rarr; `@taitube/testing`
-     - `@vp/tsconfig` &rarr; `@taitube/tsconfig`
    - **All Deployable Applications:**
      - `apps/server/api` &rarr; package name `@taitube/api`
      - `apps/server/worker` &rarr; package name `@taitube/worker`
@@ -92,7 +89,7 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
 
 ## Acceptance criteria
 
-- [ ] Every package in `packages/`, `core/`, and `adapters/` has its `package.json` name updated to `@taitube/*`.
+- [ ] Every app package under `packages/universal/`, `packages/client/` and `packages/server/` has its `package.json` name updated to `@taitube/*`; the `@kit/*` packages under `packages/platform/` are untouched.
 - [ ] Applications named `@taitube/api`, `@taitube/worker`, and `@taitube/web`.
 - [ ] Root workspace `package.json` named `"taitube"`, and `tsconfig.base.json` path mappings updated to `@taitube/*`.
 - [ ] Automated verification: `git grep "@vp/"` returns zero matches across all `.ts`, `.tsx`, and `.json` files.
@@ -115,9 +112,9 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
 
 ## Notes for the implementer
 
-- **Systematic Search & Replace:** Execute replacements package by package. Start with `@vp/tsconfig` and `@vp/config`, then `@vp/core`, `@vp/adapters`, and outward to `apps/server/api` and `apps/server/worker`.
+- **Systematic Search & Replace:** Execute replacements package by package. Start with `@vp/core`, `@vp/adapters`, and outward to `apps/server/api` and `apps/server/worker`.
 - **Git Rename Preservation:** Git history is preserved automatically because file paths inside packages remain identical; only `package.json` names, `tsconfig` paths, and imports are updated.
-- **Backward-Compatible Env Aliases:** In `packages/config`, maintain fallback support for legacy `VP_*` environment variables so existing `.env` files continue to function seamlessly.
+- **Backward-Compatible Env Aliases:** In the app's env schema (`packages/server/env-schema`), maintain fallback support for legacy `VP_*` environment variables so existing `.env` files continue to function seamlessly.
 
 ## Testing plan
 

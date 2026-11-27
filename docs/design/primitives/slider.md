@@ -21,7 +21,7 @@ A draggable value or range along a track; the base the seek bar and the volume c
 
 ```ts
 // types.ts
-import type { SizeOption, ToneOption } from '@vp/design-tokens';
+import type { SizeOption, ToneOption } from '@kit/design-tokens';
 
 export type SliderSize = Extract<SizeOption, 'sm' | 'md' | 'lg'>;
 export type SliderTone = Extract<ToneOption, 'accent' | 'neutral'>;

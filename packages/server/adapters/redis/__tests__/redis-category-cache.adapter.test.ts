@@ -1,9 +1,9 @@
+import { err, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { Category } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { err, ok } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { describeCategoryCacheContract } from '../../__tests__/contract/category-cache.contract';
 import { redisCategoryCacheSubject } from '../../__tests__/contract/redis-subjects';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';

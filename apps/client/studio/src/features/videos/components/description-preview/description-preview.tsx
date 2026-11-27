@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
 import Markdown from 'react-markdown';
+import { useT } from '#app/lib/messages';
 
 export function DescriptionPreview({ markdown }: { markdown: string }) {
   const { tOr } = useT();

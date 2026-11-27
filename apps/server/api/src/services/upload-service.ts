@@ -1,7 +1,8 @@
+import type { Result } from '@kit/result';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
+import type { ActingChannel } from '@vp/domain';
 import type { UploadPart } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import type { DispatchOrigin } from './probe-dispatch';
 import { type AbortUploadFailure, abortUpload } from './upload-abort';
 import {
@@ -39,9 +40,10 @@ export class UploadService {
 
   initiate(
     user: UserContext,
+    acting: ActingChannel,
     params: InitiateUploadParams
   ): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
-    return initiateUpload(this.ctx, user, params);
+    return initiateUpload(this.ctx, user, acting, params);
   }
 
   getResumeInfo(

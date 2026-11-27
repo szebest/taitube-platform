@@ -1,4 +1,4 @@
-import { ignore, isOk, tryCatch, unwrapOr } from '@vp/result';
+import { ignore, isOk, tryCatch, unwrapOr } from '@kit/result';
 import { useSyncExternalStore } from 'react';
 import type { z } from 'zod';
 

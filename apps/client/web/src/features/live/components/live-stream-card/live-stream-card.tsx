@@ -1,7 +1,7 @@
+import { VideoCard, type VideoCardVariant } from '@kit/components';
 import { Link } from '@tanstack/react-router';
 import type { LiveStreamPublicView } from '@vp/api-contracts';
-import { VideoCard, type VideoCardVariant } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { useT } from '#app/lib/messages';
 
 interface LiveStreamCardProps {
   stream: LiveStreamPublicView;

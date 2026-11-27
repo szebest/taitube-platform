@@ -1,19 +1,19 @@
+import { assertNever } from '@kit/result';
+import { useToast } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
-import { useToast } from '@vp/ui';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useCanSaveOffline } from '#app/features/offline/hooks/use-can-save-offline';
 import { type SaveToggled, useSaveOffline } from '#app/features/offline/hooks/use-save-offline';
+import { useT } from '#app/lib/messages';
 
-/** The Save for offline action under a watch page's title; absent where the browser cannot keep videos offline. */
+/** The Save for offline action under a watch page's title; a disabled placeholder until the browser is known to keep videos offline, absent where it cannot. */
 export function SaveOfflineToggle({ video }: { video: Video }) {
   const { tOr } = useT();
   const showToast = useToast();
   const available = useCanSaveOffline();
   const { saved, pending, toggle } = useSaveOffline(video);
 
-  if (!available) {
+  if (available === false) {
     return null;
   }
 
@@ -55,7 +55,7 @@ export function SaveOfflineToggle({ video }: { video: Video }) {
     <EngagementBar.Action
       icon="save"
       pressed={saved}
-      disabled={pending}
+      disabled={pending || available === undefined}
       onClick={async () => announce(await toggle())}
     >
       {saved ? tOr('pwa.savedOffline', {}, '') : tOr('pwa.saveOffline', {}, '')}

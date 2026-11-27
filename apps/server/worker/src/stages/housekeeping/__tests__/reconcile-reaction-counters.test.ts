@@ -1,8 +1,8 @@
+import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import { runReconcileReactionCounters } from '../reconcile-reaction-counters';
 
 const config = inProcessAppConfig();

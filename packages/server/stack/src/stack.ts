@@ -1,4 +1,4 @@
-import { type Result, err } from '@vp/result';
+import { type Result, err } from '@kit/result';
 import { describeState, formatTable, hasFailed, parseContainers } from './containers';
 import { type Topology, parseTopology, profilesOf, selectServices, tiers } from './topology';
 

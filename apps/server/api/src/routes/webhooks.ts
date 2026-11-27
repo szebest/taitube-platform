@@ -1,4 +1,4 @@
-import { createWebhook, deleteWebhook, listWebhooks } from '@vp/api-contracts';
+import { createWebhook, deleteWebhook, listWebhooks, testWebhook } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
@@ -32,5 +32,12 @@ export async function webhooksRoutes(app: FastifyInstance): Promise<void> {
         await webhookService.remove(requireAuth(request), request.params.id),
         { status: deleteWebhook.status }
       )
+  );
+
+  server.post(
+    testWebhook.path,
+    { schema: { ...contractSchema(testWebhook), params: testWebhook.params } },
+    async (request, reply) =>
+      sendResult(reply, request, await webhookService.test(requireAuth(request), request.params.id))
   );
 }

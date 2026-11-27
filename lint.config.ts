@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { OxlintConfig } from 'vite-plus/lint';
+import { packageDir } from './scripts/workspace-packages';
 
 const BIOME_TWINS = [
   'eslint/array-callback-return',
@@ -174,8 +175,24 @@ const LINT_IGNORES = [
   '**/fixtures/**',
   'scripts/__tests__/lint-fixtures/**',
   'apps/client/*/src/routeTree.gen.ts',
-  'packages/client/ui/src/styles/generated/**',
+  `${packageDir('@kit/ui')}/src/styles/generated/**`,
 ];
+
+/** APIs the browser floor in the root `package.json` lacks, which no TypeScript lib or compat table gates. */
+export const NEWER_THAN_FLOOR: NonNullable<OxlintConfig['rules']> = {
+  'house/guard-newer-apis': [
+    'error',
+    {
+      apis: [
+        'document.startViewTransition',
+        'window.requestIdleCallback',
+        'window.cancelIdleCallback',
+        'scheduler.yield',
+        'scheduler.postTask',
+      ],
+    },
+  ],
+};
 
 const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   {
@@ -200,8 +217,17 @@ const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
   },
   {
     files: [
+      'packages/{universal,client}/**',
+      'packages/platform/{universal,client}/**',
+      'apps/client/**',
+    ],
+    excludeFiles: ['apps/client/*/e2e/**'],
+    rules: NEWER_THAN_FLOOR,
+  },
+  {
+    files: [
       'tests/architecture/**',
-      'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
+      'packages/server/testing-fixtures/src/__tests__/cloud-terraform.test.ts',
       'scripts/__tests__/server-bundle.test.ts',
     ],
     rules: { 'eslint/no-template-curly-in-string': 'off' },

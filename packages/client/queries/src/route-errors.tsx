@@ -1,9 +1,9 @@
+import { ErrorState, type ErrorStateKind } from '@kit/components';
 import { Link, useRouter } from '@tanstack/react-router';
-import { ErrorState, type ErrorStateKind } from '@vp/components';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
-import type { MessageKey } from '@vp/messages';
+import type { SharedMessageKey } from '@vp/shared-messages';
 import { failureCode } from './failure-code';
+import { useT } from './intl/shared-words';
 import { present } from './present-failure';
 
 const TITLES = {
@@ -13,7 +13,7 @@ const TITLES = {
   'rate-limited': 'errorPage.rateLimitedTitle',
   server: 'errorPage.serverTitle',
   generic: 'errorPage.genericTitle',
-} as const satisfies Record<ErrorStateKind, MessageKey>;
+} as const satisfies Record<ErrorStateKind, SharedMessageKey>;
 
 function FailurePage({ code }: { code: ErrorCode }) {
   const router = useRouter();

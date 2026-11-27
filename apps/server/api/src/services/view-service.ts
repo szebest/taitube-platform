@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { ViewReceipt, ViewTelemetryInput } from '@vp/api-contracts';
 import type { ViewBufferPort, ViewRecordOutcome } from '@vp/core/ports';
 import { viewBucketsOf } from '@vp/domain';
-import type { PipelineMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { type ViewLimits, qualifyView } from '@vp/validation';
 
 export interface ViewServiceDeps {

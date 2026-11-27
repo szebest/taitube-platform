@@ -1,9 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { LogContext, createLogger } from '@kit/logger';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger } from '@vp/logger';
+import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
@@ -66,6 +67,7 @@ describe('in-process: consumers start after the metrics server and the heartbeat
       logContext: new LogContext(),
       media: mediaTools,
       speech: speechTools,
+      fingerprint: fingerprintTools,
       workerId: 'start-order',
     });
 

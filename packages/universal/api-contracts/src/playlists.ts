@@ -1,4 +1,4 @@
-import { PLAYLIST_VISIBILITIES } from '@vp/domain';
+import { PLAYLIST_KINDS, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { ChannelCardSchema } from './channels';
@@ -13,6 +13,10 @@ const PlaylistVisibilitySchema = z
   .enum(PLAYLIST_VISIBILITIES)
   .describe('public: listed and searchable; unlisted: anyone with the link; private: the owner');
 
+const PlaylistKindSchema = z
+  .enum(PLAYLIST_KINDS)
+  .describe('series: made only of the owner channel videos, with episodes and progress');
+
 const PlaylistItemSchema = z.object({
   id: z.uuid().describe('The item id a reorder names'),
   videoId: z.uuid(),
@@ -22,6 +26,20 @@ const PlaylistItemSchema = z.object({
     .nonnegative()
     .describe('0-based place in the playlist; a video hidden from this viewer keeps its place'),
   addedAt: z.string().describe('ISO 8601 timestamp the video was added'),
+  episode: z
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .describe('Its place counted from 1, in a series; null in any other playlist'),
+  progress: z
+    .number()
+    .min(0)
+    .max(100)
+    .nullable()
+    .describe(
+      'Percent of the video this signed-in viewer has watched, in a series; null otherwise'
+    ),
   video: VideoSummarySchema,
   channel: ChannelCardSchema.nullable(),
 });
@@ -32,10 +50,17 @@ export const PlaylistSchema = z.object({
   title: z.string(),
   description: z.string(),
   visibility: PlaylistVisibilitySchema,
+  kind: PlaylistKindSchema,
   isSystem: z.boolean().describe('Watch Later: cannot be renamed or deleted'),
   thumbnailUrl: z.string().nullable().describe('The custom thumbnail, else the first video poster'),
   videoCount: z.number().int().nonnegative().describe('Videos this viewer may watch'),
   owner: ChannelCardSchema.nullable(),
+  nextEpisodeVideoId: z
+    .uuid()
+    .nullable()
+    .describe(
+      'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
+    ),
   items: z.array(PlaylistItemSchema),
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 timestamp of the last change, items included'),
@@ -71,6 +96,7 @@ export const createPlaylist = defineEndpoint({
     title: TitleSchema,
     description: DescriptionSchema.optional(),
     visibility: PlaylistVisibilitySchema.optional(),
+    kind: PlaylistKindSchema.optional().describe('playlist unless asked otherwise'),
   }),
   status: 201,
   result: PlaylistSchema,
@@ -110,13 +136,16 @@ export const updatePlaylist = defineEndpoint({
     title: TitleSchema.optional(),
     description: DescriptionSchema.optional(),
     visibility: PlaylistVisibilitySchema.optional(),
+    kind: PlaylistKindSchema.optional().describe(
+      'Turning a playlist into a series is refused while it holds a video of another channel'
+    ),
   }),
   status: 200,
   result: PlaylistSchema,
   errors: {
     ...WRITE_ERRORS,
     400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE],
-    422: [ErrorCodes.VALIDATION_FAILED],
+    422: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.SERIES_VIDEO_NOT_OWNED],
   },
 });
 
@@ -146,7 +175,11 @@ export const addPlaylistItem = defineEndpoint({
   body: z.object({ videoId: z.uuid() }),
   status: 201,
   result: PlaylistSchema,
-  errors: { ...WRITE_ERRORS, 404: [ErrorCodes.PLAYLIST_NOT_FOUND, ErrorCodes.VIDEO_NOT_FOUND] },
+  errors: {
+    ...WRITE_ERRORS,
+    404: [ErrorCodes.PLAYLIST_NOT_FOUND, ErrorCodes.VIDEO_NOT_FOUND],
+    422: [ErrorCodes.SERIES_VIDEO_NOT_OWNED],
+  },
 });
 
 export const removePlaylistItem = defineEndpoint({

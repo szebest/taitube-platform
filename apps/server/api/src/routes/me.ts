@@ -1,12 +1,20 @@
-import { getAccount, issueChannelImageUpload, updateMyChannel } from '@vp/api-contracts';
+import {
+  completeChannelImage,
+  getAccount,
+  getMyChannel,
+  getMySpotlight,
+  prepareChannelImage,
+  setMySpotlight,
+  updateMyChannel,
+} from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
 export async function meRoutes(app: FastifyInstance): Promise<void> {
-  const { channelService, channelImageService } = app.services;
+  const { channelService, channelImagePipelineService, channelSpotlightService } = app.services;
 
   const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
@@ -33,31 +41,93 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (request, reply) => {
-      const authUser = requireAuth(request);
+      const { user, acting } = requireActingChannel(request);
       return sendResult(
         reply,
         request,
-        await channelService.updateChannel(authUser.id, request.body)
+        await channelService.updateChannel(user, acting, request.body)
+      );
+    }
+  );
+
+  typedApp.get(
+    getMyChannel.path,
+    { schema: { ...contractSchema(getMyChannel), security: [{ bearerAuth: [] }] } },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(reply, request, await channelService.getOwnerChannel(user, acting));
+    }
+  );
+
+  typedApp.post(
+    prepareChannelImage.path,
+    {
+      schema: {
+        ...contractSchema(prepareChannelImage),
+        security: [{ bearerAuth: [] }],
+        params: prepareChannelImage.params,
+        body: prepareChannelImage.body,
+      },
+    },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(
+        reply,
+        request,
+        await channelImagePipelineService.prepare(user, acting, {
+          kind: request.params.kind,
+          ...request.body,
+        }),
+        { status: prepareChannelImage.status }
       );
     }
   );
 
   typedApp.post(
-    issueChannelImageUpload.path,
+    completeChannelImage.path,
     {
       schema: {
-        ...contractSchema(issueChannelImageUpload),
+        ...contractSchema(completeChannelImage),
         security: [{ bearerAuth: [] }],
-        body: issueChannelImageUpload.body,
+        params: completeChannelImage.params,
+        body: completeChannelImage.body,
       },
     },
     async (request, reply) => {
-      const authUser = requireAuth(request);
+      const { user, acting } = requireActingChannel(request);
       return sendResult(
         reply,
         request,
-        await channelImageService.issueUpload(authUser.id, request.body),
-        { status: 201 }
+        await channelImagePipelineService.complete(user, acting, request.params.kind, request.body),
+        { status: completeChannelImage.status }
+      );
+    }
+  );
+
+  typedApp.get(
+    getMySpotlight.path,
+    { schema: { ...contractSchema(getMySpotlight), security: [{ bearerAuth: [] }] } },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(reply, request, await channelSpotlightService.getSettings(user, acting));
+    }
+  );
+
+  typedApp.put(
+    setMySpotlight.path,
+    {
+      schema: {
+        ...contractSchema(setMySpotlight),
+        security: [{ bearerAuth: [] }],
+        body: setMySpotlight.body,
+      },
+    },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(
+        reply,
+        request,
+        await channelSpotlightService.replace(user, acting, request.body)
       );
     }
   );

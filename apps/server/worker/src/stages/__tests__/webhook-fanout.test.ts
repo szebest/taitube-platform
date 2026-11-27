@@ -1,8 +1,8 @@
+import { createLogger } from '@kit/logger';
+import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryWebhookDispatcher } from '@vp/adapters/in-memory';
 import { webhookDeliveryFailed } from '@vp/errors';
-import { createLogger } from '@vp/logger';
-import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createWebhookFanout } from '../webhook-fanout';
 

@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import type { VideoScan, VideoScanAbsence } from '@vp/core/repositories';
 import { processingSteps, videoEvents, videos } from '@vp/db';
-import { assertNever } from '@vp/result';
 import { type SQL, and, eq, sql } from 'drizzle-orm';
 import { drizzleWhere } from '../scopes/index';
 

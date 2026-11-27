@@ -1,4 +1,7 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { expectOk } from '@kit/testing/result';
 import type { NotificationRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import {
   type NewNotificationInput,
   NOTIFICATION_RETENTION_DAYS,
@@ -6,13 +9,21 @@ import {
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import {
+  HOUR_MS,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID as CHANNEL_ID,
+  OWNER_ID,
+  publicVideo,
+  seedOwners,
+  VIDEO_IDS,
+} from './fixtures';
+import { type CreatedAtCursor, SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
+import { describeNotificationPartyInvitesContract } from './notification-party-invites.contract';
+import { describeNotificationPostsContract } from './notification-posts.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-const ACTOR = { handle: 'night-kitchen', displayName: 'Night Kitchen', avatarUrl: null };
+const ACTOR = { handle: 'owner', displayName: 'Owner', avatarUrl: null };
 
 function upload(
   videoId: string,
@@ -54,8 +65,14 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
         ({ type, payload }) => ({ type, payload })
       );
 
-    const list = async (filter: 'all' | 'subscriptions' | 'mentions' = 'all', limit = 50) =>
-      expectOk(await notifications.list(OTHER_OWNER_ID, { filter, limit }));
+    const list = async (
+      filter: 'all' | 'subscriptions' | 'mentions' = 'all',
+      limit = 50,
+      cursor: CreatedAtCursor | null = null
+    ) =>
+      expectOk(
+        await notifications.list(OTHER_OWNER_ID, { filter, limit, cursor: cursor ?? undefined })
+      );
 
     beforeAll(async () => {
       subject = await makeSubject();
@@ -65,15 +82,12 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
       await subject.close();
     });
 
+    describeNotificationPartyInvitesContract(makeSubject);
+    describeNotificationPostsContract(makeSubject);
+
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OWNER_ID,
-        handle: 'night-kitchen',
-        displayName: 'Night Kitchen',
-      });
       for (const id of Object.values(VIDEO_IDS)) await subject.seedVideo(publicVideo({ id }));
       notifications = subject.repositories.notifications;
     });
@@ -180,14 +194,25 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
       expect(firstPage).toHaveLength(2);
       const first = firstPage[0];
       if (!first) throw new Error('the first page is empty');
-      const next = expectOk(
-        await notifications.list(OTHER_OWNER_ID, {
-          filter: 'all',
-          limit: 1,
-          cursor: { createdAt: first.createdAt, id: first.id },
-        })
-      );
+      const next = await list('all', 1, first);
       expect(next.map((row) => row.videoId)).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
+    });
+
+    it('walks on from a cursor through notifications that share a millisecond', async () => {
+      const ids: string[] = [];
+      for (const videoId of [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c]) {
+        ids.push((await record(upload(videoId, { groupKey: null }))).id);
+      }
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.notifications.createdAt,
+        key: schema.notifications.id,
+        ids,
+        at: SHARED_MILLISECOND,
+      });
+
+      const served = await walkByCreatedAt((cursor) => list('all', 1, cursor));
+
+      expect(served.sort()).toEqual(ids.sort());
     });
 
     it('marks the given ids as read and announces the ones that changed', async () => {

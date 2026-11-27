@@ -1,9 +1,11 @@
+import { type AnyFailure } from '@kit/errors';
+import { Paginator } from '@kit/pagination';
+import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { DlqService } from '../dlq-service';
 
 const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
@@ -11,13 +13,15 @@ const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: '
 describe('DlqService', () => {
   let repositories: InMemoryRepositories;
   let queues: Map<string, JobQueue>;
+  let probe: InMemoryJobQueue;
   let dlqService: DlqService;
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     repositories.clear();
     queues = new Map<string, JobQueue>();
-    queues.set('probe', new InMemoryJobQueue('probe'));
+    probe = new InMemoryJobQueue('probe');
+    queues.set('probe', probe);
     dlqService = new DlqService({
       dlq: repositories.dlq,
       events: repositories.events,
@@ -76,6 +80,33 @@ describe('DlqService', () => {
 
     expectOk(await dlqService.discard(ADMIN, entry.id));
     expect(expectOk(await repositories.dlq.findById(entry.id))?.status).toBe('DISCARDED');
+  });
+
+  const act = (action: 'replay' | 'discard', id: string): Promise<Result<unknown, AnyFailure>> =>
+    action === 'replay' ? dlqService.replay(ADMIN, id) : dlqService.discard(ADMIN, id);
+
+  it.each([
+    { first: 'replay', second: 'replay', status: 'REPLAYED' },
+    { first: 'replay', second: 'discard', status: 'REPLAYED' },
+    { first: 'discard', second: 'replay', status: 'DISCARDED' },
+    { first: 'discard', second: 'discard', status: 'DISCARDED' },
+  ] as const)('refuses to $second an entry already $status', async ({ first, second, status }) => {
+    const entry = expectOk(
+      await repositories.dlq.create({
+        id: '018f0000-0000-7000-8000-000000000004',
+        queue: 'probe',
+        jobId: 'vid-1--probe--g1',
+        payload: { videoId: 'vid-1' },
+        attemptsMade: 3,
+      })
+    );
+    expectOk(await act(first, entry.id));
+    const replaysBefore = probe.enqueuedJobs.length;
+
+    expect(expectErr(await act(second, entry.id)).code).toBe(ErrorCodes.VERSION_CONFLICT);
+
+    expect(expectOk(await repositories.dlq.findById(entry.id))?.status).toBe(status);
+    expect(probe.enqueuedJobs).toHaveLength(replaysBefore);
   });
 
   it('reports DLQ_ENTRY_NOT_FOUND when the entry does not exist', async () => {

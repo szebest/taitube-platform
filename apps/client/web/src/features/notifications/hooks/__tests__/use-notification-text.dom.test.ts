@@ -16,6 +16,16 @@ describe('apps/client/web: useNotificationText', () => {
       headline: '3 new videos from Night Kitchen',
     },
     {
+      case: 'one post',
+      shown: notification({ kind: 'post', videoId: null }, { videoTitle: null }),
+      headline: 'Night Kitchen shared a post',
+    },
+    {
+      case: 'a group of posts',
+      shown: notification({ kind: 'post', videoId: null }, { videoTitle: null, count: 3 }),
+      headline: '3 new posts from Night Kitchen',
+    },
+    {
       case: 'a live start',
       shown: notification({ kind: 'live' }),
       headline: 'Night Kitchen is live now',
@@ -41,6 +51,24 @@ describe('apps/client/web: useNotificationText', () => {
       headline: 'Night Kitchen hearted your comment',
     },
     {
+      case: 'a team invite',
+      shown: notification({ kind: 'team_invite', videoId: null }, { videoTitle: null }),
+      headline: 'Night Kitchen invited you to join their team',
+    },
+    ...(['hold', 'hide', 'remove', 'ban'] as const).map((action) => ({
+      case: `a visible ${action}`,
+      shown: notification(
+        { kind: 'moderation', videoId: null },
+        { actor: null, moderation: { action, reason: null, expiresAt: null } }
+      ),
+      headline: {
+        hold: 'Your comment is waiting for review',
+        hide: 'Your comment was hidden',
+        remove: 'Your comment was removed',
+        ban: 'You can no longer comment on a channel',
+      }[action],
+    })),
+    {
       case: 'a finished upload',
       shown: notification({ kind: 'processing' }, { actor: null, outcome: 'ready' }),
       headline: 'Your video is ready to watch',
@@ -49,6 +77,21 @@ describe('apps/client/web: useNotificationText', () => {
       case: 'a failed upload',
       shown: notification({ kind: 'processing' }, { actor: null, outcome: 'failed' }),
       headline: 'Your video could not be processed',
+    },
+    {
+      case: 'a video held by screening',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'held' }),
+      headline: 'Your video is on hold until a reviewer has looked at it',
+    },
+    {
+      case: 'a video a reviewer approved',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'approved' }),
+      headline: 'A reviewer approved your video',
+    },
+    {
+      case: 'a video a reviewer rejected',
+      shown: notification({ kind: 'processing' }, { actor: null, outcome: 'rejected' }),
+      headline: 'A reviewer rejected your video',
     },
     {
       case: 'an actor that is gone',
@@ -65,6 +108,14 @@ describe('apps/client/web: useNotificationText', () => {
       case: 'the comment over the title',
       shown: notification({ kind: 'reply' }, { excerpt: 'So good' }),
       detail: 'So good',
+    },
+    {
+      case: 'the post text',
+      shown: notification(
+        { kind: 'post', videoId: null },
+        { videoTitle: null, excerpt: 'Dinner at nine' }
+      ),
+      detail: 'Dinner at nine',
     },
     { case: 'nothing', shown: notification({}, { videoTitle: null }), detail: null },
   ])('details $case', ({ shown, detail }) => {

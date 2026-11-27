@@ -1,5 +1,5 @@
+import type { Container, Token } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container, Token } from '@vp/composition';
 import type {
   AuthorizationPort,
   CacheClient,

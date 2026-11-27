@@ -1,7 +1,8 @@
-import { Icon, IconButton, Popover, type PortalContainer, Slider, Switch, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Popover, type PortalContainer, Slider, Switch } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
+import { useT } from '#app/lib/messages';
 
 export const DEFAULT_OPACITY = 85;
 
@@ -13,7 +14,9 @@ export type LiveChatMenuProps = ComponentPropsWithRef<'div'> & PortalContainer;
  */
 export function LiveChatMenu({ container, className, children, ...props }: LiveChatMenuProps) {
   const { layout, announce, setAnnounce } = useLiveChat('Menu');
-  const { chatOptions, chatAnnounce } = useUiCopy();
+  const { tOr } = useT();
+  const chatOptions = tOr('appUi.chatOptions', {}, '');
+  const chatAnnounce = tOr('appUi.chatAnnounce', {}, '');
   const announceId = useId();
   const styles = liveChatStyles({ layout });
 
@@ -40,7 +43,8 @@ export function LiveChatMenu({ container, className, children, ...props }: LiveC
 /** The overlay's ground opacity, 30 to 100 %; renders nothing when the chat is docked. */
 export function LiveChatOpacity({ className }: { className?: string }) {
   const { layout, opacity, setOpacity } = useLiveChat('Opacity');
-  const { chatOpacity } = useUiCopy();
+  const { tOr } = useT();
+  const chatOpacity = tOr('appUi.chatOpacity', {}, '');
   const labelId = useId();
 
   if (layout !== 'overlay') {

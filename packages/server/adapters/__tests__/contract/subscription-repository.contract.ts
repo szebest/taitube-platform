@@ -1,21 +1,22 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { expectOk } from '@kit/testing/result';
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
-import { viewDateOf } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
-import { expectOk } from '@vp/testing/result';
+import * as schema from '@vp/db';
+import { type NewChannelAuditEntry, viewDateOf } from '@vp/domain';
 import {
   HOUR_MS,
+  OTHER_OWNER_CHANNEL_ID as OTHER_CHANNEL_ID,
   OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID as CHANNEL_ID,
   OWNER_ID,
   VIDEO_IDS,
   idsOf,
   publicVideo,
-  seedOwners,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { AS, AS_SECOND, SUBSCRIBER_ID, seedSubscriber } from './subscriber-fixtures';
 
-const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-const OTHER_CHANNEL_ID = '00000000-0000-7000-8000-000000000902';
 const ABSENT_CHANNEL_ID = '00000000-0000-7000-8000-0000000009ff';
 
 export function describeSubscriptionRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -31,62 +32,71 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       await subject.close();
     });
 
+    const listed = async (limit: number, cursor?: { createdAt: Date; channelId: string }) =>
+      expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit, cursor }));
+
     beforeEach(async () => {
       await subject.reset();
-      await seedOwners(subject.repositories);
-      await subject.repositories.users.upsert({
-        id: SUBSCRIBER_ID,
-        email: 'subscriber@video-pipeline.local',
-      });
+      await seedSubscriber(subject.repositories);
       subscriptions = subject.repositories.subscriptions;
-
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OWNER_ID,
-        handle: 'owner-channel',
-        displayName: 'Owner Channel',
-      });
-      await subject.repositories.channels.create({
-        id: OTHER_CHANNEL_ID,
-        userId: OTHER_OWNER_ID,
-        handle: 'other-channel',
-        displayName: 'Other Channel',
-      });
     });
 
+    const subscribe = (channelId: string, as = AS) =>
+      subscriptions.subscribe(SUBSCRIBER_ID, as, channelId);
+
     it('subscribes idempotently and keeps the count in step', async () => {
-      const first = expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID));
+      const first = expectOk(await subscribe(CHANNEL_ID));
       expect(first).toEqual({ changed: true, subscriberCount: 1 });
 
-      const repeat = expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID));
+      const repeat = expectOk(await subscribe(CHANNEL_ID));
       expect(repeat).toEqual({ changed: false, subscriberCount: 1 });
 
-      expect(expectOk(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID))).toBe(true);
+      expect(expectOk(await subscriptions.isSubscribed(AS, CHANNEL_ID))).toBe(true);
       expect(expectOk(await subscriptions.getSubscriberCount(CHANNEL_ID))).toBe(1);
     });
 
-    it('unsubscribes idempotently', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+    it('writes the audit row it is handed with the subscription it creates, and with no other', async () => {
+      const subscribed: NewChannelAuditEntry = {
+        channelId: AS,
+        actorUserId: SUBSCRIBER_ID,
+        action: 'channel.subscribed',
+        targetType: 'channel',
+        targetId: CHANNEL_ID,
+        meta: {},
+      };
 
-      expect(expectOk(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID))).toEqual({
+      for (let call = 0; call < 2; call++) {
+        expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, AS, CHANNEL_ID, null, subscribed));
+      }
+
+      const audit = expectOk(
+        await subject.repositories.channelAudit.list(AS, { cursor: null, limit: 5 })
+      );
+      expect(audit).toEqual([expect.objectContaining(subscribed)]);
+    });
+
+    it('unsubscribes idempotently', async () => {
+      await subscribe(CHANNEL_ID);
+
+      expect(expectOk(await subscriptions.unsubscribe(AS, CHANNEL_ID))).toEqual({
         changed: true,
         subscriberCount: 0,
       });
-      expect(expectOk(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID))).toEqual({
+      expect(expectOk(await subscriptions.unsubscribe(AS, CHANNEL_ID))).toEqual({
         changed: false,
         subscriberCount: 0,
       });
-      expect(expectOk(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID))).toBe(false);
+      expect(expectOk(await subscriptions.isSubscribed(AS, CHANNEL_ID))).toBe(false);
     });
 
     it.each([
       {
         name: 'subscribing to',
-        write: (s: SubscriptionRepositoryPort) => s.subscribe(SUBSCRIBER_ID, ABSENT_CHANNEL_ID),
+        write: (s: SubscriptionRepositoryPort) => s.subscribe(SUBSCRIBER_ID, AS, ABSENT_CHANNEL_ID),
       },
       {
         name: 'unsubscribing from',
-        write: (s: SubscriptionRepositoryPort) => s.unsubscribe(SUBSCRIBER_ID, ABSENT_CHANNEL_ID),
+        write: (s: SubscriptionRepositoryPort) => s.unsubscribe(AS, ABSENT_CHANNEL_ID),
       },
     ])(
       'reports $name a channel that is not there as a write that changed nothing',
@@ -99,8 +109,8 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     );
 
     it('lists the channel ids a user follows', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+      await subscribe(CHANNEL_ID);
+      await subscribe(OTHER_CHANNEL_ID);
 
       const ids = expectOk(await subscriptions.getUserSubscriptionChannelIds(SUBSCRIBER_ID));
       expect([...ids].sort()).toEqual([CHANNEL_ID, OTHER_CHANNEL_ID].sort());
@@ -108,46 +118,43 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     });
 
     it('lists the subscribed channels newest first, over-fetching one row', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+      await subscribe(CHANNEL_ID);
+      await subscribe(OTHER_CHANNEL_ID);
 
-      const page = expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 }));
+      const page = await listed(1);
       expect(page).toHaveLength(2);
       expect(page[0]?.id).toBe(OTHER_CHANNEL_ID);
-      expect(page[0]?.handle).toBe('other-channel');
+      expect(page[0]?.handle).toBe('other');
       expect(page[0]?.subscribedAt).toBeInstanceOf(Date);
     });
 
     it('carries the channel profile and its count on each listed subscription', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subscribe(CHANNEL_ID);
 
-      const [row] = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })
-      );
+      const [row] = await listed(10);
 
       expect(row).toMatchObject({
         id: CHANNEL_ID,
         userId: OWNER_ID,
-        handle: 'owner-channel',
-        displayName: 'Owner Channel',
+        handle: 'owner',
+        displayName: 'Owner',
         subscriberCount: 1,
       });
     });
 
-    it('resumes the subscription listing from a keyset cursor without repeating a channel', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
-      const [first] = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 })
-      );
+    it('resumes the subscriptions from a cursor within one millisecond without repeating a channel', async () => {
+      await subscribe(CHANNEL_ID);
+      await subscribe(OTHER_CHANNEL_ID);
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.channelSubscriptions.createdAt,
+        key: schema.channelSubscriptions.channelId,
+        ids: [CHANNEL_ID, OTHER_CHANNEL_ID],
+        at: SHARED_MILLISECOND,
+      });
+      const [first] = await listed(1);
       if (!first) throw new Error('the first page is empty');
 
-      const next = expectOk(
-        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, {
-          limit: 1,
-          cursor: { createdAt: first.subscribedAt, channelId: first.id },
-        })
-      );
+      const next = await listed(1, { createdAt: first.subscribedAt, channelId: first.id });
 
       expect(next.map((row) => row.id)).toEqual([CHANNEL_ID]);
     });
@@ -164,11 +171,35 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
         new Date(now - 3 * HOUR_MS)
       );
 
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subscribe(CHANNEL_ID);
       const feed = expectOk(await subscriptions.getSubscriptionFeed(SUBSCRIBER_ID, { limit: 10 }));
 
       expect(idsOf(feed.items)).toEqual([VIDEO_IDS.a]);
       expect(feed.total).toBe(1);
+    });
+
+    it('walks the feed on from a cursor through videos that share a millisecond', async () => {
+      const ids = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+      for (const id of ids) await subject.seedVideo(publicVideo({ id }), SHARED_MILLISECOND);
+      await subscribe(CHANNEL_ID);
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.videos.createdAt,
+        key: schema.videos.id,
+        ids,
+        at: SHARED_MILLISECOND,
+      });
+
+      const served = await walkByCreatedAt(
+        async (cursor) =>
+          expectOk(
+            await subscriptions.getSubscriptionFeed(SUBSCRIBER_ID, {
+              limit: 1,
+              cursor: cursor ?? undefined,
+            })
+          ).items
+      );
+
+      expect(served.sort()).toEqual(ids.sort());
     });
 
     it('returns an empty feed for a user with no subscriptions', async () => {
@@ -178,57 +209,36 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     });
 
     it('stores a notification level per subscription, all by default', async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      const levels = async () =>
-        expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })).map(
-          (item) => item.notificationLevel
-        );
+      await subscribe(CHANNEL_ID);
+      const levels = async () => (await listed(10)).map((item) => item.notificationLevel);
       expect(await levels()).toEqual(['all']);
 
-      expect(
-        expectOk(await subscriptions.setNotificationLevel(SUBSCRIBER_ID, CHANNEL_ID, 'none'))
-      ).toBe(true);
+      expect(expectOk(await subscriptions.setNotificationLevel(AS, CHANNEL_ID, 'none'))).toBe(true);
       expect(await levels()).toEqual(['none']);
     });
 
     it('sets no level for a subscription that is not there', async () => {
-      expect(
-        expectOk(await subscriptions.setNotificationLevel(SUBSCRIBER_ID, CHANNEL_ID, 'none'))
-      ).toBe(false);
-    });
-
-    it('walks the subscribers of a channel in batches, with their levels', async () => {
-      const ids = [SUBSCRIBER_ID, OWNER_ID, OTHER_OWNER_ID].sort();
-      for (const id of ids) await subscriptions.subscribe(id, CHANNEL_ID);
-      await subscriptions.setNotificationLevel(ids[1] ?? '', CHANNEL_ID, 'highlights');
-      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
-
-      const first = expectOk(await subscriptions.listSubscribers(CHANNEL_ID, { limit: 2 }));
-      const rest = expectOk(
-        await subscriptions.listSubscribers(CHANNEL_ID, { limit: 2, after: first[1]?.subscriberId })
+      expect(expectOk(await subscriptions.setNotificationLevel(AS, CHANNEL_ID, 'none'))).toBe(
+        false
       );
-
-      expect(first.map((s) => s.subscriberId)).toEqual(ids.slice(0, 2));
-      expect(first.map((s) => s.notificationLevel)).toEqual(['all', 'highlights']);
-      expect(rest.map((s) => s.subscriberId)).toEqual(ids.slice(2));
     });
 
-    it("nets the gains and losses of the owner's channel over the days of a range", async () => {
-      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      await subscriptions.subscribe(OTHER_OWNER_ID, CHANNEL_ID);
-      await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+    it('nets the gains and losses of a channel over the days of a range', async () => {
+      await subscribe(CHANNEL_ID);
+      await subscribe(CHANNEL_ID, AS_SECOND);
+      await subscriptions.unsubscribe(AS, CHANNEL_ID);
+      await subscribe(OTHER_CHANNEL_ID);
       const today = viewDateOf(new Date());
       const yesterday = viewDateOf(new Date(Date.now() - MS_PER_DAY));
 
       expect(
-        expectOk(await subscriptions.netSubscribers(OWNER_ID, { from: today, to: today }))
+        expectOk(await subscriptions.netSubscribers(CHANNEL_ID, { from: today, to: today }))
       ).toBe(1);
       expect(
-        expectOk(await subscriptions.netSubscribers(OWNER_ID, { from: yesterday, to: yesterday }))
+        expectOk(await subscriptions.netSubscribers(CHANNEL_ID, { from: yesterday, to: yesterday }))
       ).toBe(0);
       expect(
-        expectOk(await subscriptions.netSubscribers(OTHER_OWNER_ID, { from: today, to: today }))
+        expectOk(await subscriptions.netSubscribers(OTHER_CHANNEL_ID, { from: today, to: today }))
       ).toBe(1);
     });
   });

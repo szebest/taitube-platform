@@ -1,9 +1,9 @@
+import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import { cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { ViewService } from '../view-service';
 
 const VIDEO = '00000000-0000-7000-8000-0000000000a1';
@@ -18,7 +18,7 @@ describe('ViewService', () => {
 
   beforeEach(() => {
     viewBuffer = new InMemoryViewBuffer();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     service = new ViewService({
       viewBuffer,
       metrics,

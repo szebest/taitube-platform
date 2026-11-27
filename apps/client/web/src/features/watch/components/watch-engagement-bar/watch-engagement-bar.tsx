@@ -1,50 +1,25 @@
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { BrandScope, useUiCopy } from '@kit/ui';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { useFormat, useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
-import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
-import { unwrapOr } from '@vp/result';
-import { BrandScope, useUiCopy } from '@vp/ui';
+import { SectionBoundary, useApi } from '@vp/queries';
 import type { ReactNode } from 'react';
+import { SubscribeAction } from '#app/components/channel/subscribe-action';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { ShareDialog } from '#app/components/watch/share-dialog';
 import { toSummary } from '#app/features/watch/utils/to-summary';
 import { useReaction } from '#app/hooks/use-reaction';
-import { useSetSubscription } from '#app/hooks/use-set-subscription';
-import { useSignIn } from '#app/hooks/use-sign-in';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
-import { subscriptionStatusQueryOptions } from '#app/lib/query-keys/subscription-keys';
+import { StartThreadAction } from '../start-thread-action/start-thread-action';
 
-function ChannelSection({ channelId }: { channelId: string }) {
+function ChannelSection({ channelId, videoId }: { channelId: string; videoId: string }) {
   const api = useApi();
   const { tOr } = useT();
-  const showFailure = useFailureToast();
-  const signIn = useSignIn();
-  const canSubscribe = useCan('subscribe', 'Channel');
-
   const { data: channel } = useSuspenseQuery(channelQueryOptions(api, channelId));
-  const { data: status } = useQuery({
-    ...subscriptionStatusQueryOptions(api, channelId),
-    enabled: canSubscribe,
-  });
-  const setSubscription = useSetSubscription(channelId);
-
-  const subscribed = status?.subscribed ?? false;
-  const toggle = () => {
-    if (!canSubscribe) {
-      signIn();
-      return;
-    }
-
-    const next = !subscribed;
-    const subscribe = () =>
-      setSubscription.mutate(next, {
-        onError: (error) => showFailure(tOr('watch.subscribeFailed', {}, ''), error, subscribe),
-      });
-    subscribe();
-  };
 
   return (
     <BrandScope color={channel.brandColor}>
@@ -56,13 +31,7 @@ function ChannelSection({ channelId }: { channelId: string }) {
       >
         <Link to="/channel/$channelId" params={{ channelId: channel.id }} />
       </EngagementBar.Channel>
-      <EngagementBar.Subscribe
-        subscribed={subscribed}
-        pending={setSubscription.isPending}
-        onToggle={toggle}
-      >
-        {subscribed ? tOr('watch.subscribed', {}, '') : tOr('watch.subscribe', {}, '')}
-      </EngagementBar.Subscribe>
+      <SubscribeAction channelId={channel.id} fromVideoId={videoId} />
     </BrandScope>
   );
 }
@@ -92,13 +61,33 @@ function SaveSection({ video }: { video: Video }) {
   );
 }
 
+function QueueSection({ video }: { video: Video }) {
+  const { enqueue, playNext } = useVideoActions(toSummary(video));
+  const { addToQueue, playNext: playNextLabel } = useUiCopy();
+
+  return (
+    <>
+      {enqueue && (
+        <EngagementBar.Action icon="queue-add" onClick={enqueue}>
+          {addToQueue}
+        </EngagementBar.Action>
+      )}
+      {playNext && (
+        <EngagementBar.Action icon="play" onClick={playNext}>
+          {playNextLabel}
+        </EngagementBar.Action>
+      )}
+    </>
+  );
+}
+
 export interface WatchEngagementBarProps {
   video: Video;
   /** More actions after Save, from the features the route composes in. */
   renderActions?: (video: Video) => ReactNode;
 }
 
-/** The channel, Subscribe, the reactions, Share and Save under a video's title. */
+/** The channel, Subscribe, the reactions, Share, Save, Add to queue, Play next and Start a thread under a video's title. */
 export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarProps) {
   const { tOr } = useT();
 
@@ -110,13 +99,15 @@ export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarP
           resetKey={video.channel.id}
           layout="bar"
         >
-          <ChannelSection channelId={video.channel.id} />
+          <ChannelSection channelId={video.channel.id} videoId={video.id} />
         </SectionBoundary>
       )}
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />
         <SaveSection video={video} />
+        <QueueSection video={video} />
+        <StartThreadAction videoId={video.id} variant="pill" />
         {renderActions?.(video)}
       </EngagementBar.Actions>
     </EngagementBar.Root>

@@ -1,10 +1,17 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Format } from '@kit/intl-react';
+import { Badge } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createColumnHelper, useTable } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
+import {
+  createColumnHelper,
+  functionalUpdate,
+  type OnChangeFn,
+  type RowSelectionState,
+  useTable,
+} from '@tanstack/react-table';
 import type { CreatorInboxFilter } from '@vp/domain';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
-import { useApi } from '@vp/queries';
+import { publishedAt } from '@vp/intl-formats';
+import { useApi, useAppLink } from '@vp/queries';
 import { useState } from 'react';
 import {
   DataTable,
@@ -14,7 +21,9 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type InboxComment, inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
+import { InboxBulkActions } from '../inbox-bulk-actions/inbox-bulk-actions';
 import { InboxCommentActions } from '../inbox-comment-actions/inbox-comment-actions';
 import { InboxReply } from '../inbox-reply/inbox-reply';
 
@@ -29,26 +38,42 @@ export interface CommentInboxProps {
 /** The comments on the creator's videos under one filter, on the studio's `DataTable`, each answered in its row. */
 export function CommentInbox({ filter }: CommentInboxProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
   const comments = useInfiniteQuery({
     ...inboxQueryOptions(useApi(), filter),
     select: pagedRows,
   });
   const [replyingTo, setReplyingTo] = useState<string>();
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const rows = comments.data ?? [];
   const state = tableStateOf(comments, rows.length);
 
+  const changeSelection: OnChangeFn<RowSelectionState> = (updater) =>
+    setRowSelection(functionalUpdate(updater, rowSelection));
+  const keepRefusedSelected = (refused: string[]) =>
+    setRowSelection(Object.fromEntries(refused.map((id) => [id, true])));
+
   const table = useTable({
     features: dataTableFeatures,
     columns: column.columns([
-      column.accessor((comment) => comment.video.title, {
+      column.accessor((comment) => comment.targetSummary.title, {
         id: 'video',
         header: tOr('studio.commentsVideo', {}, ''),
         enableSorting: false,
         cell: ({ row: { original } }) => (
-          <a href={`${WEB_URL}/watch/${original.video.id}`} className="line-clamp-2">
-            {original.video.title}
-          </a>
+          <span className="flex flex-col items-start gap-inline">
+            <Badge size="sm" variant="soft">
+              {tOr('studio.commentsTargetChip', { type: original.targetSummary.type }, '')}
+            </Badge>
+            {original.video ? (
+              <a href={appLink(WEB_URL, `/watch/${original.video.id}`)} className="line-clamp-2">
+                {original.targetSummary.title}
+              </a>
+            ) : (
+              <span className="line-clamp-2">{original.targetSummary.title}</span>
+            )}
+          </span>
         ),
       }),
       column.accessor(authorOf, {
@@ -89,9 +114,10 @@ export function CommentInbox({ filter }: CommentInboxProps) {
     ]),
     data: rows,
     getRowId: ({ id }) => id,
-    enableRowSelection: false,
     manualPagination: true,
     manualSorting: true,
+    state: { rowSelection },
+    onRowSelectionChange: changeSelection,
   });
 
   return (
@@ -102,6 +128,12 @@ export function CommentInbox({ filter }: CommentInboxProps) {
         fetching={comments.isFetching && !comments.isPending}
       >
         <DataTable.Caption>{tOr('studio.commentsCaption', {}, '')}</DataTable.Caption>
+        <DataTable.Batch>
+          <InboxBulkActions
+            ids={rows.filter(({ id }) => rowSelection[id]).map(({ id }) => id)}
+            onSettled={keepRefusedSelected}
+          />
+        </DataTable.Batch>
         <DataTable.Header />
         <DataTable.Body>
           {state === 'empty' && (

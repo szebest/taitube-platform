@@ -1,13 +1,13 @@
 import * as fs from 'node:fs/promises';
+import { createLogger } from '@kit/logger';
+import { err, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
-import { err, ok } from '@vp/result';
 import { chunkKey, chunkPrefix } from '@vp/storage';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { encodeSegments } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
@@ -70,6 +70,7 @@ describe('apps/server/worker/stages: transcode', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: uuidv7(),
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         sourceKey: 'raw/source.mp4',
         status: 'PROCESSING',
       })
@@ -174,10 +175,7 @@ describe('apps/server/worker/stages: transcode', () => {
 
   it('waits for a renewal still in flight when FFmpeg finishes, and commits nothing if it failed', async () => {
     let refuse: () => void = () => {};
-    let requested: () => void = () => {};
-    const renewalRequested = new Promise<void>((resolve) => {
-      requested = resolve;
-    });
+    const { promise: renewalRequested, resolve: requested } = Promise.withResolvers<void>();
     vi.spyOn(repositories.steps, 'heartbeat').mockImplementation(() => {
       requested();
       return new Promise((resolve) => {

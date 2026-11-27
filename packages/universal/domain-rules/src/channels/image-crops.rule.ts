@@ -1,0 +1,65 @@
+import { type Result, all, andThen, assertNever, map, ok } from '@kit/result';
+import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type ImageCrops } from '@vp/domain';
+import {
+  type ChannelImageKind,
+  type ImageDimensions,
+  type ImageTooSmall,
+  type InvalidCropRect,
+  validateChannelImageDimensions,
+  validateCropRect,
+} from '@vp/validation';
+
+export type DecideImageCropsFailure = ImageTooSmall | InvalidCropRect;
+
+type CropsOf<K extends ChannelImageKind> = Extract<ImageCrops, { kind: K }>;
+
+/**
+ * An avatar is cropped square, a banner once per target to that target's shape, a post image not
+ * at all: its crop is the whole image. Every crop lies inside the image the worker will read, so
+ * the job never meets a rectangle it cannot cut.
+ */
+export function decideImageCrops(
+  crops: ImageCrops,
+  image: ImageDimensions
+): Result<ImageCrops, DecideImageCropsFailure> {
+  return andThen(validateChannelImageDimensions(crops.kind, image), () => {
+    switch (crops.kind) {
+      case 'avatar':
+        return avatarCrop(crops, image);
+      case 'banner':
+        return bannerCrops(crops, image);
+      case 'post-image':
+        return ok({ kind: 'post-image' as const, crop: { x: 0, y: 0, ...image } });
+      default:
+        return assertNever(crops, 'ImageCrops.kind');
+    }
+  });
+}
+
+function avatarCrop(
+  { crop }: CropsOf<'avatar'>,
+  image: ImageDimensions
+): Result<ImageCrops, InvalidCropRect> {
+  return map(validateCropRect('crop', crop, image, 1), (checked) => ({
+    kind: 'avatar' as const,
+    crop: checked,
+  }));
+}
+
+function bannerCrops(
+  { crops }: CropsOf<'banner'>,
+  image: ImageDimensions
+): Result<ImageCrops, InvalidCropRect> {
+  const checked = all(
+    BANNER_TARGETS.map((target) =>
+      map(
+        validateCropRect(`crops.${target}`, crops[target], image, BANNER_ASPECTS[target]),
+        (rect) => [target, rect] as const
+      )
+    )
+  );
+  return map(checked, (entries) => ({
+    kind: 'banner' as const,
+    crops: Object.fromEntries(entries) as BannerCrops,
+  }));
+}

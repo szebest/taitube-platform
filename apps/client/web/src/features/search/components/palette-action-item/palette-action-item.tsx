@@ -1,11 +1,12 @@
+import { assertNever } from '@kit/result';
+import { Icon, type IconId, useAppearance } from '@kit/ui';
 import { useRouter } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
-import { Icon, type IconId, useAppearance } from '@vp/ui';
+import { useAppLink } from '@vp/queries';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import type { CommandAction } from '#app/features/search/utils/command-actions';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 const ICONS: Record<CommandAction['kind'], IconId> = {
   theme: 'moon',
@@ -23,6 +24,7 @@ export function PaletteActionItem({ action }: PaletteActionItemProps) {
   const { setOpen } = useCommandPaletteStore();
   const { update } = useAppearance();
   const router = useRouter();
+  const appLink = useAppLink();
   const { tOr } = useT();
 
   const run = () => {
@@ -38,7 +40,7 @@ export function PaletteActionItem({ action }: PaletteActionItemProps) {
         router.history.push(action.path);
         return;
       case 'studio':
-        window.location.assign(STUDIO_URL);
+        window.location.assign(appLink(STUDIO_URL));
         return;
       default:
         assertNever(action, 'command action');

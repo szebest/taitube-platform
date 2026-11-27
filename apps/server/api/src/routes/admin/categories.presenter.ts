@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import { type Problem, problemFor } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 import type {
   CreateCategoryServiceFailure,
   DeleteCategoryServiceFailure,

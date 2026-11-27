@@ -1,9 +1,9 @@
+import { createLogger } from '@kit/logger';
+import type { Tracing } from '@kit/observability';
+import { err, ok } from '@kit/result';
+import { captureLog } from '@kit/testing/log-capture';
 import { Adapters } from '@vp/adapters/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
-import type { Tracing } from '@vp/observability';
-import { err, ok } from '@vp/result';
-import { captureLog } from '@vp/testing/log-capture';
 import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
 import { serve } from '../serve';
@@ -27,16 +27,11 @@ function loggerTo(log: ReturnType<typeof captureLog>) {
 describe('apps/server/api: serve', () => {
   it('finishes a request that is in flight when shutdown begins', async () => {
     const composed = await composeApp({ config: config() });
-    let release = () => {};
-    let entered = () => {};
-    const handling = new Promise<void>((resolve) => {
-      entered = resolve;
-    });
+    const { promise: handling, resolve: entered } = Promise.withResolvers<void>();
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
     composed.app.get('/slow', async () => {
       entered();
-      await new Promise<void>((resolve) => {
-        release = resolve;
-      });
+      await released;
       return { done: true };
     });
     const api = await serve(composed, config(), TIMINGS);
@@ -69,6 +64,29 @@ describe('apps/server/api: serve', () => {
     expect(await ready.json()).toMatchObject({ status: 'degraded' });
     expect(live.status).toBe(200);
     expect(await shutdown).toBe('drained');
+  });
+
+  it('does not report listening when a signal arrives while the port is being bound', async () => {
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
+    const handlers: Array<() => void> = [];
+    const exited = Promise.withResolvers<void>();
+    const exit = vi.fn(() => exited.resolve());
+    const realListen = composed.app.listen.bind(composed.app);
+    vi.spyOn(composed.app, 'listen').mockImplementation(((
+      ...args: Parameters<typeof realListen>
+    ) => {
+      for (const handler of handlers) handler();
+      return realListen(...args);
+    }) as typeof composed.app.listen);
+
+    await serve(composed, config(), {
+      ...TIMINGS,
+      signals: { env: {}, onSignal: (_signal, handler) => handlers.push(handler), exit },
+    });
+    await exited.promise;
+
+    expect(log.text()).not.toContain('API listening');
   });
 
   it('releases every resource exactly once, in reverse construction order', async () => {

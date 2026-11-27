@@ -11,22 +11,24 @@ import {
   canCreateComment,
   canDeleteComment,
   canHeartComment,
+  canModerateComments,
   canPinComment,
   canReportComment,
   canUpdateComment,
 } from '../comments';
 
 const STRANGER: UserContext = { id: 'usr-9', role: 'USER' };
-const VIDEO_OWNER_ID = 'creator-1';
+const VIDEO = { videoOwnerId: 'creator-1', videoChannelId: 'chan-creator-1' };
 
 const CHECKS = {
   create: (user: UserContext | null) => canCreateComment({ user }),
   update: (user: UserContext | null) => canUpdateComment({ user, comment: sampleComment }),
   delete: (user: UserContext | null) =>
-    canDeleteComment({ user, comment: sampleComment, videoOwnerId: VIDEO_OWNER_ID }),
-  pin: (user: UserContext | null) => canPinComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
-  heart: (user: UserContext | null) => canHeartComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
+    canDeleteComment({ user, comment: sampleComment, ...VIDEO }),
+  pin: (user: UserContext | null) => canPinComment({ user, ...VIDEO }),
+  heart: (user: UserContext | null) => canHeartComment({ user, ...VIDEO }),
   report: (user: UserContext | null) => canReportComment({ user }),
+  moderate: (user: UserContext | null) => canModerateComments({ user, ...VIDEO }),
 };
 
 type Action = keyof typeof CHECKS;
@@ -61,6 +63,19 @@ describe('helpers/comments: who may do what to a comment', () => {
     { scenario: 'an anonymous caller hearts', user: guestUser, action: 'heart', expected: false },
     { scenario: 'a signed-in user reports', user: STRANGER, action: 'report', expected: true },
     { scenario: 'an anonymous caller reports', user: guestUser, action: 'report', expected: false },
+    {
+      scenario: 'the video owner moderates',
+      user: creatorUser,
+      action: 'moderate',
+      expected: true,
+    },
+    { scenario: 'a stranger moderates', user: STRANGER, action: 'moderate', expected: false },
+    {
+      scenario: 'an anonymous caller moderates',
+      user: guestUser,
+      action: 'moderate',
+      expected: false,
+    },
   ])('$scenario: $expected', ({ user, action, expected }) => {
     expect(CHECKS[action](user)).toBe(expected);
   });

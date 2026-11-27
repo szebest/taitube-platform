@@ -10,11 +10,15 @@ import {
   commentWindowBounds,
   toCommentThread,
 } from '../comment-thread-query';
+import { UNMODERATED } from './comment-row';
 
 const CREATED_AT = new Date('2026-03-01T12:00:00.000Z');
 const CURSOR = { isPinned: true, likeCount: 4, createdAt: CREATED_AT, id: 'c-9' };
 
-const col = (name: string) => `"video_comments"."${name}"`;
+const col = (name: string) =>
+  name === 'created_at'
+    ? `date_trunc('milliseconds', "comments"."created_at")`
+    : `"comments"."${name}"`;
 
 describe('adapters/postgres: comment thread SQL query', () => {
   it.each([
@@ -89,8 +93,11 @@ describe('adapters/postgres: comment thread SQL query', () => {
   it('folds the joined channel into the author and drops the tombstone', () => {
     const thread = toCommentThread({
       id: 'c-1',
-      videoId: 'v-1',
+      targetType: 'video',
+      targetId: 'v-1',
+      channelId: 'ch-owner',
       authorId: 'u-1',
+      authorChannelId: 'ch-1',
       parentId: null,
       content: 'hi',
       isPinned: false,
@@ -98,9 +105,9 @@ describe('adapters/postgres: comment thread SQL query', () => {
       likeCount: 0,
       heartedAt: null,
       createdAt: CREATED_AT,
+      ...UNMODERATED,
       updatedAt: CREATED_AT,
       deletedAt: null,
-      channelId: null,
       handle: null,
       displayName: null,
       avatarUrl: null,
@@ -108,9 +115,12 @@ describe('adapters/postgres: comment thread SQL query', () => {
     });
 
     expect(thread).not.toHaveProperty('deletedAt');
+    expect(thread).not.toHaveProperty('targetType');
+    expect(thread.target).toEqual({ type: 'video', id: 'v-1' });
+    expect(thread.channelId).toBe('ch-owner');
     expect(thread.author).toEqual({
       userId: 'u-1',
-      channelId: null,
+      channelId: 'ch-1',
       handle: null,
       displayName: null,
       avatarUrl: null,

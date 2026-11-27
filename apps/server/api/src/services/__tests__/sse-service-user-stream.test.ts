@@ -1,9 +1,9 @@
+import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewUserEventInput } from '@vp/core/repositories';
 import { userChannel } from '@vp/events';
-import { createLogger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import type { SseFrame } from '../sse-connection';
 import { SseService } from '../sse-service';
 import { SSE_REPLAY_LIMIT as REPLAY_LIMIT, sseServiceDeps } from './service-deps';

@@ -1,8 +1,0 @@
-{
-  "extends": "@vp/tsconfig/spec.json",
-  "compilerOptions": {
-    "lib": ["ES2023", "DOM"],
-    "jsx": "react-jsx"
-  },
-  "include": ["src/**/*"]
-}

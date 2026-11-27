@@ -1,15 +1,18 @@
 import { getUserPermissions } from '../ability';
 import { toVideoSubject } from '../normalizers/index';
-import type { UserContext, VideoResource } from '../types/index';
+import type { ShareGrant, UserContext, VideoResource } from '../types/index';
 
 export function canReadVideo({
   user,
   video,
+  share = null,
 }: {
   user: UserContext | null;
   video?: VideoResource;
+  /** A live share link the caller holds; it grants `read` on its own video and on no other. */
+  share?: ShareGrant | null;
 }): boolean {
-  const ability = getUserPermissions(user);
+  const ability = getUserPermissions(user, share);
   const videoSubject = toVideoSubject(video);
   if (!videoSubject) {
     return ability.can('read', 'Video');
@@ -65,6 +68,17 @@ export function canModerateVideo({
 }): boolean {
   const videoSubject = toVideoSubject(video);
   return getUserPermissions(user).can('moderate', videoSubject ?? 'Video');
+}
+
+export function canAppealVideo({
+  user,
+  video,
+}: {
+  user: UserContext | null;
+  video?: VideoResource;
+}): boolean {
+  const videoSubject = toVideoSubject(video);
+  return getUserPermissions(user).can('appeal', videoSubject ?? 'Video');
 }
 
 export function canPinVideo({

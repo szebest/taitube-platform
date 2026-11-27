@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { GoLiveInput, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { liveOutbox } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
-import { OWNER_ID, seedOwners } from './fixtures';
+import { OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STREAM_ID = '00000000-0000-7000-8000-00000000f101';
@@ -23,6 +23,7 @@ function goLive(): GoLiveInput {
     video: {
       id: VIDEO_ID,
       ownerId: OWNER_ID,
+      channelId: OWNER_CHANNEL_ID,
       title: 'Speedrun',
       visibility: 'public',
       sourceKey: `live/${STREAM_ID}/`,
@@ -49,14 +50,7 @@ export function describeLiveStreamRepositoryContract(makeSubject: MakeRepositori
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
-      const channel = expectOk(
-        await subject.repositories.channels.create({
-          userId: OWNER_ID,
-          handle: 'owner',
-          displayName: 'The Owner',
-        })
-      );
-      channelId = channel.id;
+      channelId = OWNER_CHANNEL_ID;
       streams = subject.repositories.liveStreams;
     });
 

@@ -1,3 +1,4 @@
+import { type Result, fromPromise, isErr, map } from '@kit/result';
 import type {
   ListRecommendationFeedbackOptions,
   RecommendationFeedbackRepositoryPort,
@@ -13,11 +14,10 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { toFeedback } from '../mappers/index';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { toFeedback, toVideoRecord } from '../mappers/index';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
 const { recommendationFeedback: rf, videos: v, channels: ch } = schema;
@@ -99,27 +99,27 @@ export class PostgresRecommendationFeedbackRepository implements RecommendationF
           .select({ feedback: rf, video: v, owner: ownerChannel, target: targetChannel })
           .from(rf)
           .leftJoin(v, and(eq(v.id, rf.videoId), watchableVideoScope(viewer)))
-          .leftJoin(ownerChannel, eq(ownerChannel.userId, v.ownerId))
+          .leftJoin(ownerChannel, eq(ownerChannel.id, v.channelId))
           .leftJoin(targetChannel, eq(targetChannel.id, rf.channelId))
           .where(
             drizzleWhere(
               eq(rf.userId, viewer.id),
               kind ? eq(rf.kind, kind) : undefined,
               keysetBefore(
-                rf.createdAt,
+                msTimestamp(rf.createdAt),
                 rf.id,
                 cursor && { sort: cursor.createdAt, tie: cursor.id }
               )
             )
           )
-          .orderBy(desc(rf.createdAt), desc(rf.id))
+          .orderBy(desc(msTimestamp(rf.createdAt)), desc(rf.id))
           .limit(limit + 1),
       databaseUnavailable.during('listRecommendationFeedback')
     );
     return map(rows, (found) =>
       found.map(({ feedback, video, owner, target }) => ({
         ...toFeedback(feedback),
-        video,
+        video: video ? toVideoRecord(video) : null,
         channel: cardOf(feedback.kind === 'hide_channel' ? target : owner),
       }))
     );

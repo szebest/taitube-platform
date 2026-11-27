@@ -1,4 +1,4 @@
-import { MS_PER_DAY, SECONDS_PER_DAY, SECONDS_PER_MINUTE } from '@vp/domain/time';
+import { MS_PER_DAY, SECONDS_PER_DAY, SECONDS_PER_MINUTE } from '@kit/primitives';
 
 export const SEARCH_TYPES = ['all', 'video', 'channel', 'playlist'] as const;
 export type SearchType = (typeof SEARCH_TYPES)[number];

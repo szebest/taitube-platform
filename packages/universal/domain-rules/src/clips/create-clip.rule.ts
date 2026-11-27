@@ -1,6 +1,6 @@
+import { type Result, andThen, err, map, ok } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { type UserContext, canCreateClip } from '@vp/permissions';
-import { type Result, andThen, err, map, ok } from '@vp/result';
 import { type InvalidClipTitle, validateClipTitle } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {

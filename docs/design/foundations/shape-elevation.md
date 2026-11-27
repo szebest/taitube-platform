@@ -140,18 +140,33 @@ or use a shadow on a card inside a card.
 
 ## Layering
 
-Names are `scale.z`; the table adds who sits on each (assignments follow the token names and the stand-in).
+Names are `scale.z`, in `docs/design/tokens.json`. Every role has its own number, so the order is the whole rule.
+A raw `z-<n>`, `z-[<n>]`, `-z-<n>` or `zIndex` is a failing `zero-matches` row: use the role.
 
 | Token | Value | Layer |
 |---|---|---|
+| `behind` | -2 | a glow or backdrop behind its owner's content, inside the owner's own stacking context (`isolate`) |
+| `ambient` | -1 | the page-level colour glow: above the page background, under every piece of page content and the header |
 | `base` | 0 | page content |
-| `sticky` | 20 | header, sticky tab strips |
+| `lift` | 1 | content raised above a sibling's backdrop inside one component (a card's byline over its hover plate) |
+| `stage-tap` | 2 | the player frame's tap layer |
+| `stage-hud` | 3 | the player frame's status, caption and notices |
+| `stage-controls` | 4 | the player frame's progress and control bar |
+| `stage-actions` | 5 | the player frame's side actions |
+| `sticky` | 20 | sticky tab strips, chip bar, page header, the mobile stage, the bottom now-playing bar, a table head |
+| `header` | 25 | the app header, over the sticky bars |
 | `rail` | 30 | rail and the bottom tab bar |
-| `overlay` | 40 | now playing bar, the player's chat overlay |
+| `pip` | 35 | the mini player, above the rail and under every overlay |
+| `overlay` | 40 | the player's chat overlay |
 | `modal` | 50 | scrim, dialogs, sheets, drawers |
 | `popover` | 60 | menus, popovers, the command palette's list, hover cards |
 | `toast` | 70 | toasts |
 | `tooltip` | 80 | tooltips |
+
+`behind`, `lift` and the `stage-*` roles only order siblings inside one stacking context, so they never meet the
+page-level roles. The `sticky` bars share a number because they never overlap: each sticks at its own offset
+(under the header, above the tab bar) or scrolls inside its own container. `ambient` is negative, so it sits
+under the page's content and above the root's background; it needs no wrapper of its own.
 
 The library's own switcher sits at 90, outside the product scale. Use the token, never a number: a menu that
 opens from inside a dialog still needs `popover` above `modal`.

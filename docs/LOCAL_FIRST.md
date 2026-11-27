@@ -13,7 +13,7 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 | **Database** | PostgreSQL 18 (local or compose) | Drizzle ORM, atomic migrations |
 | **Queue & Pub/Sub** | Redis 8 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
-| **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
+| **Authentication** | Ed25519 JWT issuer (`packages/platform/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
 | **Captions** | whisper.cpp `whisper-cli` with the Whisper small and Silero VAD models | Built and fetched at image build, pinned and checksummed in `apps/server/worker/assets.lock`; `/opt/whisper` in the worker image |
 | **HLS Player** | Vendored `hls.js` (`tools/hls-test-page`) | Zero CDN scripts or remote fonts |
@@ -66,6 +66,13 @@ API smoke, and then drives a browser through the web container: upload, `READY`,
 page and playback (`pnpm test:browser`). Last it broadcasts a test pattern from inside the live worker
 container through MediaMTX and checks the LL-HLS window and the archive in MinIO (`pnpm test:live`).
 
+### Signing in locally
+There is no password login. `./demo/start.sh` builds both apps with `VITE_DEMO_PERSONAS=true`, starts `dev-token serve`
+(port 3002, this machine only) and puts one-click sign-in on `/login` of web (:5173) and studio (:5174): Viewer,
+Creator, Second creator, Moderator, Admin or Guest. The session cookie spans ports, so one sign-in holds on both.
+Any other build leaves the flag off and ships none of that code (the bundle guard fails the build otherwise).
+`demo/login.sh <persona>` stays as the fallback: it prints a snippet to paste in DevTools.
+
 ---
 
 ## 4. Local-First Guardrails & Guarantees
@@ -83,6 +90,7 @@ container through MediaMTX and checks the LL-HLS window and the archive in MinIO
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) and the speech-to-text models are pre-baked at build time.
 4. **Offline CI Verification**:
    - CI runs `make smoke-offline` on an internal Docker bridge network without external gateway access, preventing regression against external dependencies.
+   - `pnpm check:extractable` installs every sandbox and the second app with `pnpm install --offline` from the local store, so it never reaches a registry.
 5. **Machine-Enforced in Source**:
    - `tests/architecture/local-first.test.ts` fails the build when any production source names an off-machine
      host, or when an uncommented `.env.example` default points off the machine. The cloud rung stays behind

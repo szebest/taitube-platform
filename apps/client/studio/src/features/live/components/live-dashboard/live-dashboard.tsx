@@ -1,12 +1,12 @@
+import { PageHeader, SectionError } from '@kit/components';
+import { Badge, Button } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LiveStreamView } from '@vp/api-contracts';
-import { PageHeader, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { useApi, useLiveVideoEvents } from '@vp/queries';
-import { Badge, Button } from '@vp/ui';
+import { useApi, useAppLink, useLiveVideoEvents } from '@vp/queries';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { liveKeys, myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { LiveChatModeForm } from '../live-chat-mode-form/live-chat-mode-form';
 import { LiveChatModeration } from '../live-chat-moderation/live-chat-moderation';
 import { LiveCredentialsCard } from '../live-credentials-card/live-credentials-card';
@@ -26,13 +26,16 @@ interface LiveEndedSummaryProps {
 
 function LiveEndedSummary({ videoId }: LiveEndedSummaryProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
 
   return (
     <div className="flex flex-wrap items-center gap-stack">
       <p className="m-0 text-editorial text-fg-muted">{tOr('studio.liveEndedLine', {}, '')}</p>
       {videoId !== null && (
         <Button asChild variant="outline">
-          <a href={`${WEB_URL}/watch/${videoId}`}>{tOr('studio.liveWatchRecording', {}, '')}</a>
+          <a href={appLink(WEB_URL, `/watch/${videoId}`)}>
+            {tOr('studio.liveWatchRecording', {}, '')}
+          </a>
         </Button>
       )}
     </div>

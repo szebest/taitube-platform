@@ -1,8 +1,8 @@
-import { useT } from '@vp/intl-react';
-import { Command, Field, Icon } from '@vp/ui';
+import { Command, Field, Icon } from '@kit/ui';
 import { useState } from 'react';
 import type { PickableVideo, PickVideo } from '#app/features/admin/api/pick-videos';
 import { usePickableVideos } from '#app/features/admin/hooks/use-pickable-videos';
+import { useT } from '#app/lib/messages';
 
 export interface PickVideoPickerProps {
   selected: PickVideo | null;

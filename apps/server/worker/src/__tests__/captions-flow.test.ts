@@ -1,10 +1,10 @@
+import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, mediaFailure } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
-import { err } from '@vp/result';
 import { captionsTmpPrefix } from '@vp/storage';
-import { createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { createMockJob } from '@vp/testing-fixtures';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_REGISTRY } from '../registry';
 import { CUE_EVERY_MS, captionsWorld } from '../stages/captions/__tests__/captions-harness';

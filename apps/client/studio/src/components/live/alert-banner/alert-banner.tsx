@@ -1,4 +1,4 @@
-import { cn, Icon } from '@vp/ui';
+import { cn, Icon } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** An announcement over video, slid in from below and still under reduced motion. */

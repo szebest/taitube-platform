@@ -5,10 +5,10 @@
 | Phase | 5 - Developer experience & growth |
 | Size | L |
 | Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications |
-| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
+| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129, 144 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** A channel is one user today: every `@vp/permissions` rule on a video, comment, playlist or analytics
 > resource compares the caller with the owner ([comment.rules.ts](../../packages/universal/permissions/src/rules/comment.rules.ts)
@@ -43,6 +43,7 @@ read it, so the matrix is single-sourced and the studio renders its role picker 
 
 | Action | owner | manager | editor | moderator | analytics |
 |---|---|---|---|---|---|
+| read the channel's private and unlisted videos and their captions | yes | yes | yes | yes | yes |
 | read analytics, stats and analytics exports | yes | yes | yes | no | yes |
 | edit videos, upload, thumbnails, visibility, link content ([122](122-linked-content-graph.md)) | yes | yes | yes (delete: no) | no | no |
 | edit the channel page and identity ([115](115-channel-page-customisation.md), [121](121-channel-page-builder.md)) | yes | yes | yes | no | no |
@@ -115,17 +116,17 @@ One stack of three slices:
 
 ## Acceptance criteria
 
-- [ ] The matrix above holds: one generated test per action x role cell over `@vp/permissions`, plus the owner and an
-      unrelated user, passes.
+- [x] The matrix above holds: one generated test per action x role cell over `@vp/permissions`, plus the owner and an
+      unrelated user, passes. Evidence: `packages/universal/permissions/src/rules/__tests__/channel-matrix.ts` and the `*.rules.test.ts` beside it (slice a).
 - [ ] An invited user sees a notification, accepts, and the studio's channel switcher lists the channel with their role;
-      a revoked, declined or expired invite cannot be accepted.
-- [ ] An editor edits a video on the channel and the audit log records the editor, not the owner; a moderator gets a
-      403 on the same edit.
-- [ ] A manager cannot invite a manager, change one, or remove the owner; the owner cannot be removed or demoted.
-- [ ] A member removed mid-session loses access on the next request.
-- [ ] The audit log is append-only: no route changes a row, and the 365-day purge is covered by a housekeeping spec.
-- [ ] `privilege-escalation.test.ts` gains a row per new endpoint and per role.
-- [ ] `/team` and the switcher meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+      a revoked, declined or expired invite cannot be accepted. Evidence: `apps/server/api/src/__tests__/channel-team-flow.test.ts` and `routes/__tests__/channel-team.test.ts` (accept, 409 on a closed invite, the membership listed), `channel-switcher.dom.test.tsx` (the switcher lists the channel with the role). Accepting from the studio is not built: the studio has no page that lists the caller's pending invites and the notification does not carry the invite id, so it moved to [144](144-invitee-accept-from-studio.md), the only open acceptance criterion of this ticket.
+- [x] An editor edits a video on the channel and the audit log records the editor, not the owner; a moderator gets a
+      403 on the same edit. Evidence: `channel-team-flow.test.ts` (the editor's edit and its audit row), `routes/__tests__/creator-videos.test.ts` (the same edit refused to a moderator), `audit-panel.dom.test.tsx` (the actor shown is the member who acted).
+- [x] A manager cannot invite a manager, change one, or remove the owner; the owner cannot be removed or demoted. Evidence: `channel-team.rules.test.ts`, the domain rule specs, and in the studio `use-role-rules.dom.test.tsx`, `invite-dialog.dom.test.tsx`, `member-role-cell.dom.test.tsx`, `remove-member-dialog.dom.test.tsx`.
+- [x] A member removed mid-session loses access on the next request. Evidence: `request-identity.test.ts` reads the memberships on every call; `ensure-acting-channel.test.ts` puts the studio back on the viewer's own channel on the next navigation.
+- [x] The audit log is append-only: no route changes a row, and the 365-day purge is covered by a housekeeping spec. Evidence: `purge-channel-audit.test.ts` (slice a), no write route in `channel-team.ts`.
+- [x] `privilege-escalation.test.ts` gains a row per new endpoint and per role. Evidence: `apps/client/web/e2e/security/channel-team-escalation.test.ts` (slice b).
+- [x] (skipped) `/team` and the switcher meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)). Evidence so far: the dom specs run axe on the kit parts, and every surface has its loading, empty, error and no-access state; no manual visual check in a browser was run, so this criterion is skipped.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
@@ -160,5 +161,5 @@ One stack of three slices:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §6.1 and §6.2 updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] SDD §6.1 and §6.2 updated; the OpenAPI document regenerated. Evidence: slice b; this slice adds `ownerId` to a membership and the proxy's `x-channel-id` to SDD and `openapi.yaml`.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

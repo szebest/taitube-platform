@@ -1,3 +1,5 @@
+import type { Logger } from '@kit/logger';
+import { type Result, isErr, map, ok, unwrapOr } from '@kit/result';
 import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
@@ -7,17 +9,17 @@ import type {
   RenditionRepository,
   UserEventRecord,
   UserEventRepository,
+  VideoEventRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
+import { VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { SseFrame, SseLogRead } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
+import type { GatedReadFailure, VideoAccess, VideoAccessGate } from './video-access-gate';
 import { playbackUrl } from './video-views';
 
 interface SseOpening {
@@ -50,11 +52,19 @@ export interface SseServiceDeps {
   logger: Logger;
   liveStreams: Pick<LiveStreamRepositoryPort, 'findByVideoId'>;
   liveViewers: (liveStreamId: string) => Promise<Result<number, CacheUnavailable>>;
+  gate: VideoAccessGate;
 }
 
-export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
+/** A lifecycle event replays as its status, `progress` as itself; any other event has no frame. */
+function mapEventToSse(record: VideoEventRecord): SseFrame[] {
+  if (record.type === 'progress') {
+    return [{ id: record.id, event: 'progress', data: record.payload }];
+  }
+  const status = Object.values(VIDEO_LIFECYCLE_EDGES).find(
+    ({ event }) => event === record.type
+  )?.to;
+  if (status === undefined) return [];
 
-function mapEventToSse(record: { id: number; type: string; payload: unknown }): SseFrame {
   const text = (key: string): string | undefined => {
     const value: unknown =
       record.payload && typeof record.payload === 'object'
@@ -62,32 +72,11 @@ function mapEventToSse(record: { id: number; type: string; payload: unknown }): 
         : undefined;
     return typeof value === 'string' && value !== '' ? value : undefined;
   };
-
-  switch (record.type) {
-    case 'progress':
-      return { id: record.id, event: 'progress', data: record.payload };
-    case 'video.ready':
-      return { id: record.id, event: 'status', data: { status: 'READY' } };
-    case 'video.failed':
-      return {
-        id: record.id,
-        event: 'status',
-        data: {
-          status: 'FAILED',
-          error: {
-            code: text('errorCode') ?? 'FAILED',
-            message: text('errorMessage') ?? '',
-          },
-        },
-      };
-    case 'video.processing':
-    case 'probe.completed':
-      return { id: record.id, event: 'status', data: { status: 'PROCESSING' } };
-    case 'probe.started':
-      return { id: record.id, event: 'status', data: { status: 'PROBING' } };
-    default:
-      return { id: record.id, event: 'status', data: record.payload };
-  }
+  const error =
+    status === 'FAILED'
+      ? { error: { code: text('errorCode') ?? 'FAILED', message: text('errorMessage') ?? '' } }
+      : {};
+  return [{ id: record.id, event: 'status', data: { status, ...error } }];
 }
 
 function lastIdOf(frames: SseFrame[], from: number): number {
@@ -133,19 +122,18 @@ function renditionProgress(
 export class SseService {
   constructor(private readonly deps: SseServiceDeps) {}
 
-  /**
-   * Authorises a single-video stream exactly as GET /v1/videos/:id does.
-   */
+  /** Authorises a single-video stream through the access gate GET /v1/videos/:id runs. */
   async openVideoStream(
     user: UserContext | null,
-    videoId: string
-  ): Promise<Result<SseSession, OpenVideoStreamFailure>> {
+    videoId: string,
+    access: VideoAccess
+  ): Promise<Result<SseSession, GatedReadFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
 
-    const decided = decideVideoRead({ viewer: user, video: found.value, videoId });
-    if (isErr(decided)) return err(publicReadFailure(decided.error));
-    const video = decided.value;
+    const gated = await this.deps.gate.read(user, found.value, videoId, access);
+    if (isErr(gated)) return gated;
+    const { video } = gated.value;
 
     const stream =
       video.status === 'LIVE' ? await this.deps.liveStreams.findByVideoId(videoId) : null;
@@ -178,7 +166,7 @@ export class SseService {
         if (afterId === null) return ok({ frames: [snapshot], lastEventId });
 
         return map(await this.deps.events.findAfterId(videoId, afterId), (rows) => {
-          const frames = [snapshot, ...rows.map(mapEventToSse)];
+          const frames = [snapshot, ...rows.flatMap(mapEventToSse)];
           return { frames, lastEventId: lastIdOf(frames, 0) };
         });
       },

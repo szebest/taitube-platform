@@ -1,9 +1,9 @@
+import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { PreferencesService } from '../preferences-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };

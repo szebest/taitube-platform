@@ -1,13 +1,13 @@
-import { useT } from '@vp/intl-react';
 import {
   PREFERS_REDUCED_MOTION,
   SegmentedControl,
   Switch,
   useAppearance,
   useMediaQuery,
-} from '@vp/ui';
+} from '@kit/ui';
 import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
 import { setName } from '#app/features/account/utils/set-name';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 export function FontSizeRow() {
@@ -36,7 +36,7 @@ export function FontSizeRow() {
 }
 
 export function ContrastRow() {
-  const { preference, update } = useAppearance();
+  const { resolved, update } = useAppearance();
   const { tOr } = useT();
 
   return (
@@ -47,7 +47,7 @@ export function ContrastRow() {
     >
       <Switch
         aria-label={tOr('settings.contrastMore', {}, '')}
-        checked={preference.contrast === 'more'}
+        checked={resolved.contrast === 'more'}
         onCheckedChange={(more) => update({ contrast: more ? 'more' : 'standard' })}
       />
     </SettingItem>

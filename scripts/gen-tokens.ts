@@ -1,9 +1,13 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { type TokenFiles, tokenFiles } from '../packages/universal/design-tokens/src/index';
+import {
+  type TokenFiles,
+  tokenFiles,
+} from '../packages/platform/universal/design-tokens/src/index';
+import { UI_SRC } from './scaffold';
 
-const GENERATED_CSS = 'packages/client/ui/src/styles/generated';
+const GENERATED_CSS = `${UI_SRC}/styles/generated`;
 
 const PATHS: Readonly<Record<keyof TokenFiles, string>> = {
   tokensJson: 'docs/design/tokens.json',
@@ -19,8 +23,7 @@ const root = resolve(args.find((arg) => arg !== '--check') ?? join(import.meta.d
 const readOrNothing = (path: string) => readFile(path, 'utf8').then(String, () => undefined);
 
 // The registry, ramps and scale of `root`, so a scaffold into another tree generates that tree.
-const fromRoot = (module: string) =>
-  import(pathToFileURL(join(root, 'packages/client/ui/src', module)).href);
+const fromRoot = (module: string) => import(pathToFileURL(join(root, UI_SRC, module)).href);
 const [{ appearance }, { ramps }, { scale }] = await Promise.all([
   fromRoot('appearance/registry.ts'),
   fromRoot('tokens/ref/index.ts'),

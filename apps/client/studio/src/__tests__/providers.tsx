@@ -1,4 +1,21 @@
-import { type Account, getAccount } from '@vp/api-contracts';
+import {
+  AppearanceProvider,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+  createToaster,
+} from '@kit/ui';
+import {
+  type Account,
+  getAccount,
+  listCreatorComments,
+  listMyInvites,
+  getUnreadNotificationCount,
+  listMyIdentities,
+  listMyMemberships,
+  recordMySignIn,
+} from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
   ApiProvider,
   AppWords,
@@ -7,25 +24,23 @@ import {
   type Session,
   SessionProvider,
 } from '@vp/queries';
-import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import {
-  AppearanceProvider,
-  DEFAULT_APPEARANCE,
-  ToastProvider,
-  Tooltip,
-  createToaster,
-} from '@vp/ui';
-import { account, api, mockEndpoint } from '@vp/web-testing';
+import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
+import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { STUDIO_MESSAGES } from '#app/lib/messages';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <AppWords>
+    <AppWords messages={STUDIO_MESSAGES}>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider
-            stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
+            stored={{
+              preference: { ...DEFAULT_APPEARANCE, mode: 'dark' },
+              source: 'none',
+              storage: APPEARANCE_COOKIES,
+            }}
           >
             <Tooltip.Provider>
               <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
@@ -48,8 +63,18 @@ export function signedIn(creator: Account = account()): ComponentType<PropsWithC
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** The API's answer for the account the session cookie reaches. */
+/**
+ * The API's answer for the account the session cookie reaches, who works on no other channel until a
+ * spec says so, and whose navigation finds no comment held for review.
+ */
 export function accountOf(creator: Account = account()) {
+  apiServer.use(
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(listMyIdentities, () => HttpResponse.json(identities())),
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
+    mockEndpoint(listMyInvites, () => HttpResponse.json({ items: [], nextCursor: null })),
+    mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
+  );
   return mockEndpoint(getAccount, () => HttpResponse.json(creator));
 }
 
@@ -60,8 +85,11 @@ export function signInBrowser(creator: Account = account()) {
   return accountOf(creator);
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API recording the sign-in. */
 export function devTokenServe() {
+  apiServer.use(
+    mockEndpoint(recordMySignIn, () => HttpResponse.json(signInRecord(), { status: 201 }))
+  );
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );

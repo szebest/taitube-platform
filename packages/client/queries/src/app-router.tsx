@@ -1,4 +1,7 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { tryCatch, unwrapOr } from '@kit/result';
+import { requestNonce } from '@kit/security-headers';
+import { createToaster, type Toaster } from '@kit/ui';
+import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   type AnyRoute,
   type RouteComponent,
@@ -7,40 +10,63 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
+import { createIsomorphicFn } from '@tanstack/react-start';
 import type { ApiClient } from '@vp/api-client';
-import { createLocaleStore, type LocaleStore } from '@vp/intl-react';
-import { isSupportedLocale } from '@vp/messages';
-import { requestNonce } from '@vp/security-headers';
-import { createToaster, type Toaster } from '@vp/ui';
+import { type SharedCatalogue } from '@vp/shared-messages';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
+import { identityPath, parseIdentityPath } from './account-slots';
+import { type ActingChannelStore, createActingChannelStore } from './acting-channel';
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
-import { createQueryClient } from './create-query-client';
+import {
+  type IdentityState,
+  type IdentityStore,
+  createIdentityStore,
+  parseIdentityState,
+} from './identity-store';
+import { type AppMessages, createLocaleStore, type LocaleStore } from './intl';
+import { resolveRequestIdentity } from './request-identity';
 import { RouteError, RouteNotFound } from './route-errors';
+import { SESSION_KEY, type Session } from './session';
 import { endSession } from './session-changes';
 
 /** What every route reads from context; the root route's `beforeLoad` adds `auth` (`ensureSession`). */
-export type AppRouterContext = {
+export type AppRouterContext<App extends SharedCatalogue = SharedCatalogue> = {
   api: ApiClient;
   queryClient: QueryClient;
   toaster: Toaster;
   /** The negotiated locale and its loaded catalogue; the root route's `requestLocale` sets it. */
-  locales: LocaleStore;
+  locales: LocaleStore<App>;
+  /** The channel a studio acts on; web never selects one, so its calls name none. */
+  actingChannel: ActingChannelStore;
+  /** The account slot and channel this tab acts as, and the query cache that is theirs. */
+  identity: IdentityStore;
+  /** A client calling as another slot, for what the switcher fetches ahead of a switch to it. */
+  apiAs: (slot: number) => ApiClient;
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
-export type AppRouterOptions = Partial<AppRouterContext> & {
+export type AppRouterOptions<App extends SharedCatalogue = SharedCatalogue> = Partial<
+  AppRouterContext<App>
+> & {
   history?: RouterHistory;
   nonce?: string;
   /** `false` switches intent preloading off, for a viewer who saves data. */
   defaultPreload?: 'intent' | false;
 };
 
-export type AppRoutes<TRouteTree extends AnyRoute> = {
+export type AppRoutes<TRouteTree extends AnyRoute, App extends SharedCatalogue> = {
   routeTree: TRouteTree;
+  /** The app's catalogue, its translations and its translator provider. */
+  messages: AppMessages<App>;
   /** Where the app's API client calls, from the app's own `src/config`. */
   apiBaseUrl: string;
   pending: RouteComponent;
+  /** Sends the store's channel as `X-Channel-Id` on the calls that take one: the studio's. */
+  actsOnChannels?: boolean;
+  /** Web's tab key for test variants (`x-viewer-session`). */
+  getViewerSession?: () => string;
 };
 
 function parseSearch(searchStr: string): Record<string, string> {
@@ -53,20 +79,62 @@ function stringifySearch(search: Record<string, unknown>): string {
   return searchStr.size > 0 ? `?${searchStr}` : '';
 }
 
-/** Every navigation cross-fades through a view transition; under reduced motion the page swaps at once. */
+const SIGNED_OUT_IDENTITY: IdentityState = { identity: { slot: 0 }, prefixed: false };
+
+/** The identity the server resolved for the request, or in the browser the one its URL names until the page hydrates. */
+const initialIdentity = createIsomorphicFn()
+  .server((_history: RouterHistory | undefined): IdentityState => {
+    const resolved = tryCatch(
+      (): IdentityState => {
+        const { identity, prefixed } = resolveRequestIdentity();
+        return { identity, prefixed };
+      },
+      (cause) => cause
+    );
+    return unwrapOr(resolved, SIGNED_OUT_IDENTITY);
+  })
+  .client((history: RouterHistory | undefined): IdentityState => {
+    const { identity } = parseIdentityPath((history?.location ?? window.location).pathname);
+    return identity ? { identity, prefixed: true } : SIGNED_OUT_IDENTITY;
+  });
+
+function IdentityQueryClient({
+  identity,
+  children,
+}: PropsWithChildren<{ identity: IdentityStore }>) {
+  const client = useSyncExternalStore(
+    identity.subscribe,
+    identity.queryClient,
+    identity.queryClient
+  );
+
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
+/**
+ * Every navigation cross-fades through a view transition; under reduced motion the page swaps at once.
+ * A load that stays on the same address (hydration, an invalidate) never runs one: the page takes no
+ * pointer while a transition runs, and that one would last as long as its loaders.
+ */
 const viewTransition = {
-  types: () => (document.documentElement.dataset.motion === 'reduced' ? false : ['navigation']),
+  types: ({ hrefChanged }: { hrefChanged: boolean }) =>
+    hrefChanged && document.documentElement.dataset.motion !== 'reduced' ? ['navigation'] : false,
 };
 
-function RouterWords({
+function RouterWords<App extends SharedCatalogue>({
+  messages,
   locales,
   renderedAt,
   children,
-}: PropsWithChildren<{ locales: LocaleStore; renderedAt: string }>) {
+}: PropsWithChildren<{
+  messages: AppMessages<App>;
+  locales: LocaleStore<App>;
+  renderedAt: string;
+}>) {
   const active = useSyncExternalStore(locales.subscribe, locales.snapshot, locales.snapshot);
 
   return (
-    <AppWords active={active} renderedAt={renderedAt}>
+    <AppWords messages={messages} active={active} renderedAt={renderedAt}>
       {children}
     </AppWords>
   );
@@ -84,21 +152,42 @@ const PENDING_MIN_MS = 500;
  * wrote). Search params stay the text the URL carries (no JSON either way), so `?q=1.10` is
  * `'1.10'` and each route's schema coerces what it needs.
  */
-export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending }: AppRoutes<TRouteTree>,
+export function createAppRouter<TRouteTree extends AnyRoute, App extends SharedCatalogue>(
+  {
+    routeTree,
+    messages,
+    apiBaseUrl,
+    pending,
+    actsOnChannels = false,
+    getViewerSession,
+  }: AppRoutes<TRouteTree, App>,
   {
     history,
     api,
-    queryClient = createQueryClient(),
+    queryClient,
     toaster = createToaster(),
-    locales = createLocaleStore(),
+    locales = createLocaleStore(messages),
+    actingChannel = createActingChannelStore(),
+    identity = createIdentityStore(initialIdentity(history), queryClient),
+    apiAs = (slot) =>
+      createAppApiClient({ apiBaseUrl, getSlot: () => slot, onUnauthorized: () => undefined }),
     nonce = requestNonce(),
     defaultPreload = 'intent',
-  }: AppRouterOptions = {}
+  }: AppRouterOptions<App> = {}
 ): Router<TRouteTree> {
   let renderedAt = new Date().toISOString();
+  const actingChannelId = () => {
+    const named = identity.queryClient().getQueryData<Session>(SESSION_KEY)?.actingChannelId;
+    return named ?? (actsOnChannels ? actingChannel.read() : undefined);
+  };
   const sessionApi = () =>
-    createAppApiClient({ apiBaseUrl, onUnauthorized: () => endSession(router) });
+    createAppApiClient({
+      apiBaseUrl,
+      getSlot: () => identity.read().identity.slot,
+      onUnauthorized: (slot) => endSession(router, slot),
+      getChannelId: actingChannelId,
+      getViewerSession,
+    });
   // Named as `Router`, not `createRouter`'s `RouterCore`, so the emitted declaration imports a
   // package the apps resolve: `@tanstack/router-core` is react-router's own dependency, not theirs.
   const router: Router<TRouteTree> = new Router({
@@ -107,10 +196,27 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     ssr: { nonce },
     context: {
       api: api ?? sessionApi(),
-      queryClient,
+      queryClient: identity.queryClient(),
       toaster,
       locales,
-    } satisfies AppRouterContext,
+      actingChannel,
+      identity,
+      apiAs,
+    } satisfies AppRouterContext<App>,
+    rewrite: {
+      input: ({ url }) => {
+        const located = parseIdentityPath(url.pathname);
+        if (!located.identity) return undefined;
+        url.pathname = located.pathname;
+        return url;
+      },
+      output: ({ url }) => {
+        const { identity: current, prefixed } = identity.read();
+        if (!prefixed) return undefined;
+        url.pathname = identityPath(current, url.pathname);
+        return url;
+      },
+    },
     defaultPreload,
     defaultPreloadStaleTime: 0,
     defaultViewTransition: viewTransition,
@@ -121,25 +227,35 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultNotFoundComponent: RouteNotFound,
     scrollRestoration: true,
     Wrap: ({ children }) => (
-      <RouterWords locales={locales} renderedAt={renderedAt}>
-        {children}
-      </RouterWords>
+      <IdentityQueryClient identity={identity}>
+        <RouterWords messages={messages} locales={locales} renderedAt={renderedAt}>
+          {children}
+        </RouterWords>
+      </IdentityQueryClient>
     ),
     dehydrate: (): Record<string, string> => ({
       renderedAt,
       locale: locales.snapshot().locale,
+      actingChannel: actingChannel.read() ?? '',
+      identity: JSON.stringify(identity.read()),
     }),
     hydrate: async (dehydrated) => {
       renderedAt = dehydrated['renderedAt'] ?? renderedAt;
+      actingChannel.select(dehydrated['actingChannel'] || undefined);
+      identity.hydrate(parseIdentityState(dehydrated['identity']) ?? identity.read());
       const locale = dehydrated['locale'] ?? '';
-      if (isSupportedLocale(locale)) {
+      if (LOCALES.isSupported(locale)) {
         await locales.activate(locale);
       }
     },
     parseSearch,
     stringifySearch,
   });
-  setupRouterSsrQueryIntegration({ router, queryClient });
+  setupRouterSsrQueryIntegration({
+    router,
+    queryClient: identity.queryClient(),
+    wrapQueryClient: false,
+  });
   return router;
 }
 

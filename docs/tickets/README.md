@@ -6,13 +6,8 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
-- [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
-- [112: Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md)
-- [117: Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md)
-- [136: Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md)
+- [119: Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
-- [140: Watch parties - rooms on a shared clock, room roles, guests, the roster, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md)
-- [145: Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -84,7 +79,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 45 | [Frontend API modernization & contract alignment — migrate web app to clean canonical `/v1` APIs](45-legacy-frontend-compatibility-adapter-layer.md) | 5 | L | — | — | done |
 | 46 | [YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md) | 5 | L | 38, 39 | 47, 73, 100, 104, 115, 119, 122, 125 | done |
 | 47 | [Multi-resource search engine — unified weighted full-text search across videos, channels & playlists with Redis caching](47-multi-resource-search-engine.md) | 5 | L | 38, 44, 46 | 74, 92, 111, 125, 140 | done |
-| 48 | [Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md) | 5 | L | 01, 92, 93 | — | ready |
+| 48 | [Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md) | 5 | L | 01, 92, 93, 170 | — | blocked |
 | 49 | [Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md) | 5 | M | 36, 37, 38 | — | done |
 | 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | — | done |
 | 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | — | — | done |
@@ -118,13 +113,13 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 79 | [Offline smoke test runner refactor & CI configuration cleanup](79-offline-smoke-runner-refactor-cleanup.md) | 1 | S | 35 | — | done |
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |
 | 81 | [Declarative permissions refactor with @casl/ability & elimination of ad-hoc checks](81-casl-declarative-permissions-refactor.md) | 5 | M | 39 | 82, 108, 117, 140 | done |
-| 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83, 84 | done |
+| 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83, 84, 170 | done |
 | 83 | [Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md) | 5 | L | 82 | 92, 93, 141 | done |
 | 84 | [Result-typed error handling — domain code returns, the edge decides](84-result-typed-error-handling-shared-domain-rules.md) | 5 | L | 82 | 85, 87 | done |
-| 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86, 89 | done |
-| 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85, 89, 91, 95 | 115, 121 | done |
-| 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
-| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 89, 90 | done |
+| 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86, 89, 170, 172 | done |
+| 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85, 89, 91, 95 | 115, 121, 170 | done |
+| 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88, 170 | done |
+| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 89, 90, 170 | done |
 | 89 | [Move apps/web from Create React App to TanStack Start - Vite, file-based TanStack Router, TanStack Query and SSR](89-web-tanstack-start-foundation.md) | 5 | L | 85, 88 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 86, 91, 95 | done |
 | 90 | [Cloud Terraform on the Cloudflare v5 provider, validated in CI](90-cloud-terraform-provider-v5.md) | 5 | M | 88 | — | done |
 | 91 | [Web app imports on `#app/` subpath imports - no `src/` alias, no deep relative paths](91-web-import-aliases.md) | 5 | S | 89 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86, 95 | done |
@@ -146,41 +141,45 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | 111 | done |
 | 108 | [End-to-end single-source ABAC - field-level permission filter](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | S | 81 | 124, 140 | done |
 | 109 | [Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | 123 | done |
-| 110 | [Oxc and Vite+ toolchain - oxlint, oxfmt, Vite Task, the Oxc React Compiler, and the memo cleanup it allows](110-oxc-vite-plus-toolchain.md) | 5 | L | 95 | 131, 136, 138 | done |
+| 110 | [Oxc and Vite+ toolchain - oxlint, oxfmt, Vite Task, the Oxc React Compiler, and the memo cleanup it allows](110-oxc-vite-plus-toolchain.md) | 5 | L | 95 | 131, 136, 138, 172 | done |
 | 111 | [Captions and transcripts - local speech-to-text on its own queue, side-loaded WebVTT, creator and viewer controls](111-captions-and-transcripts.md) | 5 - Developer experience & growth | L | 06, 17, 26, 30, 44, 47, 57, 59, 60, 62, 72, 97, 98, 107 | 112, 116, 131, 139, 143 | done |
-| 112 | [Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md) | 5 - Developer experience & growth | L | 12, 17, 26, 30, 39, 44, 60, 61, 98, 99, 103, 111 | — | ready |
-| 113 | [Channel comment moderation - hold for review, blocked words, slow mode, silent or visible actions, bans and a moderation queue](113-channel-comment-moderation.md) | 5 - Developer experience & growth | L | 39, 41, 42, 44, 59, 60, 95, 98, 99, 103, 117 | 114, 116, 118, 120, 122 | blocked |
-| 114 | [Creator stats on the watch page - the numbers and quick actions for the people who run the channel](114-creator-stats-on-the-watch-page.md) | 5 - Developer experience & growth | L | 40, 41, 43, 44, 59, 60, 65, 95, 98, 113, 117 | 128 | blocked |
-| 115 | [Channel identity - banner and avatar upload, handle change, trailer, links and series](115-channel-page-customisation.md) | 5 - Developer experience & growth | L | 05, 41, 44, 46, 58, 72, 73, 86, 95, 104, 117 | 119, 120, 121, 122 | blocked |
-| 116 | [Video management power tools - bulk edit, history, replace file, corrections, share links, passwords, tests, chapters, trim and clip suggestions](116-video-management-power-tools.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 05, 11, 12, 16, 17, 43, 44, 57, 59, 60, 65, 95, 105, 111, 113, 117 | 119, 120, 121, 122 | blocked |
-| 117 | [Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md) | 5 - Developer experience & growth | L | 38, 39, 44, 81, 93, 95, 99 | 113, 114, 115, 116, 118, 120, 121, 122, 129 | ready |
-| 118 | [Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md) | 5 - Developer experience & growth | L | 38, 39, 42, 43, 60, 65, 77, 95, 98, 113, 117 | — | blocked |
-| 119 | [Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 46, 57, 59, 73, 95, 98, 99, 104, 105, 115, 116 | 121, 122 | blocked |
-| 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | blocked |
+| 112 | [Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md) | 5 - Developer experience & growth | L | 12, 17, 26, 30, 39, 44, 60, 61, 98, 99, 103, 111 | — | done |
+| 113 | [Channel comment moderation - hold for review, blocked words, slow mode, silent or visible actions, bans and a moderation queue](113-channel-comment-moderation.md) | 5 - Developer experience & growth | L | 39, 41, 42, 44, 59, 60, 95, 98, 99, 103, 117 | 114, 116, 118, 120, 122 | done |
+| 114 | [Creator stats on the watch page - the numbers and quick actions for the people who run the channel](114-creator-stats-on-the-watch-page.md) | 5 - Developer experience & growth | L | 40, 41, 43, 44, 59, 60, 65, 95, 98, 113, 117 | 128 | done |
+| 115 | [Channel identity - banner and avatar upload, handle change, trailer, links and series](115-channel-page-customisation.md) | 5 - Developer experience & growth | L | 05, 41, 44, 46, 58, 72, 73, 86, 95, 104, 117 | 119, 120, 121, 122 | done |
+| 116 | [Video management power tools - bulk edit, history, replace file, corrections, share links, passwords, tests, chapters, trim and clip suggestions](116-video-management-power-tools.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 05, 11, 12, 16, 17, 43, 44, 57, 59, 60, 65, 95, 105, 111, 113, 117 | 119, 120, 121, 122 | done |
+| 117 | [Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md) | 5 - Developer experience & growth | L | 38, 39, 44, 81, 93, 95, 99 | 113, 114, 115, 116, 118, 120, 121, 122, 129, 144 | done |
+| 118 | [Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md) | 5 - Developer experience & growth | L | 38, 39, 42, 43, 60, 65, 77, 95, 98, 113, 117 | — | done |
+| 119 | [Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 46, 57, 59, 73, 95, 98, 99, 104, 105, 115, 116 | 121, 122 | ready |
+| 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | done |
 | 121 | [Channel page builder - configurable sections, tabs and custom pages with drafts, scheduling and preview](121-channel-page-builder.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 41, 58, 72, 76, 86, 95, 96, 102, 104, 106, 115, 116, 117, 119, 120 | 122 | blocked |
 | 122 | [Linked content - one typed link graph between videos, Shorts, posts, threads, playlists, clips, live and episodes](122-linked-content-graph.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 43, 44, 46, 57, 59, 65, 76, 95, 99, 102, 105, 113, 115, 116, 117, 119, 120, 121 | — | blocked |
 | 123 | [Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md) | 5 - Developer experience & growth | M | 43, 65, 109 | — | done |
 | 124 | [Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md) | 5 - Developer experience & growth | S | 100, 108 | — | done |
 | 125 | [Viewer activity - search history, liked videos and my comments](125-viewer-activity-search-history-likes-comments.md) | 5 - Developer experience & growth | M | 40, 42, 46, 47, 97 | 73, 74, 126 | done |
 | 126 | [Recommendation feedback - "Not interested", hidden channels, a "Because you searched" shelf and a rising-creators shelf](126-recommendation-feedback-and-new-shelves.md) | 5 - Developer experience & growth | L | 58, 65, 72, 95, 100, 125 | — | done |
-| 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | blocked |
-| 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | blocked |
+| 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | done |
+| 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | done |
 | 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | done |
-| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136, 145 | done |
+| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136, 145, 170 | done |
 | 132 | [Watch page follow-ups - queue reorder on a real queue, the LCP and CLS proof, the view transition check](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) | 5 - Developer experience & growth | S | 59 | — | done |
 | 133 | [SEO follow-ups - channel meta without an extra request, an embed route for the player card, and VITE_WEB_URL in the env schema](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) | 5 - Developer experience & growth | S | 63 | — | done |
 | 134 | [Settings follow-ups - the player and queue read the playback defaults, the account switch reset, and avatar and banner upload](134-settings-readers-account-switch-and-channel-image-upload.md) | 5 - Developer experience & growth | M | 72 | — | done |
 | 135 | [Studio analytics and library - the backend gaps and the UI that waits on them](135-studio-analytics-and-library-backend-gaps.md) | 5 - Developer experience & growth | M | 60 | — | done |
-| 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (4 stacks, 12 slices) | 68, 73, 102, 131, 110 | — | ready |
+| 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (one PR, 12 work items as commits) | 68, 73, 102, 131, 110 | — | done |
 | 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (one PR, one slice) | — | — | done |
 | 138 | [Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md) | 5 - Developer experience & growth | M (one PR per rule group, about four) | 110 | — | ready |
 | 139 | [Captions measurements - whisper speed, time to ready, transcode isolation, cue alignment, offline smoke](139-captions-measurements.md) | 5 - Developer experience & growth | S | 111 | 146 | in-progress |
-| 140 | [Watch parties - rooms on a shared clock, room roles, guests, the roster, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md) | 5 - Developer experience & growth | XL | 17, 30, 41, 47, 57, 59, 63, 66, 69, 73, 76, 81, 95, 97, 98, 99, 105, 106, 108 | 78, 141, 142, 143 | ready |
+| 140 | [Watch parties - rooms on a shared clock, room roles, guests, the roster, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md) | 5 - Developer experience & growth | XL | 17, 30, 41, 47, 57, 59, 63, 66, 69, 73, 76, 81, 95, 97, 98, 99, 105, 106, 108 | 78, 141, 142, 143 | in-progress |
 | 141 | [Watch party voice chat - a self-hosted SFU, push-to-talk or open mic, speaking rings, per-user volume and ducking](141-watch-party-voice-chat.md) | 5 - Developer experience & growth | L | 83, 140 | 143 | blocked |
 | 142 | [Discord party bridge - chat relayed both ways, a live party embed, Scheduled Events and role mapping](142-discord-party-bridge.md) | 5 - Developer experience & growth | M | 78, 140 | — | blocked |
 | 143 | [Watch party extras - play, memory, social, creator and safety features on top of the room engine](143-watch-party-extras.md) | 5 - Developer experience & growth | XL | 105, 111, 140, 141 | — | blocked |
-| 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | ready |
+| 144 | [Invitee accept from the studio - pending invites, accept and decline, and leaving a team](144-invitee-accept-from-studio.md) | 5 - Developer experience & growth | M | 117 | — | done |
+| 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
+| 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | in-progress |
+| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | blocked |
+| 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | done |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -345,8 +344,12 @@ flowchart LR
         T141["141 Watch party voice chat - a self-hosted SFU"]
         T142["142 Discord party bridge - chat relayed both…"]
         T143["143 Watch party extras - play"]
+        T144["144 Invitee accept from the studio - pending…"]
         T145["145 Stories"]
         T146["146 Word-level caption timestamps so per-cue…"]
+        T170["170 Platform packages - reusable"]
+        T171["171 Intl formatters - one open contract"]
+        T172["172 One ECMAScript baseline per tier - presets"]
     end
     T01 --> T02
     T01 --> T03
@@ -425,6 +428,7 @@ flowchart LR
     T01 --> T48
     T92 --> T48
     T93 --> T48
+    T170 --> T48
     T36 --> T49
     T37 --> T49
     T38 --> T49
@@ -879,8 +883,18 @@ flowchart LR
     T111 --> T143
     T140 --> T143
     T141 --> T143
+    T117 --> T144
     T131 --> T145
     T139 --> T146
+    T82 --> T170
+    T85 --> T170
+    T86 --> T170
+    T87 --> T170
+    T88 --> T170
+    T131 --> T170
+    T170 --> T171
+    T85 --> T172
+    T110 --> T172
 ```
 
 ## Parallel lanes (frontier levels)
@@ -905,13 +919,13 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 13 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation · [98](98-realtime-user-event-stream.md) Realtime - one typed user event stream o… |
 | 14 | [92](92-apps-grouped-by-tier.md) Group apps by tier |
 | 15 | [93](93-creator-studio-separate-app.md) Creator Studio as its own app |
-| 16 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals real-user measurement · [95](95-design-system-2.md) Design system 2 - themes · [109](109-upload-lifecycle-hardening-and-leak-prevention.md) Upload lifecycle hardening - idempotent … |
+| 16 | [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals real-user measurement · [95](95-design-system-2.md) Design system 2 - themes · [109](109-upload-lifecycle-hardening-and-leak-prevention.md) Upload lifecycle hardening - idempotent … |
 | 17 | [59](59-video-watch-page-responsive-layout-enhancements.md) Modern video watch page · [60](60-creator-studio-dashboard-video-management-ui.md) Creator studio dashboard · [61](61-admin-control-panel-category-moderation-ui.md) Administrator control panel · [65](65-first-party-video-playback-telemetry-analytics-beacon.md) First-party video playback telemetry · [68](68-pwa-service-worker-offline-cache-background-sync.md) Progressive Web App · [69](69-frontend-url-state-search-params-modal-routing.md) Frontend URL-driven state architecture · [70](70-frontend-resilient-error-handling-retry-policy.md) Frontend resilient error handling · [72](72-frontend-settings-customization-system.md) Settings - a full settings area · [74](74-frontend-multi-resource-search-discovery-ui.md) Frontend multi-resource search & discove… · [99](99-notifications.md) Notifications - model · [100](100-home-shelves-related-videos.md) Home shelves · [102](102-shorts.md) Shorts - vertical videos classified at p… · [103](103-comment-hearts-reports-creator-inbox.md) Comments - creator hearts · [110](110-oxc-vite-plus-toolchain.md) Oxc |
-| 18 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Remove the legacy frontend · [63](63-tanstack-router-start-ssr-seo-streaming.md) Video SEO on the SSR render - route meta · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture · [96](96-channel-featured-videos-start-here.md) Channel featured videos - creators pin t… · [101](101-pick-of-the-day-curation.md) Pick of the day - editors schedule the h… · [105](105-clips.md) Clips - share a moment of a video as its… · [106](106-channel-branded-and-user-built-themes.md) Themes beyond the built-ins - a channel'… · [117](117-channel-team-roles.md) Channel team roles - invite managers · [123](123-parallel-studio-upload-and-atomic-retention-flush.md) Parallel Studio upload parts · [124](124-related-videos-payload-and-unused-field-filter-removal.md) Related videos payload · [126](126-recommendation-feedback-and-new-shelves.md) Recommendation feedback - "Not interested" · [132](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) Watch page follow-ups - queue reorder on… · [134](134-settings-readers-account-switch-and-channel-image-upload.md) Settings follow-ups - the player · [135](135-studio-analytics-and-library-backend-gaps.md) Studio analytics · [138](138-type-aware-lint-backlog.md) Type-aware lint backlog |
-| 19 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout · [111](111-captions-and-transcripts.md) Captions · [113](113-channel-comment-moderation.md) Channel comment moderation - hold for re… · [129](129-multiple-accounts-and-channels.md) Multiple accounts · [133](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) SEO follow-ups - channel meta without an… · [140](140-watch-parties.md) Watch parties - rooms on a shared clock |
+| 18 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Remove the legacy frontend · [63](63-tanstack-router-start-ssr-seo-streaming.md) Video SEO on the SSR render - route meta · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture · [96](96-channel-featured-videos-start-here.md) Channel featured videos - creators pin t… · [101](101-pick-of-the-day-curation.md) Pick of the day - editors schedule the h… · [105](105-clips.md) Clips - share a moment of a video as its… · [106](106-channel-branded-and-user-built-themes.md) Themes beyond the built-ins - a channel'… · [117](117-channel-team-roles.md) Channel team roles - invite managers · [123](123-parallel-studio-upload-and-atomic-retention-flush.md) Parallel Studio upload parts · [124](124-related-videos-payload-and-unused-field-filter-removal.md) Related videos payload · [126](126-recommendation-feedback-and-new-shelves.md) Recommendation feedback - "Not interested" · [132](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) Watch page follow-ups - queue reorder on… · [134](134-settings-readers-account-switch-and-channel-image-upload.md) Settings follow-ups - the player · [135](135-studio-analytics-and-library-backend-gaps.md) Studio analytics · [138](138-type-aware-lint-backlog.md) Type-aware lint backlog · [172](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) One ECMAScript baseline per tier - presets |
+| 19 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout · [111](111-captions-and-transcripts.md) Captions · [113](113-channel-comment-moderation.md) Channel comment moderation - hold for re… · [129](129-multiple-accounts-and-channels.md) Multiple accounts · [133](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) SEO follow-ups - channel meta without an… · [140](140-watch-parties.md) Watch parties - rooms on a shared clock · [144](144-invitee-accept-from-studio.md) Invitee accept from the studio - pending… |
 | 20 | [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem · [112](112-upload-screening.md) Upload screening - local duplicate · [114](114-creator-stats-on-the-watch-page.md) Creator stats on the watch page - the nu… · [115](115-channel-page-customisation.md) Channel identity - banner · [116](116-video-management-power-tools.md) Video management power tools - bulk edit · [118](118-creator-data-portability-and-api.md) Creator data portability · [131](131-frontend-folder-structure-names-and-boundaries.md) Front-end folder structure · [139](139-captions-measurements.md) Captions measurements - whisper speed · [141](141-watch-party-voice-chat.md) Watch party voice chat - a self-hosted SFU |
-| 21 | [119](119-playlists-customisation-and-collaboration.md) Playlists · [120](120-community-posts-and-threads.md) Community - channel posts · [128](128-creator-analytics-device-split-and-benchmark.md) Creator analytics that hold up - views t… · [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md) Front-end UI · [142](142-discord-party-bridge.md) Discord party bridge - chat relayed both… · [143](143-watch-party-extras.md) Watch party extras - play · [145](145-kit-stories-and-visual-baselines.md) Stories · [146](146-word-level-caption-timestamps.md) Word-level caption timestamps so per-cue… |
-| 22 | [121](121-channel-page-builder.md) Channel page builder - configurable sect… |
+| 21 | [119](119-playlists-customisation-and-collaboration.md) Playlists · [120](120-community-posts-and-threads.md) Community - channel posts · [128](128-creator-analytics-device-split-and-benchmark.md) Creator analytics that hold up - views t… · [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md) Front-end UI · [142](142-discord-party-bridge.md) Discord party bridge - chat relayed both… · [143](143-watch-party-extras.md) Watch party extras - play · [145](145-kit-stories-and-visual-baselines.md) Stories · [146](146-word-level-caption-timestamps.md) Word-level caption timestamps so per-cue… · [170](170-platform-packages-open-closed-extractable.md) Platform packages - reusable |
+| 22 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [121](121-channel-page-builder.md) Channel page builder - configurable sect… · [171](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) Intl formatters - one open contract |
 | 23 | [122](122-linked-content-graph.md) Linked content - one typed link graph be… |
 
 ## Suggested single-developer order
@@ -959,6 +973,9 @@ End-to-end behaviour from the user's/operator's perspective — not a layer list
 
 ## Acceptance criteria
 - [ ] …
+
+## Setup & environment
+New env keys, services, ports, seed data or demo scenarios this ticket adds, and the docs it updates in the same PR: docs/ENVIRONMENT.md (`pnpm gen:env-docs`), docs/GETTING_STARTED.md, docs/DEMO.md and the seed; "none" when it adds none.
 
 ## Out of scope
 ## Notes for the implementer   (decision-rich only; no file paths that go stale beyond the package names fixed in SDD §15.1)

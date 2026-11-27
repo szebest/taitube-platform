@@ -1,6 +1,6 @@
-import { loadEnv } from '@vp/config';
-import { inProcessAppConfig, toAppConfig } from '@vp/env-schema';
-import { PRODUCTION_ENV } from '@vp/testing/env';
+import { loadEnv } from '@kit/config';
+import { AppEnvSchema, inProcessAppConfig, toAppConfig } from '@vp/env-schema';
+import { PRODUCTION_ENV } from '@vp/testing-fixtures/env';
 import { seedDevelopment } from '../seed-development';
 
 describe('apps/server/api: seedDevelopment', () => {
@@ -8,7 +8,7 @@ describe('apps/server/api: seedDevelopment', () => {
     const seedDatabase = vi.fn(async () => {});
 
     await expect(
-      seedDevelopment(toAppConfig(loadEnv(PRODUCTION_ENV)), seedDatabase)
+      seedDevelopment(toAppConfig(loadEnv(AppEnvSchema, PRODUCTION_ENV)), seedDatabase)
     ).rejects.toThrow('refuses NODE_ENV=production');
     expect(seedDatabase).not.toHaveBeenCalled();
   });

@@ -1,13 +1,13 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Format, useFormat } from '@kit/intl-react';
+import { fromPromise, isOk, unwrapOr } from '@kit/result';
+import { Button, useToast } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useFormat, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import { canDeleteComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { Button, useToast } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,
@@ -17,6 +17,7 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type AdminReport, adminReportsQueryOptions } from '#app/features/admin/api/admin-reports';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ReportRemoveDialog } from '../report-remove-dialog/report-remove-dialog';
 
@@ -38,8 +39,9 @@ function ReportActions({ report, onRemove }: ReportActionsProps) {
   const resolve = useResolveReport();
   const { comment } = report;
   const canResolve = useCan(canDeleteComment, {
-    comment: { id: comment.id, authorId: comment.authorId, videoId: comment.videoId },
+    comment: { id: comment.id, authorId: comment.authorId, videoId: comment.videoId ?? undefined },
     videoOwnerId: '',
+    videoChannelId: '',
   });
 
   if (!canResolve || report.resolvedAt !== null) {

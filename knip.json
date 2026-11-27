@@ -14,6 +14,7 @@
         "scripts/**/*.ts",
         "tests/**/*.ts",
         "!scripts/__tests__/lint-fixtures/**",
+        "!scripts/__tests__/typecheck-fixtures/**",
         "!tests/react-compiler/vite.config.ts"
       ],
       "vitest": ["vitest.config.ts", "tests/vitest.config.ts", "tests/integration/vitest.config.ts"]
@@ -36,6 +37,7 @@
     },
     "apps/server/worker": {
       "entry": ["src/main.ts!", "src/instrument.ts!"],
+      "vitest": ["vitest.config.ts", "integration.config.ts"],
       "project": [
         "src/**/*.ts!",
         "!src/**/__tests__/**!",
@@ -77,11 +79,11 @@
         "!src/**/*.stories.tsx!"
       ]
     },
-    "packages/server/testing": {
+    "packages/server/testing-fixtures": {
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
     },
-    "packages/client/components": {
+    "packages/**/client/components": {
       "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx}!",
@@ -91,8 +93,10 @@
         "!dist/**"
       ]
     },
-    "packages/client/ui": {
+    "packages/**/client/ui": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "includeEntryExports": false,
+      "ignoreDependencies": ["simple-icons", "simple-icons-linkedin"],
       "project": [
         "**/*.{ts,tsx,css}!",
         "!**/*.stories.tsx!",
@@ -103,7 +107,7 @@
     },
     "packages/client/workbench": {
       "includeEntryExports": false,
-      "ignoreDependencies": ["@vp/components"],
+      "ignoreDependencies": ["@kit/components"],
       "project": ["{src,.storybook}/**/*.{ts,tsx,css}", "!src/**/__tests__/**"],
       "vitest": ["vitest.jsdom.config.ts", ".storybook/vitest.config.ts"]
     },
@@ -111,20 +115,37 @@
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"],
       "vitest": ["vitest.config.ts", "integration.config.ts"]
     },
+    "packages/server/adapters": {
+      "project": ["**/*.ts!", "!**/__tests__/**!"],
+      "vitest": ["vitest.config.ts", "integration.config.ts", "perf.config.ts"]
+    },
+    "packages/server/fingerprint": {
+      "project": ["src/**/*.ts!", "!src/**/__tests__/**!"]
+    },
     "packages/server/whisper": {
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!"],
       "vitest": ["vitest.config.ts", "integration.config.ts"]
     },
-    "packages/client/web-testing": {
+    "packages/**/client/web-testing": {
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
     },
-    "packages/server/vite-preset": {
+    "packages/**/server/vite-preset": {
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
-    "packages/server/dev-token": {
-      "entry": ["src/main.ts!"],
+    "packages/**/server/testing": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "includeEntryExports": false,
+      "ignoreDependencies": ["tsx"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/**/server/dev-token": {
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -141,7 +162,8 @@
         "!dist/**"
       ]
     },
-    "packages/universal/design-tokens": {
+    "packages/**/universal/design-tokens": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -150,7 +172,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/intl": {
+    "packages/**/universal/intl": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -159,7 +181,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/messages": {
+    "packages/universal/shared-messages": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -168,7 +190,8 @@
         "!dist/**"
       ]
     },
-    "packages/client/intl-react": {
+    "packages/**/client/intl-react": {
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -177,6 +200,14 @@
       ]
     },
     "packages/client/queries": {
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/**/universal/errors": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -185,7 +216,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/errors": {
+    "packages/**/universal/machine": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -194,7 +225,7 @@
         "!dist/**"
       ]
     },
-    "packages/universal/result": {
+    "packages/**/universal/result": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
@@ -211,7 +242,27 @@
         "!dist/**"
       ]
     },
-    "packages/universal/tsconfig": {
+    "packages/platform/universal/i18n": {
+      "includeEntryExports": false,
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/platform/*/*": {
+      "includeEntryExports": false,
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/**/universal/tsconfig": {
       "entry": [],
       "project": []
     }

@@ -1,4 +1,4 @@
-import { fromPromise, ignore } from '@vp/result';
+import { fromPromise, ignore } from '@kit/result';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useStoredState } from '#app/hooks/use-stored-state';

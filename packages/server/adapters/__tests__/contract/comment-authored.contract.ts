@@ -1,8 +1,15 @@
+import { expectOk } from '@kit/testing/result';
 import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  videoTarget,
+} from './fixtures';
 
 const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
 const HIDDEN_ID = '00000000-0000-7000-8000-0000000000f7';
@@ -12,6 +19,36 @@ const STRANGER_COMMENT = '00000000-0000-7000-8000-000000000c0f';
 const idsOf = (rows: readonly AuthoredComment[]) => rows.map((row) => row.id);
 
 export function describeAuthoredCommentsContract(ctx: CommentContractContext): void {
+  describe('the channel a comment is posted as', () => {
+    it('names the channel the comment was posted as, not the primary of its author', async () => {
+      const second = expectOk(
+        await ctx.subject.repositories.channels.createOwned(
+          { userId: OWNER_ID, handle: 'second', displayName: 'Second' },
+          5
+        )
+      );
+      const created = expectOk(
+        await ctx.comments.create({
+          id: C.old,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
+          authorId: OWNER_ID,
+          authorChannelId: second.id,
+          parentId: null,
+          content: 'as my second channel',
+        })
+      );
+
+      expect(created?.author).toEqual({
+        userId: OWNER_ID,
+        channelId: second.id,
+        handle: 'second',
+        displayName: 'Second',
+        avatarUrl: null,
+      });
+    });
+  });
+
   describe('the viewer own comments', () => {
     const authored = async (limit = 10) =>
       expectOk(await ctx.comments.listByAuthor(VIEWER, { cursor: null, limit }));
@@ -50,13 +87,15 @@ export function describeAuthoredCommentsContract(ctx: CommentContractContext): v
       expectOk(
         await ctx.comments.create({
           id: STRANGER_COMMENT,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
+          authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
           content: 'not mine',
         })
       );
-      expectOk(await ctx.comments.remove({ id: C.fresh, videoId: VIDEO_IDS.a }));
+      expectOk(await ctx.comments.remove({ id: C.fresh, target: videoTarget(VIDEO_IDS.a) }));
 
       expect(idsOf(await authored())).toEqual([C.old]);
     });

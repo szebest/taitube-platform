@@ -1,4 +1,5 @@
 import {
+  getCreatorStats,
   getTranscript,
   getVideo,
   getVideoRetention,
@@ -10,6 +11,7 @@ import {
   api,
   apiServer,
   captionTrack,
+  creatorStats,
   mockEndpoint,
   transcript,
   video,
@@ -19,6 +21,7 @@ import { HttpResponse } from 'msw/http';
 import { createQueryClient } from '../create-query-client';
 import {
   captionsQueryOptions,
+  creatorStatsQueryOptions,
   myVideosQueryOptions,
   transcriptQueryOptions,
   videoKeys,
@@ -27,6 +30,7 @@ import {
 } from '../video-queries';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
+const SHARE_TOKEN = 'abcdefghijklmnopqrstuv';
 
 describe('@vp/queries: video queries', () => {
   it('keys the detail by the video, so two videos never share a cache entry', () => {
@@ -35,6 +39,7 @@ describe('@vp/queries: video queries', () => {
 
   it.each([
     { query: 'the detail', queryKey: videoQueryOptions(api, VIDEO_ID).queryKey },
+    { query: 'the creator stats', queryKey: creatorStatsQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the retention curve', queryKey: videoRetentionQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the caller list', queryKey: myVideosQueryOptions(api).queryKey },
     { query: 'the captions', queryKey: captionsQueryOptions(api, VIDEO_ID).queryKey },
@@ -52,6 +57,30 @@ describe('@vp/queries: video queries', () => {
     const loaded = await createQueryClient().query(videoQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toMatchObject({ id: VIDEO_ID, title: 'Launch day' });
+  });
+
+  it("sends a share link's token with the read and keeps it out of the key", async () => {
+    const tokens: (string | null)[] = [];
+    apiServer.use(
+      mockEndpoint(getVideo, ({ request }) => {
+        tokens.push(new URL(request.url).searchParams.get('s'));
+        return HttpResponse.json(video());
+      })
+    );
+    const shared = videoQueryOptions(api, VIDEO_ID, SHARE_TOKEN);
+
+    await createQueryClient().query(shared);
+
+    expect(tokens).toEqual([SHARE_TOKEN]);
+    expect(shared.queryKey).toEqual(videoQueryOptions(api, VIDEO_ID).queryKey);
+  });
+
+  it('loads the creator stats of the video through the API client', async () => {
+    apiServer.use(mockEndpoint(getCreatorStats, () => HttpResponse.json(creatorStats())));
+
+    const loaded = await createQueryClient().query(creatorStatsQueryOptions(api, VIDEO_ID));
+
+    expect(loaded).toEqual(creatorStats());
   });
 
   it('loads the retention curve of the video through the API client', async () => {

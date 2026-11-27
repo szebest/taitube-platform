@@ -1,6 +1,6 @@
+import { Select } from '@kit/ui';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
-import { useT } from '@vp/intl-react';
-import { Select } from '@vp/ui';
+import { useT } from '#app/lib/messages';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
 import { SettingItem } from '../setting-item/setting-item';
 import { SettingSwitchRow } from '../setting-switch-row/setting-switch-row';
@@ -80,6 +80,19 @@ export function HoverPreviewRow() {
       setting="playback.hoverPreview"
       checked={hoverPreview}
       onCheckedChange={setHoverPreview}
+    />
+  );
+}
+
+export function HoverPlayRow() {
+  const [hoverPlay, setHoverPlay] = usePlaybackPreference('hoverPlay');
+
+  return (
+    <SettingSwitchRow
+      row="hover-play"
+      setting="playback.hoverPlay"
+      checked={hoverPlay}
+      onCheckedChange={setHoverPlay}
     />
   );
 }

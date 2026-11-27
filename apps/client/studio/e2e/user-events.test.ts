@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 import { FIXTURE_VIDEO, expect, test } from '../../../../tests/playwright/fixtures';
 
 const READY_TIMEOUT_MS = 120_000;
-const USER_EVENTS_PATH = '/api/v1/me/events';
+const USER_EVENTS_PATH = /^\/u\/0\/api\/v1\/me\/events$/;
 
 type StartedUpload = { videoId: string; uploadId: string; singleUrl: string };
 
@@ -32,10 +32,10 @@ test.describe('user events', () => {
 
     const streams: string[] = [];
     context.on('request', (request) => {
-      if (new URL(request.url()).pathname === USER_EVENTS_PATH) streams.push(request.url());
+      if (USER_EVENTS_PATH.test(new URL(request.url()).pathname)) streams.push(request.url());
     });
     const streamOpened = context.waitForEvent('response', (response) =>
-      response.url().includes(USER_EVENTS_PATH)
+      USER_EVENTS_PATH.test(new URL(response.url()).pathname)
     );
     const tabs = [page, await context.newPage()];
     for (const tab of tabs) {

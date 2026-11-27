@@ -1,7 +1,14 @@
+import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
 import type { CacheClient, CommentCachePort, HotComments } from '@vp/core/ports';
+import {
+  COMMENT_MODERATION_REASONS,
+  type CommentTarget,
+  DISCLOSURES,
+  HELD_REASONS,
+  MODERATION_STATES,
+} from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 
 const HotCommentsSchema = z.object({
@@ -9,19 +16,29 @@ const HotCommentsSchema = z.object({
   threads: z.array(
     z.object({
       id: z.string(),
-      videoId: z.string(),
+      target: z.object({ type: z.enum(['video', 'post']), id: z.string() }),
+      channelId: z.string(),
       authorId: z.string(),
+      authorChannelId: z.string(),
       parentId: z.string().nullable(),
       content: z.string(),
       isPinned: z.boolean(),
       isEdited: z.boolean(),
       likeCount: z.number().int(),
       heartedAt: z.union([z.null(), z.coerce.date()]),
+      moderationState: z.enum(MODERATION_STATES),
+      moderationDisclosure: z.enum(DISCLOSURES).nullable(),
+      moderationReason: z.enum(COMMENT_MODERATION_REASONS).nullable(),
+      moderationNote: z.string().nullable(),
+      moderatedBy: z.string().nullable(),
+      moderatedAt: z.union([z.null(), z.coerce.date()]),
+      heldReason: z.enum(HELD_REASONS).nullable(),
+      looksLikeQuestion: z.boolean(),
       createdAt: z.coerce.date(),
       updatedAt: z.coerce.date(),
       author: z.object({
         userId: z.string(),
-        channelId: z.string().nullable(),
+        channelId: z.string(),
         handle: z.string().nullable(),
         displayName: z.string().nullable(),
         avatarUrl: z.string().nullable(),
@@ -50,10 +67,10 @@ export class RedisCommentCacheAdapter implements CommentCachePort {
   }
 
   async getHot<E>(
-    videoId: string,
+    target: CommentTarget,
     fetcher: () => Promise<Result<HotComments, E>>
   ): Promise<Result<HotComments, E>> {
-    const key = CacheKeys.videoHotComments(videoId);
+    const key = CacheKeys.hotComments(target.type, target.id);
     const cached = this.parse(unwrapOr(await this.cache.get(key), null));
     if (cached) return ok(cached);
 
@@ -67,8 +84,11 @@ export class RedisCommentCacheAdapter implements CommentCachePort {
     return fetched;
   }
 
-  async invalidate(videoId: string): Promise<Result<void, CacheUnavailable>> {
-    return map(await this.cache.del(CacheKeys.videoHotComments(videoId)), () => undefined);
+  async invalidate(target: CommentTarget): Promise<Result<void, CacheUnavailable>> {
+    return map(
+      await this.cache.del(CacheKeys.hotComments(target.type, target.id)),
+      () => undefined
+    );
   }
 
   private parse(raw: string | null): HotComments | null {

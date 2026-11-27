@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * The videos a creator pinned to the channel's Start here shelf. The store keeps what was saved,

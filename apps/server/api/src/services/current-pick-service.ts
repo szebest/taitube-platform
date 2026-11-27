@@ -1,8 +1,8 @@
+import { err, isErr, isOk, map, ok, type Result } from '@kit/result';
 import { CurrentPickSchema, type CurrentPickView } from '@vp/api-contracts';
 import type { PickRepositoryPort } from '@vp/core/repositories';
 import { decidePickVideo, type NothingToPick, nothingToPick } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { err, isErr, isOk, map, ok, type Result } from '@vp/result';
 import type { CurrentPickCache } from './current-pick-cache';
 import type { FeedService } from './feed-service';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';

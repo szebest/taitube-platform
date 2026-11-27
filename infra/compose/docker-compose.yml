@@ -263,6 +263,19 @@ services:
     tmpfs:
       - /tmp/vp:size=1g,mode=1777
 
+  worker-screen:
+    <<: *worker
+    stop_grace_period: 295s
+    cpus: 2
+    mem_limit: 1536m
+    environment:
+      <<: *app-env
+      WORKER_STAGE: screen
+      FFMPEG_THREADS: "2"
+      SCREENING_MODEL_PATH: /opt/screening/vit-base-nsfw-detector-int8.onnx
+    tmpfs:
+      - /tmp/vp:size=4g,mode=1777
+
   worker-captions:
     <<: *worker
     stop_grace_period: 890s

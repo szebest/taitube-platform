@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import type { Repositories } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import {
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubject): void {
@@ -23,7 +30,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
       await seedOwners(repositories);
     });
 
-    const statsOf = async () => expectOk(await repositories.channels.statsOf(OWNER_ID));
+    const statsOf = async () => expectOk(await repositories.channels.statsOf(OWNER_CHANNEL_ID));
 
     const view = async (videoId: string, views: number) =>
       expectOk(
@@ -32,6 +39,9 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
           counts: [{ videoId, viewDate: '2026-03-10', views, watchSeconds: views * 10 }],
           retention: [],
           hourly: [],
+          devices: [],
+          shareLinks: [],
+          experiments: [],
         })
       );
 
@@ -43,11 +53,12 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
           expectedVersion: video?.version ?? 0,
           patch: { visibility: 'public' },
           userId: OWNER_ID,
+          auditFields: [],
         })
       );
     };
 
-    it('answers zero for an owner with no videos', async () => {
+    it('answers zero for a channel with no videos', async () => {
       expect(await statsOf()).toEqual({ videoCount: 0, totalViews: 0 });
     });
 
@@ -79,7 +90,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
         expected: { videoCount: 0, totalViews: 0 },
       },
     ])(
-      'derives the stats of an owner holding $name that the flush gave 5 views',
+      'derives the stats of a channel holding $name that the flush gave 5 views',
       async ({ video, expected }) => {
         await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, ...video }));
         await view(VIDEO_IDS.a, 5);
@@ -87,6 +98,19 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
         expect(await statsOf()).toEqual(expected);
       }
     );
+
+    it('leaves out the videos the same owner published on another channel', async () => {
+      const second = expectOk(
+        await repositories.channels.createOwned(
+          { userId: OWNER_ID, handle: 'second', displayName: 'Second' },
+          5
+        )
+      );
+      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, channelId: second.id }));
+      await view(VIDEO_IDS.a, 5);
+
+      expect(await statsOf()).toEqual({ videoCount: 0, totalViews: 0 });
+    });
 
     it('adds every flush to the views of the counted videos', async () => {
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));

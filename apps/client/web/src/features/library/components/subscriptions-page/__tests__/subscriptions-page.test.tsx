@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, subscribedChannel } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProviders, withToasts } from '#app/__tests__/providers';
 import { mySubscriptionsQueryOptions } from '#app/lib/query-keys/subscription-keys';
 import { SubscriptionsPage } from '../subscriptions-page';
 
@@ -9,7 +9,7 @@ function renderSubscriptions(items: ReturnType<typeof subscribedChannel>[]) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(mySubscriptionsQueryOptions(api).queryKey, { items, nextCursor: null });
 
-  return renderPage(<SubscriptionsPage />, AppProviders, { queryClient });
+  return renderPage(<SubscriptionsPage />, withToasts(AppProviders), { queryClient });
 }
 
 describe('apps/client/web: subscriptions page', () => {

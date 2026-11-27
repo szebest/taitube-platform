@@ -1,15 +1,15 @@
+import { PageHeader, SectionError, VideoCardSkeleton } from '@kit/components';
+import { Callout } from '@kit/ui';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
-import { PageHeader, SectionError } from '@vp/components';
 import { isExactChannelMatch } from '@vp/domain';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Callout } from '@vp/ui';
-import { useId, useRef } from 'react';
+import { Suspense, useId, useRef } from 'react';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { searchQueryOptions } from '#app/features/search/api/search-queries';
 import { matchedTerms } from '#app/features/search/utils/matched-terms';
 import { useWindowRows } from '#app/hooks/use-window-rows';
+import { useT } from '#app/lib/messages';
 import { ChannelResultHeader } from '../channel-result-header/channel-result-header';
 import { SearchNoResults } from '../search-no-results/search-no-results';
 import { SearchResult, searchResultKey } from '../search-result/search-result';
@@ -24,14 +24,49 @@ export interface SearchResultsProps {
   query: string;
 }
 
+/** The heading, the type tabs and the sort stay mounted while a tab or a sort loads; only the results under them wait. */
 export function SearchResults({ query }: SearchResultsProps) {
+  const { type, sort } = route.useLoaderDeps();
+  const { tOr } = useT();
+  const headingId = useId();
+
+  return (
+    <section className="flex flex-col gap-6">
+      <PageHeader.Root>
+        <PageHeader.Title asChild>
+          <h1 id={headingId}>{tOr('search.resultsFor', { query }, '')}</h1>
+        </PageHeader.Title>
+      </PageHeader.Root>
+      <div className="flex min-w-0 items-center gap-stack">
+        <SearchTypeChipBar query={query} />
+        <SearchSortMenu />
+      </div>
+      <Suspense key={`${type}:${sort}`} fallback={<SearchResultsSkeleton />}>
+        <SearchResultList query={query} headingId={headingId} />
+      </Suspense>
+    </section>
+  );
+}
+
+export function SearchResultsSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <VideoCardSkeleton variant="row" count={6} />
+    </div>
+  );
+}
+
+interface SearchResultListProps extends SearchResultsProps {
+  headingId: string;
+}
+
+function SearchResultList({ query, headingId }: SearchResultListProps) {
   const api = useApi();
   const { type, sort } = route.useLoaderDeps();
   const { data, hasNextPage, isFetching, isError, fetchNextPage } = useSuspenseInfiniteQuery(
     searchQueryOptions(api, { query, type, sort })
   );
   const { tOr } = useT();
-  const headingId = useId();
   const list = useRef<HTMLUListElement>(null);
 
   const [first] = data.pages;
@@ -51,16 +86,7 @@ export function SearchResults({ query }: SearchResultsProps) {
   });
 
   return (
-    <section className="flex flex-col gap-6">
-      <PageHeader.Root>
-        <PageHeader.Title asChild>
-          <h1 id={headingId}>{tOr('search.resultsFor', { query }, '')}</h1>
-        </PageHeader.Title>
-      </PageHeader.Root>
-      <div className="flex items-center gap-stack">
-        <SearchTypeChipBar counts={{ [type]: first?.total }} />
-        <SearchSortMenu />
-      </div>
+    <div className="flex animate-fade-in flex-col gap-6">
       {first?.fuzzyFallback && (
         <Callout.Root role="status">
           <Callout.Icon />
@@ -96,12 +122,12 @@ export function SearchResults({ query }: SearchResultsProps) {
       )}
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={() => fetchNextPage()}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasNextPage && !isFetching && !isError && (
         <FeedSentinel onNear={() => fetchNextPage({ cancelRefetch: false })} />
       )}
-    </section>
+    </div>
   );
 }

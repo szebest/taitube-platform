@@ -1,5 +1,6 @@
-import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { type InvalidField, invalidField } from '../failures';
+import { type InputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
+import { type InvalidField, invalidField } from '../field-failures';
 
 export type UploadTooLarge = InputFailure<
   typeof ErrorCodes.UPLOAD_TOO_LARGE,

@@ -1,6 +1,6 @@
+import { Badge, Callout } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { waitFor } from '@testing-library/dom';
-import { Badge, Callout } from '@vp/ui';
 import { LiveChat, LiveChatSkeleton } from '..';
 import { LiveChatRoot } from '../live-chat';
 import type { LiveChatMessageState, LiveChatRole } from '../types';

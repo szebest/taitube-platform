@@ -1,7 +1,9 @@
+import { fromPromise, ignore, isOk, parseJson } from '@kit/result';
 import { onlineManager } from '@tanstack/react-query';
 import { type ContractResult, streamMyEvents } from '@vp/api-contracts';
-import { fromPromise, ignore, isOk, parseJson } from '@vp/result';
+import { identityPath } from './account-slots';
 import { API_PROXY_PATH } from './api-client';
+import { createReconnectTimer } from './reconnect-timer';
 
 export type UserStreamEvent = ContractResult<typeof streamMyEvents>;
 
@@ -26,6 +28,8 @@ export interface UserEventBrowser {
 
 export interface UserEventConnection {
   name: string;
+  /** The account slot the stream is for, named in its path: an `EventSource` sends no custom header. */
+  slot: number;
   browser: UserEventBrowser;
   onEvent: (event: UserStreamEvent) => void;
   /** A tab that joins behind a leading one gets no `hello`, so it catches up here instead. */
@@ -39,8 +43,6 @@ interface Delivery {
 
 const USER_EVENTS_URL = `${API_PROXY_PATH}${streamMyEvents.path}`;
 const EVENT_TYPES = streamMyEvents.result.options.map((option) => option.shape.type.value);
-const FIRST_RETRY_MS = 1_000;
-const LAST_RETRY_MS = 30_000;
 
 function readEvent(data: string): UserStreamEvent | undefined {
   const json = parseJson(data);
@@ -50,10 +52,12 @@ function readEvent(data: string): UserStreamEvent | undefined {
 
 export function connectUserEvents({
   name,
+  slot,
   browser,
   onEvent,
   onFollow,
 }: UserEventConnection): () => void {
+  const streamUrl = identityPath({ slot }, USER_EVENTS_URL);
   const channel = browser.openChannel(name);
   const stopped = new AbortController();
   let lastSeenId = 0;
@@ -78,8 +82,7 @@ export function connectUserEvents({
 
       let source: UserEventSource | undefined;
       let sourceLastId = '';
-      let retries = 0;
-      let retryTimer: ReturnType<typeof setTimeout> | undefined;
+      const reconnect = createReconnectTimer(() => open());
 
       const onFrame = (frame: MessageEvent<string>) => {
         // EventSource repeats the last id on a frame that carries none, such as a progress tick.
@@ -94,14 +97,9 @@ export function connectUserEvents({
       };
 
       const close = () => {
-        clearTimeout(retryTimer);
+        reconnect.cancel();
         source?.close();
         source = undefined;
-      };
-
-      const retryLater = () => {
-        retryTimer = setTimeout(open, Math.min(FIRST_RETRY_MS * 2 ** retries, LAST_RETRY_MS));
-        retries += 1;
       };
 
       const open = () => {
@@ -109,17 +107,15 @@ export function connectUserEvents({
         if (!onlineManager.isOnline()) return;
 
         const opened = browser.openSource(
-          lastSeenId > 0 ? `${USER_EVENTS_URL}?last-event-id=${lastSeenId}` : USER_EVENTS_URL
+          lastSeenId > 0 ? `${streamUrl}?last-event-id=${lastSeenId}` : streamUrl
         );
         sourceLastId = '';
         for (const type of EVENT_TYPES) opened.addEventListener(type, onFrame);
-        opened.addEventListener('open', () => {
-          retries = 0;
-        });
+        opened.addEventListener('open', reconnect.reset);
         opened.addEventListener('error', () => {
           if (opened.readyState !== opened.CLOSED || opened !== source) return;
 
-          retryLater();
+          reconnect.schedule();
         });
         source = opened;
       };

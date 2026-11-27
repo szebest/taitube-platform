@@ -4,7 +4,7 @@ import { createConnection, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
-import { mintToken } from '../../packages/server/dev-token/src/index';
+import { mintToken } from '../../packages/server/dev-identity/src/index';
 import { compareCues, describeAlignment, type Span } from '../../scripts/cue-alignment';
 import { sessionCookie } from '../playwright/session-cookie';
 

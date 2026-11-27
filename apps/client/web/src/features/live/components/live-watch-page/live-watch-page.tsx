@@ -1,9 +1,8 @@
+import { Badge, Button } from '@kit/ui';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { ClientOnly, Link, useParams } from '@tanstack/react-router';
 import type { LiveStreamPublicView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
-import { Badge, Button } from '@vp/ui';
 import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type LiveChatLayout, LiveChatSkeleton } from '#app/components/live/live-chat';
@@ -17,6 +16,7 @@ import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube
 import { Stage } from '#app/components/watch/stage';
 import { liveKeys, liveStreamQueryOptions } from '#app/features/live/api/live-queries';
 import { useChatDock } from '#app/features/live/hooks/use-chat-dock';
+import { useT } from '#app/lib/messages';
 import { LiveChatReplay } from '../live-chat-replay/live-chat-replay';
 import { LiveStreamChat } from '../live-stream-chat/live-stream-chat';
 

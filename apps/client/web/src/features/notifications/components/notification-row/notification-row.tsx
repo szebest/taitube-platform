@@ -1,8 +1,9 @@
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { Link } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
-import { publishedAt } from '@vp/intl';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { publishedAt } from '@vp/intl-formats';
+import { useAppLink } from '@vp/queries';
 import {
   NotificationCentre,
   notificationCentreStyles,
@@ -10,7 +11,9 @@ import {
 } from '#app/components/shell/notification-centre';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
+import { notificationHref } from '#app/features/notifications/utils/notification-href';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
+import { STUDIO_URL } from '#app/lib/config';
 
 export interface NotificationRowProps {
   notification: Notification;
@@ -22,9 +25,11 @@ export function NotificationRow({ notification }: NotificationRowProps) {
   const { format } = useFormat();
   const textOf = useNotificationText();
   const markRead = useMarkRead();
+  const appLink = useAppLink();
 
   const { headline, detail } = textOf(notification);
   const target = notificationTarget(notification);
+  const href = notificationHref(notification, (path) => appLink(STUDIO_URL, path));
   const styles = notificationCentreStyles();
 
   const open = () => {
@@ -48,6 +53,16 @@ export function NotificationRow({ notification }: NotificationRowProps) {
     time: unwrapOr(format(publishedAt(notification.createdAt).relative), ''),
     onSelect: open,
   };
+
+  if (href) {
+    return (
+      <NotificationCentre.Item asChild {...item}>
+        <a href={href}>
+          <span className={styles.text()}>{words}</span>
+        </a>
+      </NotificationCentre.Item>
+    );
+  }
 
   if (!target) {
     return <NotificationCentre.Item {...item}>{words}</NotificationCentre.Item>;

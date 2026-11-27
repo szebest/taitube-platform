@@ -1,25 +1,41 @@
+import { Singleflight } from '@kit/concurrency';
+import { createLogger } from '@kit/logger';
+import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
+  InMemoryChannelAuditRepository,
+  InMemoryChannelHandleHistoryRepository,
   InMemoryChannelRepository,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
-  InMemoryStorageClient,
+  InMemorySearchSuggestionIndex,
+  InMemoryStepRepository,
+  InMemoryVideoChapterRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
+import { type ActingChannel, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
-import { Paginator } from '@vp/pagination';
-import { ok } from '@vp/result';
-import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
+import {
+  ChannelIdentityService,
+  type ChannelIdentityServiceDeps,
+} from '../channel-identity-service';
 import type { ChannelServiceDeps } from '../channel-service';
+import { CreatorStudioService } from '../creator-studio-service';
+import { ExperimentOverlay } from '../experiment-overlay';
+import { HistoryPause } from '../history-pause';
+import { MetadataScreening } from '../metadata-screening';
+import type { SearchServiceDeps } from '../search-service';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
+import { VideoAccessGate } from '../video-access-gate';
 import { VideoService, type VideoServiceDeps } from '../video-service';
+import { ViewerProgress } from '../viewer-progress';
 
 const CACHES = inProcessAppConfig().caches;
 
@@ -36,7 +52,12 @@ export function videoServiceDeps(
 ): VideoServiceDeps {
   return {
     videos,
-    channels: new InMemoryChannelRepository(new InMemoryVideoRepository()),
+    channels: new InMemoryChannelRepository(
+      new InMemoryVideoRepository(),
+      new InMemoryChannelHandleHistoryRepository(),
+      new InMemoryChannelAuditRepository()
+    ),
+    chapters: new InMemoryVideoChapterRepository(),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
@@ -45,24 +66,28 @@ export function videoServiceDeps(
     }),
     authorization: new CaslAuthorizationAdapter(),
     paginator: new Paginator(),
+    steps: new InMemoryStepRepository(),
     probeQueue: new InMemoryJobQueue('probe'),
     ...overrides,
   };
 }
 
-export const TEST_PUBLIC_BUCKET = 'public';
+export function ownerActing(ownerId: string, channelId: string): ActingChannel {
+  return { channelId, ownerId, role: 'owner' };
+}
 
-/** Channel images over one repositories bundle and an in-memory public bucket. */
-export function channelImageServiceDeps(
+export const TEST_NOW = Date.parse('2026-03-10T00:00:00.000Z');
+
+/** The channel identity rules over one repositories bundle, at a fixed clock. */
+export function channelIdentityServiceDeps(
   repositories: InMemoryRepositories,
-  overrides: Partial<ChannelImageServiceDeps> = {}
-): ChannelImageServiceDeps {
+  overrides: Partial<ChannelIdentityServiceDeps> = {}
+): ChannelIdentityServiceDeps {
   return {
     channels: repositories.channels,
-    storage: new InMemoryStorageClient(),
-    publicBucket: TEST_PUBLIC_BUCKET,
-    cdn: TEST_CDN,
-    presignedUrlTtlSeconds: 900,
+    handleHistory: repositories.channelHandleHistory,
+    audit: repositories.channelAudit,
+    now: () => TEST_NOW,
     ...overrides,
   };
 }
@@ -83,7 +108,9 @@ export function channelServiceDeps(
     ),
     paginator: new Paginator(),
     cdn: TEST_CDN,
-    images: new ChannelImageService(channelImageServiceDeps(repositories)),
+    identity: new ChannelIdentityService(channelIdentityServiceDeps(repositories)),
+    pages: repositories.channelPages,
+    now: () => TEST_NOW,
     ...overrides,
   };
 }
@@ -113,6 +140,24 @@ export function uploadContext(
   };
 }
 
+/** The unlock credential `videoAccessGateOf` accepts for any protected video. */
+export const UNLOCKED = 'unlocked';
+
+export function videoAccessGateOf(
+  repositories: InMemoryRepositories,
+  now: () => number = Date.now
+): VideoAccessGate {
+  return new VideoAccessGate({
+    shareLinks: repositories.shareLinks,
+    passwords: repositories.videoPasswords,
+    unlock: {
+      issue: () => UNLOCKED,
+      verify: (_videoId, _hash, credential) => credential === UNLOCKED,
+    },
+    now,
+  });
+}
+
 /** An SseService over one repositories bundle, replaying at most SSE_REPLAY_LIMIT events. */
 export function sseServiceDeps(
   repositories: InMemoryRepositories,
@@ -126,9 +171,61 @@ export function sseServiceDeps(
     notifications: repositories.notifications,
     liveStreams: repositories.liveStreams,
     liveViewers: async () => ok(0),
+    gate: videoAccessGateOf(repositories),
     cdn: TEST_CDN,
     replayLimit: SSE_REPLAY_LIMIT,
     logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),
+    ...overrides,
+  };
+}
+
+/** The edit screening switched on, over the same repositories as the service under test. */
+export function metadataScreeningOf(repositories: InMemoryRepositories): MetadataScreening {
+  const { thresholds, process } = inProcessAppConfig().screening;
+  return new MetadataScreening({
+    screenings: repositories.screenings,
+    videos: repositories.videos,
+    enabled: true,
+    thresholds,
+    locales: process.metadataLocales,
+    recentTitleCount: process.recentTitleCount,
+  });
+}
+
+export function creatorStudioOf(repositories: InMemoryRepositories): CreatorStudioService {
+  return new CreatorStudioService({
+    videos: repositories.videos,
+    studio: repositories.videoStudio,
+    videoService: new VideoService(
+      videoServiceDeps(repositories.videos, { chapters: repositories.videoChapters })
+    ),
+    metadataScreening: metadataScreeningOf(repositories),
+    cdn: TEST_CDN,
+    sprite: TEST_SPRITE,
+    channels: repositories.channels,
+    paginator: new Paginator(),
+  });
+}
+
+/** A SearchService over one repositories bundle, with its own cache and suggestion index. */
+export function searchServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<SearchServiceDeps> = {}
+): SearchServiceDeps {
+  return {
+    search: repositories.search,
+    suggestions: new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix),
+    cache: new InMemoryCacheClient(),
+    singleflight: new Singleflight(),
+    paginator: new Paginator(),
+    viewerProgress: new ViewerProgress(repositories.watchHistory),
+    experiments: new ExperimentOverlay(repositories.videoExperiments),
+    history: repositories.searchHistory,
+    pause: new HistoryPause(repositories.userPreferences),
+    cdn: TEST_CDN,
+    sprite: TEST_SPRITE,
+    channels: repositories.channels,
+    now: Date.now,
     ...overrides,
   };
 }

@@ -1,6 +1,5 @@
+import { DropdownMenu, IconButton, type PortalContainer } from '@kit/ui';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
-import { useT } from '@vp/intl-react';
-import { DropdownMenu, IconButton, type PortalContainer } from '@vp/ui';
 import { Captions, Gauge, Settings, SlidersHorizontal, Type } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import {
@@ -9,6 +8,7 @@ import {
   usePlayerContainer,
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
+import { useT } from '#app/lib/messages';
 import { useCaptionTrackLabel } from './hooks/use-caption-track-label';
 
 const CAPTIONS_OFF = 'off';
@@ -110,7 +110,7 @@ function QualitySubmenu({ container }: PortalContainer) {
   const byHeight = renditions
     .flatMap(({ id, height }) => (height ? [{ id, height }] : []))
     .toSorted((higher, lower) => lower.height - higher.height)
-    .map(({ id, height }) => ({ value: id, label: tOr('videos.resolution', { height }, '') }));
+    .map(({ id, height }) => ({ value: id, label: tOr('player.resolution', { height }, '') }));
   const choices = [auto, ...byHeight];
 
   return (

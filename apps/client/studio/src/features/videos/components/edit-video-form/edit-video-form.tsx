@@ -1,15 +1,13 @@
+import { VideoThumbnail } from '@kit/components';
+import { useAppForm } from '@kit/forms';
+import { Button, Field, Switch, useToast } from '@kit/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError } from '@vp/api-client';
 import { type Video, VIDEO_VISIBILITIES } from '@vp/api-contracts';
-import { VideoThumbnail } from '@vp/components';
-import { ErrorCodes } from '@vp/errors';
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { Button, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';
+import { isVersionConflict } from '#app/features/videos/api/is-version-conflict';
 import {
   type EditVideoValues,
   NO_CATEGORY,
@@ -17,16 +15,13 @@ import {
   valuesOf,
 } from '#app/features/videos/forms/edit-video-values';
 import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
+import { useT } from '#app/lib/messages';
 import {
   validateVideoDescription,
   validateVideoTags,
   validateVideoTitle,
 } from '#app/utils/video-field-validators';
 import { DescriptionPreview } from '../description-preview/description-preview';
-
-function isVersionConflict(error: Error): boolean {
-  return error instanceof ApiError && error.code === ErrorCodes.VERSION_CONFLICT;
-}
 
 /** The metadata editor: validates with the API's own rules and saves against the version it loaded. */
 export function EditVideoForm({ video }: { video: Video }) {
@@ -132,6 +127,16 @@ export function EditVideoForm({ video }: { video: Video }) {
             placeholder={tOr('studio.editTagsPlaceholder', {}, '')}
             removeLabel={(tag) => tOr('studio.editTagRemove', { tag }, '')}
           />
+        )}
+      </form.AppField>
+
+      <form.AppField name="commentsEnabled">
+        {(field) => (
+          <Field.Root orientation="horizontal">
+            <Field.Label>{tOr('studio.commentsSwitchLabel', {}, '')}</Field.Label>
+            <Switch checked={field.state.value} onCheckedChange={field.handleChange} />
+            <Field.Hint>{tOr('studio.commentsSwitchHint', {}, '')}</Field.Hint>
+          </Field.Root>
         )}
       </form.AppField>
 

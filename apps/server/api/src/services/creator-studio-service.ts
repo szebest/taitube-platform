@@ -1,38 +1,38 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map } from '@kit/result';
 import type {
   ChannelRepositoryPort,
-  StudioMetadataPatch,
   VideoLibraryQuery,
   VideoRecord,
   VideoRepository,
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import type {
+  ActingChannel,
   CreatorLibrarySort,
   LibrarySort,
   SortOrder,
-  ThumbnailSelection,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
-  type CategoryNotFound,
-  DELETABLE_STATUSES,
-  type UpdateVideoMetadataFailure,
   type VideoLifecycleFailure,
-  type VideoMetadataPatch,
-  categoryNotFound,
   decideAdminAccess,
-  decideVideoMetadataUpdate,
+  decideChannelTask,
   decideVideoTakedown,
-  videoNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, map } from '@vp/result';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
+import type { MetadataScreening } from './metadata-screening';
+import {
+  type CreatorVideoEdit,
+  type UpdateVideoServiceFailure,
+  type VideoEditOptions,
+  applyVideoEdit,
+} from './video-edit';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import {
   type CreatorVideoView,
@@ -48,6 +48,7 @@ export interface CreatorStudioServiceDeps {
   videos: VideoRepository;
   studio: VideoStudioRepository;
   videoService: VideoService;
+  metadataScreening: MetadataScreening;
   channels: ChannelRepositoryPort;
   cdn: CdnBase;
   sprite: SpriteGeometry;
@@ -74,6 +75,8 @@ export interface AdminLibraryOptions {
   q?: string;
 }
 
+export type CreatorLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
+
 export type AdminLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
 
 interface LibraryWalk {
@@ -82,57 +85,30 @@ interface LibraryWalk {
   cursor?: string;
 }
 
-export interface CreatorVideoEdit {
-  title?: string;
-  description?: string;
-  visibility?: VideoVisibility;
-  categoryId?: string | null;
-  tags?: string[];
-  selectedThumbnail?: ThumbnailSelection;
-  version: number;
-}
-
-export type UpdateVideoServiceFailure =
-  | UpdateVideoMetadataFailure
-  | CategoryNotFound
-  | ReadVideoServiceFailure
-  | VersionConflict;
+export type { CreatorVideoEdit, UpdateVideoServiceFailure, VideoEditOptions } from './video-edit';
 
 export type TakeDownServiceFailure =
   | VideoLifecycleFailure
   | ReadVideoServiceFailure
   | VersionConflict;
 
-function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
-  switch (selection.source) {
-    case 'poster':
-      return null;
-    default:
-      return assertNever(selection.source, 'ThumbnailSelection');
-  }
-}
-
-function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
-  const { selectedThumbnail, ...columns } = patch;
-  if (!selectedThumbnail) return columns;
-  return { ...columns, customThumbnailKey: thumbnailKeyOf(selectedThumbnail) };
-}
-
 export class CreatorStudioService {
   constructor(private readonly deps: CreatorStudioServiceDeps) {}
 
   async library(
     user: UserContext,
+    acting: ActingChannel,
     options: CreatorLibraryOptions
   ): Promise<
-    Result<
-      { items: CreatorVideoView[]; nextCursor: string | null },
-      DatabaseUnavailable | InvalidCursor
-    >
+    Result<{ items: CreatorVideoView[]; nextCursor: string | null }, CreatorLibraryFailure>
   > {
+    const allowed = decideChannelTask({ user, acting, task: 'read-library' });
+    if (isErr(allowed)) return allowed;
+    const { channelId } = allowed.value;
+
     const { sort, status, visibility, q } = options;
     const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
-      ownerId: user.id,
+      channelId,
       status,
       visibility,
       titleContains: q,
@@ -140,11 +116,11 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [user.id]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [channelId]);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
-        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(user.id)),
+        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(channelId)),
       })
     );
   }
@@ -168,12 +144,13 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const owners = [...new Set(rows.slice(0, limit).map((row) => row.ownerId))];
-    const channelOf = await loadChannelsOf(this.deps.channels, owners);
+    const channelIds = [...new Set(rows.slice(0, limit).map((row) => row.channelId))];
+    const channelOf = await loadChannelsOf(this.deps.channels, channelIds);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort, order),
-        toItem: (row) => toVideoSummaryView(row, this.deps.cdn, this.deps.sprite, of(row.ownerId)),
+        toItem: (row) =>
+          toVideoSummaryView(row, this.deps.cdn, this.deps.sprite, of(row.channelId)),
       })
     );
   }
@@ -183,7 +160,7 @@ export class CreatorStudioService {
     requestedLimit: number | undefined,
     filters: Pick<
       VideoLibraryQuery,
-      'ownerId' | 'status' | 'visibility' | 'categoryId' | 'titleContains'
+      'channelId' | 'status' | 'visibility' | 'categoryId' | 'titleContains'
     >
   ): Promise<Result<{ rows: VideoRecord[]; limit: number }, DatabaseUnavailable | InvalidCursor>> {
     const limit = this.deps.paginator.limit(requestedLimit);
@@ -200,41 +177,13 @@ export class CreatorStudioService {
     return map(rows, (found) => ({ rows: found, limit }));
   }
 
-  /**
-   * The rule is decided against the row as read, so the write must land on that same row: the
-   * caller's version has to be the one read, and the repository's CAS on it rejects anything since.
-   */
-  async update(
+  update(
     user: UserContext,
     videoId: string,
-    edit: CreatorVideoEdit
+    edit: CreatorVideoEdit,
+    options?: VideoEditOptions
   ): Promise<Result<VideoDetailView, UpdateVideoServiceFailure>> {
-    const found = await this.deps.videos.findById(videoId);
-    if (isErr(found)) return found;
-
-    const { version, ...patch } = edit;
-    const decided = decideVideoMetadataUpdate({ editor: user, video: found.value, videoId, patch });
-    if (isErr(decided)) return decided;
-    if (found.value?.version !== version) return err(versionConflict(videoId, version));
-
-    const outcome = await this.deps.studio.updateMetadata({
-      videoId,
-      expectedVersion: version,
-      patch: toStudioPatch(decided.value),
-      userId: user.id,
-    });
-    if (isErr(outcome)) return outcome;
-
-    switch (outcome.value.type) {
-      case 'updated':
-        return this.deps.videoService.get(user, videoId);
-      case 'video-missing':
-        return err(videoNotFound(videoId));
-      case 'category-missing':
-        return err(categoryNotFound(outcome.value.categoryId));
-      default:
-        return assertNever(outcome.value, 'StudioMetadataOutcome');
-    }
+    return applyVideoEdit(this.deps, user, videoId, edit, options);
   }
 
   async takeDown(
@@ -250,7 +199,6 @@ export class CreatorStudioService {
 
     const taken = await this.deps.studio.takeDown({
       videoId,
-      from: DELETABLE_STATUSES,
       moderatorId: moderator.id,
       reason,
     });

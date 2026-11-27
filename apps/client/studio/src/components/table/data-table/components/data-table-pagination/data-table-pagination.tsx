@@ -1,7 +1,8 @@
-import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
+import { Button, DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { useDataTable } from '#app/components/table/data-table/data-table.context';
 import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
+import { useT } from '#app/lib/messages';
 
 const PAGE_SIZES = [10, 20, 50, 100] as const;
 
@@ -17,17 +18,22 @@ export function DataTablePagination({
   ...props
 }: DataTablePaginationProps) {
   const { table, pagination } = useDataTable('Pagination');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const id = useId();
   const styles = dataTableStyles();
-  const pageOf = copy.pageOf
-    .replace('{position}', String(pagination.pageIndex + 1))
-    .replace('{count}', String(Math.max(table.getPageCount(), 1)));
+  const pageOf = tOr(
+    'appUi.pageOf',
+    {
+      position: String(pagination.pageIndex + 1),
+      count: String(Math.max(table.getPageCount(), 1)),
+    },
+    ''
+  );
 
   return (
     <div data-slot="data-table-pagination" className={styles.footer({ className })} {...props}>
       {children}
-      <span id={`${id}-size`}>{copy.rowsPerPage}</span>
+      <span id={`${id}-size`}>{tOr('appUi.rowsPerPage', {}, '')}</span>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button
@@ -55,7 +61,7 @@ export function DataTablePagination({
       </DropdownMenu.Root>
       <IconButton
         size="sm"
-        aria-label={copy.previousPage}
+        aria-label={tOr('appUi.previousPage', {}, '')}
         disabled={!table.getCanPreviousPage()}
         onClick={() => table.previousPage()}
       >
@@ -64,7 +70,7 @@ export function DataTablePagination({
       <span className={styles.pageOf()}>{pageOf}</span>
       <IconButton
         size="sm"
-        aria-label={copy.nextPage}
+        aria-label={tOr('appUi.nextPage', {}, '')}
         disabled={!table.getCanNextPage()}
         onClick={() => table.nextPage()}
       >

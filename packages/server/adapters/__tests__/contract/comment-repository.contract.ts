@@ -1,9 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import type { CommentRepositoryPort } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { describeAuthoredCommentsContract } from './comment-authored.contract';
 import {
   C,
-  CHANNEL_ID,
   type CommentContractContext,
   commentsCount,
   keyset,
@@ -11,8 +10,21 @@ import {
   seedThreads,
 } from './comment-contract-context';
 import { describeCommentInboxContract } from './comment-inbox.contract';
+import { describeCommentKeysetWalksContract } from './comment-keyset-walks.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
+import { describeCommentPublicScopeContract } from './comment-public-scope.contract';
+import { describeCommentTargetGoneContract } from './comment-target-gone.contract';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
+  publicVideo,
+  seedOwners,
+  videoTarget,
+  OWNER_CHANNEL_ID,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -26,6 +38,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       get comments() {
         return comments;
       },
+      authorId: OTHER_OWNER_ID,
     };
 
     beforeAll(async () => {
@@ -42,20 +55,16 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       comments = subject.repositories.comments;
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
-      await subject.repositories.channels.create({
-        id: CHANNEL_ID,
-        userId: OTHER_OWNER_ID,
-        handle: 'commenter',
-        displayName: 'The Commenter',
-      });
     });
 
     it('creates a comment with its author profile and counts it on the video', async () => {
       const created = expectOk(
         await comments.create({
           id: C.old,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
@@ -63,7 +72,8 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
       expect(created).toMatchObject({
         id: C.old,
-        videoId: VIDEO_IDS.a,
+        target: videoTarget(VIDEO_IDS.a),
+        channelId: OWNER_CHANNEL_ID,
         parentId: null,
         content: 'first',
         isPinned: false,
@@ -72,34 +82,14 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         replyCount: 0,
         author: {
           userId: OTHER_OWNER_ID,
-          channelId: CHANNEL_ID,
-          handle: 'commenter',
-          displayName: 'The Commenter',
+          channelId: OTHER_OWNER_CHANNEL_ID,
+          handle: 'other',
+          displayName: 'Other',
           avatarUrl: null,
         },
       });
       expect(created?.createdAt).toBeInstanceOf(Date);
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
-    });
-
-    it('leaves the channel fields empty for an author without a channel', async () => {
-      const created = expectOk(
-        await comments.create({
-          id: C.old,
-          videoId: VIDEO_IDS.a,
-          authorId: OWNER_ID,
-          parentId: null,
-          content: 'no channel',
-        })
-      );
-
-      expect(created?.author).toEqual({
-        userId: OWNER_ID,
-        channelId: null,
-        handle: null,
-        displayName: null,
-        avatarUrl: null,
-      });
     });
 
     it('keeps every write to comments_count exact under concurrent creates', async () => {
@@ -112,8 +102,10 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         ids.map((id) =>
           comments.create({
             id,
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: OTHER_OWNER_ID,
+            authorChannelId: OTHER_OWNER_CHANNEL_ID,
             parentId: null,
             content: id,
           })
@@ -123,59 +115,92 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(10);
     });
 
-    function reply(id: string, parentId: string) {
-      return comments.create({
-        id,
-        videoId: VIDEO_IDS.a,
-        authorId: OTHER_OWNER_ID,
-        parentId,
-        content: 'reply',
-      });
-    }
-
-    it('leaves no live reply under a root removed while the reply was written', async () => {
-      await seedComment(ctx, C.liked);
-
-      const [created, removed] = await Promise.all([
-        reply(C.reply1, C.liked),
-        comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }),
-      ]);
-
-      expect(expectOk(removed)).toBe(expectOk(created) === null ? 1 : 2);
-      expect(expectOk(await comments.findById(C.reply1))).toBeNull();
-      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
-    });
-
-    it('writes nothing for a reply to a removed root', async () => {
-      await seedComment(ctx, C.liked);
-      expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
-
-      expect(expectOk(await reply(C.reply1, C.liked))).toBeNull();
-      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
-    });
-
     it('edits the content and marks the comment edited', async () => {
       await seedComment(ctx, C.old);
 
-      const edited = expectOk(await comments.updateContent(C.old, 'rewritten'));
+      const edited = expectOk(
+        await comments.updateContent(C.old, 'rewritten', { looksLikeQuestion: false })
+      );
 
       expect(edited).toMatchObject({ id: C.old, content: 'rewritten', isEdited: true });
       expect(expectOk(await comments.findById(C.old))?.content).toBe('rewritten');
     });
 
+    it('rewrites the question flag with the content and leaves the state alone', async () => {
+      await seedComment(ctx, C.old);
+
+      const asked = expectOk(
+        await comments.updateContent(C.old, 'how so?', { looksLikeQuestion: true })
+      );
+
+      expect(asked).toMatchObject({ looksLikeQuestion: true, moderationState: 'published' });
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
+    });
+
+    it('holds an edited comment, takes it and its replies off the count and tells the moderators', async () => {
+      await seedComment(ctx, C.old);
+      await seedComment(ctx, C.reply1, { parentId: C.old });
+      await seedComment(ctx, C.fresh);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(3);
+
+      const held = expectOk(
+        await comments.updateContent(C.old, 'blocked', {
+          looksLikeQuestion: false,
+          hold: { reason: 'blocked_word', disclosure: 'silent', moderators: [OWNER_ID] },
+        })
+      );
+
+      expect(held).toMatchObject({
+        content: 'blocked',
+        moderationState: 'held',
+        moderationDisclosure: 'silent',
+        heldReason: 'blocked_word',
+      });
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
+      const events = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10));
+      expect(events.map(({ type }) => type).filter((type) => type === 'comment.held')).toEqual([
+        'comment.held',
+      ]);
+      const queued = expectOk(await subject.repositories.outbox.claimBatch(9)).map(({ payload }) =>
+        payload.type === 'queue' ? payload.job.name : ''
+      );
+      expect(queued).toContain('announce-comment-held');
+    });
+
+    it('answers null and writes nothing when editing a comment that is gone', async () => {
+      expect(
+        expectOk(
+          await comments.updateContent(C.old, 'nothing', {
+            looksLikeQuestion: false,
+            hold: { reason: 'review_all', disclosure: 'visible', moderators: [] },
+          })
+        )
+      ).toBeNull();
+    });
+
     it('removes a root with its replies and takes them all off the count', async () => {
       await seedThreads(ctx);
 
-      const removed = expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
+      const removed = expectOk(
+        await comments.remove({ id: C.liked, target: videoTarget(VIDEO_IDS.a) })
+      );
 
       expect(removed).toBe(3);
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(2);
       expect(expectOk(await comments.findById(C.liked))).toBeNull();
       expect(expectOk(await comments.findById(C.reply1))).toBeNull();
-      expect(expectOk(await comments.updateContent(C.liked, 'too late'))).toBeNull();
+      expect(
+        expectOk(await comments.updateContent(C.liked, 'too late', { looksLikeQuestion: false }))
+      ).toBeNull();
       expect(
         idsOf(
-          expectOk(await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(10) }))
+          expectOk(
+            await comments.listThreads(videoTarget(VIDEO_IDS.a), {
+              viewer: null,
+              sort: 'top',
+              window: keyset(10),
+            })
+          )
         )
       ).toEqual([C.old, C.fresh]);
     });
@@ -183,11 +208,19 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     it('removes a reply and drops it from its root reply count', async () => {
       await seedThreads(ctx);
 
-      expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(1);
-      expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(0);
+      expect(
+        expectOk(await comments.remove({ id: C.reply1, target: videoTarget(VIDEO_IDS.a) }))
+      ).toBe(1);
+      expect(
+        expectOk(await comments.remove({ id: C.reply1, target: videoTarget(VIDEO_IDS.a) }))
+      ).toBe(0);
 
       const [liked] = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(1) })
+        await comments.listThreads(videoTarget(VIDEO_IDS.a), {
+          viewer: null,
+          sort: 'top',
+          window: keyset(1),
+        })
       );
       expect(liked).toMatchObject({ id: C.liked, replyCount: 1 });
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(4);
@@ -195,7 +228,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('holds one pinned comment per video, unpinning the previous one', async () => {
       await seedThreads(ctx);
-      const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
+      const at = (id: string) => ({ id, target: videoTarget(VIDEO_IDS.a) });
 
       expectOk(await comments.setPinned(at(C.old), true));
       const pinned = expectOk(await comments.setPinned(at(C.fresh), true));
@@ -209,7 +242,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('keeps the current pin when the comment to pin was removed', async () => {
       await seedThreads(ctx);
-      const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
+      const at = (id: string) => ({ id, target: videoTarget(VIDEO_IDS.a) });
       expectOk(await comments.setPinned(at(C.old), true));
       expectOk(await comments.remove(at(C.fresh)));
 
@@ -219,12 +252,15 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     it('answers null when pinning a comment that is gone', async () => {
       expect(
-        expectOk(await comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true))
+        expectOk(await comments.setPinned({ id: C.old, target: videoTarget(VIDEO_IDS.a) }, true))
       ).toBeNull();
     });
 
     describeCommentListingContract(ctx);
     describeCommentInboxContract(ctx);
     describeAuthoredCommentsContract(ctx);
+    describeCommentKeysetWalksContract(ctx);
+    describeCommentPublicScopeContract(ctx);
+    describeCommentTargetGoneContract(ctx);
   });
 }

@@ -3,7 +3,12 @@ import { userEvent } from '@testing-library/user-event';
 import { Events } from 'hls.js';
 import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { PlayerChannelProvider, useOnPlayerEnded } from '#app/lib/player/player-channel';
-import { usePlayerCommands, VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
+import {
+  usePlayerCommands,
+  usePlayerState,
+  VideoJsEngine,
+  type VideoJsEngineProps,
+} from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
   const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
@@ -20,6 +25,13 @@ function PickRendition() {
       Pick 360p
     </button>
   );
+}
+
+function PlayerFlags() {
+  const buffering = usePlayerState((state) => state.buffering);
+  const ended = usePlayerState((state) => state.ended);
+
+  return <output>{`buffering:${buffering} ended:${ended}`}</output>;
 }
 
 function WatchEnd({ onEnded }: { onEnded: () => void }) {
@@ -39,6 +51,7 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}, onChannelEnded = 
     >
       <PickRendition />
       <WatchEnd onEnded={onChannelEnded} />
+      <PlayerFlags />
     </VideoJsEngine>,
     { wrapper: PlayerChannelProvider }
   );
@@ -125,6 +138,20 @@ describe('apps/client/web: the Video.js engine', () => {
     fireEvent(video, new Event('loadedmetadata'));
 
     await vi.waitFor(() => expect(onPause).toHaveBeenCalledOnce());
+  });
+
+  it.each([
+    { event: 'waiting', media: { paused: false }, flags: 'buffering:true ended:false' },
+    { event: 'ended', media: { ended: true }, flags: 'buffering:false ended:true' },
+  ])('exposes the $event state to the skin', async ({ event, media, flags }) => {
+    const { video } = renderEngine();
+    for (const [name, value] of Object.entries(media)) {
+      Object.defineProperty(video, name, { configurable: true, value });
+    }
+
+    fireEvent(video, new Event(event));
+
+    expect(await screen.findByText(flags)).toBeInTheDocument();
   });
 
   it('reports a stall to onWaiting', () => {

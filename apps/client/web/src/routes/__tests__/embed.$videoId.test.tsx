@@ -1,4 +1,4 @@
-import { getVideo } from '@vp/api-contracts';
+import { getVideo, listVideoCorrections } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
@@ -8,6 +8,7 @@ import { getRouter } from '#app/router';
 function embed(path: string, overrides: Parameters<typeof video>[0] = {}) {
   return serverRender(getRouter, path, {
     handlers: [
+      mockEndpoint(listVideoCorrections, () => HttpResponse.json({ items: [] })),
       mockEndpoint(getVideo, () =>
         HttpResponse.json(
           video({
@@ -54,6 +55,16 @@ describe('apps/client/web: /embed/$videoId', () => {
 
     expect(status).toBe(307);
     expect(location).toBe(`/embed/${VIDEO_ID}`);
+  });
+
+  it('plays a private video its share link lets through', async () => {
+    const { status, html } = await embed(`/embed/${VIDEO_ID}?s=abcdefghijklmnopqrstuv`, {
+      visibility: 'private',
+      shareLinkId: '0190c3a0-5e1d-7000-8000-0000000000e1',
+    });
+
+    expect(status).toBe(200);
+    expect(html).toContain('src="http://localhost:9000/posters/p.jpg"');
   });
 
   it.each([

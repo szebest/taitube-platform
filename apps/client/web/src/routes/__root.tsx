@@ -1,10 +1,12 @@
+import { requestAppearancePreference } from '@kit/ui';
+import uiStyles from '@kit/ui/styles.css?url';
 import { createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { type AppRouterContext, ensureSession, requestLocale } from '@vp/queries';
-import { requestAppearancePreference } from '@vp/ui';
-import uiStyles from '@vp/ui/styles.css?url';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { isEmbedPath } from '#app/features/embed';
 import { requestSidebarState } from '#app/features/shell';
+import type { WebCatalogue } from '#app/lib/messages';
 import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
 import { headWords } from '#app/lib/seo/head-words';
 import { urlModals } from '#app/lib/url-modal/registry';
@@ -12,11 +14,11 @@ import { AppLayout } from './-components/app-layout/app-layout';
 import { EmbedLayout } from './-components/embed-layout/embed-layout';
 import { RootDocument } from './-components/root-document/root-document';
 
-export const Route = createRootRouteWithContext<AppRouterContext>()({
+export const Route = createRootRouteWithContext<AppRouterContext<WebCatalogue>>()({
   beforeLoad: async ({ context, location }) => {
     const devicePreferences = requestDevicePreferences();
     return {
-      appearance: requestAppearancePreference(),
+      appearance: requestAppearancePreference(APPEARANCE_COOKIES),
       devicePreferences,
       sidebarState: requestSidebarState(),
       ...(await requestLocale(context.locales, {
@@ -29,7 +31,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
   head: ({ match }) => ({
     meta: [
       { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       {
         name: 'description',
         content: headWords(match.context.locales.snapshot()).tOr('shell.siteDescription', {}, ''),

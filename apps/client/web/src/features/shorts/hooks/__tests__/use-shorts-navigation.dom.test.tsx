@@ -38,7 +38,7 @@ describe('apps/client/web: useShortsNavigation', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe(`/shorts/${SHORTS[1]?.id}`));
   });
 
-  it('moves on from the Short the URL names, while the move before it has yet to render', async () => {
+  it('moves two Shorts on two quick steps, and names the one it rests on', async () => {
     const { router } = await renderShorts();
     const frame = screen.getByRole('region', { name: 'Shorts player' });
 

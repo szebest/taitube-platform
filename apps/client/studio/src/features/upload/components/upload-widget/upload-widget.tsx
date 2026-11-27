@@ -1,9 +1,10 @@
-import { fileSize, uploadProgress } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
-import { assertNever, unwrapOr } from '@vp/result';
-import { Button, Card, Icon, IconButton, Progress } from '@vp/ui';
+import { useFormat } from '@kit/intl-react';
+import { assertNever, unwrapOr } from '@kit/result';
+import { Button, Card, Icon, IconButton, Progress } from '@kit/ui';
+import { fileSize, uploadProgress } from '@vp/intl-formats';
 import { percentOf } from '#app/features/upload/api/upload-progress';
 import { useUploadProgress } from '#app/features/upload/hooks/use-upload-progress';
+import { useT } from '#app/lib/messages';
 import { type UploadItem, useUploadDock } from '../upload-dock/upload-dock';
 import { UploadProcessing } from '../upload-processing/upload-processing';
 
@@ -108,7 +109,7 @@ export function UploadWidget() {
   return (
     <aside
       aria-label={tOr('studio.uploadDockTitle', {}, '')}
-      className="fixed start-0 bottom-0 z-toast w-full p-gutter-compact medium:max-w-[24rem]"
+      className="fixed start-0 bottom-0 z-toast w-full p-gutter-compact pb-[max(var(--gutter-compact),env(safe-area-inset-bottom))] medium:max-w-[24rem]"
     >
       <Card.Root elevation={3}>
         <Card.Header>

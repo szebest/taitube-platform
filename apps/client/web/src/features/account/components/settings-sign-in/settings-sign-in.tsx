@@ -1,6 +1,6 @@
+import { EmptyState, SignedOutIllustration } from '@kit/components';
 import { Link, useLocation } from '@tanstack/react-router';
-import { EmptyState, SignedOutIllustration } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { useT } from '#app/lib/messages';
 
 /** What a guest sees in place of a section the account holds: one line and a way to sign in. */
 export function SettingsSignIn() {

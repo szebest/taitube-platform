@@ -1,7 +1,7 @@
 import type { Reporter, TestCase } from 'vite-plus/test/node';
 import { publish, type Retried, repoPath } from './retried/publish';
 
-/** Names every vitest test that failed and passed on its `--retry`, so a retry never hides a flake. */
+/** Names every vitest test that failed and passed on its `--retry`, and fails the run on one. */
 export default class VitestRetriedReporter implements Reporter {
   private readonly retried: Retried[] = [];
 

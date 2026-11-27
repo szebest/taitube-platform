@@ -23,6 +23,7 @@ export const adminUser: UserContext = { id: 'admin-1', role: 'ADMIN', email: 'ad
 export const publicVideo: VideoResource = {
   id: 'vid-pub',
   ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
   visibility: 'public',
   status: 'READY',
 };
@@ -30,6 +31,7 @@ export const publicVideo: VideoResource = {
 export const unlistedVideo: VideoResource = {
   id: 'vid-unl',
   ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
   visibility: 'unlisted',
   status: 'READY',
 };
@@ -37,6 +39,7 @@ export const unlistedVideo: VideoResource = {
 export const privateVideo: VideoResource = {
   id: 'vid-priv',
   ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
   visibility: 'private',
   status: 'READY',
 };
@@ -44,13 +47,32 @@ export const privateVideo: VideoResource = {
 export const rejectedVideo: VideoResource = {
   id: 'vid-rejected',
   ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
   visibility: 'private',
   status: 'REJECTED',
+};
+
+export const heldVideo: VideoResource = {
+  id: 'vid-held',
+  ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
+  visibility: 'private',
+  status: 'HELD',
+};
+
+export const screeningRejectedVideo: VideoResource = {
+  id: 'vid-screening-rejected',
+  ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
+  visibility: 'private',
+  status: 'REJECTED',
+  errorCode: 'SCREENING_REJECTED',
 };
 
 export const foreignVideo: VideoResource = {
   id: 'vid-foreign',
   ownerId: 'creator-2',
+  channelId: 'chan-creator-2',
   visibility: 'private',
   status: 'READY',
 };
@@ -58,6 +80,7 @@ export const foreignVideo: VideoResource = {
 export const sampleUpload: UploadResource = {
   id: 'up-1',
   ownerId: 'creator-1',
+  channelId: 'chan-creator-1',
   videoId: 'vid-pub',
 };
 
@@ -72,6 +95,7 @@ export const sampleComment: CommentResource = {
   authorId: 'usr-1',
   videoId: 'vid-pub',
   videoOwnerId: 'creator-1',
+  videoChannelId: 'chan-creator-1',
 };
 
 export const sampleChannel: ChannelResource = {

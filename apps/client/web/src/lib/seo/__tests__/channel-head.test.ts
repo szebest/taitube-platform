@@ -1,4 +1,4 @@
-import { FALLBACK_ACTIVE_LOCALE } from '@vp/intl-react';
+import { FALLBACK_ACTIVE_LOCALE } from '@vp/queries/intl';
 import { channel, videoSummary } from '@vp/web-testing';
 import { channelHead } from '../channel-head';
 import { headWords } from '../head-words';
@@ -26,7 +26,7 @@ describe('apps/client/web: channelHead', () => {
     const head = channelHead(owned, [videoSummary({ title: 'One' })], SITE, WORDS);
 
     expect(head.meta).toContainEqual({ title: 'The Creator' });
-    expect(head.links[0]).toEqual({ rel: 'canonical', href: `${SITE}/channel/${owned.id}` });
+    expect(head.links[0]).toEqual({ rel: 'canonical', href: `${SITE}/@${owned.handle}` });
     expect(JSON.parse(head.scripts[0]?.children ?? '')).toMatchObject({
       '@type': 'ItemList',
       itemListElement: [{ position: 1 }],

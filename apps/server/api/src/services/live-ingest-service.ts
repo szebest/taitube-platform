@@ -1,3 +1,4 @@
+import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, streamKeyFromPath } from '@vp/domain';
 import {
@@ -8,7 +9,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { announceLiveOutbox, liveOutbox, subscribersOutbox } from '@vp/job-contracts';
-import { type Result, err, isErr, ok } from '@vp/result';
 import { liveMasterKey, livePrefix } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 
@@ -71,6 +71,7 @@ export class LiveIngestService {
       video: {
         id: videoId,
         ownerId: channel.value.userId,
+        channelId: channel.value.id,
         title: stream.title || channel.value.displayName,
         description: stream.description,
         visibility: stream.visibility,

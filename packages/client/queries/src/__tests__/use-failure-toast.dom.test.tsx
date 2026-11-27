@@ -1,10 +1,11 @@
+import { ToastProvider, createToaster } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-import { ToastProvider, createToaster } from '@vp/ui';
 import { AppWords } from '../app-words';
 import { useFailureToast } from '../use-failure-toast';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function Failing({ error, retry }: { error: unknown; retry?: () => void }) {
   const showFailure = useFailureToast();
@@ -17,7 +18,7 @@ function Failing({ error, retry }: { error: unknown; retry?: () => void }) {
 
 async function renderFailing(props: { error: unknown; retry?: () => void }) {
   render(
-    <AppWords>
+    <AppWords messages={SPEC_MESSAGES}>
       <ToastProvider toaster={createToaster()}>
         <Failing {...props} />
       </ToastProvider>

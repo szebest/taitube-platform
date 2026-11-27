@@ -1,22 +1,30 @@
+import { Format } from '@kit/intl-react';
+import { UI_COPY_KEYS, type UiCopy, useUiCopy } from '@kit/ui';
 import { act, render } from '@testing-library/react';
-import { Format, useT } from '@vp/intl-react';
-import { LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
-import { UI_COPY_KEYS, type UiCopy, useUiCopy } from '@vp/ui';
+import type { SupportedLocale } from '@vp/shared-messages';
 import type { ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { AppWords, type AppWordsProps } from '../app-words';
+import { SPEC_MESSAGES, useSpecT } from './spec-messages';
 
 const RENDERED_AT = '2026-10-30T12:00:00.000Z';
 const HYDRATED_AT = '2026-10-30T12:00:05.000Z';
 const PUBLISHED = { type: 'relative', value: '2026-10-30T11:59:24.000Z' } as const;
 
-function renderWords(children: ReactNode, props: Omit<AppWordsProps, 'children'> = {}) {
-  return <AppWords {...props}>{children}</AppWords>;
+function renderWords(
+  children: ReactNode,
+  props: Omit<AppWordsProps<typeof SPEC_MESSAGES.source>, 'children' | 'messages'> = {}
+) {
+  return (
+    <AppWords messages={SPEC_MESSAGES} {...props}>
+      {children}
+    </AppWords>
+  );
 }
 
 async function activeLocale(locale: SupportedLocale) {
-  return { locale, catalogues: { [locale]: await LOCALE_DETAILS[locale].load() } };
+  return { locale, catalogues: { [locale]: await SPEC_MESSAGES.load(locale) } };
 }
 
 async function hydrateServerMarkup(page: ReactNode) {
@@ -41,12 +49,11 @@ function copyFromCatalogue() {
 }
 
 function LocalisedPage() {
-  const { tOr } = useT();
+  const { tOr } = useSpecT();
   return (
     <main>
       <p>{tOr('videos.views', { count: 3 }, '')}</p>
       <p>{tOr('videos.views', { count: 5 }, '')}</p>
-      <p>{tOr('settings.resultCount', { count: 22 }, '')}</p>
       <Format value={{ type: 'number', value: 1_234_567 }} />
       <Format value={PUBLISHED} />
     </main>
@@ -81,10 +88,10 @@ describe('@vp/queries: AppWords', () => {
   });
 
   it.each([
-    { locale: 'en', words: /^3 views5 views22 settings1,234,56736 seconds ago$/ },
+    { locale: 'en', words: /^3 views5 views1,234,56736 seconds ago$/ },
     {
       locale: 'pl',
-      words: /^3 wyświetlenia5 wyświetleń22 ustawienia1\s234\s56736 sekund temu$/,
+      words: /^3 wyświetlenia5 wyświetleń1\s234\s56736 sekund temu$/,
     },
   ] as const)(
     'hydrates the $locale server markup byte for byte, in its own words and separators',

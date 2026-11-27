@@ -1,0 +1,188 @@
+import { join } from 'node:path';
+import ts from 'typescript';
+import { load } from '../../scripts/workspace-packages';
+import { productionProgram } from './program';
+import { read, ROOT } from './repo-files';
+
+type EntryMove = string | Readonly<Record<string, string>>;
+type PackageMove = string | Readonly<Record<string, EntryMove>>;
+type Moves = Readonly<Record<string, PackageMove>>;
+
+interface Workspace {
+  entriesOf: (name: string) => string[] | undefined;
+  exportsOf: (specifier: string) => string[];
+}
+
+const difference = (left: readonly string[], right: readonly string[]) =>
+  left.filter((name) => !right.includes(name));
+
+const destinationsOf = (move: PackageMove | EntryMove): string[] =>
+  typeof move === 'string' ? [move] : Object.values(move).flatMap(destinationsOf);
+
+const exportedAt = (workspace: Workspace, destination: string, symbol: string): boolean =>
+  workspace.exportsOf(destination).includes(symbol);
+
+function landedDrift(name: string, move: PackageMove, workspace: Workspace): string[] {
+  const absent = destinationsOf(move).filter((to) => workspace.entriesOf(to) === undefined);
+  if (absent.length > 0) return [`${name}: no workspace package has this name`];
+  if (typeof move === 'string') return [];
+  return Object.values(move).flatMap((entryMove) =>
+    typeof entryMove === 'string'
+      ? []
+      : Object.entries(entryMove)
+          .filter(([symbol, to]) => !exportedAt(workspace, to, symbol))
+          .map(([symbol, to]) => `${name}: ${symbol} is not exported by ${to}`)
+  );
+}
+
+function moveDrift(moves: Moves, workspace: Workspace): string[] {
+  return Object.entries(moves).flatMap(([name, move]) => {
+    const entries = workspace.entriesOf(name);
+    if (!entries) return landedDrift(name, move, workspace);
+    if (typeof move === 'string') return [];
+
+    const landedElsewhere = (entry: string) => {
+      const to = move[entry];
+      return typeof to === 'string' && to !== name && workspace.entriesOf(to) !== undefined;
+    };
+    const listed = Object.keys(move).filter(
+      (entry) => entries.includes(entry) || !landedElsewhere(entry)
+    );
+    const entryDrift = [
+      ...difference(entries, listed).map((entry) => `${name}: export entry ${entry} is not listed`),
+      ...difference(listed, entries).map(
+        (entry) => `${name}: lists ${entry}, which it no longer exports`
+      ),
+    ];
+    const nameDrift = Object.entries(move).flatMap(([entry, entryMove]) => {
+      if (typeof entryMove === 'string' || !entries.includes(entry)) return [];
+      const specifier = entry === '.' ? name : `${name}/${entry.slice(2)}`;
+      const exported = workspace.exportsOf(specifier);
+      const named = Object.keys(entryMove);
+      const movedOut = (symbol: string) => {
+        const to = entryMove[symbol];
+        return to !== undefined && to !== name && exportedAt(workspace, to, symbol);
+      };
+      return [
+        ...difference(exported, named).map((n) => `${specifier}: export ${n} has no destination`),
+        ...difference(named, exported)
+          .filter((n) => !movedOut(n))
+          .map((n) => `${specifier}: lists ${n}, which it no longer exports`),
+      ];
+    });
+    return [...entryDrift, ...nameDrift];
+  });
+}
+
+function repoWorkspace(): Workspace {
+  const manifests = new Map(
+    load().map(({ name, dir }) => [
+      name,
+      JSON.parse(read(join(dir, 'package.json'))) as { exports?: Record<string, unknown> },
+    ])
+  );
+  const { program } = productionProgram();
+  const checker = program.getTypeChecker();
+  const from = join(ROOT, 'package.json');
+
+  return {
+    entriesOf: (name) => {
+      const manifest = manifests.get(name);
+      return (
+        manifest &&
+        Object.keys(manifest.exports ?? {})
+          .filter((e) => !e.includes('*'))
+          .toSorted()
+      );
+    },
+    exportsOf: (specifier) => {
+      const { resolvedModule } = ts.resolveModuleName(
+        specifier,
+        from,
+        program.getCompilerOptions(),
+        ts.sys
+      );
+      const source = resolvedModule && program.getSourceFile(resolvedModule.resolvedFileName);
+      const symbol = source && checker.getSymbolAtLocation(source);
+      return symbol
+        ? checker
+            .getExportsOfModule(symbol)
+            .map((e) => e.name)
+            .toSorted()
+        : [];
+    },
+  };
+}
+
+const PLANTED: Workspace = {
+  entriesOf: (name) =>
+    name === '@vp/split'
+      ? ['.', './extra']
+      : name === '@kit/landed' || name === '@vp/landed-app'
+        ? ['.']
+        : undefined,
+  exportsOf: (specifier) => (specifier === '@kit/landed' ? ['moved'] : ['kept', 'added']),
+};
+
+describe('architecture: package moves', () => {
+  it('gives every export of a split package a destination, and names only what exists', () => {
+    const moves = JSON.parse(read('scripts/package-moves.json')) as Moves;
+
+    expect(moveDrift(moves, repoWorkspace())).toEqual([]);
+  });
+
+  it.each<{ planted: string; moves: Moves; drift: string[] }>([
+    {
+      planted: 'a package that does not exist',
+      moves: { '@vp/gone': '@kit/gone' },
+      drift: ['@vp/gone: no workspace package has this name'],
+    },
+    {
+      planted: 'an unlisted entry, an added export and a removed one',
+      moves: { '@vp/split': { '.': { kept: '@kit/split', removed: '@vp/split' } } },
+      drift: [
+        '@vp/split: export entry ./extra is not listed',
+        '@vp/split: export added has no destination',
+        '@vp/split: lists removed, which it no longer exports',
+      ],
+    },
+  ])('reports $planted', ({ moves, drift }) => {
+    expect(moveDrift(moves, PLANTED)).toEqual(drift);
+  });
+
+  it('ignores a subpath that has landed in another package and is no longer exported', () => {
+    expect(
+      moveDrift({ '@vp/split': { '.': '@vp/split', './gone': '@kit/landed' } }, PLANTED)
+    ).toEqual(['@vp/split: export entry ./extra is not listed']);
+  });
+
+  it('reports a symbol of a landed split that its destination does not export', () => {
+    const moves: Moves = { '@vp/old': { '.': { moved: '@kit/landed', ghost: '@kit/landed' } } };
+
+    expect(moveDrift(moves, PLANTED)).toEqual(['@vp/old: ghost is not exported by @kit/landed']);
+  });
+
+  it('accepts a whole move that has landed, its old name gone and its new one present', () => {
+    expect(moveDrift({ '@vp/landed': '@kit/landed' }, PLANTED)).toEqual([]);
+  });
+
+  it('accepts a split package that has landed, its old name gone and every destination present', () => {
+    const split = { '.': { moved: '@kit/landed', kept: '@vp/landed-app' }, './sub': '@kit/landed' };
+
+    expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([]);
+  });
+
+  it('reports a split package whose old name is gone but a destination is missing', () => {
+    const split = { '.': { a: '@kit/landed', b: '@vp/missing' } };
+
+    expect(moveDrift({ '@vp/landed-split': split }, PLANTED)).toEqual([
+      '@vp/landed-split: no workspace package has this name',
+    ]);
+  });
+
+  it('accepts a listed export that now lives in its destination package', () => {
+    const split = { '.': { kept: '@vp/split', added: '@vp/split', moved: '@kit/landed' } };
+
+    expect(moveDrift({ '@vp/split': { ...split, './extra': '@vp/split' } }, PLANTED)).toEqual([]);
+  });
+});

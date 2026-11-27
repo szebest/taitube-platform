@@ -12,11 +12,13 @@ Instructions for any coding agent working on `@vp/db`.
 (no CLI, no `migrate` / `seed` scripts):
 - **Schema Definitions:** Drizzle ORM tables (`src/schema.ts`, subpath `@vp/db/schema`, with
   `src/social-schema.ts` for `video_reactions` and `channel_subscriptions`, `src/comments-schema.ts` for
-  `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
+  `video_comments` (with its moderation columns), `src/comment-moderation-schema.ts` for `channel_comment_settings`, `channel_user_restrictions`, `channel_trusted_commenters`, `channel_saved_replies` and `comment_removals`, `src/view-schema.ts` for `video_views_daily`, `video_views_device_daily` (device CHECKed against `VIEW_DEVICES`) and `video_view_batches`, and
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`, and
   `src/preferences-schema.ts` for `user_preferences`, whose `jsonb` sections are typed by `@vp/domain/settings`, and
-  `src/user-events-schema.ts` for `user_events`, `src/search-history-schema.ts` for `search_history`, `src/recommendation-feedback-schema.ts` for `recommendation_feedback`, `src/clips-schema.ts` for `clips`, `src/picks-schema.ts` for `picks` (its no-overlap exclusion constraint exists only in `0026_picks.sql`, like the search vectors), `src/channel-featured-schema.ts` for `channel_featured_videos`, and `src/captions-schema.ts` for `video_captions` and
-  `video_transcript_cues`; `drizzle.config.ts` reads them all). The cue `text_vector` is generated in
+  `src/user-events-schema.ts` for `user_events`, `src/outbox-schema.ts` for `outbox` (`status` moves through `OUTBOX_ROW`, `claimable_at` holds a relay's lease and the retry backoff), `src/search-history-schema.ts` for `search_history`, `src/recommendation-feedback-schema.ts` for `recommendation_feedback`, `src/clips-schema.ts` for `clips`, `src/picks-schema.ts` for `picks` (its no-overlap exclusion constraint exists only in `0026_picks.sql`, like the search vectors), `src/channel-featured-schema.ts` for `channel_featured_videos`, `src/channel-team-schema.ts` for `channel_members`, `channel_invites` and the append-only `channel_audit_log` (roles and statuses CHECKed against `@vp/domain`, audit actions left open), `src/screening-schema.ts` for `video_screenings`, `video_frame_hashes` (four indexed 16-bit bands), `video_audio_fingerprints` and `screening_appeals`, and `src/captions-schema.ts` for `video_captions` and
+  `video_transcript_cues`, and `src/watch-parties-schema.ts` (rooms, seats, bans, roles) with
+  `src/watch-party-activity-schema.ts` (invites, links, queue, chat, personal controls, interest, reports),
+  whose room `search_vector` and its GIN and trigram indexes exist only in `0035_watch_parties.sql`; `drizzle.config.ts` reads them all). The cue `text_vector` is generated in
   `0022_captions.sql` like the search vectors, and reached through `transcriptVector`. `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
   `src/search-schema.ts` declares no table: the generated `search_vector` columns and the GIN and trigram
   indexes exist only in `0014_search_vectors.sql` (a custom migration), so no `select()` carries a vector,
@@ -27,6 +29,9 @@ Instructions for any coding agent working on `@vp/db`.
 - **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, two
   READY videos (the dev user's public one, the other user's private one) and the public one's three
   renditions.
+- **Demo Identities:** `upsertIdentities(url, identities, log)` (`src/seed-identities.ts`,
+  `@vp/db/seed-identities`) upserts users with a role and tier, the one thing the public API cannot grant;
+  the `@vp/demo` seed calls it before it signs in as them.
 - **Connection Client:** `createDbClient(url, { max })` (the `postgres.js` pool plus the Drizzle
   instance) and `waitForDatabase` (`src/client.ts`, `@vp/db/client`).
 
@@ -36,7 +41,7 @@ The runners live in the API: `apps/server/api/src/migrate.ts` (`pnpm db:migrate`
 *Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
 
 **Layer 3.** Its `@vp/*` dependencies are layer 1 and `@vp/job-contracts` (layer 2); the list is in [package.json](package.json). It does
-not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase` take the structural `Log`
+not depend on `@kit/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase` take the structural `Log`
 (`info` / `warn`) from `src/client.ts`.
 
 ---
@@ -44,9 +49,9 @@ not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase
 ## 2. Invariants & Rules
 
 1. **State Durability (CAS):** State updates to `videos` run through `VideoRepository.transition(options)`
-   (`packages/server/adapters/postgres/repositories/postgres-video-repository.ts`), which updates the status
-   only while it still matches `from` and appends to `video_events` (and optionally `outbox`) in the same
-   transaction. This package holds no transition helper.
+   (`commitVideoTransition` in `packages/server/adapters/postgres/repositories/video-transition.ts`), which
+   updates the status only while it is still one of the named edge's sources and appends to `video_events`
+   (and optionally `outbox`) in the same transaction. This package holds no transition helper.
 2. **Schema Drift Prevention:** Generate migrations with `pnpm --filter @vp/db generate` and verify them
    with `pnpm --filter @vp/db check` (root alias `pnpm db:check`).
 3. **Deterministic Seeds:** Seed rows use fixed UUIDs, and each row's `onConflictDoUpdate` sets that row's

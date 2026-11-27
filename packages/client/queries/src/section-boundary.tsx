@@ -1,9 +1,9 @@
+import { SectionError, type SectionErrorRootProps } from '@kit/components';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { CatchBoundary } from '@tanstack/react-router';
-import { SectionError, type SectionErrorRootProps } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
 import { failureCode } from './failure-code';
+import { useT } from './intl/shared-words';
 import { present } from './present-failure';
 
 export interface SectionBoundaryProps extends Pick<SectionErrorRootProps, 'layout' | 'className'> {

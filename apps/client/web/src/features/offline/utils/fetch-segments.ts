@@ -1,4 +1,4 @@
-import { fromPromise } from '@vp/result';
+import { fromPromise } from '@kit/result';
 import { type FetchedEntry, sizeOf } from './put-all';
 
 /**

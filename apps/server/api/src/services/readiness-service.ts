@@ -1,5 +1,5 @@
+import { isOk } from '@kit/result';
 import type { HealthCheckable } from '@vp/core/ports';
-import { isOk } from '@vp/result';
 
 type DependencyCheck = 'ok' | 'failed';
 

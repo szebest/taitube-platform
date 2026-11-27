@@ -1,9 +1,10 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
-import { STRANGER, aComment, aVideo } from '../../__tests__/entities';
+import { STRANGER, aComment, aVideo, videoHost } from '../../__tests__/entities';
 import { type ReportCommentInput, decideCommentReport } from '../report-comment.rule';
 
 const video = aVideo();
+const host = videoHost(video);
 const comment = aComment();
 
 function input(overrides: Partial<ReportCommentInput> = {}): ReportCommentInput {
@@ -11,7 +12,7 @@ function input(overrides: Partial<ReportCommentInput> = {}): ReportCommentInput 
     reporter: STRANGER,
     comment,
     commentId: comment.id,
-    video,
+    host,
     reason: 'spam',
     note: undefined,
     ...overrides,
@@ -41,7 +42,7 @@ describe('@vp/domain-rules: decideCommentReport', () => {
     },
     {
       scenario: 'a comment under a private video',
-      overrides: { video: aVideo({ visibility: 'private' }) },
+      overrides: { host: videoHost(aVideo({ visibility: 'private' })) },
       code: ErrorCodes.FORBIDDEN,
     },
     {

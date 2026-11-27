@@ -1,6 +1,6 @@
+import { DEFAULT_APPEARANCE } from '@kit/ui';
 import { QueryClient } from '@tanstack/react-query';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { DEFAULT_APPEARANCE } from '@vp/ui';
 import { preferencesView } from '#app/__tests__/preferences-fixtures';
 import { type MergeState, resetIdentityState } from '../identity-reset';
 
@@ -13,6 +13,7 @@ function setup(merge: Partial<{ [K in keyof MergeState]: MergeState[K]['current'
   const state: MergeState = {
     applied: { current: merge.applied ?? { userId: 'old', version: 4 } },
     guest: { current: merge.guest },
+    baseline: { current: merge.baseline },
   };
   const restoreGuest = vi.fn();
   return {
@@ -40,6 +41,14 @@ describe('resetIdentityState', () => {
 
     expect(state.applied.current).toBeUndefined();
     expect(state.guest.current).toBeUndefined();
+  });
+
+  it("measures a signed-out viewer's next change from the sections put back", () => {
+    const { state, reset } = setup({ guest: GUEST });
+
+    reset();
+
+    expect(state.baseline.current).toBe(GUEST.appearance);
   });
 
   it("puts the guest's sections back on the device before forgetting them", () => {

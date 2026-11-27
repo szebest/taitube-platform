@@ -1,11 +1,12 @@
+import { VideoCard } from '@kit/components';
+import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
-import { VideoCard } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import type { ReactNode } from 'react';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 
 export interface LibraryVideoRowProps {
   video: VideoSummary;
@@ -31,7 +32,7 @@ export function LibraryVideoRow({
   actions,
 }: LibraryVideoRowProps) {
   const { tOr } = useT();
-  const { save, enqueue } = useVideoActions(video);
+  const { save, enqueue, playNext } = useVideoActions(video);
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
 
@@ -68,7 +69,7 @@ export function LibraryVideoRow({
           <Format value={publishedAt(at).relative} />
         </time>
       </VideoCard.Meta>
-      <VideoCard.Menu onSave={save} onQueue={enqueue}>
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
         {actions}
       </VideoCard.Menu>
     </VideoCard.Root>

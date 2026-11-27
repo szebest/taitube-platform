@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { RefObject } from 'react';
 import type { LiveChatLayout } from './types';
 

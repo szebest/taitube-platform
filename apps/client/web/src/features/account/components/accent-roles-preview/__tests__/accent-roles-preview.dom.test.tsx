@@ -1,12 +1,19 @@
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import { render, screen } from '@testing-library/react';
-import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { AppProviders } from '#app/__tests__/providers';
 import { AccentRolesPreview } from '../accent-roles-preview';
 
 const renderPreview = (hex: string, mode: 'dark' | 'light') =>
   render(
     <AppProviders>
-      <AppearanceProvider stored={{ preference: { ...DEFAULT_APPEARANCE, mode }, source: 'none' }}>
+      <AppearanceProvider
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, mode },
+          source: 'none',
+          storage: APPEARANCE_COOKIES,
+        }}
+      >
         <AccentRolesPreview hex={hex} />
       </AppearanceProvider>
     </AppProviders>

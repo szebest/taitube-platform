@@ -1,6 +1,9 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { productionSources, read, trackedFiles } from './repo-files';
 
-const UI = 'packages/client/ui/src/';
+const CLIENT = tierGlob('client');
+const UI = `${packageDir('@kit/ui')}/src/`;
+
 /** Where a token value may be written: the sets and the themes, each its own module. */
 const TOKEN_HOMES = [`${UI}tokens/`, `${UI}themes/`];
 /** The one module that offers a theme or a set to the apps. */
@@ -53,7 +56,7 @@ describe('architecture: token sets and themes stay data', () => {
     {
       shape: 'a theme imported by an app',
       file: 'apps/client/web/src/routes/__root.tsx',
-      source: "import { nocturne } from '@vp/ui/themes/nocturne';",
+      source: "import { nocturne } from '@kit/ui/themes/nocturne';",
     },
     {
       shape: 'a set imported outside the registry',
@@ -114,7 +117,7 @@ describe('architecture: token sets and themes stay data', () => {
     const sources = trackedFiles(
       ':(glob)apps/client/*/src/**/*.css',
       ':(glob)apps/client/*/src/**/*.scss',
-      ':(glob)packages/client/*/src/**/*.css',
+      `:(glob)${CLIENT}/*/src/**/*.css`,
       ':(glob)packages/client/workbench/.storybook/*.css',
       ...productionSources().filter((file) => /^(?:apps|packages)\/client\//.test(file)),
       `:(exclude)${GENERATED}`

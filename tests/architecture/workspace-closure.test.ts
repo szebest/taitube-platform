@@ -1,4 +1,7 @@
+import { inPackageTier, packageDir } from '../../scripts/workspace-packages';
 import { workspaceClosure, workspaceLinks } from './workspace-closure';
+
+const TSCONFIG = packageDir('@kit/tsconfig');
 
 const PLANTED = `lockfileVersion: '9.0'
 
@@ -13,9 +16,9 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/server/testing
     devDependencies:
-      '@vp/tsconfig':
+      '@kit/tsconfig':
         specifier: workspace:*
-        version: link:../../../packages/universal/tsconfig
+        version: link:../../../${TSCONFIG}
 
   packages/server/testing:
     dependencies:
@@ -70,14 +73,12 @@ ${PLANTED}`;
   });
 
   it('still exempts build tooling reached by a dev edge', () => {
-    expect(workspaceClosure('apps/client/web', 'dev', PLANTED)).not.toContain(
-      'packages/universal/tsconfig'
-    );
+    expect(workspaceClosure('apps/client/web', 'dev', PLANTED)).not.toContain(TSCONFIG);
   });
 
   it('fires the server-tier assertion the planted edge breaks', () => {
     const server = workspaceClosure('apps/client/web', 'runtime', PLANTED).filter((dep) =>
-      dep.startsWith('packages/server/')
+      inPackageTier(dep, 'server')
     );
 
     expect(server).toEqual(['packages/server/job-contracts', 'packages/server/testing']);

@@ -1,6 +1,7 @@
-import { videoTransitionName } from '@vp/components';
-import { Button, cn, Icon, Skeleton, Slot, Spinner, useUiCopy } from '@vp/ui';
+import { videoTransitionName } from '@kit/components';
+import { Button, cn, Icon, Skeleton, Slot, Spinner, useUiCopy } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 import { StageContext, useStage } from './stage.context';
 import { stageStyles } from './stage.variants';
 import type { StageStatusKind, StageVariant } from './types';
@@ -26,7 +27,8 @@ export function StageRoot({
   children,
   ...props
 }: StageRootProps) {
-  const { videoPlayer } = useUiCopy();
+  const { tOr } = useT();
+  const videoPlayer = tOr('appUi.videoPlayer', {}, '');
   const styles = stageStyles({ variant });
   const banner = variant === 'banner';
   const transition =

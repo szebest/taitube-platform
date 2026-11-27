@@ -83,7 +83,7 @@ flowchart TB
   A3 --> SVC
   W1 --> ST["7 worker stages<br/>all read env at the default-parameter"]
   ST -.-> ENV
-  CFG["@vp/config loadEnv()<br/>validated AppEnv"] --> M1["api/main.ts"]
+  CFG["@kit/config loadEnv()<br/>validated AppEnv"] --> M1["api/main.ts"]
   CFG --> M2["worker/main.ts (partial)"]
   M1 -. "4 of 40 keys forwarded" .-> A1
   style ENV fill:#fee2e2,stroke:#ef4444
@@ -419,7 +419,7 @@ export class VideoService {
               <tr><th class="p-3 font-semibold w-20">Stream</th><th class="p-3 font-semibold">Work</th><th class="p-3 font-semibold w-32">Closes</th></tr>
             </thead>
             <tbody class="divide-y divide-slate-100 align-top">
-              <tr><td class="p-3 mono">W1</td><td class="p-3"><span class="mono text-xs">@vp/composition</span> &mdash; typed tokens, lazy memoised factories, cycle detection, ordered <span class="mono text-xs">dispose</span></td><td class="p-3 mono text-xs">&mdash;</td></tr>
+              <tr><td class="p-3 mono">W1</td><td class="p-3"><span class="mono text-xs">@kit/composition</span> &mdash; typed tokens, lazy memoised factories, cycle detection, ordered <span class="mono text-xs">dispose</span></td><td class="p-3 mono text-xs">&mdash;</td></tr>
               <tr><td class="p-3 mono">W2</td><td class="p-3"><span class="mono text-xs">AppConfig</span> as a value: one <span class="mono text-xs">loadEnv()</span> per process, <span class="mono text-xs">CdnBase</span> and bucket names parsed once, the phantom env keys reconciled</td><td class="p-3 mono text-xs">F1, F4</td></tr>
               <tr><td class="p-3 mono">W3</td><td class="p-3">Total dependencies: delete all six self-construction fallbacks and the 25 conditional spreads; deps become required</td><td class="p-3 mono text-xs">F3, F8</td></tr>
               <tr><td class="p-3 mono">W4</td><td class="p-3">One registration surface for both apps; <span class="mono text-xs">AdapterKind</span> is the only switch; the worker's <span class="mono text-xs">instanceof</span> inference is deleted</td><td class="p-3 mono text-xs">F5</td></tr>

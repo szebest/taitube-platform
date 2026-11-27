@@ -17,6 +17,7 @@ import { ApiProvider } from '../api-provider';
 import { GUEST, type Session } from '../session';
 import { SessionProvider } from '../session-provider';
 import { useLiveChat } from '../use-live-chat';
+import { scriptSockets } from './scripted-socket';
 
 const STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
 const SIGNED_IN: Session = { status: 'signed-in', account: account() };
@@ -45,7 +46,19 @@ function renderChat({
   return { ...rendered, socket };
 }
 
+const HELLO = {
+  type: 'hello',
+  resume: 'fresh',
+  mode: { slowModeSeconds: 0, subscribersOnly: false },
+  canSend: false,
+  canModerate: false,
+};
+
 describe('packages/queries: useLiveChat', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it.each([
     { viewer: 'a signed-in viewer', session: SIGNED_IN, query: '?ticket=ticket-1', canSend: true },
     { viewer: 'a guest', session: GUEST, query: '', canSend: false },
@@ -102,5 +115,29 @@ describe('packages/queries: useLiveChat', () => {
 
     await vi.waitFor(() => expect(result.current.connection).toBe('open'), { timeout: 3000 });
     expect(socket.urls).toEqual([`ws://localhost:3000/v1/live/${STREAM_ID}/chat?ticket=ticket-1`]);
+  });
+
+  it('waits longer before each reconnect until the socket says hello, then starts over', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sockets = scriptSockets();
+    renderChat({ session: GUEST });
+    const reconnectsAfter = async (ms: number, { hello = false } = {}) => {
+      const opened = sockets.length;
+      const socket = sockets.at(-1);
+      act(() => {
+        socket?.open();
+        if (hello) socket?.speak(HELLO);
+        socket?.drop();
+      });
+      await act(() => vi.advanceTimersByTimeAsync(ms - 1));
+      expect(sockets).toHaveLength(opened);
+      await act(() => vi.advanceTimersByTimeAsync(1));
+      expect(sockets).toHaveLength(opened + 1);
+    };
+
+    await reconnectsAfter(1_000);
+    await reconnectsAfter(2_000);
+    await reconnectsAfter(4_000);
+    await reconnectsAfter(1_000, { hello: true });
   });
 });

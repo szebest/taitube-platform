@@ -1,13 +1,15 @@
 import {
   getChannelAnalytics,
   getVideoAnalytics,
+  getVideoAudience,
+  getVideoBenchmark,
   getVideoRetention,
   problemFor,
 } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -55,6 +57,45 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
   );
 
   server.get(
+    getVideoAudience.path,
+    {
+      schema: {
+        ...contractSchema(getVideoAudience),
+        params: getVideoAudience.params,
+        querystring: getVideoAudience.query,
+      },
+    },
+    async (request, reply) => {
+      const user = requireAuth(request);
+      return sendResult(
+        reply,
+        request,
+        await analyticsService.videoAudience(user, request.params.id, request.query.range),
+        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+      );
+    }
+  );
+
+  server.get(
+    getVideoBenchmark.path,
+    {
+      schema: {
+        ...contractSchema(getVideoBenchmark),
+        params: getVideoBenchmark.params,
+      },
+    },
+    async (request, reply) => {
+      const user = requireAuth(request);
+      return sendResult(
+        reply,
+        request,
+        await analyticsService.videoBenchmark(user, request.params.id),
+        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+      );
+    }
+  );
+
+  server.get(
     getChannelAnalytics.path,
     {
       schema: {
@@ -63,11 +104,11 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (request, reply) => {
-      const user = requireAuth(request);
+      const { user, acting } = requireActingChannel(request);
       return sendResult(
         reply,
         request,
-        await analyticsService.channelAnalytics(user, request.query.range)
+        await analyticsService.channelAnalytics(user, acting, request.query.range)
       );
     }
   );

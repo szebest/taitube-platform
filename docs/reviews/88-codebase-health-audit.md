@@ -28,7 +28,7 @@ checked against the code, and several claims in the previous scorecard were wron
 
 | Finding | Evidence | Reproduce |
 |---|---|---|
-| Dev JWKS served in every environment, and prod points at it | `apps/api/src/routes/index.ts:20`, `routes/dev-jwks.ts:10`, `infra/k8s/base/configmap-secret.yaml:28`, seed in `packages/server/dev-token/src/keys.ts:23` | `grep -n devJwksRoutes apps/api/src/routes/index.ts; grep -n AUTH_JWKS_URL infra/k8s/base/configmap-secret.yaml` |
+| Dev JWKS served in every environment, and prod points at it | `apps/api/src/routes/index.ts:20`, `routes/dev-jwks.ts:10`, `infra/k8s/base/configmap-secret.yaml:28`, seed in `packages/platform/server/dev-token/src/keys.ts:23` | `grep -n devJwksRoutes apps/api/src/routes/index.ts; grep -n AUTH_JWKS_URL infra/k8s/base/configmap-secret.yaml` |
 | `iss`/`aud` never compared on the JWKS path | `apps/api/src/plugins/jwks-verifier.ts:177-187` (exp, nbf, sub only); `AUTH_ISSUER`/`AUTH_AUDIENCE` not in `AppConfig.auth` | `grep -nE "iss\|aud" apps/api/src/plugins/jwks-verifier.ts` |
 | Unknown `alg` falls back to RSA-SHA256; kid-less token takes `keys[0]`; ES256 always fails (no `dsaEncoding`) | `jwks-verifier.ts:73-74`, `:138`, `:156` | read |
 | JWKS cache is module state with a 5 min TTL and no refetch on unknown kid | `jwks-verifier.ts:33-40` | `grep -n "let jwksCache" apps/api/src/plugins/jwks-verifier.ts` |
@@ -70,7 +70,7 @@ The 25 unread keys: `ALLOWED_CONTENT_TYPES`, `AUTH_AUDIENCE`, `AUTH_DEV_USER_ID`
 
 - Worker consumes before metrics and heartbeat: `apps/worker/src/main.ts:31` (start, `new Worker` autoruns) before `:34` (metrics) and `:40-44` (heartbeat). A metrics bind failure calls `process.exit(1)` at `:75-77` with jobs in flight.
 - Both mains attach signal handlers after `main()` resolves (`apps/worker/src/main.ts:69`, `apps/api/src/main.ts:71-73`).
-- API drain order is correct: readiness flips, 2 s drain, close, dispose, all inside a 20 s grace window (`packages/server/composition/src/shutdown.ts:17,36-57`).
+- API drain order is correct: readiness flips, 2 s drain, close, dispose, all inside a 20 s grace window (`packages/platform/server/composition/src/shutdown.ts:17,36-57`).
 - Worker liveness is `test -f /tmp/vp/heartbeat || exit 0` - a missing file is healthy. Zero readiness probes across 8 worker manifests.
 - Heartbeat file written from 5 places: `probe.ts:90`, `transcode.ts:100,232`, `thumbnail.ts:71`, `main.ts:22`, in two formats. `main.ts:22` writes epoch seconds, the stages write ISO strings, and the probe's `$(( $(date +%s) - $(cat heartbeat) ))` is a syntax error on an ISO string.
 
@@ -90,7 +90,7 @@ destructuring defaults, `?? getMetrics()` and `app.ts`/`runner.ts` are outside i
 
 ## Errors
 
-- `@vp/result` has no `ignore()`.
+- `@kit/result` has no `ignore()`.
 - About 36 statement-level discards. Behaviour-changing ones: `apps/worker/src/stages/housekeeping/expire-raw.ts:47-50,60`, `reconcile-uploads.ts:72,124,140-142`, `reconcile-processing.ts:112`, `purge-deleted.ts:89-91,110`, `transcode.ts:231`. Cache writes: `apps/api/src/services/subscription-service.ts:67,68,88,89,115`, `reaction-service.ts:58,59`. Inconsistent pair: `video-lifecycle.ts:75` discards the `enqueueProbe` that `upload-complete.ts:198` checks.
 - `catch-confinement` regex `(^|[^\w.])catch\s*[({]` skips `.catch(`: 43 method catches, 20 in services and stages. `grep -rcE '\.catch\??\.?\s*\(' apps/api/src/services apps/worker/src/stages --include='*.ts'`.
 - `legacy-catch-sites.ts`: 22 entries.

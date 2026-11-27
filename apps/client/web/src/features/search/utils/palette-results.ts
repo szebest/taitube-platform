@@ -1,5 +1,5 @@
+import { assertNever } from '@kit/result';
 import type { SearchResultItem, SearchSuggestion } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 import type { PlaylistHit, VideoHit } from './search-hits';
 
 export type PaletteResult =

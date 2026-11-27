@@ -19,8 +19,8 @@ This is a **workspace package with a CLI**, not a loose script, which is why it 
 
 - **Tier `server`**, Node/Bun only.
 - **`vp.layer` 6**, above the applications, because its spec boots `apps/server/api` (`composeApp`) against a
-  stub S3 to drive a real resumable upload end to end. What the package *ships* is `@vp/logger` and
-  `@vp/result`; the layer records the whole manifest, devDependencies included.
+  stub S3 to drive a real resumable upload end to end. What the package *ships* is `@kit/logger` and
+  `@kit/result`; the layer records the whole manifest, devDependencies included.
 
 ---
 
@@ -29,7 +29,7 @@ This is a **workspace package with a CLI**, not a loose script, which is why it 
 1. **Local-first (Rule 1):** runs fully offline, no external host, nothing phones home.
 2. **Dual runtime (Rule 2):** the root `pnpm upload-client` script runs it through `tsx`, and it must
    still run cleanly under `bun`, which `pnpm test:bun` proves.
-3. **1:1 tests (Rule 12):** every source file has a name-matching test file.
+3. **Tests (Rule 12):** specs where behaviour can break, in `src/__tests__/`; no spec per file is required.
 
 ---
 

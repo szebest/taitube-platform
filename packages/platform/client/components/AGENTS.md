@@ -1,0 +1,39 @@
+# AGENTS.md - @kit/components (the shared components)
+
+> Tier rules for this directory: [../AGENTS.md](../../../client/AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../../AGENTS.md)
+
+Owner: ticket [95](../../../../docs/tickets/95-design-system-2.md), section 6. `client` tier, layer T4: above `@kit/ui` (T3),
+whose primitives it composes, and below the apps. Specs: [docs/design/components/](../../../../docs/design/components/README.md).
+
+## What it holds
+
+Only what web and studio both render today. A piece moves here from an app kit the day the second app needs it,
+never earlier.
+
+- `PageHeader`, `VideoThumbnail` (the frame with duration, progress and badges that web's cards and studio's
+  library rows both draw), `EmptyState`, `ErrorState`, `SectionError`, and the skeleton of each
+  that has one.
+- `StatCard` (one KPI with its delta and sparkline) and `seriesColor`, the categorical colour its sparkline and the studio's charts share (`src/analytics/`).
+- `Shelf`, `VideoCard` and `StartHereShelf` (a headed scroller of cards, the one video card, and the channel's Start here shelf), which web's pages draw and the studio's Start here section previews.
+- `SpriteStrip` (`src/sprite-strip/`): the frames of a video's sprite sheet side by side, with an optional range left clear and `spriteFrameStyle`, the tile a time falls in. Web's clip editor and the studio's `TimelineRangeEditor` both draw it.
+- The eight state illustrations (`src/illustrations/`), plain SVG components drawn in `currentColor`: the parent's CSS
+  colour tints them, so they take `accent` per theme.
+- `LoginCard` and `AccountMenu`, the presentational parts of sign-in and the account menu; the session hooks
+  stay in the app's data layer and each app wraps them in `features/account/components/`.
+
+Every component is a folder, `src/<area>/<name>/`, shaped like a `@kit/ui` primitive: `<name>.tsx`,
+`<name>.context.ts` and `<name>.variants.ts` for a compound one, `types.ts`, a story and a jsdom spec; the shape is [docs/standards/frontend-structure.md](../../../../docs/standards/frontend-structure.md#3-a-component-folder). It reads the
+words it prints itself through `useUiCopy()` and takes product words as children.
+
+Every component is imported by both apps (`tests/architecture/shared-components-used-by-both-apps.test.ts`). How to
+add one: [docs/standards/design-system.md](../../../../docs/standards/design-system.md).
+
+## What does not belong here
+
+- A component one app alone renders: it goes in that app's kit (`apps/client/<app>/src/components/`).
+- A data hook, the router or the API client: a smart wrapper in the app owns them.
+
+```bash
+pnpm --filter @kit/components typecheck
+pnpm --filter @kit/components test
+```

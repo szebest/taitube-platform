@@ -1,17 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Video } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { useEffect } from 'react';
 import { usePlaybackSession } from '#app/hooks/use-playback-queue';
 import { playlistQueryOptions } from '#app/lib/query-keys/library-keys';
-import { toSummary } from '../utils/to-summary';
-
-export interface OpenInPlaybackSession {
-  video: Video;
-  list: string | undefined;
-  startTime: number | undefined;
-  autoplay: boolean;
-}
+import { type OpenInPlaybackSession, toOpenAction } from '../utils/to-open-action';
 
 /** Hands the watch page's video, and the playlist it was opened from, to the session that plays it. */
 export function useOpenInPlaybackSession({
@@ -19,6 +11,7 @@ export function useOpenInPlaybackSession({
   list,
   startTime,
   autoplay,
+  shareToken,
 }: OpenInPlaybackSession) {
   const api = useApi();
   const { dispatch } = usePlaybackSession();
@@ -28,16 +21,6 @@ export function useOpenInPlaybackSession({
   });
 
   useEffect(() => {
-    dispatch({
-      type: 'open',
-      video: toSummary(video),
-      list,
-      playlist: playlist && {
-        id: playlist.id,
-        videos: playlist.items.map((item) => item.video),
-      },
-      startTime,
-      autoplay,
-    });
-  }, [dispatch, video, list, playlist, startTime, autoplay]);
+    dispatch(toOpenAction({ video, list, startTime, autoplay, shareToken }, playlist));
+  }, [dispatch, video, list, playlist, startTime, autoplay, shareToken]);
 }

@@ -1,8 +1,9 @@
-import { Avatar, Badge, Button, Icon, useUiCopy, VisuallyHidden } from '@vp/ui';
+import { Avatar, Badge, Button, Icon, useUiCopy, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
 import type { LiveChatMessageState, LiveChatRole } from '#app/components/live/live-chat/types';
+import { useT } from '#app/lib/messages';
 
 export interface LiveChatMessageProps extends ComponentPropsWithRef<'li'> {
   author: string;
@@ -25,10 +26,13 @@ export function LiveChatMessage({
 }: LiveChatMessageProps) {
   const { layout } = useLiveChat('Message');
   const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = liveChatStyles({ layout, state });
-  const roleLabel = { viewer: undefined, creator: copy.roleCreator, moderator: copy.roleModerator }[
-    role
-  ];
+  const roleLabel = {
+    viewer: undefined,
+    creator: tOr('appUi.roleCreator', {}, ''),
+    moderator: tOr('appUi.roleModerator', {}, ''),
+  }[role];
 
   return (
     <li
@@ -50,14 +54,16 @@ export function LiveChatMessage({
           )}
           <span className={styles.author()}>{author}</span>
           <span className={styles.text()}>
-            {state === 'removed' ? copy.messageRemoved : children}
+            {state === 'removed' ? tOr('appUi.messageRemoved', {}, '') : children}
           </span>
-          {state === 'pending' && <VisuallyHidden>{copy.messagePending}</VisuallyHidden>}
+          {state === 'pending' && (
+            <VisuallyHidden>{tOr('appUi.messagePending', {}, '')}</VisuallyHidden>
+          )}
         </p>
         {state === 'failed' && (
           <div className={styles.failure()}>
             <Icon name="alert" size="sm" />
-            <span>{copy.messageFailed}</span>
+            <span>{tOr('appUi.messageFailed', {}, '')}</span>
             {onRetry && (
               <Button size="sm" variant="ghost" tone="danger" onClick={onRetry}>
                 {copy.retry}

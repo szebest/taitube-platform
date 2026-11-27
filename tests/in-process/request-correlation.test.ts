@@ -1,20 +1,21 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { LogContext, createLogger } from '@kit/logger';
+import { captureLog } from '@kit/testing/log-capture';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger } from '@vp/logger';
-import { captureLog } from '@vp/testing/log-capture';
-import { expectOk } from '@vp/testing/result';
+import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
+import { mintToken } from '../../packages/server/dev-identity/src/index';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000c1';
 const RAW_BUCKET = 'raw';
@@ -49,6 +50,7 @@ describe('in-process: one request id from the API into the worker', () => {
       logContext,
       media: mediaTools,
       speech: speechTools,
+      fingerprint: fingerprintTools,
       workerId: 'correlation-spec',
     });
     expectOk(await worker.start());

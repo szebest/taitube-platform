@@ -1,16 +1,21 @@
 import { videos } from '@vp/db';
 import { sql } from 'drizzle-orm';
 import { keysetBefore, keysetPast } from '../keyset';
+import { msTimestamp } from '../ms-timestamp';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: keyset scope', () => {
   const createdAt = new Date('2024-05-01T00:00:00.000Z');
 
-  it('compares the sort column first and breaks ties on the tiebreaker', () => {
-    const scope = keysetBefore(videos.createdAt, videos.id, { sort: createdAt, tie: 'video-1' });
+  it('compares the sort key first, breaks ties on the tiebreaker and sends a date as ISO text', () => {
+    const scope = keysetBefore(msTimestamp(videos.createdAt), videos.id, {
+      sort: createdAt,
+      tie: 'video-1',
+    });
+    const createdMs = `date_trunc('milliseconds', "videos"."created_at")`;
 
     expect(sqlText(scope)).toBe(
-      '("videos"."created_at" < $1 or ("videos"."created_at" = $2 and "videos"."id" < $3))'
+      `(${createdMs} < $1::timestamptz or (${createdMs} = $2::timestamptz and "videos"."id" < $3))`
     );
     const iso = createdAt.toISOString();
     expect(sqlParams(scope)).toEqual([iso, iso, 'video-1']);
@@ -39,6 +44,6 @@ describe('adapters/postgres/scoping: keyset scope', () => {
     { name: 'an absent cursor', cursor: undefined },
     { name: 'a null cursor', cursor: null },
   ])('scopes nothing for $name', ({ cursor }) => {
-    expect(keysetBefore(videos.createdAt, videos.id, cursor)).toBeUndefined();
+    expect(keysetBefore(msTimestamp(videos.createdAt), videos.id, cursor)).toBeUndefined();
   });
 });

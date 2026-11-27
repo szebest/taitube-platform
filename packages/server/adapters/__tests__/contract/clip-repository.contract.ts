@@ -1,7 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import type { ClipRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { Clip, ClipEntry } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -50,11 +51,6 @@ export function describeClipRepositoryContract(makeSubject: MakeRepositoriesSubj
       await seedOwners(subject.repositories);
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.a }));
       await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.b }));
-      await subject.repositories.channels.create({
-        userId: OWNER_ID,
-        handle: 'owner',
-        displayName: 'The Owner',
-      });
       clips = subject.repositories.clips;
     });
 
@@ -86,7 +82,7 @@ export function describeClipRepositoryContract(makeSubject: MakeRepositoriesSubj
       });
     });
 
-    it('walks on from a cursor, ties on the time broken by id', async () => {
+    it('walks on from a cursor, ties on the millisecond broken by id', async () => {
       const at = new Date(BASE);
       await save(
         clip(1, { createdAt: at }),
@@ -94,6 +90,12 @@ export function describeClipRepositoryContract(makeSubject: MakeRepositoriesSubj
         clip(3, { createdAt: at })
       );
       await save(clip(4, { createdAt: new Date(BASE - 60_000) }));
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.clips.createdAt,
+        key: schema.clips.id,
+        ids: [clipId(1), clipId(2), clipId(3)],
+        at,
+      });
 
       const first = await list(2);
       const last = first[1]?.clip;

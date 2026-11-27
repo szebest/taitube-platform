@@ -1,6 +1,6 @@
-import { PageHeader, ShelfSkeleton } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { PageHeader, ShelfSkeleton } from '@kit/components';
 import type { ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 import { HistoryShelf } from '../history-shelf/history-shelf';
 import { PlaylistsShelf } from '../playlists-shelf/playlists-shelf';
 import { UploadsShelf } from '../uploads-shelf/uploads-shelf';

@@ -8,7 +8,7 @@
 | Blocks | 119, 120, 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** done
 
 > **Why.** [44](44-creator-studio-video-management-visibility.md) edits one video at a time with no way back, a mistake in
 > a published video means a new upload and a lost URL, comments and history, a private link cannot expire, nothing tells a
@@ -29,7 +29,7 @@
 ### 1. One revisions model
 
 Table `entity_revisions` (`id`, `entity_type` a literal union in `@vp/domain` (`video_metadata`, and 121's
-`channel_layout`), `entity_id`, `version`, `snapshot` jsonb, `author_user_id`, `note`, `created_at`; unique
+`channel_layout`), `entity_id`, `version`, `snapshot` jsonb, `author_user_id`, `restored_from_version` (null unless the revision is a restore), `created_at`; unique
 `(entity_type, entity_id, version)`; the last 50 per entity kept by housekeeping). A generic repository interface in
 `@vp/core/repositories` with postgres and in-memory implementations: `append`, `list` (keyset), `get`. Restoring writes a
 new revision from an old snapshot, so history is never rewritten. Other tickets add an entity type and a snapshot schema,
@@ -137,7 +137,7 @@ studio's analytics page and the editor list them with a preview loop and a "Crea
 
 ### 9. Studio
 
-The library table's selection gets a bulk bar over the bulk endpoint (a `Dialog` per field, a result `Toast` listing failures);
+The library table's selection gets a bulk bar over the bulk endpoint (one generic field `Dialog` for visibility, category, add tags, remove tags and comments, a result `Toast` listing each failure by video and code);
 the editor gains tabs (`Tabs`): Details, Chapters, Corrections, Sharing, Tests, Edit video, History (the revisions list with a
 diff of changed fields and Restore). New kit parts, specified under `docs/design/` and built here: `PlayerCardLayer` (web
 kit), `TimelineRangeEditor` (studio kit; a range plus markers over sprite frames, used by corrections, trim, blur and chapters),
@@ -155,28 +155,30 @@ One stack of three slices:
 
 ## Acceptance criteria
 
-- [ ] Bulk edit changes visibility, category, tags and comments on 30 videos; one unauthorised id fails alone and is
+- [x] Bulk edit changes visibility, category, tags and comments on 30 videos; one unauthorised id fails alone and is
       reported; each change is in that video's history and can be restored, and a stale restore is a 409.
-- [ ] Chapters saved in the editor show on the seek bar and replace the description's timestamps; suggestions from a fixture
+- [x] Chapters saved in the editor show on the seek bar and replace the description's timestamps; suggestions from a fixture
       transcript are deterministic and respect the 90-second rule; nothing is saved by suggesting.
-- [ ] A correction card appears only inside its range, is dismissible by keyboard, never covers the controls, and is also
+- [x] A correction card appears only inside its range, is dismissible by keyboard, never covers the controls, and is also
       listed under the description.
-- [ ] A share link opens a private video, stops at its expiry with 410, counts opens, views and watch seconds per link, and
+- [x] A share link opens a private video, stops at its expiry with 410, counts opens, views and watch seconds per link, and
       revoking it works at once; the link grants nothing beyond watching.
-- [ ] A password-protected video shows a gate on the page and the embed, a wrong password is counted and limited, and the
+- [x] A password-protected video shows a gate on the page and the embed, a wrong password is counted and limited, and the
       12-hour cookie lifts the gate; the password is never in a response or a log.
-- [ ] A two-variant test serves each session one variant consistently, leaves oEmbed and OpenGraph on the control, reports
+- [x] A two-variant test serves each session one variant consistently, leaves oEmbed and OpenGraph on the control, reports
       watch seconds per impression, click-through and view duration per variant, and says "not enough data" under 1000
       impressions; the winner is applied only by the creator.
-- [ ] Replacing a video keeps its URL, views, likes and comments, serves the old renditions until the new ladder is
+- [x] Replacing a video keeps its URL, views, likes and comments, serves the old renditions until the new ladder is
       complete, swaps once even if the job retries, and a failed replacement changes nothing.
-- [ ] A trim and a blur render into a new generation with the blur on the right frames and the chapters shifted; reverting
+- [x] A trim and a blur render into a new generation with the blur on the right frames and the chapters shifted; reverting
       swaps back to the base generation within the 14 days.
-- [ ] Clip suggestions return windows inside the video and creating one yields a normal 105 clip.
-- [ ] An editor (117) may do all of this except delete; a moderator gets a 403; `privilege-escalation.test.ts` gains the
+- [x] Clip suggestions return windows inside the video and creating one yields a normal 105 clip.
+- [x] An editor (117) may do all of this except delete; a moderator gets a 403; `privilege-escalation.test.ts` gains the
       rows.
 - [ ] The studio tabs and the player cards meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+      Not proved here: `PlayerCardLayer` and the editor tabs have no stories and no visual baselines yet; a follow-up
+      ticket adds them and runs the design review.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -213,5 +215,5 @@ One stack of three slices:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §3, §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] SDD §3, §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

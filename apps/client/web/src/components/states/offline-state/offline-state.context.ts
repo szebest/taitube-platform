@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { OfflineStateSize, OfflineStateTone } from './types';
 
 export const [OfflineStateContext, useOfflineState] = createCompoundContext<{

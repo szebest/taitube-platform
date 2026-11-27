@@ -13,6 +13,8 @@
 
 import * as crypto from 'node:crypto';
 import { runReconcileUploads } from '../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
+import { createLogger, type Logger } from '../packages/platform/server/logger/src/index';
+import { isErr, type Result } from '../packages/platform/universal/result/src/index';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
@@ -20,10 +22,8 @@ import {
 } from '../packages/server/adapters/in-memory/index';
 import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
-import { createLogger, type Logger } from '../packages/server/logger/src/index';
-import { createMetricsRegistry } from '../packages/server/observability/src/index';
+import { createPipelineMetrics } from '../packages/server/pipeline-metrics/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';
-import { isErr, type Result } from '../packages/universal/result/src/index';
 
 /** The simulation has nothing to recover from, so a failed step ends it. */
 function required<T>(result: Result<T, { message: string }>, step: string): T {
@@ -50,7 +50,7 @@ async function runFairnessSimulation(log: Logger) {
   const startHrTime = process.hrtime.bigint();
   const getElapsedMs = () => Number((process.hrtime.bigint() - startHrTime) / 1000000n);
 
-  const metrics = createMetricsRegistry();
+  const metrics = createPipelineMetrics();
 
   async function triggerReconciler() {
     const reconciled = await runReconcileUploads({
@@ -160,10 +160,16 @@ async function runFairnessSimulation(log: Logger) {
     const videoId = crypto.randomUUID();
     const sourceKey = rawSourceKey(videoId);
 
+    const channel = required(
+      await repositories.channels.findPrimaryByUserId(ownerId),
+      'owner channel'
+    );
+    if (!channel) throw new Error(`the in-memory seed has no channel for ${ownerId}`);
     const video = required(
       await repositories.videos.create({
         id: videoId,
         ownerId,
+        channelId: channel.id,
         title: `video-${index}`,
         status: 'UPLOADED',
         sourceKey,

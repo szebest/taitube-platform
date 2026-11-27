@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Drawer, Icon, Popover, Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { Avatar, Badge, Button, Drawer, Icon, Popover, Skeleton, Slot } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -7,6 +7,7 @@ import {
   useId,
   useState,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { NotificationCentreContext, useNotificationCentre } from './notification-centre.context';
 import { notificationCentreStyles } from './notification-centre.variants';
 import type { NotificationCentreLayout } from './types';
@@ -51,7 +52,8 @@ export function NotificationCentreTrigger({
   ...props
 }: Omit<ComponentPropsWithRef<'button'>, 'children'>) {
   const { layout, unread } = useNotificationCentre('Trigger');
-  const { notifications } = useUiCopy();
+  const { tOr } = useT();
+  const notifications = tOr('appUi.notifications', {}, '');
   const styles = notificationCentreStyles();
   const Trigger = layout === 'popover' ? Popover.Trigger : Drawer.Trigger;
 
@@ -137,7 +139,8 @@ export function NotificationCentreHeader({
   ...props
 }: ComponentPropsWithRef<'div'>) {
   const { layout, titleId } = useNotificationCentre('Header');
-  const { notifications } = useUiCopy();
+  const { tOr } = useT();
+  const notifications = tOr('appUi.notifications', {}, '');
   const styles = notificationCentreStyles();
 
   return (
@@ -159,7 +162,9 @@ export function NotificationCentreMarkAllRead({
   onClick,
   ...props
 }: Omit<ComponentPropsWithRef<'button'>, 'children'>) {
-  const { markAllRead, allMarkedRead } = useUiCopy();
+  const { tOr } = useT();
+  const markAllRead = tOr('appUi.markAllRead', {}, '');
+  const allMarkedRead = tOr('appUi.allMarkedRead', {}, '');
   const [marked, setMarked] = useState(false);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -267,7 +272,8 @@ export function NotificationCentreItem({
   children,
   ...props
 }: NotificationCentreItemProps) {
-  const { unread: unreadWord } = useUiCopy();
+  const { tOr } = useT();
+  const unreadWord = tOr('appUi.unread', {}, '');
   const styles = notificationCentreStyles();
   const Element = asChild ? Slot.Root : 'button';
 

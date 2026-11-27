@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import type { Clip, Video } from '@vp/domain';
 import { type UserContext, canReadVideo } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
 import { type ClipNotFound, clipNotFound } from './failures';
 
 export interface ReadClipInput {

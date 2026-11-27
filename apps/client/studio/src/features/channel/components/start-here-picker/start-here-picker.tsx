@@ -1,9 +1,9 @@
+import { Button, Command, Popover } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Button, Command, Popover } from '@vp/ui';
 import { pickableVideosQueryOptions } from '#app/features/channel/api/channel-featured';
+import { useT } from '#app/lib/messages';
 
 interface StartHerePickerProps {
   pinned: readonly VideoSummary[];

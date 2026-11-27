@@ -7,6 +7,8 @@ import { transcriptQueryOptions, videoKeys } from '../video-queries';
 
 type Change = Extract<UserEvent, { type: 'video.processing' }>['payload']['change'];
 
+const OTHER_VIDEO_ID = '00000000-0000-7000-8000-0000000000ff';
+
 const PROCESSING = video({
   status: 'PROCESSING',
   progress: { overall: 10, byRendition: { '480p': 20 } },
@@ -47,6 +49,18 @@ describe('@vp/queries: user event handlers', () => {
     apply(change);
 
     expect(detail()).toMatchObject(patched);
+  });
+
+  it('keeps the progress of a video that is no longer processing when a late tick arrives', () => {
+    const ready = video({
+      status: 'READY',
+      progress: { overall: 100, byRendition: { '720p': 100 } },
+    });
+    const { apply, detail } = cacheWith(ready);
+
+    apply({ kind: 'progress', rendition: '720p', percent: 40, overall: 40 });
+
+    expect(detail()).toEqual(ready);
   });
 
   it('refetches the video and the caller list on a status change, for what the status brought', () => {
@@ -93,7 +107,14 @@ describe('@vp/queries: user event handlers', () => {
       actorChannelId: null,
       videoId: VIDEO_ID,
       commentId: null,
-      payload: { count: 1, actor: null, videoTitle: null, excerpt: null, outcome: null },
+      payload: {
+        count: 1,
+        actor: null,
+        videoTitle: null,
+        excerpt: null,
+        outcome: null,
+        party: null,
+      },
       read: false,
       createdAt: '2026-01-02T03:04:05.000Z',
     } as const;
@@ -142,6 +163,20 @@ describe('@vp/queries: user event handlers', () => {
 
     expect(
       queryClient.getQueryState(['creator', 'comments', { filter: 'all' }])?.isInvalidated
+    ).toBe(true);
+  });
+
+  it('refetches the creator inbox when a comment is held on one of the caller videos', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['creator', 'comments', { filter: 'held' }], { pages: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'comment.held',
+      payload: { commentId: VIDEO_ID, videoId: VIDEO_ID },
+    });
+
+    expect(
+      queryClient.getQueryState(['creator', 'comments', { filter: 'held' }])?.isInvalidated
     ).toBe(true);
   });
 
@@ -197,5 +232,52 @@ describe('@vp/queries: user event handlers', () => {
       true,
       true,
     ]);
+  });
+
+  it('refetches the channel whose image became ready, and leaves the cache alone on a failure', () => {
+    const queryClient = createQueryClient();
+    const channelId = '00000000-0000-7000-8000-0000000000d1';
+    const key = ['channels', 'detail', channelId];
+    queryClient.setQueryData(key, {});
+    const payload = { uploadId: VIDEO_ID, channelId, kind: 'banner' as const };
+
+    applyUserEvent(queryClient, {
+      type: 'channel.image.failed',
+      payload: { ...payload, reason: 'unreadable' },
+    });
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false);
+
+    applyUserEvent(queryClient, {
+      type: 'channel.image.ready',
+      payload: { ...payload, version: 2 },
+    });
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+  });
+
+  it('refetches the personal controls when another device changed one', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['watch-party-controls'], { items: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'party.controls.updated',
+      payload: { targetKey: `user:${VIDEO_ID}`, roomId: null },
+    });
+
+    expect(queryClient.getQueryState(['watch-party-controls'])?.isInvalidated).toBe(true);
+  });
+
+  it('refetches the creator stats and the retention of the video the event names, no other', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(videoKeys.creatorStats(VIDEO_ID), {});
+    queryClient.setQueryData(videoKeys.creatorStats(OTHER_VIDEO_ID), {});
+    queryClient.setQueryData(videoKeys.retention(VIDEO_ID), {});
+
+    applyUserEvent(queryClient, { type: 'video.stats.updated', payload: { videoId: VIDEO_ID } });
+
+    expect(queryClient.getQueryState(videoKeys.creatorStats(VIDEO_ID))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(videoKeys.retention(VIDEO_ID))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(videoKeys.creatorStats(OTHER_VIDEO_ID))?.isInvalidated).toBe(
+      false
+    );
   });
 });

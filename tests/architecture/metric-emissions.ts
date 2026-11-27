@@ -1,4 +1,6 @@
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
+import { SERVER } from './ecmascript-baseline';
 import { read } from './repo-files';
 
 /** A label whose value is computed at run time rather than chosen from a fixed set. */
@@ -12,23 +14,26 @@ export interface RegisteredMetric {
   series: string[];
 }
 
-/** `createMetricsRegistry` builds its own metrics and spreads in the web vitals, playback and captions modules'. */
+const PIPELINE_METRICS = packageDir('@vp/pipeline-metrics');
+
+/** `createPipelineMetrics` builds its own metrics and spreads in the web vitals, playback and captions modules'. */
 const METRICS_MODULES = [
-  'packages/server/observability/src/metrics.ts',
-  'packages/server/observability/src/web-vitals-metrics.ts',
-  'packages/server/observability/src/playback-metrics.ts',
-  'packages/server/observability/src/captions-metrics.ts',
+  `${PIPELINE_METRICS}/src/pipeline-metrics.ts`,
+  `${PIPELINE_METRICS}/src/web-vitals-metrics.ts`,
+  `${PIPELINE_METRICS}/src/playback-metrics.ts`,
+  `${PIPELINE_METRICS}/src/captions-metrics.ts`,
+  `${PIPELINE_METRICS}/src/screening-metrics.ts`,
 ];
 const HISTOGRAM_SERIES = ['_bucket', '_count', '_sum'];
 const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);
 
-/** Every metric `createMetricsRegistry` builds, read from `new Kind({ name })` in its modules. */
+/** Every metric `createPipelineMetrics` builds, read from `new Kind({ name })` in its modules. */
 export function registeredMetrics(): RegisteredMetric[] {
   return METRICS_MODULES.flatMap(metricsDeclaredIn);
 }
 
 function metricsDeclaredIn(module: string): RegisteredMetric[] {
-  const file = ts.createSourceFile(module, read(module), ts.ScriptTarget.ES2022, true);
+  const file = ts.createSourceFile(module, read(module), SERVER.target, true);
   const found: RegisteredMetric[] = [];
   const visit = (node: ts.Node): void => {
     if (

@@ -1,6 +1,6 @@
-import { getDevJwks, mintToken } from '@vp/dev-token';
-import { signJwt, signingKey } from '@vp/testing/jwt';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { signJwt, signingKey } from '@kit/testing/jwt';
+import { expectErr, expectOk } from '@kit/testing/result';
+import { getDevJwks, mintToken } from '@vp/dev-identity';
 import { DevTokenVerifier } from '../dev-token-verifier';
 
 function verifier(issuer = 'vp-dev') {

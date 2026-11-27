@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { suppressTracing } from '@opentelemetry/core';
@@ -9,7 +10,6 @@ import {
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ProbeJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { TOKENS, bearer, buildTestApp } from '../../__tests__/test-app';
 import { abortMidRequest } from './abort-mid-request';
 

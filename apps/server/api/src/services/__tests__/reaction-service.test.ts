@@ -1,14 +1,16 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ReactionService } from '../reaction-service';
 
 const CACHES = inProcessAppConfig().caches;
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
 const OWNER_ID = '00000000-0000-7000-8000-0000000000a2';
+const REACTOR_ID = '00000000-0000-7000-8000-0000000000a3';
 
 function makeService(repositories: InMemoryRepositories): ReactionService {
   return new ReactionService({
@@ -18,6 +20,8 @@ function makeService(repositories: InMemoryRepositories): ReactionService {
       backend: { type: 'cache', cache: new InMemoryCacheClient() },
     }),
     videos: repositories.videos,
+    restrictions: repositories.channelUserRestrictions,
+    now: Date.now,
   });
 }
 
@@ -25,6 +29,7 @@ async function seedVideo(repositories: InMemoryRepositories): Promise<void> {
   await repositories.videos.create({
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: await seedPrimaryChannel(repositories, OWNER_ID),
     title: 'Reactions fixture',
     visibility: 'public',
     status: 'READY',
@@ -83,4 +88,32 @@ describe('apps/server/api/services: ReactionService', () => {
       dislikesCount: 1,
     });
   });
+
+  it.each([
+    { kind: 'ban' as const, refused: true },
+    { kind: 'shadow' as const, refused: false },
+  ])(
+    'refuses a reaction from a user with a $kind only for a ban: $refused',
+    async ({ kind, refused }) => {
+      expectOk(
+        await repositories.channelUserRestrictions.apply({
+          channelId: await seedPrimaryChannel(repositories, OWNER_ID),
+          userId: REACTOR_ID,
+          kind,
+          reason: 'spam',
+          expiresAt: null,
+          createdBy: OWNER_ID,
+        })
+      );
+
+      const result = await service.setReaction({ id: REACTOR_ID, role: 'USER' }, VIDEO_ID, 'LIKE');
+
+      expect(result.ok).toBe(!refused);
+      if (refused)
+        expect(expectErr(result)).toMatchObject({
+          code: ErrorCodes.COMMENTS_BANNED,
+          reason: 'spam',
+        });
+    }
+  );
 });

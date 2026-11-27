@@ -1,9 +1,8 @@
+import { Badge, Button, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Badge, Button, useToast } from '@vp/ui';
 import { useState } from 'react';
 import {
   deleteTrackMutationOptions,
@@ -12,6 +11,7 @@ import {
 } from '#app/features/captions/api/caption-mutations';
 import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
 import { fileIssueOf, hasCode, reasonCopy } from '#app/features/captions/utils/caption-failures';
+import { useT } from '#app/lib/messages';
 import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { CueEditorDialog } from '../cue-editor-dialog/cue-editor-dialog';
 import { VttPicker } from '../vtt-picker/vtt-picker';

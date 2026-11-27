@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { sseStreamLimitReached, sseUnavailable } from '../sse-failures';
 
 describe('apps/server/api/services: SSE register failures', () => {

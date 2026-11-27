@@ -1,10 +1,12 @@
+import { VideoCard } from '@kit/components';
+import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import type { VideoHit } from '#app/features/search/utils/search-hits';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { MatchedText } from '../matched-text/matched-text';
 
 export interface SearchVideoResultProps {
@@ -16,11 +18,12 @@ export interface SearchVideoResultProps {
 export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
-  const { save, enqueue } = useVideoActions(video);
+  const { save, enqueue, playNext } = useVideoActions(video);
+  const impression = useImpression(video);
   const { channel } = video;
 
   return (
-    <VideoCard.Root variant="row" videoId={video.id}>
+    <VideoCard.Root ref={impression} variant="row" videoId={video.id}>
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
         duration={clock}
@@ -52,7 +55,7 @@ export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
           <MatchedText text={video.description} terms={terms} />
         </VideoCard.Snippet>
       )}
-      <VideoCard.Menu onSave={save} onQueue={enqueue} />
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext} />
     </VideoCard.Root>
   );
 }

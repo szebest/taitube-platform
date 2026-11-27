@@ -1,13 +1,13 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { type Result, fromPromise, map } from '@kit/result';
 import {
   type NewUserEventInput,
   type UserEventRecord,
   UserEventRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
-import { type Result, fromPromise, map } from '@vp/result';
 import { and, asc, eq, gte, lt, max, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';

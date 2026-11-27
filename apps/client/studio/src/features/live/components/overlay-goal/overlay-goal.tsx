@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
 import { GoalBar } from '#app/components/live/goal-bar';
 import { nextSubscriberGoal } from '#app/features/live/utils/subscriber-goal';
+import { useT } from '#app/lib/messages';
 
 export interface OverlayGoalProps {
   subscriberCount: number;

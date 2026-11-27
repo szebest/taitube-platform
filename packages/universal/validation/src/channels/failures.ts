@@ -1,5 +1,7 @@
-import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { type InvalidField, type LengthBounds, invalidField } from '../failures';
+import { type InputFailure } from '@kit/errors';
+import type { LengthBounds } from '@kit/validation';
+import { ErrorCodes } from '@vp/errors';
+import { type InvalidField, invalidField } from '../field-failures';
 
 export type InvalidHandleFormat = InputFailure<
   typeof ErrorCodes.INVALID_HANDLE_FORMAT,
@@ -38,4 +40,22 @@ export function invalidChannelLinks(limits: ChannelLinkLimits): InvalidChannelLi
     `At most ${limits.maxLinks} links, each with a label of 1 to ${limits.maxLabelLength} characters and an https URL of up to ${limits.maxUrlLength} characters`,
     limits
   );
+}
+
+export type ImageTooSmall = InputFailure<
+  typeof ErrorCodes.IMAGE_TOO_SMALL,
+  { width: number; height: number; minWidth: number; minHeight: number }
+>;
+
+export function imageTooSmall(
+  size: { width: number; height: number },
+  min: { minWidth: number; minHeight: number }
+): ImageTooSmall {
+  return {
+    code: ErrorCodes.IMAGE_TOO_SMALL,
+    message: `The image is ${size.width} x ${size.height}; it must be at least ${min.minWidth} x ${min.minHeight}`,
+    field: 'file',
+    ...size,
+    ...min,
+  };
 }

@@ -1,4 +1,4 @@
-import { ONE_YEAR_S, readCookie, writeCookie } from '@vp/ui';
+import { ONE_YEAR_S, readCookie, writeCookie } from '@kit/ui';
 import { z } from 'zod';
 
 const SidebarStateSchema = z.enum(['expanded', 'collapsed']);

@@ -1,7 +1,7 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 

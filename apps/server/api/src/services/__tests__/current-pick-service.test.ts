@@ -1,7 +1,7 @@
+import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { CurrentPickSchema } from '@vp/api-contracts';
 import { databaseUnavailable, ErrorCodes } from '@vp/errors';
-import { err } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { CurrentPickService } from '../current-pick-service';
 import { generateEtag } from '../http-cache';
 import type { PickService } from '../pick-service';
@@ -56,6 +56,7 @@ describe('apps/server/api/services: CurrentPickService', () => {
             expectedVersion: video?.version ?? 0,
             patch: { visibility: 'private' },
             userId: OWNER,
+            auditFields: ['visibility'],
           })
         );
       },

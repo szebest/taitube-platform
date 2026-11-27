@@ -1,7 +1,8 @@
-import type { Comment, Video } from '@vp/domain';
+import { type Result, andThen, err, ok } from '@kit/result';
+import type { Comment, CommentHost } from '@vp/domain';
 import { type UserContext, canDeleteComment, canPinComment } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
+import { commentOwnership } from './comment-host';
 import { type CommentNotFound, type CommentNotPinnable, commentNotPinnable } from './failures';
 import { locateComment } from './located-comment';
 
@@ -9,7 +10,7 @@ export interface ModerateCommentInput {
   readonly actor: UserContext | null;
   readonly comment: Comment | null;
   readonly commentId: string;
-  readonly video: Video | null;
+  readonly host: CommentHost | null;
 }
 
 export type DeleteCommentFailure = CommentNotFound | AuthorizationFailure;
@@ -18,11 +19,11 @@ export type PinCommentFailure = DeleteCommentFailure | CommentNotPinnable;
 export function decideCommentDelete(
   input: ModerateCommentInput
 ): Result<Comment, DeleteCommentFailure> {
-  return andThen(locateComment(input), ({ comment, video }) =>
+  return andThen(locateComment(input), ({ comment, host }) =>
     andThen(
       authorize(
         input.actor,
-        canDeleteComment({ user: input.actor, comment, videoOwnerId: video.ownerId }),
+        canDeleteComment({ user: input.actor, comment, ...commentOwnership(host) }),
         { action: 'delete', subject: 'Comment' }
       ),
       () => ok(comment)
@@ -30,16 +31,21 @@ export function decideCommentDelete(
   );
 }
 
-/** Pinning and unpinning are one decision: only the video owner curates the top of the list. */
+/**
+ * Pinning and unpinning are one decision: only the creator curates the top of the list, and
+ * only a root that is published, because a held or hidden one is out of public reads.
+ */
 export function decideCommentPin(input: ModerateCommentInput): Result<Comment, PinCommentFailure> {
-  return andThen(locateComment(input), ({ comment, video }) =>
+  return andThen(locateComment(input), ({ comment, host }) =>
     andThen(
-      authorize(input.actor, canPinComment({ user: input.actor, videoOwnerId: video.ownerId }), {
+      authorize(input.actor, canPinComment({ user: input.actor, ...commentOwnership(host) }), {
         action: 'pin',
         subject: 'Comment',
       }),
       (): Result<Comment, CommentNotPinnable> =>
-        comment.parentId === null ? ok(comment) : err(commentNotPinnable(comment.id))
+        comment.parentId === null && comment.moderationState === 'published'
+          ? ok(comment)
+          : err(commentNotPinnable(comment.id))
     )
   );
 }

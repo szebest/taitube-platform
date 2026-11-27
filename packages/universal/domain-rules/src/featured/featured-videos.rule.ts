@@ -1,6 +1,6 @@
+import { andThen, err, isErr, ok, type Result } from '@kit/result';
 import type { Video } from '@vp/domain';
 import { canPinVideo, type UserContext } from '@vp/permissions';
-import { andThen, err, isErr, ok, type Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   decideVideoRead,
@@ -13,6 +13,8 @@ import { type FeaturedVideoNotPublic, featuredVideoNotPublic } from './failures'
 
 export interface DecideFeaturedVideosInput {
   readonly viewer: UserContext | null;
+  /** The owner of the channel whose shelf this is; a member may pin only that channel's videos. */
+  readonly shelfOwnerId: string;
   readonly videoIds: readonly string[];
   readonly videos: ReadonlyMap<string, Video>;
 }
@@ -42,7 +44,7 @@ export function decideFeaturedVideos(
 }
 
 function decideOne(
-  { viewer, videos }: DecideFeaturedVideosInput,
+  { viewer, shelfOwnerId, videos }: DecideFeaturedVideosInput,
   videoId: string
 ): Result<Video, FeaturedVideosFailure> {
   const found = videos.get(videoId);
@@ -51,10 +53,15 @@ function decideOne(
   if (isErr(readable)) return err(publicReadFailure(readable.error));
 
   return andThen(
-    authorize(viewer, canPinVideo({ user: viewer, video: readable.value }), {
-      action: 'pin',
-      subject: 'Video',
-    }),
+    authorize(
+      viewer,
+      readable.value.ownerId === shelfOwnerId &&
+        canPinVideo({ user: viewer, video: readable.value }),
+      {
+        action: 'pin',
+        subject: 'Video',
+      }
+    ),
     () => featurable(readable.value)
   );
 }

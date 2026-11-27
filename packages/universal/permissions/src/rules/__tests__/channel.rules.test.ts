@@ -3,6 +3,7 @@ import { creatorUser, guestUser, sampleChannel, standardUser } from '../../__moc
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineChannelRules } from '../channel.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 describe('rules/channel.rules: Declarative Channel Ability Rules', () => {
   it.each<{
@@ -36,4 +37,11 @@ describe('rules/channel.rules: Declarative Channel Ability Rules', () => {
   ])('$scenario: $expected', ({ user, action, target, expected }) => {
     expect(buildAbility(defineChannelRules, user).can(action, target)).toBe(expected);
   });
+
+  it.each(matrixCells('Channel'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineChannelRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

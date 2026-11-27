@@ -38,6 +38,30 @@ export function renumberPositions(order: readonly string[]): PositionWrite[] {
   return order.map((id, index) => ({ id, position: index * POSITION_GAP }));
 }
 
+/**
+ * Slots for `count` new items after the ordered `items`. When the slots would overflow, `renumber`
+ * respaces the existing order first and the new items follow it.
+ */
+export function appendPositions(
+  items: readonly PositionedItem[],
+  count: number
+): { renumber: PositionWrite[]; positions: number[] } {
+  const positions: number[] = [];
+  let last = items.at(-1)?.position ?? null;
+  for (let added = 0; added < count; added += 1) {
+    const next = appendPosition(last);
+    if (next === null) {
+      return {
+        renumber: renumberPositions(items.map((item) => item.id)),
+        positions: Array.from({ length: count }, (_, n) => (items.length + n) * POSITION_GAP),
+      };
+    }
+    positions.push(next);
+    last = next;
+  }
+  return { renumber: [], positions };
+}
+
 function slotBetween(before: number | undefined, after: number | undefined): number | null {
   if (before === undefined) return after === undefined ? null : after - POSITION_GAP;
   if (after === undefined) return before + POSITION_GAP;

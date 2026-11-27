@@ -1,7 +1,12 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { WEB_ROWS } from './zero-matches-client-rows';
 import { DESIGN_ROWS } from './zero-matches-design-rows';
 import { REACT_ROWS } from './zero-matches-react-rows';
 import { RETIRED_TOOL_ROWS } from './zero-matches-retired-tool-rows';
+
+const LOGGER = packageDir('@kit/logger');
+const CLIENT = tierGlob('client');
+const UNIVERSAL = tierGlob('universal');
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
 export const PRODUCTION_SOURCE = [
@@ -59,7 +64,7 @@ export const ROWS: readonly Row[] = [
       ':(glob)apps/**/*.ts',
       ':(glob)apps/**/*.tsx',
       ':(glob)packages/**/*.ts',
-      ':(exclude,glob)packages/server/testing/**',
+      ':(exclude,glob)packages/server/testing-fixtures/**',
     ],
     expected: 1,
     fires: 'async function uploadedVideo(sourceKey: string): Promise<string> {',
@@ -178,16 +183,16 @@ export const ROWS: readonly Row[] = [
     fires: "console.error('fatal', err);",
   },
   {
-    name: 'pino outside @vp/logger',
+    name: 'pino outside @kit/logger',
     pattern: /from 'pino'/g,
-    scope: [...PRODUCTION_SOURCE, 'tests/e2e', ':(exclude)packages/server/logger'],
+    scope: [...PRODUCTION_SOURCE, 'tests/e2e', `:(exclude)${LOGGER}`],
     expected: 0,
     fires: "import pino from 'pino';",
   },
   {
-    name: 'logging re-exported from @vp/observability',
+    name: 'logging re-exported from @kit/observability',
     pattern: /createLogger|LogContext|from 'pino'/g,
-    scope: productionUnder('packages/server/observability'),
+    scope: productionUnder(packageDir('@kit/observability')),
     expected: 0,
     fires: "export { createLogger } from './logger';",
   },
@@ -285,11 +290,7 @@ export const ROWS: readonly Row[] = [
   {
     name: 'a doc asking for an import extension',
     pattern: /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
-    scope: [
-      'ARCHITECTURE.md',
-      ':(glob)packages/universal/**/AGENTS.md',
-      ':(glob)packages/client/**/AGENTS.md',
-    ],
+    scope: ['ARCHITECTURE.md', `:(glob)${UNIVERSAL}/**/AGENTS.md`, `:(glob)${CLIENT}/**/AGENTS.md`],
     expected: 0,
     fires: 'Relative imports carry `.js` so Node resolves them.',
   },

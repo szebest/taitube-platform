@@ -1,9 +1,8 @@
+import { Skeleton } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
-import { VideoCardSkeleton } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { Skeleton } from '@vp/ui';
 import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
-import { SearchResults } from '../search-results/search-results';
+import { useT } from '#app/lib/messages';
+import { SearchResults, SearchResultsSkeleton } from '../search-results/search-results';
 
 const route = getRouteApi('/search');
 
@@ -23,7 +22,7 @@ export function SearchPageSkeleton() {
     <section aria-hidden="true" className="flex flex-col gap-6">
       <Skeleton className="h-7 w-40" />
       <ChipBarSkeleton />
-      <VideoCardSkeleton variant="row" count={6} />
+      <SearchResultsSkeleton />
     </section>
   );
 }

@@ -36,14 +36,14 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
 ### Rule 2: Deep Domain Services, Total Dependencies
 - Every domain resource has a corresponding service in `apps/server/api/src/services/` (`VideoService`,
   `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`,
-  `SubscriptionService`, `CommentService`, `CommentReportService`, `CreatorCommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `PickService`, `ChannelFeaturedService`, `PreferencesService`,
+  `SubscriptionService`, `CommentService`, `CommentReportService`, `CreatorCommentService`, `ScreeningService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `PickService`, `ChannelFeaturedService`, `PreferencesService`,
   `CaptionService`, `CaptionTrackService`, `ViewService`,
   `AnalyticsService`, `SseService`, `DlqService`,
   `QueueService`, `ReadinessService`).
 - A service's dependencies are required. It never constructs, defaults or reads from `process.env` a
   collaborator or a setting it was not handed, and it imports nothing from `@vp/adapters`
   (`total-dependencies`, `adapter-instantiation` and `sdk-confinement` assert it). HTTP cache helpers are
-  three functions in `http-cache.ts`; `Singleflight` comes from `@vp/concurrency`.
+  three functions in `http-cache.ts`; `Singleflight` comes from `@kit/concurrency`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 - Routes are plugins: `export async function xRoutes(app: FastifyInstance)`, reading `app.services` and
   `app.config`, registered from `routes/index.ts`.
@@ -119,3 +119,7 @@ pnpm --filter @vp/api test
 # Typecheck API package
 pnpm --filter @vp/api typecheck
 ```
+
+## State machines
+
+A value whose legal moves depend on its status is a `defineMachine` table in a `*.machine.ts` beside the rule that uses it; see [docs/state-machines.md](../../../docs/state-machines.md).

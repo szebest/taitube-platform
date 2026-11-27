@@ -1,7 +1,7 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { CANONICAL_LADDER } from '@vp/job-contracts';
 import { renditionPlaylistKey } from '@vp/storage';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { transcribeSpan } from '../captions-audio';
 import { captionsWorld } from './captions-harness';
 
@@ -48,15 +48,15 @@ describe('captions stage: the audio a run transcribes', () => {
   it('falls back to the smallest rendition once the raw source has expired', async () => {
     const world = await captionsWorld();
     expectOk(await world.storage.deleteObject('raw', world.run().data.sourceKey));
-    expectOk(
-      await world.repositories.videos.transition({
-        videoId: world.videoId,
-        from: 'UPLOADED',
-        to: 'READY',
-        eventType: 'test',
-        patch: { ladder: CANONICAL_LADDER.slice(1) },
-      })
-    );
+    for (const edge of ['startProbe', 'completeProbe', 'package'] as const) {
+      expectOk(
+        await world.repositories.videos.transition({
+          videoId: world.videoId,
+          edge,
+          patch: { ladder: CANONICAL_LADDER.slice(1) },
+        })
+      );
+    }
 
     const { read } = await sourcesRead(world);
 

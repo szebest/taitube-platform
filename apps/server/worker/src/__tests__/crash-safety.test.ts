@@ -1,10 +1,10 @@
+import { createLogger } from '@kit/logger';
+import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { JobQueue } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
-import { ok } from '@vp/result';
-import { SEEDED, createMockJob } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED, createMockJob } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
 import { STAGE_SETTINGS } from './stage-settings';
@@ -24,6 +24,7 @@ describe('crash safety and effectively-once completion', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: SEEDED.channelId,
       title: 'Crash Safety Video',
       status: 'PROCESSING',
       sourceKey,

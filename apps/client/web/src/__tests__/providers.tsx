@@ -1,5 +1,20 @@
-import type { Account } from '@vp/api-contracts';
-import { getAccount, getPreferences, getUnreadNotificationCount } from '@vp/api-contracts';
+import {
+  AppearanceProvider,
+  createToaster,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  Tooltip,
+} from '@kit/ui';
+import type { Account, ChannelMembershipView } from '@vp/api-contracts';
+import {
+  getAccount,
+  getPreferences,
+  getUnreadNotificationCount,
+  listMyIdentities,
+  listMyMemberships,
+  recordMySignIn,
+} from '@vp/api-contracts';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -10,22 +25,26 @@ import {
   type Session,
   SessionProvider,
 } from '@vp/queries';
-import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import { AppearanceProvider, DEFAULT_APPEARANCE, Tooltip } from '@vp/ui';
-import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
+import { DEV_TOKEN_URL } from '@vp/queries/demo-personas';
+import { account, api, apiServer, identities, mockEndpoint, signInRecord } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { DevicePreferencesProvider } from '../lib/preferences/device-preferences-provider';
 import { PreferencesSyncContext } from '../lib/preferences/preferences-sync.context';
 import { DEFAULT_DEVICE_PREFERENCES } from './device-preferences-fixtures';
 
-const STORED_APPEARANCE = { preference: DEFAULT_APPEARANCE, source: 'none' } as const;
+const STORED_APPEARANCE = {
+  preference: DEFAULT_APPEARANCE,
+  source: 'none',
+  storage: APPEARANCE_COOKIES,
+} as const;
 
 const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() };
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <AppWords>
+    <AppWords messages={WEB_MESSAGES}>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <AppearanceProvider stored={STORED_APPEARANCE}>
@@ -44,6 +63,17 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
 /** What the root route mounts around every page for a guest, in a fixed locale and zone. */
 export const AppProviders = providersFor(GUEST);
 
+/** `Providers` with the toasts a page that reports a failed write needs; a page that renders nothing for an empty list stays free of them. */
+export function withToasts(
+  Providers: ComponentType<PropsWithChildren>
+): ComponentType<PropsWithChildren> {
+  return ({ children }) => (
+    <Providers>
+      <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
+    </Providers>
+  );
+}
+
 /** The same, for `viewer` signed in. */
 export function signedIn(viewer: Account = account()): ComponentType<PropsWithChildren> {
   return providersFor({ status: 'signed-in', account: viewer });
@@ -61,8 +91,11 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them, with no saved preferences and nothing unread. */
-export function signInBrowser(viewer: Account = account()) {
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them, with no saved preferences, nothing unread and the channels of `memberships`. */
+export function signInBrowser(
+  viewer: Account = account(),
+  memberships: ChannelMembershipView[] = []
+) {
   // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
   apiServer.use(
@@ -76,14 +109,28 @@ export function signInBrowser(viewer: Account = account()) {
         updatedAt: null,
       })
     ),
-    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 }))
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: memberships })),
+    mockEndpoint(listMyIdentities, () => HttpResponse.json(identities()))
   );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 
-/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for, and the API recording the sign-in and answering the signed-in persona with no channels. */
 export function devTokenServe() {
+  apiServer.use(
+    mockEndpoint(listMyMemberships, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(recordMySignIn, () => HttpResponse.json(signInRecord(), { status: 201 }))
+  );
   return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
     HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
   );
+}
+
+/** `AppProviders` with toasts, for a server render of a card that offers queue actions. */
+export const AppProvidersWithToasts = withToasts(AppProviders);
+
+/** `signedIn(viewer)` with toasts. */
+export function signedInWithToasts(viewer?: Account): ComponentType<PropsWithChildren> {
+  return withToasts(signedIn(viewer));
 }

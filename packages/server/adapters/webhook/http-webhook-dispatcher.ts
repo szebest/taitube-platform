@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import { err, isErr, ok, type Result } from '@kit/result';
 import type { WebhookDelivery } from '@vp/core/ports';
 import { WebhookDispatcher } from '@vp/core/ports';
 import {
@@ -6,7 +7,6 @@ import {
   webhookDeliveryFailed,
   webhookDeliveryRejected,
 } from '@vp/errors';
-import { err, isErr, ok, type Result } from '@vp/result';
 import { validateWebhookUrl } from '@vp/validation';
 
 export interface HttpWebhookDispatcherConfig {

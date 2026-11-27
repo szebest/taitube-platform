@@ -1,12 +1,13 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const MB = 1024 * 1024;
 
 describe('apps/server/api/services: abort upload', () => {
@@ -24,7 +25,11 @@ describe('apps/server/api/services: abort upload', () => {
   });
 
   const start = (sizeBytes: number) =>
-    service.initiate(OWNER, { filename: 'clip.mp4', sizeBytes, contentType: 'video/mp4' });
+    service.initiate(OWNER, OWNER_ACTING, {
+      filename: 'clip.mp4',
+      sizeBytes,
+      contentType: 'video/mp4',
+    });
 
   it.each([
     ['a single PUT upload', MB],
@@ -52,6 +57,19 @@ describe('apps/server/api/services: abort upload', () => {
       uploadId,
       strategy: 'single',
     });
+  });
+
+  it('refuses to abort an upload a completion closed while its object was removed', async () => {
+    const { uploadId, videoId } = expectOk(await start(MB));
+    const remove = storage.deleteObject.bind(storage);
+    vi.spyOn(storage, 'deleteObject').mockImplementation(async (bucket, key) => {
+      await repositories.uploads.updateStatus(uploadId, 'COMPLETED');
+      return remove(bucket, key);
+    });
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+    expect(expectOk(await repositories.uploads.findById(uploadId))?.status).toBe('COMPLETED');
+    expect(expectOk(await repositories.videos.findById(videoId))?.status).toBe('UPLOADING');
   });
 
   it('refuses to abandon a multipart upload whose object storage already assembled', async () => {
@@ -86,7 +104,7 @@ describe('apps/server/api/services: abort upload', () => {
 
   it('refuses an upload whose session has expired', async () => {
     const { uploadId } = expectOk(
-      await build({ uploadSessionTtlSeconds: 0 }).initiate(OWNER, {
+      await build({ uploadSessionTtlSeconds: 0 }).initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: MB,
         contentType: 'video/mp4',

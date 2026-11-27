@@ -1,0 +1,172 @@
+import { createToaster, ToastProvider, Tooltip } from '@kit/ui';
+import type { Decorator } from '@storybook/react-vite';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
+import type { Account } from '@vp/api-contracts';
+import {
+  ApiProvider,
+  AppWords,
+  createIdentityStore,
+  GUEST,
+  SESSION_KEY,
+  type Session,
+  SessionProvider,
+} from '@vp/queries';
+import type { ActiveLocale } from '@vp/queries/intl';
+import { createContext, type PropsWithChildren, type ReactNode, use, useState } from 'react';
+import { WEB_MESSAGES, type WebCatalogue } from '../../../../apps/client/web/src/lib/messages';
+import { pickLocale } from './decorator';
+import { type ApiReply, inMemoryApi } from './in-memory-api';
+import { WebProviders } from './web-providers';
+
+/** What a story asks of the app around it, under `parameters.app`; a story without it renders bare. */
+export interface AppParameters {
+  session?: 'guest' | 'signed-in';
+  /** Built once per story render, so a closure over it is that render's own state. */
+  api?: () => readonly ApiReply[];
+}
+
+const USER = {
+  id: '0190c3a0-5e1d-7000-8000-00000000b001',
+  email: 'viewer@example.com',
+  tier: 'free',
+  createdAt: '2026-01-01T00:00:00.000Z',
+} as const;
+
+const VIEWER: Account = {
+  ...USER,
+  role: 'CREATOR',
+  user: USER,
+  channel: {
+    id: '0190c3a0-5e1d-7000-8000-00000000c001',
+    userId: USER.id,
+    handle: 'viewer',
+    displayName: 'The Viewer',
+    avatarUrl: null,
+    bannerUrl: null,
+    avatar: null,
+    banner: null,
+    bannerLink: null,
+    bannerCrops: null,
+    country: null,
+    hasContact: false,
+    contactEmail: null,
+    handleChangeAvailableAt: null,
+    brandColor: null,
+    bio: null,
+    links: [],
+    subscriberCount: 0,
+    videoCount: 0,
+    totalViews: 0,
+    live: null,
+    autoCaptionsDefault: false,
+    createdAt: USER.createdAt,
+    updatedAt: USER.createdAt,
+  },
+  channels: [
+    {
+      id: '0190c3a0-5e1d-7000-8000-00000000c001',
+      handle: 'viewer',
+      displayName: 'The Viewer',
+      avatarUrl: null,
+    },
+  ],
+};
+
+const StoryContext = createContext<ReactNode>(null);
+
+type ActiveWords = ActiveLocale<WebCatalogue>;
+
+const ActiveContext = createContext<ActiveWords | undefined>(undefined);
+
+const PATHS = ['/', '/login', '/channel/$channelId', '/watch/$videoId'];
+
+function createStoryRouter(
+  queryClient: QueryClient,
+  Providers: (props: PropsWithChildren<{ active: ActiveWords | undefined }>) => ReactNode
+) {
+  function Stage() {
+    return <Providers active={use(ActiveContext)}>{use(StoryContext)}</Providers>;
+  }
+  const root = createRootRoute({ component: Stage });
+  const routeTree = root.addChildren(
+    PATHS.map((path) => createRoute({ getParentRoute: () => root, path }))
+  );
+  return createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+    context: {
+      identity: createIdentityStore({ identity: { slot: 0 }, prefixed: false }, queryClient),
+    },
+  });
+}
+
+function StoryApp({
+  parameters,
+  active,
+  children,
+}: {
+  parameters: AppParameters;
+  active: ActiveWords;
+  children: ReactNode;
+}) {
+  const session: Session =
+    parameters.session === 'signed-in' ? { status: 'signed-in', account: VIEWER } : GUEST;
+  const [client] = useState(() => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(SESSION_KEY, session);
+    return queryClient;
+  });
+  const [api] = useState(() => inMemoryApi(parameters.api?.() ?? []));
+  const [toaster] = useState(createToaster);
+  const [router] = useState(() =>
+    createStoryRouter(client, ({ active: words, children: story }) => (
+      <AppWords messages={WEB_MESSAGES} active={words}>
+        <ApiProvider api={api}>
+          <SessionProvider session={session}>
+            <Tooltip.Provider>
+              <ToastProvider toaster={toaster}>
+                <WebProviders>{story}</WebProviders>
+              </ToastProvider>
+            </Tooltip.Provider>
+          </SessionProvider>
+        </ApiProvider>
+      </AppWords>
+    ))
+  );
+
+  return (
+    <QueryClientProvider client={client}>
+      <ActiveContext value={active}>
+        <StoryContext value={children}>
+          <RouterProvider router={router} />
+        </StoryContext>
+      </ActiveContext>
+    </QueryClientProvider>
+  );
+}
+
+/**
+ * The app around a story that asks for it (`parameters.app`): a router at `/`, a query client, the API
+ * answered in memory from the story's replies, the session, the locale's words, the toaster and the web
+ * app's own contexts. The one place a kit component's providers are stood up.
+ */
+export const withApp: Decorator = (Story, { parameters, globals, loaded }) => {
+  const app: AppParameters | undefined = parameters.app;
+  if (app === undefined) return <Story />;
+
+  const locale = pickLocale(globals);
+  return (
+    <StoryApp parameters={app} active={{ locale, catalogues: { [locale]: loaded.catalogue } }}>
+      <Story />
+    </StoryApp>
+  );
+};

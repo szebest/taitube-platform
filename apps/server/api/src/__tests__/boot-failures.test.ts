@@ -1,3 +1,5 @@
+import { type Result, err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type {
   JobSchedulerTemplate,
@@ -11,8 +13,6 @@ import {
   cacheUnavailable,
   queueUnavailable,
 } from '@vp/errors';
-import { type Result, err } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { buildTestApp, inMemoryQueues } from './test-app';
 
 class UnsubscribableCache extends InMemoryCacheClient {

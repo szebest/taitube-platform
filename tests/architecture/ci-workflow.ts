@@ -9,7 +9,8 @@ interface Step {
 export interface Job {
   name?: string;
   needs?: string | string[];
-  strategy?: { matrix?: Record<string, readonly (string | number)[]> };
+  outputs?: Record<string, string>;
+  strategy?: { matrix?: Record<string, readonly (string | number)[] | string> };
   if?: string;
   'timeout-minutes'?: number;
   services?: Record<string, unknown>;
@@ -60,14 +61,20 @@ export interface Check {
   job: Job;
 }
 
-/** Every combination of a matrix's values, as the names a `${{ matrix.<key> }}` reads. */
+/**
+ * Every combination of a matrix's values, as the names a `${{ matrix.<key> }}` reads. A matrix a
+ * `fromJSON` expression fills is known only at run time, so it stands for one combination, `N`.
+ */
 function matrixCombinations(
-  matrix: Record<string, readonly (string | number)[]>
+  matrix: Record<string, readonly (string | number)[] | string>
 ): Record<string, string>[] {
   return Object.entries(matrix).reduce<Record<string, string>[]>(
     (combinations, [key, values]) =>
       combinations.flatMap((combination) =>
-        values.map((value) => ({ ...combination, [key]: String(value) }))
+        (typeof values === 'string' ? ['N'] : values).map((value) => ({
+          ...combination,
+          [key]: String(value),
+        }))
       ),
     [{}]
   );

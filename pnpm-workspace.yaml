@@ -1,11 +1,13 @@
 packages:
   - 'apps/*/*'
   - 'packages/*/*'
+  - 'packages/platform/*/*'
   - 'tools/*'
 allowBuilds:
   '@parcel/watcher': false
   esbuild: false
   msgpackr-extract: false
+  onnxruntime-node: false
   protobufjs: false
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@1.5.0

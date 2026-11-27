@@ -30,6 +30,7 @@ index, gates and non-negotiables: `references/this-repo.md`.
 
 - Read the ticket whole, then only the sections of the requirements and design docs it
   links: the links are the context budget.
+- A ticket that adds or changes a package asks the platform question first (`references/this-repo.md`).
 - Use the glossary's words for names and test titles.
 - A contract the ticket touches (a payload, a schema, an environment key, a table) changes
   together with its design doc in the same PR, or not at all.

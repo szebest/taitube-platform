@@ -55,7 +55,7 @@ describe('apps/client/web: app command palette', () => {
       within(screen.getByRole('group', { name: 'Go to' }))
         .getAllByRole('option')
         .map((option) => option.textContent)
-    ).toEqual(['Home', 'Shorts', 'Trending', 'Live']);
+    ).toEqual(['Home', 'Shorts', 'Trending', 'Live', 'Settings']);
   });
 
   it('groups the results of the words typed and opens the one chosen with the keyboard alone', async () => {

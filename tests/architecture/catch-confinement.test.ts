@@ -1,15 +1,18 @@
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { ENTRYPOINTS, isListed } from './entrypoints';
 import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
+const RESULT = packageDir('@kit/result');
+
 /**
- * `tryCatch` / `fromPromise` in `@vp/result` and the adapters that call them are where a throwing
+ * `tryCatch` / `fromPromise` in `@kit/result` and the adapters that call them are where a throwing
  * SDK becomes a `Result`, and an entrypoint's top-level handler is where a failure becomes an exit
  * code. Everywhere else a `catch` is control flow that cannot tell intent from fault, which is what
  * let `channel-service.ts` turn a dead database into a channel-less user.
  */
-const CATCH_HOMES = ['packages/universal/result/', 'packages/server/adapters/'];
+const CATCH_HOMES = [`${RESULT}/`, 'packages/server/adapters/'];
 
 const CATCH = /(^|[^\w.])catch\s*[({]|\.catch\s*\(|\?\.catch\?\.\s*\(/;
 
@@ -77,10 +80,10 @@ describe('architecture: catch is confined to the boundary that converts a throw'
   });
 
   it('still sees the catches the boundary legitimately makes', () => {
-    expect(catches(read('packages/universal/result/src/try-catch.ts'))).toBe(true);
+    expect(catches(read(`${RESULT}/src/try-catch.ts`))).toBe(true);
   });
 
-  it('finds no catch outside @vp/result, an adapter or an entrypoint', () => {
+  it('finds no catch outside @kit/result, an adapter or an entrypoint', () => {
     expect(productionSources().filter((file) => !isHome(file) && catches(read(file)))).toEqual([]);
   });
 

@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { LiveGatewayUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /** The ingest server's control plane, addressed by the path a publisher sends on (`live/{key}`). */
 export abstract class LiveGatewayPort {

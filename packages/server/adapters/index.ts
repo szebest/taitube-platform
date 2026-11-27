@@ -12,3 +12,4 @@ export * from './authorization/index';
 export * from './composition/index';
 export * from './mediamtx/mediamtx-live-gateway';
 export * from './webhook/http-webhook-dispatcher';
+export * from './crypto/scrypt-password-hasher';

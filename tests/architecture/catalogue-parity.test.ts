@@ -1,9 +1,14 @@
-import { en, LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
+import { LOCALES } from '@vp/shared-messages';
+import {
+  loadStudioTranslation,
+  STUDIO_SOURCE,
+} from '../../apps/client/studio/src/lib/messages/catalogue';
+import { loadWebTranslation, WEB_SOURCE } from '../../apps/client/web/src/lib/messages/catalogue';
 
 /**
  * A key `en` has and a translation lacks shows English in the middle of the page; a key a
  * translation has and `en` lacks is copy nothing renders, usually a rename that missed a language.
- * Every catalogue holds exactly `en`'s key set.
+ * Every app's translation holds exactly its source catalogue's key set, the shared words included.
  */
 type Catalogue = Readonly<Record<string, Readonly<Record<string, unknown>> | undefined>>;
 
@@ -19,8 +24,8 @@ function drift(reference: Catalogue, translation: Catalogue) {
   const expected = keysOf(reference);
   const actual = keysOf(translation);
   return {
-    missing: [...expected].filter((key) => !actual.has(key)),
-    extra: [...actual].filter((key) => !expected.has(key)),
+    missing: [...expected.difference(actual)],
+    extra: [...actual.difference(expected)],
   };
 }
 
@@ -47,12 +52,26 @@ describe('architecture: every catalogue holds the keys en holds', () => {
     expect(drift(REFERENCE, translation)).toEqual(expected);
   });
 
-  it.each(SUPPORTED_LOCALES.filter((locale) => locale !== 'en'))(
-    'finds no drift between en and %s',
-    async (locale) => {
-      const translation = await LOCALE_DETAILS[locale].load();
+  const APPS = [
+    { app: 'web', source: WEB_SOURCE, load: loadWebTranslation },
+    { app: 'studio', source: STUDIO_SOURCE, load: loadStudioTranslation },
+  ] as const;
 
-      expect(drift(en, translation)).toEqual({ missing: [], extra: [] });
-    }
-  );
+  it.each(
+    APPS.flatMap(({ app, source, load }) =>
+      LOCALES.tags
+        .filter((locale) => locale !== 'en')
+        .map((locale) => ({
+          app,
+          source,
+          load,
+          locale,
+        }))
+    )
+  )('finds no drift between en and $locale in $app', async ({ source, load, locale }) => {
+    expect(drift(source, await load(locale))).toEqual({
+      missing: [],
+      extra: [],
+    });
+  });
 });

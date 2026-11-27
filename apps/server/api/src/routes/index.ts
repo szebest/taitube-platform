@@ -1,23 +1,32 @@
+import { assertNever } from '@kit/result';
 import type { AuthConfig } from '@vp/env-schema';
-import { assertNever } from '@vp/result';
 import type { FastifyPluginAsync } from 'fastify';
 import { adminCategoriesRoutes } from './admin/categories';
 import { adminDlqRoutes } from './admin/dlq';
 import { adminPicksRoutes } from './admin/picks';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminReportsRoutes } from './admin/reports';
+import { adminScreeningRoutes } from './admin/screening';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
+import { apiTokenRoutes } from './api-tokens';
 import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
+import { channelExportRoutes } from './channel-exports';
 import { channelFeaturedRoutes } from './channel-featured';
+import { channelRestrictionsRoutes } from './channel-restrictions';
+import { channelTeamRoutes } from './channel-team';
 import { channelsRoutes } from './channels';
 import { clipsRoutes } from './clips';
+import { commentModerationRoutes } from './comment-moderation';
+import { commentRemovalsRoutes } from './comment-removals';
 import { commentReportsRoutes } from './comment-reports';
+import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorLiveRoutes } from './creator-live';
+import { creatorStatsRoutes } from './creator-stats';
 import { creatorVideosRoutes } from './creator-videos';
 import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
@@ -28,24 +37,43 @@ import { liveChatRoutes } from './live-chat';
 import { liveCompanionRoutes } from './live-companion';
 import { liveIngestRoutes } from './live-ingest';
 import { meRoutes } from './me';
+import { myChannelsRoutes } from './my-channels';
 import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
+import { postStudioRoutes } from './post-studio';
+import { postsRoutes } from './posts';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
+import { savedRepliesRoutes } from './saved-replies';
+import { screeningRoutes } from './screening';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
+import { threadsRoutes } from './threads';
+import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
+import { videoAccessRoutes } from './video-access';
+import { videoExperimentsRoutes } from './video-experiments';
+import { videoPipelineRoutes } from './video-pipeline';
+import { videoToolsRoutes } from './video-tools';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
 import { viewsRoutes } from './views';
 import { watchHistoryRoutes } from './watch-history';
+import { watchPartiesRoutes } from './watch-parties';
+import { watchPartyControlsRoutes } from './watch-party-controls';
+import { watchPartyGuestsRoutes } from './watch-party-guests';
+import { watchPartyInvitesRoutes } from './watch-party-invites';
+import { watchPartyMembersRoutes } from './watch-party-members';
+import { watchPartyQueueRoutes } from './watch-party-queue';
+import { watchPartyRolesRoutes } from './watch-party-roles';
+import { watchPartySocketRoutes } from './watch-party-socket';
 import { webhooksRoutes } from './webhooks';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
@@ -56,8 +84,16 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   viewsRoutes,
   telemetryRoutes,
   analyticsRoutes,
+  creatorStatsRoutes,
   creatorVideosRoutes,
+  videoToolsRoutes,
+  videoAccessRoutes,
+  videoExperimentsRoutes,
+  videoPipelineRoutes,
   commentsRoutes,
+  postsRoutes,
+  threadsRoutes,
+  postStudioRoutes,
   commentReportsRoutes,
   creatorCommentsRoutes,
   feedRoutes,
@@ -70,6 +106,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminCategoriesRoutes,
   adminVideosRoutes,
   meRoutes,
+  myChannelsRoutes,
   preferencesRoutes,
   captionsRoutes,
   notificationsRoutes,
@@ -88,12 +125,31 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   liveCompanionRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
+  channelTeamRoutes,
+  channelExportRoutes,
+  apiTokenRoutes,
+  channelRestrictionsRoutes,
+  commentModerationRoutes,
+  commentRemovalsRoutes,
+  commentSettingsRoutes,
+  trustedCommentersRoutes,
+  savedRepliesRoutes,
   subscriptionsRoutes,
   eventsRoutes,
   adminQueuesRoutes,
   adminDlqRoutes,
   adminReportsRoutes,
+  adminScreeningRoutes,
+  screeningRoutes,
   adminPicksRoutes,
+  watchPartiesRoutes,
+  watchPartyGuestsRoutes,
+  watchPartyRolesRoutes,
+  watchPartyMembersRoutes,
+  watchPartyQueueRoutes,
+  watchPartyInvitesRoutes,
+  watchPartyControlsRoutes,
+  watchPartySocketRoutes,
 ];
 
 /** The dev key is derived from a committed seed, so its JWKS is served in dev mode and nowhere else. */

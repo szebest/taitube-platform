@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
-import { type SigningKey, signJwt, signingKey } from '@vp/testing/jwt';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { type SigningKey, signJwt, signingKey } from '@kit/testing/jwt';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { type ClaimPolicy, decodeJwt, verifyJwt } from '../jwt';
 
 const NOW = 1_700_000_000_000;

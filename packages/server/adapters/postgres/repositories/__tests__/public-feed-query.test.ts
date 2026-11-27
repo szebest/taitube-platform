@@ -5,6 +5,7 @@ import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from '../pu
 
 const INSTANT = new Date('2026-01-01T00:00:00.000Z');
 const INSTANT_TEXT = INSTANT.toISOString();
+const CREATED_AT_MS = `date_trunc('milliseconds', "videos"."created_at")`;
 
 function rankOrder(sort: PublicFeedSort | undefined) {
   return publicFeedOrderBy({ limit: 10, sort }, INSTANT)[0];
@@ -27,7 +28,12 @@ describe('adapters/postgres: public feed SQL query', () => {
         column: 'category_id',
         value: 'cat-1',
       },
-      { filter: 'owner', options: { ownerId: 'owner-1' }, column: 'owner_id', value: 'owner-1' },
+      {
+        filter: 'channel',
+        options: { channelId: 'channel-1' },
+        column: 'channel_id',
+        value: 'channel-1',
+      },
     ])('adds the $filter predicate only when one is requested', ({ options, column, value }) => {
       expect(sqlText(publicFeedScope())).not.toContain(column);
       const scoped = publicFeedScope(options);
@@ -38,16 +44,15 @@ describe('adapters/postgres: public feed SQL query', () => {
 
   describe('rank expression', () => {
     it.each([
-      { sort: undefined, expected: '"videos"."created_at" desc' },
-      { sort: 'recent' as const, expected: '"videos"."created_at" desc' },
+      { sort: undefined, expected: `${CREATED_AT_MS} desc` },
+      { sort: 'recent' as const, expected: `${CREATED_AT_MS} desc` },
       { sort: 'popular' as const, expected: '"videos"."views_count" desc' },
     ])('keys $sort on $expected', ({ sort, expected }) => {
       expect(sqlText(rankOrder(sort))).toBe(expected);
     });
 
     it('spells the trending gravity curve out of the shared constants', () => {
-      const age =
-        'greatest(0, extract(epoch from ($1::timestamptz - "videos"."created_at")) / 3600.0)';
+      const age = `greatest(0, extract(epoch from ($1::timestamptz - ${CREATED_AT_MS})) / 3600.0)`;
       expect(sqlText(rankOrder('trending'))).toBe(
         `("videos"."views_count"::double precision + ${TRENDING_GRAVITY.viewsOffset}) / power(${age} + ${TRENDING_GRAVITY.ageOffsetHours}, ${TRENDING_GRAVITY.exponent}) desc`
       );
@@ -81,7 +86,7 @@ describe('adapters/postgres: public feed SQL query', () => {
     });
 
     it.each([
-      { sort: 'recent' as const, key: '"videos"."created_at"', cast: '::timestamptz' },
+      { sort: 'recent' as const, key: CREATED_AT_MS, cast: '::timestamptz' },
       { sort: 'popular' as const, key: '"videos"."views_count"', cast: '::integer' },
     ])(
       'takes the rows strictly after the $sort cursor, breaking ties on the id',

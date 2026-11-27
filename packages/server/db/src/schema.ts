@@ -1,5 +1,8 @@
 import {
+  type BannerCrops,
+  type ChannelBannerLink,
   type ChannelLink,
+  type DlqStatus,
   RENDITION_STATUSES,
   STEP_STATUSES,
   UPLOAD_STATUSES,
@@ -22,6 +25,7 @@ import {
   pgTable,
   text,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
@@ -50,8 +54,8 @@ export const channels = pgTable(
     id: uuid('id').primaryKey(),
     userId: uuid('user_id')
       .notNull()
-      .unique()
       .references(() => users.id, { onDelete: 'cascade' }),
+    isPrimary: boolean('is_primary').notNull().default(false),
     handle: text('handle').notNull().unique(),
     displayName: text('display_name').notNull(),
     avatarUrl: text('avatar_url'),
@@ -59,6 +63,13 @@ export const channels = pgTable(
     brandColor: text('brand_color'),
     bio: text('bio'),
     links: jsonb('links').$type<ChannelLink[]>().notNull().default([]),
+    avatarVersion: integer('avatar_version').notNull().default(0),
+    bannerVersion: integer('banner_version').notNull().default(0),
+    bannerCrops: jsonb('banner_crops').$type<BannerCrops>(),
+    country: text('country'),
+    contactEmail: text('contact_email'),
+    bannerLink: jsonb('banner_link').$type<ChannelBannerLink>(),
+    handleChangedAt: timestamptz('handle_changed_at'),
     autoCaptionsDefault: boolean('auto_captions_default').notNull().default(false),
     subscriberCount: integer('subscriber_count').notNull().default(0),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
@@ -67,6 +78,9 @@ export const channels = pgTable(
   (table) => [
     index('channels_handle_idx').on(table.handle),
     index('channels_user_id_idx').on(table.userId),
+    uniqueIndex('channels_user_primary_unique')
+      .on(table.userId)
+      .where(sql`${table.isPrimary}`),
   ]
 );
 
@@ -93,9 +107,13 @@ export const videos = pgTable(
     ownerId: uuid('owner_id')
       .notNull()
       .references(() => users.id),
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => channels.id),
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     tags: text('tags').array().notNull().default([]),
     customThumbnailKey: text('custom_thumbnail_key'),
+    accessPasswordHash: text('access_password_hash'),
     autoCaptions: boolean('auto_captions'),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),
@@ -121,6 +139,7 @@ export const videos = pgTable(
     version: integer('version').notNull().default(0),
     viewsCount: bigint('views_count', { mode: 'number' }).notNull().default(0),
     commentsCount: integer('comments_count').notNull().default(0),
+    commentsEnabled: boolean('comments_enabled').notNull().default(true),
     likesCount: integer('likes_count').notNull().default(0),
     dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),
@@ -134,12 +153,13 @@ export const videos = pgTable(
       table.createdAt.desc().nullsFirst(),
       table.id.desc().nullsFirst()
     ),
+    index('videos_channel_created_idx').on(table.channelId, table.createdAt.desc()),
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
     index('videos_category_id_idx').on(table.categoryId),
     index('videos_views_count_idx').on(table.viewsCount.desc()),
     index('videos_tags_idx').using('gin', table.tags),
     index('videos_channel_stats_idx')
-      .on(table.ownerId, table.viewsCount)
+      .on(table.channelId, table.viewsCount)
       .where(
         sql`${table.status} = 'READY' AND ${table.visibility} = 'public' AND ${table.deletedAt} IS NULL`
       ),
@@ -246,7 +266,7 @@ export const dlqEntries = pgTable(
     stack: text('stack'),
     attemptsMade: integer('attempts_made').notNull(),
     workerId: text('worker_id'),
-    status: text('status').$type<'PARKED' | 'REPLAYED' | 'DISCARDED'>().notNull().default('PARKED'),
+    status: text('status').$type<DlqStatus>().notNull().default('PARKED'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     replayedAt: timestamptz('replayed_at'),
   },
@@ -257,17 +277,4 @@ export const dlqEntries = pgTable(
       table.attemptsMade
     ),
   ]
-);
-
-export const outbox = pgTable(
-  'outbox',
-  {
-    id: uuid('id').primaryKey(),
-    kind: text('kind').notNull(),
-    payload: jsonb('payload').notNull(),
-    createdAt: timestamptz('created_at').notNull().defaultNow(),
-    publishedAt: timestamptz('published_at'),
-    attempts: integer('attempts').notNull().default(0),
-  },
-  (table) => [index('outbox_drain_idx').on(table.publishedAt, table.createdAt)]
 );

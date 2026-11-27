@@ -1,8 +1,8 @@
+import { andThenAsync, fromPromise, map, ok, type Result } from '@kit/result';
 import type { LiveChatOffsetRange, LiveChatRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { LiveChatMessage, NewLiveChatMessage } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { andThenAsync, fromPromise, map, ok, type Result } from '@vp/result';
 import { and, asc, desc, eq, gt, gte, isNull, lt, type SQL, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
@@ -50,7 +50,7 @@ export class PostgresLiveChatRepository implements LiveChatRepositoryPort {
           this.db
             .select({ handle: ch.handle, displayName: ch.displayName, avatarUrl: ch.avatarUrl })
             .from(ch)
-            .where(eq(ch.userId, message.userId))
+            .where(and(eq(ch.userId, message.userId), eq(ch.isPrimary, true)))
             .limit(1),
         databaseUnavailable.during('appendLiveChatMessage')
       );
@@ -145,7 +145,7 @@ export class PostgresLiveChatRepository implements LiveChatRepositoryPort {
         this.db
           .select(columns)
           .from(m)
-          .leftJoin(ch, eq(ch.userId, m.userId))
+          .leftJoin(ch, and(eq(ch.userId, m.userId), eq(ch.isPrimary, true)))
           .where(and(where, isNull(m.removedAt)))
           .orderBy(...orderBy)
           .limit(limit),

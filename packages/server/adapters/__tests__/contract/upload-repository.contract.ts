@@ -1,5 +1,5 @@
+import { expectOk } from '@kit/testing/result';
 import type { UploadRepository } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -77,5 +77,19 @@ export function describeUploadRepositoryContract(makeSubject: MakeRepositoriesSu
       expect(expectOk(await uploads.findById(UPLOAD_ID))?.status).toBe('COMPLETED');
       expect(expectOk(await uploads.updateStatus(UNKNOWN_UPLOAD_ID, 'ABORTED'))).toBeNull();
     });
+
+    it.each([
+      { first: 'ABORTED', second: 'COMPLETED' },
+      { first: 'COMPLETED', second: 'ABORTED' },
+      { first: 'COMPLETED', second: 'COMPLETED' },
+    ] as const)(
+      'refuses to move an upload already $first to $second, and keeps it $first',
+      async ({ first, second }) => {
+        expectOk(await uploads.updateStatus(UPLOAD_ID, first));
+
+        expect(expectOk(await uploads.updateStatus(UPLOAD_ID, second))).toBeNull();
+        expect(expectOk(await uploads.findById(UPLOAD_ID))?.status).toBe(first);
+      }
+    );
   });
 }

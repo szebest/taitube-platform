@@ -38,6 +38,7 @@ function playingVideo(): HTMLVideoElement {
 describe('apps/client/web: useAmbientSample', () => {
   afterEach(() => {
     delete document.documentElement.dataset.motion;
+    delete document.documentElement.dataset.ambient;
     vi.unstubAllGlobals();
   });
 
@@ -110,5 +111,30 @@ describe('apps/client/web: useAmbientSample', () => {
     tick(16);
 
     expect(getImageData).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    {
+      scenario: 'the glow is off',
+      arrange: () => (document.documentElement.dataset.ambient = 'off'),
+    },
+    {
+      scenario: 'the viewer saves data',
+      arrange: () => vi.stubGlobal('navigator', { connection: { saveData: true } }),
+    },
+    {
+      scenario: 'the link is 2g',
+      arrange: () => vi.stubGlobal('navigator', { connection: { effectiveType: '2g' } }),
+    },
+  ])('never samples while $scenario', ({ arrange }) => {
+    arrange();
+    const { getImageData } = canvasReading(DUSK);
+    const tick = frameClock();
+    const { result } = renderHook(() => useAmbientSample(playingVideo()));
+
+    tick(100);
+
+    expect(getImageData).not.toHaveBeenCalled();
+    expect(result.current).toEqual([]);
   });
 });

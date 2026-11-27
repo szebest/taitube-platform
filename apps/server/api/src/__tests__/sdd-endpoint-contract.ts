@@ -1,17 +1,26 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
+import { SDD_ANALYTICS_ENDPOINTS } from './sdd-analytics-endpoints';
 import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
+import { SDD_EXPORT_ENDPOINTS } from './sdd-export-endpoints';
 import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_LIVE_ENDPOINTS } from './sdd-live-endpoints';
 import { SDD_PICK_ENDPOINTS } from './sdd-pick-endpoints';
+import { SDD_POST_ENDPOINTS } from './sdd-post-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
+import { SDD_SCREENING_ENDPOINTS } from './sdd-screening-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
+import { SDD_TEAM_ENDPOINTS } from './sdd-team-endpoints';
+import { SDD_THREAD_ENDPOINTS } from './sdd-thread-endpoints';
+import { SDD_TOKEN_ENDPOINTS } from './sdd-token-endpoints';
 import { SDD_VIEWER_ACTIVITY_ENDPOINTS } from './sdd-viewer-activity-endpoints';
+import { SDD_WATCH_PARTY_ENDPOINTS } from './sdd-watch-party-endpoints';
+import { SDD_WATCH_PARTY_MEMBER_ENDPOINTS } from './sdd-watch-party-member-endpoints';
 
 export interface SddEndpointContract {
   path: string;
@@ -91,9 +100,14 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/videos/{id}',
     method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: VIEWED_VIDEO,
+    expectedStatuses: [200, 400, 401, 403, 404, 410],
+    expectedErrorCodes: [
+      ...VIEWED_VIDEO,
+      ErrorCodes.VIDEO_PASSWORD_REQUIRED,
+      ErrorCodes.SHARE_LINK_EXPIRED,
+    ],
     hasPathParams: true,
+    hasQueryParams: true,
   },
   {
     path: '/v1/videos/{id}',
@@ -135,7 +149,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     path: '/v1/videos/{id}/reactions',
     method: 'put',
     expectedStatuses: [200, 400, 401, 403, 404],
-    expectedErrorCodes: OWNED_VIDEO,
+    expectedErrorCodes: [...OWNED_VIDEO, ErrorCodes.COMMENTS_BANNED],
     hasBody: true,
     hasPathParams: true,
   },
@@ -162,18 +176,10 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasBody: true,
   },
   {
-    path: '/v1/creator/videos/{id}/retention',
+    path: '/v1/videos/{id}/creator-stats',
     method: 'get',
     expectedStatuses: [200, 400, 401, 403, 404],
     expectedErrorCodes: OWNED_VIDEO,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/creator/videos/{id}/analytics',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 403, 404],
-    expectedErrorCodes: OWNED_VIDEO,
-    hasQueryParams: true,
     hasPathParams: true,
   },
   {
@@ -214,22 +220,13 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/me/channel',
     method: 'patch',
-    expectedStatuses: [200, 400, 401, 404, 409, 422],
+    expectedStatuses: [200, 400, 401, 403, 404, 409, 422],
     expectedErrorCodes: [
       ...CHANNEL,
       ErrorCodes.HANDLE_ALREADY_TAKEN,
+      ErrorCodes.HANDLE_CHANGE_TOO_SOON,
+      ErrorCodes.HANDLE_RESERVED,
       ErrorCodes.INVALID_HANDLE_FORMAT,
-    ],
-    hasBody: true,
-  },
-  {
-    path: '/v1/me/channel/images',
-    method: 'post',
-    expectedStatuses: [201, 400, 401, 404, 422],
-    expectedErrorCodes: [
-      ...CHANNEL,
-      ErrorCodes.UPLOAD_TOO_LARGE,
-      ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
     ],
     hasBody: true,
   },
@@ -327,8 +324,17 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_VIEWER_ACTIVITY_ENDPOINTS,
   ...SDD_CLIP_ENDPOINTS,
   ...SDD_PICK_ENDPOINTS,
+  ...SDD_ANALYTICS_ENDPOINTS,
   ...SDD_INTEGRATION_ENDPOINTS,
+  ...SDD_TEAM_ENDPOINTS,
+  ...SDD_EXPORT_ENDPOINTS,
+  ...SDD_POST_ENDPOINTS,
+  ...SDD_THREAD_ENDPOINTS,
+  ...SDD_TOKEN_ENDPOINTS,
   ...SDD_LIVE_ENDPOINTS,
+  ...SDD_SCREENING_ENDPOINTS,
+  ...SDD_WATCH_PARTY_ENDPOINTS,
+  ...SDD_WATCH_PARTY_MEMBER_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

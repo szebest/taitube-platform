@@ -1,11 +1,12 @@
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import {
   captionsChunkKey,
   captionsFileKey,
   captionsPrefix,
   captionsTmpPrefix,
-  channelImageKey,
-  channelImagePrefix,
+  channelImageUploadKey,
+  channelImageVariantKey,
+  channelImageVersionPrefix,
   chunkKey,
   chunkPrefix,
   liveArchivePlaylistKey,
@@ -17,6 +18,9 @@ import {
   livePrefix,
   liveRelativeUri,
   liveSegmentKey,
+  evidenceFrameKey,
+  exportObjectKey,
+  evidencePrefix,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
@@ -24,6 +28,8 @@ import {
   renditionObjectKey,
   renditionPlaylistKey,
   renditionPrefix,
+  generationPurgeTargets,
+  replacementSourceKey,
   reprocessPrefixesBefore,
   sanitizeStorageUrl,
   spriteKey,
@@ -35,6 +41,16 @@ describe('packages/storage: object keys', () => {
   const videoId = SEEDED.videoId;
   const segmentKeyOf = (generation: number) =>
     renditionObjectKey(videoId, '720p', 'seg_00001.ts', generation);
+
+  it('keeps a channel export under the exports prefix of its channel, named by its format', () => {
+    expect(exportObjectKey('ch1', 'e1', 'csv')).toBe('exports/ch1/e1.csv');
+  });
+
+  it('keeps evidence under a prefix of its own, outside the raw uploads', () => {
+    expect(evidencePrefix(videoId)).toBe(`evidence/${videoId}/`);
+    expect(evidenceFrameKey(videoId, 2)).toBe(`evidence/${videoId}/frame-2.jpg`);
+    expect(evidencePrefix(videoId).startsWith(rawPrefix(videoId).slice(0, 4))).toBe(false);
+  });
 
   it('lays keys out as SDD §7 specifies', () => {
     expect(rawSourceKey(videoId, 'mp4')).toBe(`raw/${videoId}/source.mp4`);
@@ -84,13 +100,40 @@ describe('packages/storage: object keys', () => {
     expect(masterPlaylistKey(videoId, 3).startsWith(prefix)).toBe(false);
   });
 
-  it('keeps a channel image under its channel and kind prefix', () => {
-    const key = channelImageKey('chan-1', 'avatar', 'img-9', 'webp');
+  it('keeps a replacement upload under the raw prefix, apart from the first source', () => {
+    expect(replacementSourceKey(videoId, 3, '.mov')).toBe(`raw/${videoId}/g3/source.mov`);
+  });
 
-    expect(key).toBe('channels/chan-1/avatar/img-9.webp');
-    expect(key.startsWith(channelImagePrefix('chan-1', 'avatar'))).toBe(true);
-    expect(key.startsWith(channelImagePrefix('chan-1', 'banner'))).toBe(false);
-    expect(key.startsWith(channelImagePrefix('chan-10', 'avatar'))).toBe(false);
+  it('purges a later generation by its own prefix, never touching another', () => {
+    const [prefix = ''] = generationPurgeTargets(videoId, 2, ['720p']);
+
+    expect(generationPurgeTargets(videoId, 2, ['720p'])).toHaveLength(1);
+    expect(segmentKeyOf(2).startsWith(prefix)).toBe(true);
+    expect(segmentKeyOf(3).startsWith(prefix)).toBe(false);
+  });
+
+  it('purges the first generation rendition by rendition and its master, never every later one with it', () => {
+    const targets = generationPurgeTargets(videoId, 1, ['720p', '480p']);
+
+    expect(targets).toEqual([
+      renditionPrefix(videoId, '720p'),
+      renditionPrefix(videoId, '480p'),
+      masterPlaylistKey(videoId),
+    ]);
+    expect(targets.some((target) => segmentKeyOf(2).startsWith(target))).toBe(false);
+    expect(targets.some((target) => segmentKeyOf(1).startsWith(target))).toBe(true);
+  });
+
+  it('keeps the raw upload apart from its variants, one prefix per version', () => {
+    const variant = channelImageVariantKey('chan-1', 'banner', 'desktop-1280', 3);
+
+    expect(channelImageUploadKey('chan-1', 'banner', 'up-1')).toBe(
+      'channel-images/chan-1/banner/up-1'
+    );
+    expect(variant).toBe('channels/chan-1/banner/v3/desktop-1280.webp');
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 3))).toBe(true);
+    expect(variant.startsWith(channelImageVersionPrefix('chan-1', 'banner', 30))).toBe(false);
+    expect(variant.startsWith('channels/chan-1/banner/')).toBe(true);
   });
 
   it('keeps everything a broadcast writes under its live prefix, an epoch apart', () => {

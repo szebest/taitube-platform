@@ -148,10 +148,24 @@ while true; do
   elif [ "$STATUS" = "FAILED" ]; then
     echo "Error: Video processing failed: $VIDEO_RES"
     exit 1
+  elif [ "$STATUS" = "HELD" ]; then
+    echo "Error: Screening held the clean fixture: $VIDEO_RES"
+    exit 1
   fi
 
   sleep 0.5
 done
+
+# 5b. Verify the screening step ran: the screen stage stored one PASS result
+POSTGRES_ID=$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=postgres" 2>/dev/null | head -1 || true)
+if [ -n "$POSTGRES_ID" ]; then
+  SCREENING=$(docker exec "$POSTGRES_ID" psql -U vp -d vp -tAc "select outcome from video_screenings where video_id = '$VIDEO_ID'" 2>/dev/null | tr -d '[:space:]')
+  if [ "$SCREENING" != "PASS" ]; then
+    echo "Error: expected a PASS screening result for $VIDEO_ID, got '${SCREENING:-none}'"
+    exit 1
+  fi
+  echo "==> Screening result: PASS"
+fi
 
 # 6. Verify HLS playback URLs
 PLAYBACK_URL=$(echo "$VIDEO_RES" | grep -o '"playbackUrl":"[^"]*' | cut -d'"' -f4)

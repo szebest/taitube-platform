@@ -1,3 +1,6 @@
+import type { AnyFailure } from '@kit/errors';
+import type { Logger } from '@kit/logger';
+import { type Result, assertNever, ok } from '@kit/result';
 import type {
   JobQueue,
   MultipartStorage,
@@ -7,18 +10,31 @@ import type {
   ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
+import {
+  CHANNEL_AUDIT_RETENTION_DAYS,
+  SCREENING_EVIDENCE_RETENTION_DAYS,
+  CHANNEL_IMAGE_RETENTION_DAYS,
+  HANDLE_RESERVATION_DAYS,
+  SEARCH_HISTORY_RETENTION_DAYS,
+} from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
-import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, ok } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
+import { runPruneRevisions } from './prune-revisions';
+import { runPublishDuePosts } from './publish-due-posts';
+import { runPurgeChannelAudit } from './purge-channel-audit';
+import { runPurgeChannelImages } from './purge-channel-images';
+import { runPurgeCommentModeration } from './purge-comment-moderation';
 import { runPurgeDeleted } from './purge-deleted';
+import { runPurgeExports } from './purge-exports';
+import { runPurgeGenerations } from './purge-generations';
+import { runPurgeHandleHistory } from './purge-handle-history';
+import { runPurgeScreeningEvidence } from './purge-screening-evidence';
 import { runPurgeSearchHistory } from './purge-search-history';
 import { runReconcileCaptions } from './reconcile-captions';
+import { runReconcileLive } from './reconcile-live';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
@@ -26,6 +42,7 @@ import { runTmpSweep } from './tmp-sweep';
 
 export * from './reconcile-uploads';
 export * from './reconcile-processing';
+export * from './reconcile-live';
 export * from './reconcile-reaction-counters';
 export * from './purge-deleted';
 export * from './expire-raw';
@@ -33,6 +50,15 @@ export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './reconcile-captions';
+export * from './purge-channel-audit';
+export * from './purge-comment-moderation';
+export * from './purge-screening-evidence';
+export * from './purge-channel-images';
+export * from './purge-handle-history';
+export * from './purge-exports';
+export * from './purge-generations';
+export * from './prune-revisions';
+export * from './publish-due-posts';
 export * from './purge-search-history';
 
 interface HousekeepingSettings {
@@ -78,6 +104,7 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       notificationRetentionDays: housekeeping.notificationRetentionDays,
     },
     expire: { scanLimit: housekeeping.scanLimit },
+    duePosts: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
     captions: {
@@ -85,6 +112,16 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       scanLimit: housekeeping.scanLimit,
     },
     searchHistory: { retentionDays: SEARCH_HISTORY_RETENTION_DAYS },
+    channelAudit: { retentionDays: CHANNEL_AUDIT_RETENTION_DAYS },
+    screeningEvidence: {
+      retentionDays: SCREENING_EVIDENCE_RETENTION_DAYS,
+      scanLimit: housekeeping.scanLimit,
+    },
+    channelImages: {
+      retentionDays: CHANNEL_IMAGE_RETENTION_DAYS,
+      scanLimit: housekeeping.scanLimit,
+    },
+    handleHistory: { reservationDays: HANDLE_RESERVATION_DAYS },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -122,6 +159,15 @@ export function createHousekeepingProcessor(
 
       case 'reconcile-processing':
         return await runReconcileProcessing({
+          repositories,
+          getQueue,
+          workerId,
+          ...tasks.processing,
+          logger,
+        });
+
+      case 'reconcile-live':
+        return await runReconcileLive({
           repositories,
           getQueue,
           workerId,
@@ -186,6 +232,71 @@ export function createHousekeepingProcessor(
           ...tasks.searchHistory,
           logger,
         });
+
+      case 'purge-channel-audit':
+        return await runPurgeChannelAudit({
+          repositories,
+          now,
+          ...tasks.channelAudit,
+          logger,
+        });
+
+      case 'purge-comment-moderation':
+        return await runPurgeCommentModeration({ repositories, now, logger });
+      case 'purge-screening-evidence':
+        return await runPurgeScreeningEvidence({
+          repositories,
+          storage,
+          rawBucket,
+          now,
+          ...tasks.screeningEvidence,
+          logger,
+        });
+
+      case 'purge-channel-images':
+        return await runPurgeChannelImages({
+          repositories,
+          storage,
+          rawBucket,
+          publicBucket,
+          now,
+          ...tasks.channelImages,
+          logger,
+        });
+
+      case 'purge-handle-history':
+        return await runPurgeHandleHistory({
+          repositories,
+          now,
+          ...tasks.handleHistory,
+          logger,
+        });
+
+      case 'purge-exports':
+        return await runPurgeExports({
+          repositories,
+          storage,
+          rawBucket,
+          now,
+          ...tasks.expire,
+          logger,
+        });
+
+      case 'prune-revisions':
+        return await runPruneRevisions({ repositories, logger });
+
+      case 'purge-generations':
+        return await runPurgeGenerations({
+          repositories,
+          storage,
+          publicBucket,
+          now,
+          ...tasks.expire,
+          logger,
+        });
+
+      case 'publish-due-posts':
+        return await runPublishDuePosts({ repositories, now, ...tasks.duePosts, logger });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

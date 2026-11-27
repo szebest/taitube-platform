@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
-import { AlertDialog, Button } from '@vp/ui';
+import { AlertDialog, Button } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 
 export interface ConfirmDialogProps {
   open: boolean;

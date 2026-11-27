@@ -1,11 +1,12 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type { ClipRepositoryPort, ListClipsOptions } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Clip, ClipEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { fromPromise, map, type Result } from '@vp/result';
 import { desc, eq, getTableColumns } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { toVideoRecord } from '../mappers/video.mapper';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -40,22 +41,26 @@ export class PostgresClipRepository implements ClipRepositoryPort {
           .select({ clip: getTableColumns(c), video: getTableColumns(v), ...channelCardColumns })
           .from(c)
           .innerJoin(v, eq(v.id, c.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(c.userId, viewer.id),
               watchableVideoScope(viewer),
-              keysetBefore(c.createdAt, c.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(c.createdAt),
+                c.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(c.createdAt), desc(c.id))
+          .orderBy(desc(msTimestamp(c.createdAt)), desc(c.id))
           .limit(limit + 1),
       databaseUnavailable.during('listClips')
     );
     return map(rows, (found) =>
       found.map(({ clip, video, channelId, handle, displayName, avatarUrl }) => ({
         clip,
-        video,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

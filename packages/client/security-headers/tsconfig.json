@@ -1,9 +1,0 @@
-{
-  "extends": "@vp/tsconfig/client.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["src/**/__tests__/**", "src/**/__mocks__/**", "src/**/*.test.ts"]
-}

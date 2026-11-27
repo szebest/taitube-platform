@@ -1,22 +1,29 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@kit/design-tokens';
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@kit/ui';
 import { render } from '@testing-library/react';
-import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@vp/design-tokens';
-import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
+import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/account/utils/settings-index';
 import { SetPreview } from '../token-group-map';
 
 const SETS_CSS = readFileSync(
-  join(dirname(createRequire(import.meta.url).resolve('@vp/ui/styles.css')), 'generated/sets.css'),
+  join(dirname(createRequire(import.meta.url).resolve('@kit/ui/styles.css')), 'generated/sets.css'),
   'utf8'
 );
 
 const renderPreview = (group: TokenGroup, setId: string, mode: 'dark' | 'light' = 'dark') =>
   render(
     <AppProviders>
-      <AppearanceProvider stored={{ preference: { ...DEFAULT_APPEARANCE, mode }, source: 'none' }}>
+      <AppearanceProvider
+        stored={{
+          preference: { ...DEFAULT_APPEARANCE, mode },
+          source: 'none',
+          storage: APPEARANCE_COOKIES,
+        }}
+      >
         <SetPreview group={group} setId={setId} />
       </AppearanceProvider>
     </AppProviders>

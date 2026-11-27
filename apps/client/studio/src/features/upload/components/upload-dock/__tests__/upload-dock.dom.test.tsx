@@ -44,5 +44,6 @@ describe('apps/client/studio: UploadDockProvider', () => {
 
     expect(await screen.findByText('Uploading Second')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: 'Overall of First' })).toBeInTheDocument();
+    finishTransfer();
   });
 });

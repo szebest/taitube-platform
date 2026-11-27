@@ -14,7 +14,7 @@ Worker source uses `node:*` modules only, never a `Bun.*` API (`src/__tests__/ru
 - **Stage Registry:** `WORKER_STAGE` picks the stage from `STAGE_REGISTRY` in `src/registry.ts`.
 - **One Queue per Stage:** decoupled concurrency, scaling and backoff per SDD §9.1.
 - **Fencing Tokens:** a stage claims its `processing_steps` row with a UUIDv7 `lockToken` through `repositories.steps.claim(...)`, and `complete(...)` / `fail(...)` check the same token, so a zombie worker's commit is rejected (SDD §5.3, §9.5).
-- **Graceful Shutdown:** `SIGTERM` / `SIGINT` run `shutdownOnce` from `@vp/composition`, installed before the worker starts.
+- **Graceful Shutdown:** `SIGTERM` / `SIGINT` run `shutdownOnce` from `@kit/composition`, installed before the worker starts.
 - **Per-Job Temp Dirs:** created under `TMP_DIR` (default `/tmp/vp`) by `src/stages/scratch-dir.ts` and removed in a `finally`; the `tmp-sweep` housekeeping task removes one left behind.
 - **Liveness Heartbeat:** `src/heartbeat.ts` writes integer epoch seconds to `WORKER_HEARTBEAT_PATH` (default `/tmp/vp/heartbeat`) every 15 s.
 

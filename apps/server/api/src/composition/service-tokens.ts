@@ -1,8 +1,8 @@
-import { token } from '@vp/composition';
+import { token } from '@kit/composition';
+import type { Logger } from '@kit/logger';
+import type { MetricsServer } from '@kit/observability';
+import type { Paginator } from '@kit/pagination';
 import type { JobQueue } from '@vp/core/ports';
-import type { Logger } from '@vp/logger';
-import type { MetricsServer } from '@vp/observability';
-import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type { HistoryPause } from '../services/history-pause';
 import type {
@@ -12,13 +12,15 @@ import type {
   CaptionTrackService,
   CategoryService,
   ChannelFeaturedService,
-  ChannelImageService,
+  ChannelIdentityService,
+  ChannelImagePipelineService,
+  ChannelSpotlightService,
+  ChannelAuditService,
+  ChannelInviteService,
+  ChannelMemberService,
   ChannelService,
+  RequestIdentity,
   ClipService,
-  OEmbedService,
-  WebhookService,
-  CommentReportService,
-  CommentService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -42,6 +44,7 @@ import type {
   ReactionService,
   RecommendationFeedbackService,
   RelatedService,
+  ScreeningService,
   SearchHistoryService,
   SearchService,
   SseHub,
@@ -57,8 +60,22 @@ import type {
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
+import { type AccountServiceSet, AccountServices } from './account-tokens';
+import { type CommentServiceSet, CommentServices } from './comment-tokens';
+import { type IntegrationServiceSet, IntegrationServices } from './integration-tokens';
+import { type PostServiceSet, PostServices } from './post-tokens';
+import { ScreeningServices } from './screening-tokens';
+import { type VideoToolsServiceSet, VideoToolsServices } from './video-tools-tokens';
+import { type WatchPartyServiceSet, WatchPartyServices } from './watch-party-tokens';
 
-export interface ServiceSet {
+export interface ServiceSet
+  extends
+    CommentServiceSet,
+    IntegrationServiceSet,
+    VideoToolsServiceSet,
+    AccountServiceSet,
+    WatchPartyServiceSet,
+    PostServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -70,11 +87,14 @@ export interface ServiceSet {
   recommendationFeedbackService: RecommendationFeedbackService;
   categoryService: CategoryService;
   channelService: ChannelService;
-  channelImageService: ChannelImageService;
+  channelIdentityService: ChannelIdentityService;
+  channelImagePipelineService: ChannelImagePipelineService;
+  channelSpotlightService: ChannelSpotlightService;
   channelFeaturedService: ChannelFeaturedService;
+  channelInviteService: ChannelInviteService;
+  channelMemberService: ChannelMemberService;
+  channelAuditService: ChannelAuditService;
   clipService: ClipService;
-  oembedService: OEmbedService;
-  webhookService: WebhookService;
   liveIngestService: LiveIngestService;
   creatorLiveService: CreatorLiveService;
   liveService: LiveService;
@@ -85,8 +105,7 @@ export interface ServiceSet {
   pickService: PickService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
-  commentService: CommentService;
-  commentReportService: CommentReportService;
+  screeningService: ScreeningService;
   creatorCommentService: CreatorCommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
@@ -127,11 +146,15 @@ export const Services = {
   ),
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
-  ChannelImageService: token<ChannelImageService>('ChannelImageService'),
+  RequestIdentity: token<RequestIdentity>('RequestIdentity'),
+  ChannelIdentityService: token<ChannelIdentityService>('ChannelIdentityService'),
+  ChannelImagePipelineService: token<ChannelImagePipelineService>('ChannelImagePipelineService'),
+  ChannelSpotlightService: token<ChannelSpotlightService>('ChannelSpotlightService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
+  ChannelInviteService: token<ChannelInviteService>('ChannelInviteService'),
+  ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),
+  ChannelAuditService: token<ChannelAuditService>('ChannelAuditService'),
   ClipService: token<ClipService>('ClipService'),
-  OEmbedService: token<OEmbedService>('OEmbedService'),
-  WebhookService: token<WebhookService>('WebhookService'),
   LiveIngestService: token<LiveIngestService>('LiveIngestService'),
   CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
   LiveService: token<LiveService>('LiveService'),
@@ -144,8 +167,13 @@ export const Services = {
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
-  CommentService: token<CommentService>('CommentService'),
-  CommentReportService: token<CommentReportService>('CommentReportService'),
+  ...CommentServices,
+  ...ScreeningServices,
+  ...IntegrationServices,
+  ...VideoToolsServices,
+  ...AccountServices,
+  ...WatchPartyServices,
+  ...PostServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

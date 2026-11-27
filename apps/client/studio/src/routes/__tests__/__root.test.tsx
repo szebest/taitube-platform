@@ -28,6 +28,14 @@ describe('apps/client/studio: root route', () => {
     expect(head(html)).not.toContain('name="description"');
   });
 
+  it('lets the page draw under a notch, so safe-area insets are real', async () => {
+    const html = await document();
+
+    expect(head(html)).toContain(
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>'
+    );
+  });
+
   it.each([
     { acceptLanguage: 'pl-PL,en;q=0.5', lang: 'pl', notFound: 'Nie znaleziono strony' },
     { acceptLanguage: 'de-DE', lang: 'en', notFound: 'Page not found' },

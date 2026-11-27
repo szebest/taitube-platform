@@ -1,0 +1,11 @@
+{
+  "extends": "@kit/tsconfig/client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/__tests__/**", "src/**/__mocks__/**", "src/**/*.test.ts", "src/**/*.test.tsx"]
+}

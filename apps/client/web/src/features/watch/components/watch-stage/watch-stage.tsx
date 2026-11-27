@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { type PlaybackRange, usePlayerTheater } from '#app/components/player/taitube-player';
 import { Stage } from '#app/components/watch/stage';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
+import { useAmbientGlow } from '#app/lib/ambient/ambient-glow';
 import { PlayerSlot } from '../player-slot/player-slot';
 import { WatchPlayer } from '../watch-player/watch-player';
 
@@ -15,15 +16,14 @@ export interface WatchStageProps {
 
 export function WatchStage({ video, range }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;
-  const glowColors = useAmbientSample(posterUrl);
+  const glowRef = useAmbientGlow(useAmbientSample(posterUrl));
   const theater = usePlayerTheater();
   const poster = posterUrl && (
     <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
 
   return (
-    <Stage.Root variant={theater ? 'theater' : 'standard'} videoId={id} glowColors={glowColors}>
-      <Stage.Glow />
+    <Stage.Root ref={glowRef} variant={theater ? 'theater' : 'standard'} videoId={id}>
       {playbackUrl ? (
         <ClientOnly fallback={poster}>
           <Suspense fallback={poster}>

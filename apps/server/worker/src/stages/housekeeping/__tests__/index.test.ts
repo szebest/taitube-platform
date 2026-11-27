@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryMultipartStorage,
@@ -8,7 +9,6 @@ import {
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { HousekeepingJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { createHousekeepingProcessor } from '../index';
 import { inMemoryQueues } from './housekeeping-harness';
@@ -39,16 +39,22 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     viewBuffer = new InMemoryViewBuffer();
   });
 
-  it('dispatches reconcile-uploads to the upload reconciler', async () => {
-    expect(await run('reconcile-uploads')).toEqual({ abandonedCount: 0, reenqueuedCount: 0 });
-  });
-
-  it('dispatches reconcile-captions to the captions reconciler', async () => {
-    expect(await run('reconcile-captions')).toEqual({ requeued: 0 });
-  });
-
-  it('dispatches purge-search-history to the search history purge', async () => {
-    expect(await run('purge-search-history')).toEqual({ purgedCount: 0 });
+  it.each([
+    { task: 'reconcile-uploads', result: { abandonedCount: 0, reenqueuedCount: 0 } },
+    { task: 'reconcile-captions', result: { requeued: 0 } },
+    { task: 'reconcile-live', result: { orphanedCount: 0 } },
+    { task: 'purge-search-history', result: { purgedCount: 0 } },
+    { task: 'purge-channel-audit', result: { purgedCount: 0 } },
+    { task: 'purge-comment-moderation', result: { removals: 0, restrictions: 0 } },
+    { task: 'purge-screening-evidence', result: { purgedCount: 0 } },
+    { task: 'purge-channel-images', result: { purgedCount: 0 } },
+    { task: 'purge-handle-history', result: { purgedCount: 0 } },
+    { task: 'purge-exports', result: { purgedCount: 0, abandonedCount: 0 } },
+    { task: 'prune-revisions', result: { purgedCount: 0 } },
+    { task: 'purge-generations', result: { purgedCount: 0, expiredUploads: 0 } },
+    { task: 'publish-due-posts', result: { publishedCount: 0 } },
+  ] as const)('dispatches $task to its task', async ({ task, result }) => {
+    expect(await run(task)).toEqual(result);
   });
 
   it('dispatches reconcile-reaction-counters to the counter reconciler', async () => {

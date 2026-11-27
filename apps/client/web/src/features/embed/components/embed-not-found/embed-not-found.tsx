@@ -1,4 +1,4 @@
-import { useT } from '@vp/intl-react';
+import { useT } from '#app/lib/messages';
 
 export function EmbedNotFound() {
   const { tOr } = useT();

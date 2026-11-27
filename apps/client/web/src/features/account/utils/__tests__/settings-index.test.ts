@@ -1,4 +1,4 @@
-import { appearance } from '@vp/ui/appearance/registry';
+import { appearance } from '@kit/ui/appearance/registry';
 import { SETTING_ROWS, SETTINGS_SECTION_IDS, SETTINGS_SECTIONS } from '../settings-index';
 
 describe('the settings index', () => {
@@ -25,6 +25,7 @@ describe('the settings index', () => {
       'privacy',
       'notifications',
       'language',
+      'accounts',
     ]);
   });
 });

@@ -1,17 +1,20 @@
+import type { Result } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { VideoRecord, VideoRepository, VideoWithDetails } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { VideoStatus } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
   OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
   OWNER_ID,
   VIDEO_IDS,
   idsOf,
   publicVideo,
   seedOwners,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkByCreatedAt } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import type { VideoContractContext } from './video-contract-context';
 import { describeVideoFeedContract } from './video-feed.contract';
@@ -61,6 +64,24 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         expect(found?.version).toBe(created.version);
       });
 
+      it('writes the audit row it is handed with the video', async () => {
+        const uploaded = {
+          channelId: OWNER_CHANNEL_ID,
+          actorUserId: OWNER_ID,
+          action: 'video.uploaded',
+          targetType: 'video',
+          targetId: VIDEO_IDS.a,
+          meta: {},
+        } as const;
+
+        expectOk(await videos.create(publicVideo({ id: VIDEO_IDS.a }), uploaded));
+
+        const audit = expectOk(
+          await subject.repositories.channelAudit.list(OWNER_CHANNEL_ID, { cursor: null, limit: 5 })
+        );
+        expect(audit).toEqual([expect.objectContaining(uploaded)]);
+      });
+
       it('exposes the video with its details', async () => {
         expectOk(await videos.create(publicVideo({ id: VIDEO_IDS.a })));
         const details = expectOk(await videos.findWithDetails(VIDEO_IDS.a));
@@ -80,6 +101,30 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         { name: 'findWithDetails', read: (r) => r.findWithDetails(VIDEO_IDS.f) },
       ])('answers ok(null) from $name for an unknown id', async ({ read }) => {
         expect(expectOk(await read(videos))).toBeNull();
+      });
+    });
+
+    describe('listReadyAfter', () => {
+      it('answers only the listed videos ready after the cutoff, in one read', async () => {
+        const cutoff = new Date(Date.now() - 48 * HOUR_MS);
+        await videos.create(
+          publicVideo({ id: VIDEO_IDS.a, readyAt: new Date(Date.now() - HOUR_MS) })
+        );
+        await videos.create(publicVideo({ id: VIDEO_IDS.b, readyAt: cutoff }));
+        await videos.create(publicVideo({ id: VIDEO_IDS.c, status: 'UPLOADING' }));
+        await videos.create(
+          publicVideo({ id: VIDEO_IDS.d, readyAt: new Date(Date.now() - HOUR_MS) })
+        );
+
+        const found = expectOk(
+          await videos.listReadyAfter([VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.e], cutoff)
+        );
+
+        expect(idsOf(found)).toEqual([VIDEO_IDS.a]);
+      });
+
+      it('answers nothing for no ids', async () => {
+        expect(expectOk(await videos.listReadyAfter([], new Date(0)))).toEqual([]);
       });
     });
 
@@ -106,6 +151,23 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
       ])('$scenario', async ({ status, expected }) => {
         const rows = expectOk(await videos.listByOwner({ ownerId: OWNER_ID, limit: 10, status }));
         expect(idsOf(rows)).toEqual(expected);
+      });
+
+      it('walks on from a cursor through videos created within one millisecond', async () => {
+        const tied = [VIDEO_IDS.d, VIDEO_IDS.e, VIDEO_IDS.f];
+        for (const id of tied) await subject.seedVideo(publicVideo({ id }), SHARED_MILLISECOND);
+        await subject.spreadAcrossMicroseconds({
+          stamp: schema.videos.createdAt,
+          key: schema.videos.id,
+          ids: tied,
+          at: SHARED_MILLISECOND,
+        });
+
+        const served = await walkByCreatedAt(async (cursor) =>
+          expectOk(await videos.listByOwner({ ownerId: OWNER_ID, cursor, limit: 1 }))
+        );
+
+        expect(served.sort()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b, ...tied].sort());
       });
     });
 

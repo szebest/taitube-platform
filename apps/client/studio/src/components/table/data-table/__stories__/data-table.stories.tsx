@@ -1,3 +1,5 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Badge, type BadgeTone, Button, Icon, type IconId, Input } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   createColumnHelper,
@@ -5,8 +7,6 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { Badge, type BadgeTone, Button, Icon, type IconId, Input } from '@vp/ui';
 import { DataTable, type DataTableFeatures, DataTableSkeleton, dataTableFeatures } from '..';
 import type { DataTableState } from '../types';
 

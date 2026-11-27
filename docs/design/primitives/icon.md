@@ -18,7 +18,7 @@ A sized, stroke-consistent wrapper for a Lucide glyph; every icon in the product
 
 ```ts
 // types.ts
-import type { IconSize, ToneOption } from '@vp/design-tokens';
+import type { IconSize, ToneOption } from '@kit/design-tokens';
 
 export type IconTone = 'inherit' | Extract<ToneOption, 'neutral' | 'accent' | 'danger'>;
 ```

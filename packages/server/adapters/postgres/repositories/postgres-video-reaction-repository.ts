@@ -1,3 +1,4 @@
+import { type Result, fromPromise, map } from '@kit/result';
 import type { ListLikedVideosOptions, VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { reactionDelta } from '@vp/domain';
@@ -10,10 +11,10 @@ import type {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { toVideoRecord } from '../mappers/video.mapper';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -218,22 +219,27 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           })
           .from(vr)
           .innerJoin(v, eq(v.id, vr.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(vr.userId, viewer.id),
               eq(vr.type, 'LIKE'),
               watchableVideoScope(viewer),
-              keysetBefore(vr.updatedAt, vr.id, cursor && { sort: cursor.likedAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(vr.updatedAt),
+                vr.id,
+                cursor && { sort: cursor.likedAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(vr.updatedAt), desc(vr.id))
+          .orderBy(desc(msTimestamp(vr.updatedAt)), desc(vr.id))
           .limit(limit + 1),
       databaseUnavailable.during('listLikedVideos')
     );
     return map(rows, (found) =>
-      found.map(({ channelId, handle, displayName, avatarUrl, ...entry }) => ({
+      found.map(({ channelId, handle, displayName, avatarUrl, video, ...entry }) => ({
         ...entry,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

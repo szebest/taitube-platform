@@ -1,10 +1,11 @@
+import { isOk, map } from '@kit/result';
 import { search, searchSuggestions } from '@vp/api-contracts';
 import { SEARCH_RATE_LIMITS } from '@vp/domain';
-import { isOk, map } from '@vp/result';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { PER_VIEWER_HEADERS, viewerSessionOf } from './video-access-request';
 
 function perClient(max: number) {
   return {
@@ -27,8 +28,13 @@ export async function searchRoutes(app: FastifyInstance): Promise<void> {
       schema: { ...contractSchema(search), querystring: search.query },
     },
     async (request, reply) => {
-      const found = await searchService.search(request.query, request.user);
+      const found = await searchService.search(
+        request.query,
+        request.user ?? null,
+        viewerSessionOf(request)
+      );
       if (isOk(found)) reply.header('X-Cache', found.value.cache);
+      reply.headers(PER_VIEWER_HEADERS);
       return sendResult(
         reply,
         request,

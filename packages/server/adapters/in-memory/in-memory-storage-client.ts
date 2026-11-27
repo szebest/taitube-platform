@@ -1,4 +1,7 @@
 import * as fs from 'node:fs';
+import { S3_MAX_KEYS_PER_REQUEST } from '@kit/object-storage';
+import { MS_PER_SECOND } from '@kit/primitives';
+import { type Result, err, ok } from '@kit/result';
 import {
   StorageClient,
   type StorageDeleteObjectsResult,
@@ -11,10 +14,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
-import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 
 interface StoredObject {
   data: Buffer;
@@ -139,7 +139,7 @@ export class InMemoryStorageClient extends StorageClient {
 
     const slice = filteredKeys.slice(0, maxKeys);
     const isTruncated = filteredKeys.length > maxKeys;
-    const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
+    const lastKey = slice.at(-1);
     return ok({
       keys: slice,
       nextContinuationToken: isTruncated ? lastKey : undefined,

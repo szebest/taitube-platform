@@ -1,23 +1,25 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { JobQueue } from '@vp/core/ports';
-import type {
-  DlqEntryRecord,
-  DlqRepository,
-  DlqStatus,
-  EventRepository,
-} from '@vp/core/repositories';
+import type { DlqEntryRecord, DlqRepository, EventRepository } from '@vp/core/repositories';
+import type { DlqStatus } from '@vp/domain';
 import {
   type AuthorizationFailure,
+  DLQ_ENTRY,
   type DlqEntryNotFound,
   type ReplayQueueUnknown,
   decideAdminAccess,
   dlqEntryNotFound,
   replayQueueUnknown,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
+import {
+  type DatabaseUnavailable,
+  type QueueUnavailable,
+  type VersionConflict,
+  versionConflict,
+} from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface DlqServiceDeps {
@@ -38,9 +40,14 @@ export type ReplayDlqFailure =
   | AuthorizationFailure
   | DlqEntryNotFound
   | ReplayQueueUnknown
+  | VersionConflict
   | DatabaseUnavailable
   | QueueUnavailable;
-export type DiscardDlqFailure = AuthorizationFailure | DlqEntryNotFound | DatabaseUnavailable;
+export type DiscardDlqFailure =
+  | AuthorizationFailure
+  | DlqEntryNotFound
+  | VersionConflict
+  | DatabaseUnavailable;
 
 /**
  * Dead-letter queue inspection, replay and discarding. Admin access is a rule, absence is a rule,
@@ -94,20 +101,22 @@ export class DlqService {
       ...defaultJobOptions,
     };
 
-    const updated = await this.deps.dlq.updateStatus(
+    const updated = await this.deps.dlq.transition({
       id,
-      'REPLAYED',
-      { replayedAt: new Date() },
-      {
+      from: DLQ_ENTRY.sources('replay'),
+      to: DLQ_ENTRY.target('replay'),
+      replayedAt: new Date(),
+      outbox: {
         kind: 'dlq_replay',
         payload: {
           type: 'queue',
           queueName: entry.value.queue,
           job: { name: entry.value.queue, data: entry.value.payload, opts: replayOpts },
         },
-      }
-    );
+      },
+    });
     if (isErr(updated)) return updated;
+    if (!updated.value) return err(versionConflict(id));
 
     const enqueued = await targetQueue.add(entry.value.queue, entry.value.payload, replayOpts);
     if (isErr(enqueued)) return enqueued;
@@ -127,8 +136,13 @@ export class DlqService {
     const entry = await this.entryFor(caller, id);
     if (isErr(entry)) return entry;
 
-    const updated = await this.deps.dlq.updateStatus(id, 'DISCARDED');
+    const updated = await this.deps.dlq.transition({
+      id,
+      from: DLQ_ENTRY.sources('discard'),
+      to: DLQ_ENTRY.target('discard'),
+    });
     if (isErr(updated)) return updated;
+    if (!updated.value) return err(versionConflict(id));
 
     return this.record(entry.value, 'dlq.discarded', {
       dlqEntryId: id,

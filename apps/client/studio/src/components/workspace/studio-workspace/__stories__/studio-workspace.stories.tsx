@@ -1,6 +1,6 @@
+import { PageHeader } from '@kit/components';
+import { Button, Icon, Input, Logo, Tooltip } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { PageHeader } from '@vp/components';
-import { Button, Icon, Input, Logo, Tooltip } from '@vp/ui';
 import { StudioWorkspace, StudioWorkspaceSkeleton } from '..';
 import { StudioWorkspaceRoot } from '../studio-workspace';
 
@@ -23,7 +23,7 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
     <>
       <StudioWorkspace.Nav>
         <a href="/" aria-label="Taitube Studio" className="flex h-header items-center px-inline">
-          <Logo />
+          <Logo name="Taitube" />
         </a>
         {NAV.map(({ icon, label, href }) => (
           <StudioWorkspace.NavItem

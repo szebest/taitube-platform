@@ -1,0 +1,28 @@
+{
+  "name": "@vp/deploy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@kit/result": "workspace:*",
+    "@vp/env-schema": "workspace:*",
+    "@vp/job-contracts": "workspace:*",
+    "js-yaml": "^5.4.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@types/node": "^24.19.1",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "vp": {
+    "layer": 7
+  }
+}

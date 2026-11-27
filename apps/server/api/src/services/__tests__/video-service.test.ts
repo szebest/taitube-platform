@@ -1,7 +1,8 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
@@ -15,10 +16,11 @@ describe('apps/server/api/services: VideoService', () => {
   let repositories: InMemoryRepositories;
   let service: VideoService;
 
-  const seed = (visibility: 'private' | 'public', extra: Record<string, string> = {}) =>
+  const seed = async (visibility: 'private' | 'public', extra: Record<string, string> = {}) =>
     repositories.videos.create({
       id: VIDEO_ID,
       ownerId: OWNER.id,
+      channelId: await seedPrimaryChannel(repositories, OWNER.id),
       title: 'Video fixture',
       visibility,
       status: 'READY',
@@ -74,10 +76,15 @@ describe('apps/server/api/services: VideoService', () => {
           }),
         channel: { id: CHANNEL_ID, handle: 'owner', displayName: 'Owner', avatarUrl: null },
       },
-      { name: 'no channel for an owner without one', setup: async () => {}, channel: null },
-    ])('carries $name', async ({ setup, channel }) => {
+      {
+        name: 'no card for a channel that is not there',
+        setup: async () => {},
+        extra: { channelId: '00000000-0000-7000-8000-0000000000ff' },
+        channel: null,
+      },
+    ])('carries $name', async ({ setup, extra, channel }) => {
       await setup();
-      await seed('public');
+      await seed('public', extra);
 
       expect(expectOk(await service.get(null, VIDEO_ID))).toMatchObject({
         channel,
@@ -99,10 +106,15 @@ describe('apps/server/api/services: VideoService', () => {
           }),
         channel: { id: CHANNEL_ID, handle: 'owner', displayName: 'Owner', avatarUrl: null },
       },
-      { name: 'no channel for an owner without one', setup: async () => {}, channel: null },
-    ])('puts each video under $name', async ({ setup, channel }) => {
+      {
+        name: 'no card for a channel that is not there',
+        setup: async () => {},
+        extra: { channelId: '00000000-0000-7000-8000-0000000000ff' },
+        channel: null,
+      },
+    ])('puts each video under $name', async ({ setup, extra, channel }) => {
       await setup();
-      await seed('private');
+      await seed('private', extra);
 
       const page = expectOk(await service.list(OWNER, {}));
 

@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { SettingsSection } from '#app/components/settings/settings-section';
@@ -8,6 +7,7 @@ import {
   SETTINGS_SECTIONS,
   type SettingsSectionId,
 } from '#app/features/account/utils/settings-index';
+import { useT } from '#app/lib/messages';
 import { SettingsSignIn } from '../settings-sign-in/settings-sign-in';
 
 export type SettingsSectionPageProps = PropsWithChildren<{

@@ -24,13 +24,15 @@ function renderChannelAs(subscribed: boolean | 'guest') {
 }
 
 describe('apps/client/web: SubscribeAction', () => {
-  it('sends a guest who presses Subscribe to sign in, then back to the page', async () => {
+  it('asks a guest who presses Subscribe to sign in, on the same page', async () => {
     const { user, router } = await renderChannelAs('guest');
 
     await user.click(await screen.findByRole('button', { name: 'Subscribe' }));
 
-    expect(router.state.location.pathname).toBe('/login');
-    expect(router.state.location.search).toEqual({ redirect: URL });
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to subscribe to this channel' })
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(URL);
   });
 
   it.each([

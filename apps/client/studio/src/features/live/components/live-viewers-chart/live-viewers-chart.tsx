@@ -1,8 +1,9 @@
-import { Format, useT } from '@vp/intl-react';
+import { Format } from '@kit/intl-react';
+import { Skeleton } from '@kit/ui';
 import type { ViewerSample } from '@vp/queries';
-import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
+import { useT } from '#app/lib/messages';
 import { LazyLiveViewersPlot } from '../live-viewers-plot/live-viewers-plot.lazy';
 
 const MIN_SAMPLES = 2;

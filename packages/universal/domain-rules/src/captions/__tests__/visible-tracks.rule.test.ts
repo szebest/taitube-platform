@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { CaptionTrack } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { aCaptionTrack } from '../../__tests__/entities';
 import { decideTranscriptTrack, visibleCaptionTracks } from '../visible-tracks.rule';
 

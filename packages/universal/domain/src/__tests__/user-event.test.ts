@@ -1,9 +1,17 @@
 import type { CommentThread } from '../comment';
 import {
   captionsFailed,
+  channelImageFailed,
+  channelImageReady,
   captionsReady,
   commentCreated,
+  commentHeld,
+  exportFailed,
+  exportReady,
+  partyControlsUpdated,
   preferencesUpdated,
+  videoGenerationUpdated,
+  videoStatsUpdated,
   videoStatusChanged,
 } from '../user-event';
 
@@ -12,6 +20,13 @@ describe('domain: user event', () => {
     expect(videoStatusChanged('v1', 'READY')).toEqual({
       type: 'video.processing',
       payload: { videoId: 'v1', change: { kind: 'status', status: 'READY' } },
+    });
+  });
+
+  it('announces a swapped or failed generation of a video', () => {
+    expect(videoGenerationUpdated({ videoId: 'v1', generation: 3, status: 'failed' })).toEqual({
+      type: 'video.generation.updated',
+      payload: { videoId: 'v1', generation: 3, status: 'failed' },
     });
   });
 
@@ -25,14 +40,24 @@ describe('domain: user event', () => {
   it('announces a new comment with its author and the video it is on, and nothing more', () => {
     const thread: CommentThread = {
       id: 'c1',
-      videoId: 'v1',
+      target: { type: 'video', id: 'v1' },
+      channelId: 'ch',
       authorId: 'u2',
+      authorChannelId: 'ch',
       parentId: null,
       content: 'nice',
       isPinned: false,
       isEdited: false,
       likeCount: 0,
       heartedAt: null,
+      moderationState: 'published',
+      moderationDisclosure: null,
+      moderationReason: null,
+      moderationNote: null,
+      moderatedBy: null,
+      moderatedAt: null,
+      heldReason: null,
+      looksLikeQuestion: false,
       createdAt: new Date('2026-03-01T12:00:00.000Z'),
       updatedAt: new Date('2026-03-01T12:00:00.000Z'),
       replyCount: 0,
@@ -54,6 +79,13 @@ describe('domain: user event', () => {
     });
   });
 
+  it('announces a held comment by its ids, never its text or author', () => {
+    expect(commentHeld({ id: 'c1', target: { type: 'video', id: 'v1' } })).toEqual({
+      type: 'comment.held',
+      payload: { commentId: 'c1', videoId: 'v1' },
+    });
+  });
+
   it('announces a ready track with its language and kind', () => {
     expect(captionsReady('v1', { id: 'c1', language: 'en', kind: 'auto' })).toEqual({
       type: 'captions.ready',
@@ -65,6 +97,59 @@ describe('domain: user event', () => {
     expect(captionsFailed('v1', 'c1', 'WHISPER_FAILED')).toEqual({
       type: 'captions.failed',
       payload: { videoId: 'v1', captionId: 'c1', reason: 'WHISPER_FAILED' },
+    });
+  });
+
+  it('announces an image that became the channel one, with its version', () => {
+    const payload = { uploadId: 'u1', channelId: 'ch1', kind: 'banner' as const, version: 3 };
+
+    expect(channelImageReady(payload)).toEqual({ type: 'channel.image.ready', payload });
+  });
+
+  it('announces an image the job gave up on, with the reason', () => {
+    const payload = {
+      uploadId: 'u1',
+      channelId: 'ch1',
+      kind: 'avatar' as const,
+      reason: 'unreadable',
+    };
+
+    expect(channelImageFailed(payload)).toEqual({ type: 'channel.image.failed', payload });
+  });
+
+  it('announces a ready export with when its file expires', () => {
+    const payload = {
+      exportId: 'e1',
+      channelId: 'ch1',
+      kind: 'comments' as const,
+      format: 'csv' as const,
+      rowCount: 3,
+      expiresAt: '2026-03-08T12:00:00.000Z',
+    };
+
+    expect(exportReady(payload)).toEqual({ type: 'export.ready', payload });
+  });
+
+  it('announces an export the job gave up on, with the reason', () => {
+    const payload = { exportId: 'e1', channelId: 'ch1', kind: 'videos' as const, reason: 'big' };
+
+    expect(exportFailed(payload)).toEqual({ type: 'export.failed', payload });
+  });
+
+  it.each([
+    { scope: 'a room', roomId: 'r1' },
+    { scope: 'everywhere', roomId: null },
+  ])('announces a personal control changed for $scope without its values', ({ roomId }) => {
+    expect(partyControlsUpdated('user:u2', roomId)).toEqual({
+      type: 'party.controls.updated',
+      payload: { targetKey: 'user:u2', roomId },
+    });
+  });
+
+  it('announces fresh video stats by the video id alone, no counts', () => {
+    expect(videoStatsUpdated('v1')).toEqual({
+      type: 'video.stats.updated',
+      payload: { videoId: 'v1' },
     });
   });
 });

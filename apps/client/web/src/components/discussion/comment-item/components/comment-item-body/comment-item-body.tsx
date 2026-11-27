@@ -1,13 +1,14 @@
-import { Button, useUiCopy } from '@vp/ui';
+import { Button } from '@kit/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
 import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
 import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
 import { useClamped } from '#app/components/discussion/comment-item/hooks/use-clamped';
+import { useT } from '#app/lib/messages';
 
 /** The text, tokenised by the app; long text collapses to six lines with Read more. */
 export function CommentItemBody({ className, children, ...props }: ComponentPropsWithRef<'div'>) {
   const { state } = useCommentItem('Body');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const [open, setOpen] = useState(false);
   const { clamped, measure } = useClamped();
   const styles = commentItemStyles({ state });
@@ -15,7 +16,9 @@ export function CommentItemBody({ className, children, ...props }: ComponentProp
   if (state === 'deleted' || state === 'removed') {
     return (
       <p data-slot="comment-item-body" className={styles.gone({ className })}>
-        {state === 'deleted' ? copy.commentDeleted : copy.commentRemoved}
+        {state === 'deleted'
+          ? tOr('appUi.commentDeleted', {}, '')
+          : tOr('appUi.commentRemoved', {}, '')}
       </p>
     );
   }
@@ -47,7 +50,7 @@ export function CommentItemBody({ className, children, ...props }: ComponentProp
           className="col-start-2 justify-self-start px-0"
           onClick={() => setOpen(!open)}
         >
-          {open ? copy.showLess : copy.readMore}
+          {open ? tOr('appUi.showLess', {}, '') : tOr('appUi.readMore', {}, '')}
         </Button>
       )}
     </>

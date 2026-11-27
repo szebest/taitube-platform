@@ -10,7 +10,7 @@ import {
   TRENDING_GRAVITY,
 } from '@vp/domain';
 import { type SQL, desc, eq, isNull, notInArray, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, ownerScope, publicVisibilityScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp, publicVisibilityScope } from '../scopes/index';
 import { constant } from './sql-constant';
 
 interface RankInput {
@@ -19,7 +19,7 @@ interface RankInput {
 }
 
 const ROW_RANK_INPUT: RankInput = {
-  createdAt: sql`${videos.createdAt}`,
+  createdAt: msTimestamp(videos.createdAt),
   viewsCount: sql`${videos.viewsCount}`,
 };
 
@@ -59,7 +59,7 @@ function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date):
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 
-export function publicFeedScope({ categoryId, ownerId, format }: PublicFeedFilter = {}):
+export function publicFeedScope({ categoryId, channelId, format }: PublicFeedFilter = {}):
   | SQL
   | undefined {
   return drizzleWhere(
@@ -67,7 +67,7 @@ export function publicFeedScope({ categoryId, ownerId, format }: PublicFeedFilte
     eq(videos.status, PUBLIC_FEED_STATUS),
     isNull(videos.deletedAt),
     categoryId ? eq(videos.categoryId, categoryId) : undefined,
-    ownerId ? ownerScope(videos, ownerId) : undefined,
+    channelId ? eq(videos.channelId, channelId) : undefined,
     format ? eq(videos.format, format) : undefined
   );
 }

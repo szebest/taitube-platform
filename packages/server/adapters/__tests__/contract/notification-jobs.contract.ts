@@ -1,5 +1,14 @@
-import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { expectOk } from '@kit/testing/result';
+import {
+  OTHER_OWNER_CHANNEL_ID,
+  OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
+  OWNER_ID,
+  VIDEO_IDS,
+  publicVideo,
+  seedOwners,
+  videoTarget,
+} from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000c1';
@@ -69,8 +78,10 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
       expectOk(
         await subject.repositories.comments.create({
           id: COMMENT_ID,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OWNER_ID,
+          authorChannelId: OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
@@ -84,13 +95,15 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
       expectOk(
         await subject.repositories.comments.create({
           id: COMMENT_ID,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
+          authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
           content: 'first',
         })
       );
-      const target = { id: COMMENT_ID, videoId: VIDEO_IDS.a };
+      const target = { id: COMMENT_ID, target: videoTarget(VIDEO_IDS.a) };
 
       expectOk(await subject.repositories.comments.setHearted(target, true));
       expectOk(await subject.repositories.comments.setHearted(target, true));
@@ -113,6 +126,7 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
         await subject.repositories.videoStudio.updateMetadata({
           videoId: VIDEO_IDS.a,
           userId: OWNER_ID,
+          auditFields: [],
           expectedVersion: seeded.version,
           patch: { visibility: to },
         })

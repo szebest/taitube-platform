@@ -1,3 +1,5 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { andThen, andThenAsync, err, isErr, map, type Result } from '@kit/result';
 import type { ClipPageView, ClipView, CreateClipBody } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
@@ -18,12 +20,11 @@ import {
   videoNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
+import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { andThen, andThenAsync, err, isErr, map, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
+import { NO_VIDEO_ACCESS, type VideoAccessGate } from './video-access-gate';
 import { type SpriteGeometry, toVideoSummaryView } from './video-views';
 
 export interface ClipServiceDeps {
@@ -33,6 +34,7 @@ export interface ClipServiceDeps {
   paginator: Paginator;
   cdn: CdnBase;
   sprite: SpriteGeometry;
+  gate: VideoAccessGate;
   now: () => number;
 }
 
@@ -64,26 +66,34 @@ export class ClipService {
     });
   }
 
+  /**
+   * A clip of a password-protected video opens with that video's unlock credential, which
+   * `unlockOf` finds among the caller's cookies once the clip names its video.
+   */
   async get(
     viewer: UserContext | null,
-    clipId: string
+    clipId: string,
+    unlockOf: (videoId: string) => string | null
   ): Promise<Result<ClipView, ClipNotFound | DatabaseUnavailable>> {
     const found = await this.deps.clips.findById(clipId);
-    return andThenAsync(
-      found,
-      async (clip): Promise<Result<ClipView, ClipNotFound | DatabaseUnavailable>> => {
-        if (!clip) return err(clipNotFound(clipId));
-        const loaded = await this.deps.videos.findById(clip.videoId);
-        return andThenAsync(
-          loaded,
-          async (video): Promise<Result<ClipView, ClipNotFound | DatabaseUnavailable>> => {
-            const decided = decideClipRead({ viewer, clip, video, clipId });
-            if (isErr(decided) || !video) return err(clipNotFound(clipId));
-            return this.present(decided.value, video);
-          }
-        );
-      }
-    );
+    if (isErr(found)) return found;
+    const clip = found.value;
+    if (!clip) return err(clipNotFound(clipId));
+
+    const loaded = await this.deps.videos.findById(clip.videoId);
+    if (isErr(loaded)) return loaded;
+    const video = loaded.value;
+    const decided = decideClipRead({ viewer, clip, video, clipId });
+    if (isErr(decided) || !video) return err(clipNotFound(clipId));
+
+    const access = { ...NO_VIDEO_ACCESS, credential: unlockOf(video.id) };
+    const gated = await this.deps.gate.read(viewer, video, video.id, access);
+    if (isErr(gated)) {
+      return gated.error.code === ErrorCodes.DATABASE_UNAVAILABLE
+        ? err(gated.error)
+        : err(clipNotFound(clipId));
+    }
+    return this.present(decided.value, gated.value.video);
   }
 
   async listMine(
@@ -116,7 +126,7 @@ export class ClipService {
   }
 
   private async present(clip: Clip, video: Video): Promise<Result<ClipView, DatabaseUnavailable>> {
-    const owner = await this.deps.channels.findByUserId(video.ownerId);
+    const owner = await this.deps.channels.findById(video.channelId);
     return map(owner, (channel) => this.toView(clip, video, channel && toChannelCard(channel)));
   }
 

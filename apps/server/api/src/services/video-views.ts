@@ -1,6 +1,9 @@
+import { type Result, map } from '@kit/result';
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelCard,
+  type Chapter,
+  type ExperimentVariantId,
   THUMBNAIL_PROGRESS,
   type VideoFormat,
   type VideoStatus,
@@ -9,7 +12,6 @@ import {
 } from '@vp/domain';
 import type { AppConfig, CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, map } from '@vp/result';
 import { masterPlaylistKey } from '@vp/storage';
 
 interface VideoLadderEntry {
@@ -36,9 +38,16 @@ interface VideoRenditionView {
   playlistUrl?: string;
 }
 
+/** The running test whose variant a response shows; absent without a viewer session. */
+export interface ExperimentTag {
+  id: string;
+  variantId: ExperimentVariantId;
+}
+
 export interface VideoDetailView {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -59,6 +68,11 @@ export interface VideoDetailView {
   thumbnailUrl?: string;
   categoryId: string | null;
   tags: string[];
+  commentsEnabled: boolean;
+  chapters: Chapter[];
+  passwordProtected: boolean;
+  shareLinkId?: string;
+  experiment?: ExperimentTag;
   channel?: ChannelCard | null;
   viewsCount: number;
   likesCount: number;
@@ -84,6 +98,7 @@ export interface ViewerProgressView {
 export interface VideoSummaryView {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -103,12 +118,14 @@ export interface VideoSummaryView {
   createdAt: string;
   updatedAt: string;
   readyAt?: string;
+  experiment?: ExperimentTag;
   viewer?: ViewerProgressView | null;
 }
 
 export interface CreatorVideoView extends VideoSummaryView {
   commentsCount: number;
   tags: string[];
+  commentsEnabled: boolean;
 }
 
 export function cdnUrl(cdn: CdnBase, key: string): string {
@@ -134,7 +151,7 @@ export function playbackUrl(video: PlayableVideo, cdn: CdnBase): string | undefi
   return cdnUrl(cdn, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
-function thumbnailUrl(
+export function thumbnailUrl(
   video: { customThumbnailKey?: string | null; posterKey?: string | null },
   cdn: CdnBase
 ): string | undefined {
@@ -153,6 +170,7 @@ export function toVideoCardView(
   return {
     id: v.id,
     ownerId: v.ownerId,
+    channelId: v.channelId,
     title: v.title,
     description: v.description,
     visibility: v.visibility,
@@ -183,16 +201,16 @@ export function toVideoSummaryView(
   return { ...toVideoCardView(v, cdn, sprite), channel };
 }
 
-export type ChannelOf = (ownerId: string) => ChannelCard | null;
+export type ChannelOf = (channelId: string) => ChannelCard | null;
 
 export async function loadChannelsOf(
-  channels: ChannelRepositoryPort,
-  ownerIds: readonly string[]
+  channels: Pick<ChannelRepositoryPort, 'findByIds'>,
+  channelIds: readonly string[]
 ): Promise<Result<ChannelOf, DatabaseUnavailable>> {
-  const found = await channels.findByUserIds(ownerIds);
+  const found = await channels.findByIds(channelIds);
   return map(found, (list) => {
-    const byOwner = new Map(list.map((channel) => [channel.userId, toChannelCard(channel)]));
-    return (ownerId: string) => byOwner.get(ownerId) ?? null;
+    const byId = new Map(list.map((channel) => [channel.id, toChannelCard(channel)]));
+    return (channelId: string) => byId.get(channelId) ?? null;
   });
 }
 
@@ -206,6 +224,7 @@ export function toCreatorVideoView(
     ...toVideoSummaryView(v, cdn, sprite, channel),
     commentsCount: v.commentsCount ?? 0,
     tags: v.tags ?? [],
+    commentsEnabled: v.commentsEnabled ?? true,
   };
 }
 
@@ -258,6 +277,7 @@ export function toVideoDetailView(
   return {
     id: video.id,
     ownerId: video.ownerId,
+    channelId: video.channelId,
     title: video.title,
     description: video.description,
     visibility: video.visibility,
@@ -280,6 +300,9 @@ export function toVideoDetailView(
     thumbnailUrl: thumbnailUrl(video, cdn),
     categoryId: video.categoryId ?? null,
     tags: video.tags ?? [],
+    commentsEnabled: video.commentsEnabled ?? true,
+    chapters: [],
+    passwordProtected: video.passwordProtected ?? false,
     viewsCount: video.viewsCount ?? 0,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,

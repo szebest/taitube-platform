@@ -1,9 +1,9 @@
-import { SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { SectionError } from '@kit/components';
 import { myVideosQueryOptions, useApi } from '@vp/queries';
 import { FeedSentinel } from '#app/components/feed/feed-sentinel';
 import { VideoGrid } from '#app/components/video/video-grid';
 import { useVideoPages } from '#app/hooks/use-video-pages';
+import { useT } from '#app/lib/messages';
 
 /** The viewer's own uploads on their channel page, paging in as they scroll. */
 export function OwnVideos() {
@@ -23,7 +23,7 @@ export function OwnVideos() {
       <VideoGrid videos={videos} />
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>
-          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+          <SectionError.Message>{tOr('feed.loadMoreFailed', {}, '')}</SectionError.Message>
         </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={loadMore} />}

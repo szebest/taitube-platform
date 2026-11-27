@@ -1,0 +1,18 @@
+{
+  "name": "@kit/tsconfig",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./base.json": "./base.json",
+    "./build.json": "./build.json",
+    "./client.json": "./client.json",
+    "./server.json": "./server.json",
+    "./spec.json": "./spec.json",
+    "./universal.json": "./universal.json"
+  },
+  "vp": {
+    "layer": 1
+  }
+}

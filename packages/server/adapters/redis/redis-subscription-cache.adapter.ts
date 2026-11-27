@@ -1,7 +1,7 @@
+import { type Result, andThenAsync, fromPromise, map, ok } from '@kit/result';
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
 
 export interface RedisSubscriptionCacheAdapterConfig {
@@ -11,7 +11,7 @@ export interface RedisSubscriptionCacheAdapterConfig {
 }
 
 /**
- * A user with no subscriptions still needs a present key, otherwise every
+ * A channel that follows nobody still needs a present key, otherwise every
  * lookup would read as a cache miss and fall through to Postgres.
  */
 const EMPTY_SENTINEL = '__EMPTY__';
@@ -28,10 +28,10 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
   }
 
   async isSubscribed(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<boolean | null, CacheUnavailable>> {
-    const key = CacheKeys.userSubscriptions(userId);
+    const key = CacheKeys.channelSubscriptions(subscriberChannelId);
 
     const exists = await fromPromise(
       () => this.redis.exists(key),
@@ -52,10 +52,10 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
   }
 
   async addSubscription(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = CacheKeys.userSubscriptions(userId);
+    const key = CacheKeys.channelSubscriptions(subscriberChannelId);
     const done = await fromPromise(
       () =>
         this.redis
@@ -71,22 +71,22 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
   }
 
   async removeSubscription(
-    userId: string,
+    subscriberChannelId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
     const done = await fromPromise(
-      () => this.redis.srem(CacheKeys.userSubscriptions(userId), channelId),
+      () => this.redis.srem(CacheKeys.channelSubscriptions(subscriberChannelId), channelId),
       cacheUnavailable.during('removeSubscription')
     );
 
     return map(done, () => undefined);
   }
 
-  async setUserSubscriptions(
-    userId: string,
+  async setSubscriptions(
+    subscriberChannelId: string,
     channelIds: string[]
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = CacheKeys.userSubscriptions(userId);
+    const key = CacheKeys.channelSubscriptions(subscriberChannelId);
     const done = await fromPromise(
       () =>
         this.redis
@@ -95,7 +95,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
           .sadd(key, ...(channelIds.length > 0 ? channelIds : [EMPTY_SENTINEL]))
           .expire(key, this.userSubscriptionsTtlSeconds)
           .exec(),
-      cacheUnavailable.during('setUserSubscriptions')
+      cacheUnavailable.during('setSubscriptions')
     );
 
     return map(done, () => undefined);

@@ -1,46 +1,48 @@
-import { type Comment, type Video, threadRootId } from '@vp/domain';
+import { type Result, andThen, err, map, ok } from '@kit/result';
+import { type Comment, type CommentHost, type CommentTarget, threadRootId } from '@vp/domain';
 import { type UserContext, canCreateComment } from '@vp/permissions';
-import { type Result, andThen, err, map, ok } from '@vp/result';
 import { type InvalidCommentContent, validateCommentContent } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import {
+  type ReadCommentHostFailure,
+  decideCommentHostRead,
+  commentTargetNotFound,
+} from './comment-host';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface CreateCommentInput {
   readonly author: UserContext | null;
-  readonly video: Video | null;
-  readonly videoId: string;
+  readonly host: CommentHost | null;
+  readonly target: CommentTarget;
   readonly parent: Comment | null;
   readonly parentId: string | null;
   readonly content: string;
 }
 
 export interface CommentToCreate {
-  readonly video: Video;
+  readonly host: CommentHost;
   readonly parentId: string | null;
   readonly content: string;
 }
 
 export type CreateCommentFailure =
   | AuthorizationFailure
-  | ReadVideoFailure
+  | ReadCommentHostFailure
   | CommentNotFound
   | InvalidCommentContent;
 
-function threadParent(
-  input: CreateCommentInput,
-  video: Video
-): Result<string | null, CommentNotFound> {
+function threadParent(input: CreateCommentInput): Result<string | null, CommentNotFound> {
   if (input.parentId === null) return ok(null);
-  if (!input.parent || input.parent.videoId !== video.id) {
+  const { parent, target } = input;
+  if (!parent || parent.target.type !== target.type || parent.target.id !== target.id) {
     return err(commentNotFound(input.parentId));
   }
-  return ok(threadRootId(input.parent));
+  return ok(threadRootId(parent));
 }
 
 /**
- * Permission first, so an anonymous caller learns nothing about which videos exist. A parent
- * under another video is reported absent rather than forbidden: from this video it is not there.
+ * Permission first, so an anonymous caller learns nothing about which targets exist. A parent
+ * under another target is reported absent rather than forbidden: from this one it is not there.
  */
 export function decideCommentCreate(
   input: CreateCommentInput
@@ -52,10 +54,12 @@ export function decideCommentCreate(
     }),
     (author): Result<CommentToCreate, CreateCommentFailure> =>
       andThen(
-        decideVideoRead({ viewer: author, video: input.video, videoId: input.videoId }),
-        (video) =>
-          andThen(threadParent(input, video), (parentId) =>
-            map(validateCommentContent(input.content), (content) => ({ video, parentId, content }))
+        input.host
+          ? decideCommentHostRead(author, input.host)
+          : err(commentTargetNotFound(input.target)),
+        (host) =>
+          andThen(threadParent(input), (parentId) =>
+            map(validateCommentContent(input.content), (content) => ({ host, parentId, content }))
           )
       )
   );

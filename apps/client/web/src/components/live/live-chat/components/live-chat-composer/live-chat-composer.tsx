@@ -1,7 +1,8 @@
-import { Icon, IconButton, Textarea, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Textarea } from '@kit/ui';
 import { type ComponentPropsWithRef, type SubmitEvent, type KeyboardEvent, useState } from 'react';
 import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
 import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
+import { useT } from '#app/lib/messages';
 
 const COUNTER_FROM = 0.8;
 
@@ -21,7 +22,9 @@ export function LiveChatComposer({
   ...props
 }: LiveChatComposerProps) {
   const { layout, onSend } = useLiveChat('Composer');
-  const { chatPlaceholder, send } = useUiCopy();
+  const { tOr } = useT();
+  const chatPlaceholder = tOr('appUi.chatPlaceholder', {}, '');
+  const send = tOr('appUi.send', {}, '');
   const [text, setText] = useState('');
   const styles = liveChatStyles({ layout });
   const blocked = disabled || wait !== undefined;

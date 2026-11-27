@@ -4,11 +4,15 @@ import type {
   ClipView,
   CommentView,
   CreatorInboxCommentView,
+  CreatorStats,
   CurrentPickView,
+  IdentitiesView,
   LiveChatMessageView,
   LiveChatServerFrame,
   LiveStreamPublicView,
   OwnerChannel,
+  PublicChannel,
+  SignInView,
   SubscribedChannel,
   TranscriptView,
   Video,
@@ -30,6 +34,7 @@ export function videoSummary(overrides: Partial<VideoSummary> = {}): VideoSummar
   return {
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: CHANNEL_ID,
     title: 'A video',
     description: 'About something',
     visibility: 'public',
@@ -48,6 +53,7 @@ export function video(overrides: Partial<Video> = {}): Video {
   return {
     id: VIDEO_ID,
     ownerId: OWNER_ID,
+    channelId: CHANNEL_ID,
     title: 'A video',
     description: 'About something',
     visibility: 'public',
@@ -55,6 +61,9 @@ export function video(overrides: Partial<Video> = {}): Video {
     format: 'standard',
     progress: { overall: 100, byRendition: {} },
     renditions: [],
+    commentsEnabled: true,
+    chapters: [],
+    passwordProtected: false,
     likesCount: 0,
     dislikesCount: 0,
     version: 3,
@@ -113,6 +122,7 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
   const postedAt = '2026-10-14T09:12:00.000Z';
   return {
     id: COMMENT_ID,
+    target: { type: 'video', id: VIDEO_ID },
     videoId: VIDEO_ID,
     parentId: null,
     content: 'The tram at 02:15 is the best sound design this year.',
@@ -121,6 +131,8 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
     likeCount: 0,
     heartedByCreator: false,
     replyCount: 0,
+    status: 'published',
+    moderation: null,
     author: {
       userId: COMMENT_AUTHOR_ID,
       channelId: null,
@@ -139,10 +151,17 @@ export function comment(overrides: Partial<CommentView> = {}): CommentView {
 export function inboxComment(
   overrides: Partial<CreatorInboxCommentView> = {}
 ): CreatorInboxCommentView {
-  return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
+  return {
+    ...comment(),
+    video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' },
+    targetSummary: { type: 'video', id: VIDEO_ID, title: 'Alfama at 5 a.m.' },
+    ...overrides,
+  };
 }
 
-export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
+export function channel(
+  overrides: Partial<OwnerChannel & PublicChannel> = {}
+): OwnerChannel & PublicChannel {
   return {
     id: CHANNEL_ID,
     userId: OWNER_ID,
@@ -150,6 +169,15 @@ export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
     displayName: 'The Creator',
     avatarUrl: null,
     bannerUrl: null,
+    avatar: null,
+    banner: null,
+    bannerLink: null,
+    bannerCrops: null,
+    country: null,
+    hasContact: false,
+    contactEmail: null,
+    handleChangeAvailableAt: null,
+    redirectedFrom: null,
     brandColor: null,
     bio: null,
     links: [],
@@ -175,7 +203,39 @@ export function feedPages(items: VideoSummary[]) {
 
 export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
-  return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
+  const { redirectedFrom: _redirectedFrom, ...owned } = channel();
+  const { id, handle, displayName, avatarUrl } = owned;
+  return {
+    ...user,
+    role: 'CREATOR',
+    user,
+    channel: owned,
+    channels: [{ id, handle, displayName, avatarUrl }],
+    ...overrides,
+  };
+}
+
+/** A sign-in into a browser slot, as `POST /v1/me/security/sign-ins` records it. */
+export function signInRecord(overrides: Partial<SignInView> = {}): SignInView {
+  return {
+    id: '0190c3a0-5e1d-7000-8000-00000000e101',
+    action: 'account.signed_in',
+    slot: 0,
+    userAgent: null,
+    createdAt: CREATED_AT,
+    ...overrides,
+  };
+}
+
+/** What `GET /v1/me/identities` returns for `account()`: its primary channel, owned, and no team. */
+export function identities(overrides: Partial<IdentitiesView> = {}): IdentitiesView {
+  const { user, channels } = account();
+  return {
+    account: { id: user.id, email: user.email },
+    owned: channels.map((owned) => ({ ...owned, isPrimary: true })),
+    member: [],
+    ...overrides,
+  };
 }
 
 export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -255,6 +315,39 @@ export function transcript(overrides: Partial<TranscriptView> = {}): TranscriptV
       { index: 1, startMs: 2000, endMs: 5000, text: 'Today we bake bread' },
       { index: 2, startMs: 5000, endMs: 9000, text: 'First the flour' },
     ],
+    ...overrides,
+  };
+}
+
+/** A video ready a day ago with a first-48-hours window still open and two drop-offs. */
+export function creatorStats(overrides: Partial<CreatorStats> = {}): CreatorStats {
+  return {
+    videoId: VIDEO_ID,
+    generatedAt: '2026-01-02T12:00:00.000Z',
+    lifetime: { views: 1_200, watchSeconds: 54_000, likes: 24, comments: 6, subscribersGained: 3 },
+    last30Days: {
+      views: 1_200,
+      watchSeconds: 54_000,
+      averageViewDurationSeconds: 45,
+      daily: [
+        { date: '2026-01-01', views: 900 },
+        { date: '2026-01-02', views: 300 },
+      ],
+    },
+    first48Hours: {
+      hours: [
+        { hour: '2026-01-01T12:00:00.000Z', views: 40 },
+        { hour: '2026-01-01T13:00:00.000Z', views: 90 },
+      ],
+      windowEndsAt: '2026-01-03T12:00:00.000Z',
+    },
+    retention: {
+      average: 0.42,
+      dropOffs: [
+        { percent: 10, positionSeconds: 42, lostShare: 0.18 },
+        { percent: 50, positionSeconds: 210, lostShare: 0.09 },
+      ],
+    },
     ...overrides,
   };
 }

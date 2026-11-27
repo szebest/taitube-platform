@@ -2,7 +2,7 @@ import { MAX_WEBHOOKS_PER_USER, WEBHOOK_EVENTS } from '../webhook';
 
 describe('@vp/domain: webhook', () => {
   it('names the events a creator can subscribe to', () => {
-    expect(WEBHOOK_EVENTS).toEqual(['video.ready', 'live.started']);
+    expect(WEBHOOK_EVENTS).toEqual(['video.ready', 'live.started', 'export.ready', 'comment.held']);
   });
 
   it('caps what one user can register', () => {

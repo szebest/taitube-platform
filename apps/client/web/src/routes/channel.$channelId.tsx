@@ -1,13 +1,8 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, prefetched } from '@vp/queries';
-import { z } from 'zod';
-import { ChannelPage } from '#app/features/channel';
+import { ChannelPage, ChannelSearchSchema, loadChannelPage } from '#app/features/channel';
 import { WEB_URL } from '#app/lib/config';
-import {
-  channelQueryOptions,
-  channelStartHereQueryOptions,
-} from '#app/lib/query-keys/channel-keys';
 import { channelHead } from '#app/lib/seo/channel-head';
 import { headWords } from '#app/lib/seo/head-words';
 
@@ -16,13 +11,10 @@ export const Route = createFileRoute('/channel/$channelId')({
     parse: ({ channelId }) => ({ channelId: parseParam(ChannelIdParamSchema.shape.id, channelId) }),
     stringify: ({ channelId }) => ({ channelId }),
   },
-  validateSearch: z.object({}),
-  loader: async ({ context: { queryClient, api }, params: { channelId } }) => {
-    const startHereOptions = channelStartHereQueryOptions(api, channelId);
-    const channel = await ensureFound(queryClient, channelQueryOptions(api, channelId));
-    await prefetched(queryClient.query(startHereOptions));
-    return { channel, videos: queryClient.getQueryData(startHereOptions.queryKey)?.items ?? [] };
-  },
+  validateSearch: ChannelSearchSchema,
+  loaderDeps: ({ search: { tab } }) => ({ tab }),
+  loader: ({ context, params: { channelId }, deps: { tab } }) =>
+    loadChannelPage(context, channelId, tab),
   head: ({ loaderData, match }) =>
     loaderData
       ? channelHead(
@@ -32,5 +24,8 @@ export const Route = createFileRoute('/channel/$channelId')({
           headWords(match.context.locales.snapshot())
         )
       : {},
-  component: ChannelPage,
+  component: function ChannelById() {
+    const { channelId } = Route.useParams();
+    return <ChannelPage channelId={channelId} />;
+  },
 });

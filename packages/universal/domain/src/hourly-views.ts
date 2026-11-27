@@ -1,4 +1,4 @@
-import { MS_PER_HOUR } from '@vp/domain/time';
+import { MS_PER_HOUR } from '@kit/primitives';
 
 /** The start of a UTC hour as an ISO instant, `YYYY-MM-DDTHH:00:00.000Z`. */
 export type ViewHour = string;
@@ -29,6 +29,26 @@ export function hourlyWindow(now: Date): ViewHourRange {
   const to = viewHourOf(now);
   const from = new Date(Date.parse(to) - (HOURLY_WINDOW_HOURS - 1) * MS_PER_HOUR).toISOString();
   return { from, to };
+}
+
+export interface FirstHoursWindow {
+  readonly range: ViewHourRange;
+  readonly endsAt: string;
+}
+
+/** The 48 hour slots from the hour a video became ready, and the instant its first 48 hours end. */
+export function firstHoursWindow(readyAt: Date): FirstHoursWindow {
+  const from = viewHourOf(readyAt);
+  const to = new Date(Date.parse(from) + (HOURLY_WINDOW_HOURS - 1) * MS_PER_HOUR).toISOString();
+  return {
+    range: { from, to },
+    endsAt: new Date(readyAt.getTime() + HOURLY_WINDOW_HOURS * MS_PER_HOUR).toISOString(),
+  };
+}
+
+/** The earliest `readyAt` whose first 48 hours still include `now`, exclusive. */
+export function firstHoursSince(now: Date): Date {
+  return new Date(now.getTime() - HOURLY_WINDOW_HOURS * MS_PER_HOUR);
 }
 
 export function fillHourly(range: ViewHourRange, rows: readonly HourlyViews[]): HourlyViews[] {

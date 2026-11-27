@@ -17,6 +17,8 @@ describe('apps/client/web: EmbedSearchSchema', () => {
     { search: { controls: 'none' }, parsed: {} },
     { search: { loop: '1' }, parsed: { loop: 1 } },
     { search: { loop: ['1', '0'] }, parsed: {} },
+    { search: { s: 'abcdefghijklmnopqrstuv' }, parsed: { s: 'abcdefghijklmnopqrstuv' } },
+    { search: { s: 'short' }, parsed: {} },
     {
       search: { autoplay: '1', t: '30', controls: '0', loop: '1' },
       parsed: { autoplay: 1, t: 30, controls: 0, loop: 1 },
@@ -27,6 +29,7 @@ describe('apps/client/web: EmbedSearchSchema', () => {
       t: undefined,
       controls: undefined,
       loop: undefined,
+      s: undefined,
       ...parsed,
     });
   });

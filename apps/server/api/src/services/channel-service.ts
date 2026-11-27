@@ -1,30 +1,39 @@
+import type { InvalidCursor, Paginator } from '@kit/pagination';
+import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
 import type {
   CaptionRepository,
+  ChannelPageRepositoryPort,
   ChannelRepositoryPort,
   LiveStreamRepositoryPort,
   PlaylistRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import { type Channel, type UpdateChannelInput, type VideoFormat, toChannelCard } from '@vp/domain';
+import {
+  type ActingChannel,
+  type Channel,
+  type ChannelFieldsPatch,
+  type ChannelLocalization,
+  type VideoFormat,
+  pickLocalization,
+  toChannelCard,
+} from '@vp/domain';
 import {
   type ChannelNotFound,
-  type ClaimHandleFailure,
-  type InvalidBrandColor,
+  type AuthorizationFailure,
   channelNotFound,
-  decideHandleClaim,
-  validateBrandColor,
+  decideChannelTask,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
-import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
-import { type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
-import { uuidv7 } from 'uuidv7';
-import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
-import { type ProvisionFailure, claimFreeHandle, findChannelByIdOrHandle } from './channel-lookup';
-import { type ChannelView, toChannelView } from './channel-views';
+import {
+  type ChannelIdentityService,
+  type IdentityFailure,
+  channelChange,
+} from './channel-identity-service';
+import { type ProvisionFailure, findChannelByIdOrHandle, provisionAccount } from './channel-lookup';
+import { type ChannelView, toChannelView, toOwnerExtras } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
@@ -38,16 +47,16 @@ export interface ChannelServiceDeps {
   videoService: VideoService;
   paginator: Paginator;
   cdn: CdnBase;
-  images: ChannelImageService;
+  identity: ChannelIdentityService;
+  pages: Pick<ChannelPageRepositoryPort, 'listLocalizations'>;
+  now: () => number;
 }
 
 export type { ChannelView } from './channel-views';
 
-/** An uploaded image's key replaces the address of the same field. */
-export type UpdateChannelCommand = UpdateChannelInput & {
-  avatarKey?: string;
-  bannerKey?: string;
-};
+export type PublicChannelView = ChannelView & { redirectedFrom: string | null };
+
+export type UpdateChannelCommand = ChannelFieldsPatch & { handle?: string };
 
 export type UserAccountView = Account;
 
@@ -55,12 +64,11 @@ type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string
 
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
 export type UpdateChannelFailure =
+  | AuthorizationFailure
   | ChannelNotFound
-  | ResolveChannelImageFailure
-  | ClaimHandleFailure
-  | InvalidBrandColor
-  | InvalidChannelLinks
+  | IdentityFailure
   | DatabaseUnavailable;
+export type GetOwnerChannelFailure = AuthorizationFailure | ChannelNotFound | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
 export type ListChannelVideosFailure = GetPublicChannelFailure | ListVideosFailure;
 export type ListChannelPlaylistsFailure =
@@ -83,7 +91,10 @@ export interface ChannelPlaylistsPage {
 export class ChannelService {
   constructor(private readonly deps: ChannelServiceDeps) {}
 
-  /** The caller's account; its role is the one the verified token carries, which no table stores. */
+  /**
+   * The caller's account with its primary channel and every channel it owns; its role is the one
+   * the verified token carries, which no table stores.
+   */
   async getAccount(caller: UserContext): Promise<Result<UserAccountView, GetAccountFailure>> {
     const user = await this.deps.users.findById(caller.id);
     if (isErr(user)) return user;
@@ -91,9 +102,10 @@ export class ChannelService {
       return err({ code: ErrorCodes.UNAUTHORIZED, message: 'User record not found' });
     }
 
-    const channel = await this.deps.channels.findByUserId(caller.id);
-    if (isErr(channel)) return channel;
-    if (!channel.value) return err(channelNotFound(caller.id));
+    const owned = await this.deps.channels.listByUserId(caller.id);
+    if (isErr(owned)) return owned;
+    const [primary] = owned.value;
+    if (!primary) return err(channelNotFound(caller.id));
 
     const account = {
       id: user.value.id,
@@ -102,72 +114,81 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    const view = await this.ownerChannelView(channel.value);
+    const view = await this.ownerChannelView(primary);
     if (isErr(view)) return view;
 
-    return ok({ ...account, role: caller.role, user: account, channel: view.value });
+    return ok({
+      ...account,
+      role: caller.role,
+      user: account,
+      channel: view.value,
+      channels: owned.value.map(toChannelCard),
+    });
   }
 
   async updateChannel(
-    userId: string,
+    user: UserContext,
+    acting: ActingChannel,
     input: UpdateChannelCommand
   ): Promise<Result<OwnerChannel, UpdateChannelFailure>> {
-    const existing = await this.deps.channels.findByUserId(userId);
+    const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
+    const existing = await this.deps.channels.findById(acting.channelId);
     if (isErr(existing)) return existing;
-    if (!existing.value) return err(channelNotFound(userId));
+    if (!existing.value) return err(channelNotFound(acting.channelId));
 
-    let links: UpdateChannelInput['links'];
-    if (input.links !== undefined) {
-      const checked = validateChannelLinks(input.links);
-      if (isErr(checked)) return checked;
-      links = checked.value;
-    }
+    const identity = await this.deps.identity.decide(existing.value, input);
+    if (isErr(identity)) return identity;
 
-    let brandColor: string | null | undefined;
-    if (input.brandColor !== undefined) {
-      const checked = validateBrandColor(input.brandColor);
-      if (isErr(checked)) return checked;
-      brandColor = checked.value;
-    }
-
-    let handle: string | undefined;
-    if (input.handle !== undefined) {
-      const heldBy = await this.deps.channels.findByHandle(input.handle);
-      if (isErr(heldBy)) return heldBy;
-
-      const claimed = decideHandleClaim({
-        handle: input.handle,
-        heldBy: heldBy.value,
-        claimantChannelId: existing.value.id,
-      });
-      if (isErr(claimed)) return claimed;
-      handle = claimed.value;
-    }
-
-    const images = await this.deps.images.addressesOf(existing.value.id, input);
-    if (isErr(images)) return images;
-
-    const updated = await this.deps.channels.update(existing.value.id, {
-      handle,
-      displayName: input.displayName,
-      avatarUrl: images.value.avatarUrl,
-      bannerUrl: images.value.bannerUrl,
-      brandColor,
-      bio: input.bio,
-      links,
-    });
+    const { id } = existing.value;
+    const updated = await this.deps.channels.update(
+      id,
+      {
+        ...identity.value,
+        displayName: input.displayName,
+        avatarUrl: input.avatarUrl,
+        bannerUrl: input.bannerUrl,
+        bio: input.bio,
+      },
+      identity.value.handle === undefined ? undefined : channelChange(user, id, ['handle'])
+    );
     if (isErr(updated)) return updated;
-
-    return updated.value
-      ? await this.ownerChannelView(updated.value)
-      : err(channelNotFound(userId));
+    if (!updated.value) return err(channelNotFound(acting.channelId));
+    return await this.ownerChannelView(updated.value);
   }
 
+  /** `locales` is the negotiated chain, most preferred first; the channel's own description is the last resort. */
   async getPublicChannel(
-    idOrHandle: string
-  ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
-    const channel = await findChannelByIdOrHandle(this.deps.channels, idOrHandle);
-    return isErr(channel) ? channel : await this.channelView(channel.value);
+    idOrHandle: string,
+    locales: readonly string[]
+  ): Promise<Result<PublicChannelView, GetPublicChannelFailure>> {
+    const match = await this.deps.identity.findPublic(idOrHandle);
+    if (isErr(match)) return match;
+
+    const localizations = await this.deps.pages.listLocalizations(match.value.channel.id);
+    if (isErr(localizations)) return localizations;
+
+    const view = await this.channelView(
+      match.value.channel,
+      pickLocalization(localizations.value, locales)
+    );
+    return map(view, (found) => ({ ...found, redirectedFrom: match.value.redirectedFrom }));
+  }
+
+  /** The channel the studio edits: only roles that may edit it read what its team sees. */
+  async getOwnerChannel(
+    user: UserContext,
+    acting: ActingChannel
+  ): Promise<Result<OwnerChannel, GetOwnerChannelFailure>> {
+    const allowed = decideChannelTask({ user, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
+    const channel = await this.deps.channels.findById(acting.channelId);
+    if (isErr(channel)) return channel;
+    return channel.value
+      ? await this.ownerChannelView(channel.value)
+      : err(channelNotFound(acting.channelId));
   }
 
   /** Every video of the channel is its own, so the card comes from the lookup, not another read. */
@@ -181,7 +202,7 @@ export class ChannelService {
     const cards = await this.deps.videoService.listPublic({
       ...page,
       sort: 'recent',
-      ownerId: channel.value.userId,
+      channelId: channel.value.id,
     });
     const card = toChannelCard(channel.value);
     return map(cards, (found) => ({
@@ -214,11 +235,14 @@ export class ChannelService {
     );
   }
 
-  private async channelView(channel: Channel): Promise<Result<ChannelView, DatabaseUnavailable>> {
-    const stats = await this.deps.channels.statsOf(channel.userId);
+  private async channelView(
+    channel: Channel,
+    localization: ChannelLocalization | null = null
+  ): Promise<Result<ChannelView, DatabaseUnavailable>> {
+    const stats = await this.deps.channels.statsOf(channel.id);
     if (isErr(stats)) return stats;
     return map(await this.deps.liveStreams.findOpenByChannel(channel.id), (stream) =>
-      toChannelView(channel, stats.value, stream)
+      toChannelView(channel, stats.value, stream, { cdn: this.deps.cdn, localization })
     );
   }
 
@@ -227,51 +251,18 @@ export class ChannelService {
   ): Promise<Result<OwnerChannel, DatabaseUnavailable>> {
     const view = await this.channelView(channel);
     if (isErr(view)) return view;
-    return map(await this.deps.captions.channelDefault(channel.userId), (autoCaptionsDefault) => ({
+    return map(await this.deps.captions.channelDefault(channel.id), (autoCaptionsDefault) => ({
       ...view.value,
+      ...toOwnerExtras(channel, new Date(this.deps.now())),
       autoCaptionsDefault,
     }));
   }
 
   /**
-   * Creates the user, channel and Watch Later rows a verified identity implies, on its first
-   * authenticated request. Every write tolerates losing a race with a concurrent request for the
-   * same identity - and only that, so a dead store still surfaces instead of a half-provisioned user.
+   * Creates the user, primary channel and Watch Later rows a verified identity implies, on its
+   * first authenticated request, and answers every channel the caller owns, the primary first.
    */
-  async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
-    const userEmail = email || `${userId}@taitube.local`;
-
-    const existingUser = await this.deps.users.findById(userId);
-    if (isErr(existingUser)) return existingUser;
-
-    if (!existingUser.value) {
-      const upserted = await this.deps.users.upsert({ id: userId, email: userEmail, tier: 'free' });
-      if (isErr(upserted)) return upserted;
-    }
-
-    const existingChannel = await this.deps.channels.findByUserId(userId);
-    if (isErr(existingChannel)) return existingChannel;
-    if (existingChannel.value) return ok();
-
-    // The channel is the "already provisioned" marker, so Watch Later has to exist before it does.
-    const watchLater = await this.deps.playlists.provisionWatchLater({
-      id: uuidv7(),
-      ownerId: userId,
-    });
-    if (isErr(watchLater)) return watchLater;
-
-    const handle = await claimFreeHandle(this.deps.channels, userEmail, userId);
-    if (isErr(handle)) return handle;
-
-    const created = await this.deps.channels.create({
-      userId,
-      handle: handle.value,
-      displayName: email ? email.split('@')[0] || 'User' : 'User',
-    });
-
-    // A concurrent request for the same identity got there first; that is a success for us.
-    return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
-      ? created
-      : ok();
+  ensureProvisioned(userId: string, email?: string): Promise<Result<Channel[], ProvisionFailure>> {
+    return provisionAccount(this.deps, userId, email);
   }
 }

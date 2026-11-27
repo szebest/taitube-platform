@@ -1,4 +1,4 @@
-import { Skeleton } from '@vp/ui';
+import { Skeleton } from '@kit/ui';
 import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
 import type { CommentLevel } from '#app/components/discussion/comment-item/types';
 

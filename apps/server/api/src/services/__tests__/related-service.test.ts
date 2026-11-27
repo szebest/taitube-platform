@@ -1,10 +1,13 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
+import { ExperimentOverlay } from '../experiment-overlay';
 import { RelatedService } from '../related-service';
 import { VideoService } from '../video-service';
 import { ViewerProgress } from '../viewer-progress';
+import { sessionShown, startTitleTest } from './running-test';
 import { videoServiceDeps } from './service-deps';
 
 const OWNER = '00000000-0000-7000-8000-0000000000f1';
@@ -19,10 +22,11 @@ describe('apps/server/api/services: RelatedService', () => {
   let repositories: InMemoryRepositories;
   let service: RelatedService;
 
-  const publish = (id: string, overrides: Partial<NewVideoInput> = {}) =>
+  const publish = async (id: string, overrides: Partial<NewVideoInput> = {}) =>
     repositories.videos.create({
       id,
       ownerId: OWNER,
+      channelId: await seedPrimaryChannel(repositories, overrides.ownerId ?? OWNER),
       title: `Video ${id.slice(-1)}`,
       visibility: 'public',
       status: 'READY',
@@ -41,7 +45,16 @@ describe('apps/server/api/services: RelatedService', () => {
         videoServiceDeps(repositories.videos, { channels: repositories.channels })
       ),
       viewerProgress: new ViewerProgress(repositories.watchHistory),
+      experiments: new ExperimentOverlay(repositories.videoExperiments),
     });
+    expectOk(
+      await repositories.channels.create({
+        id: OWNER_CHANNEL,
+        userId: OWNER,
+        handle: 'o',
+        displayName: 'O',
+      })
+    );
     await publish(ANCHOR);
     await publish(TAGGED);
     await publish(PRIVATE, { visibility: 'private' });
@@ -71,6 +84,23 @@ describe('apps/server/api/services: RelatedService', () => {
     expect(items[0]?.viewer).toMatchObject({ progressSeconds: 15 });
   });
 
+  it('shows the session its test variant of a related video', async () => {
+    const test = await startTitleTest(repositories, {
+      videoId: TAGGED,
+      ownerId: OWNER,
+      control: 'Video b',
+      challenger: 'Lisbon by tram',
+    });
+
+    const items = expectOk(await service.get(VIEWER, ANCHOR, sessionShown(test.id, 'b')));
+
+    expect(items[0]).toMatchObject({
+      id: TAGGED,
+      title: 'Lisbon by tram',
+      experiment: { id: test.id, variantId: 'b' },
+    });
+  });
+
   it('refuses a video the caller may not read', async () => {
     expect(expectErr(await service.get(VIEWER, PRIVATE)).code).toBe(ErrorCodes.FORBIDDEN);
   });
@@ -81,14 +111,6 @@ describe('apps/server/api/services: RelatedService', () => {
   ] as const)(
     'leaves out $scenario for the viewer who hid it, and for no one else',
     async ({ target }) => {
-      expectOk(
-        await repositories.channels.create({
-          id: OWNER_CHANNEL,
-          userId: OWNER,
-          handle: 'o',
-          displayName: 'O',
-        })
-      );
       expectOk(
         await repositories.recommendationFeedback.put({
           ...target,

@@ -1,10 +1,12 @@
-import { createWebhook, deleteWebhook, listWebhooks } from '../webhooks';
+import { WEBHOOK_EVENTS } from '@vp/domain';
+import { createWebhook, deleteWebhook, listWebhooks, testWebhook } from '../webhooks';
 
 describe('packages/api-contracts: webhooks', () => {
   it.each([
     { endpoint: createWebhook, method: 'POST', path: '/v1/me/webhooks', status: 201 },
     { endpoint: listWebhooks, method: 'GET', path: '/v1/me/webhooks', status: 200 },
     { endpoint: deleteWebhook, method: 'DELETE', path: '/v1/me/webhooks/:id', status: 204 },
+    { endpoint: testWebhook, method: 'POST', path: '/v1/me/webhooks/:id/test', status: 200 },
   ])('serves $method $path with $status', ({ endpoint, method, path, status }) => {
     expect(endpoint).toMatchObject({ method, path, status });
   });
@@ -14,6 +16,11 @@ describe('packages/api-contracts: webhooks', () => {
     {
       scenario: 'both events',
       body: { url: 'https://x.test/h', events: ['video.ready', 'live.started'] },
+      ok: true,
+    },
+    {
+      scenario: 'a held comment',
+      body: { url: 'https://x.test/h', events: ['comment.held'] },
       ok: true,
     },
     { scenario: 'no events', body: { url: 'https://x.test/h', events: [] }, ok: false },
@@ -30,7 +37,7 @@ describe('packages/api-contracts: webhooks', () => {
     },
     {
       scenario: 'more events than exist',
-      body: { url: 'https://x.test/h', events: ['video.ready', 'live.started', 'video.ready'] },
+      body: { url: 'https://x.test/h', events: [...WEBHOOK_EVENTS, 'video.ready'] },
       ok: false,
     },
   ])('checks the create body of $scenario', ({ body, ok }) => {
@@ -54,5 +61,26 @@ describe('packages/api-contracts: webhooks', () => {
 
   it('refuses a webhook id that is not a UUID', () => {
     expect(deleteWebhook.params.safeParse({ id: 'nope' }).success).toBe(false);
+  });
+
+  it.each([
+    { scenario: 'a delivery', result: { outcome: 'delivered' }, ok: true },
+    {
+      scenario: 'a refusal with its status',
+      result: { outcome: 'failed', reason: 'status', status: 410 },
+      ok: true,
+    },
+    {
+      scenario: 'a timeout',
+      result: { outcome: 'failed', reason: 'timeout', status: null },
+      ok: true,
+    },
+    {
+      scenario: 'an unknown reason',
+      result: { outcome: 'failed', reason: 'dns', status: null },
+      ok: false,
+    },
+  ])('reads a test result of $scenario: $ok', ({ result, ok }) => {
+    expect(testWebhook.result.safeParse(result).success).toBe(ok);
   });
 });

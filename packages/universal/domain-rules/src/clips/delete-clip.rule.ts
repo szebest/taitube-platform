@@ -1,6 +1,6 @@
+import { type Result, err, map } from '@kit/result';
 import type { Clip } from '@vp/domain';
 import { type UserContext, canDeleteClip } from '@vp/permissions';
-import { type Result, err, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ClipNotFound, clipNotFound } from './failures';
 

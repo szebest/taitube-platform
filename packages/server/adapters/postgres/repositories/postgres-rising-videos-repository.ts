@@ -1,3 +1,4 @@
+import { type Result, fromPromise, map } from '@kit/result';
 import type {
   RisingVideosOptions,
   RisingVideosRepositoryPort,
@@ -6,9 +7,9 @@ import type {
 import * as schema from '@vp/db';
 import { RISING, rankRising } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, gte, lte, notInArray, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere } from '../scopes/index';
 import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
@@ -37,7 +38,7 @@ export class PostgresRisingVideosRepository implements RisingVideosRepositoryPor
             completed: completed.viewers,
           })
           .from(v)
-          .innerJoin(ch, eq(ch.userId, v.ownerId))
+          .innerJoin(ch, eq(ch.id, v.channelId))
           .innerJoin(
             started,
             and(eq(started.videoId, v.id), eq(started.percent, RISING.startPercent))
@@ -63,9 +64,9 @@ export class PostgresRisingVideosRepository implements RisingVideosRepositoryPor
     return map(rows, (found) =>
       rankRising(
         found.map(({ video, completed: done, ...counts }) => ({
-          video,
+          video: toVideoRecord(video),
           id: video.id,
-          ownerId: video.ownerId,
+          channelId: video.channelId,
           createdAt: video.createdAt,
           completed: done ?? 0,
           ...counts,

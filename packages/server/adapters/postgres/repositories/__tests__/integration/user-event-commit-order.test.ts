@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
 import { videoStatusChanged } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';

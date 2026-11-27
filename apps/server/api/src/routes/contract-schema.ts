@@ -1,5 +1,6 @@
-import { type EndpointContract, problemResponse } from '@vp/api-contracts';
-import type { z } from 'zod';
+import { CHANNEL_HEADER, type EndpointContract, problemResponse } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
+import { z } from 'zod';
 
 export interface ContractSchemaOptions {
   hide?: boolean;
@@ -11,7 +12,8 @@ export interface ContractSchema {
   summary: string;
   description: string;
   response: Record<number, z.ZodType>;
-  security?: never[];
+  headers?: z.ZodType;
+  security?: SecurityRequirement[];
   hide?: boolean;
 }
 
@@ -30,7 +32,7 @@ export function contractSchema(
     ...options.responses,
   };
 
-  for (const [status, codes] of Object.entries(contract.errors)) {
+  for (const [status, codes] of Object.entries(errorsOf(contract))) {
     response[Number(status)] = problemResponse(codes);
   }
 
@@ -39,9 +41,55 @@ export function contractSchema(
     summary: contract.summary,
     description: contract.description,
     response,
-    ...(contract.anonymous ? { security: [] } : {}),
+    ...(contract.channelScoped ? { headers: CHANNEL_HEADERS } : {}),
+    ...securityOf(contract),
     ...(options.hide || contract.internal ? { hide: true } : {}),
   };
+}
+
+type SecurityRequirement = Readonly<Record<string, readonly string[]>>;
+
+/**
+ * An anonymous route asks for nothing; a route a token may call names its scope as the role the
+ * `personalAccessToken` scheme needs (OpenAPI 3.1 lets a non-OAuth scheme list roles).
+ */
+function securityOf({ anonymous, scope }: EndpointContract): { security?: SecurityRequirement[] } {
+  if (!scope) return anonymous ? { security: [] } : {};
+  return { security: [anonymous ? {} : { bearerAuth: [] }, { personalAccessToken: [scope] }] };
+}
+
+/** Loose, because Fastify replaces the request headers with what the schema lets through. */
+const CHANNEL_HEADERS = z.looseObject({ [CHANNEL_HEADER]: z.uuid().optional() });
+
+type Errors = EndpointContract['errors'];
+
+const CHANNEL_REFUSALS: Errors = {
+  403: [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED, ErrorCodes.FORBIDDEN],
+};
+
+/** What the auth hook answers a personal access token on any route that names a scope. */
+const TOKEN_REFUSALS: Errors = {
+  400: [ErrorCodes.API_TOKEN_WITH_SESSION],
+  401: [ErrorCodes.UNAUTHORIZED],
+  403: [ErrorCodes.API_TOKEN_SCOPE_MISSING],
+  429: [ErrorCodes.RATE_LIMITED],
+};
+
+function merged(errors: Errors, added: Errors): Errors {
+  const statuses = new Set([...Object.keys(errors), ...Object.keys(added)].map(Number));
+  return Object.fromEntries(
+    [...statuses].map((status) => [
+      status,
+      [...new Set([...(errors[status] ?? []), ...(added[status] ?? [])])],
+    ])
+  );
+}
+
+function errorsOf(contract: EndpointContract): Errors {
+  const scoped = contract.channelScoped
+    ? merged(contract.errors, CHANNEL_REFUSALS)
+    : contract.errors;
+  return contract.scope ? merged(scoped, TOKEN_REFUSALS) : scoped;
 }
 
 export interface ContractPath {

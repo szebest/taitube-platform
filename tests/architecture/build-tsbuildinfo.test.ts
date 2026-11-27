@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { read, trackedFiles } from './repo-files';
 
-const BUILD_CONFIG = '@vp/tsconfig/build.json';
+const BUILD_CONFIG = '@kit/tsconfig/build.json';
 
 function extendsBuildConfig(file: string, source: string): boolean {
   const { config } = ts.parseConfigFileTextToJson(file, source);

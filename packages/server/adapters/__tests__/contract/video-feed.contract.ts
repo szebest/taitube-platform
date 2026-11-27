@@ -1,10 +1,12 @@
+import { expectOk } from '@kit/testing/result';
 import type { ListPublicVideosOptions, VideoRecord } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import type { PublicFeedCursor, PublicFeedFilter, PublicFeedSort, VideoFormat } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   HOUR_MS,
+  OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
   VIDEO_IDS,
@@ -12,6 +14,7 @@ import {
   publicVideo,
   seedCategories,
 } from './fixtures';
+import { walkOneAtATime } from './keyset-walk';
 import type { VideoContractContext } from './video-contract-context';
 
 interface FeedSeed {
@@ -163,8 +166,8 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       },
       {
         sort: 'recent',
-        scope: 'owner',
-        filter: { ownerId: OTHER_OWNER_ID },
+        scope: 'channel',
+        filter: { channelId: OTHER_OWNER_CHANNEL_ID },
         expected: [VIDEO_IDS.b, VIDEO_IDS.d],
       },
     ])('restricts $sort to the requested $scope', async ({ sort, filter, expected }) => {
@@ -217,9 +220,9 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         expected: EXPECTED_ORDER[sort],
       })),
       {
-        feed: "one owner's recent",
+        feed: "one channel's recent",
         sort: 'recent',
-        filter: { ownerId: OTHER_OWNER_ID },
+        filter: { channelId: OTHER_OWNER_CHANNEL_ID },
         expected: [VIDEO_IDS.b, VIDEO_IDS.d],
       },
     ])(
@@ -241,6 +244,34 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         }
 
         expect(walked).toEqual(expected);
+      }
+    );
+
+    it.each(SORTS)(
+      'walks the $sort feed through videos created within one millisecond',
+      async ({ sort }) => {
+        const ids = FEED_SEEDS.map(({ id }) => id);
+        await ctx.subject.spreadAcrossMicroseconds({
+          stamp: schema.videos.createdAt,
+          key: schema.videos.id,
+          ids,
+          at: new Date(FEED_INSTANT_MS - HOUR_MS),
+        });
+        let instant = FEED_INSTANT_MS;
+
+        const served = await walkOneAtATime(
+          async (cursor: PublicFeedCursor | null) => {
+            const page = expectOk(
+              await ctx.videos.listPublic({ limit: 1, sort, ...(cursor ? { cursor } : {}) })
+            );
+            instant = page.instant;
+            return page.items;
+          },
+          (row) => cursorFor(row, instant),
+          ({ id }) => id
+        );
+
+        expect(served.sort()).toEqual(ids.sort());
       }
     );
 

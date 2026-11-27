@@ -1,11 +1,11 @@
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { ids } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 import { STAGE_SETTINGS, TASKS } from './stage-settings';
@@ -35,6 +35,7 @@ describe('admission control in the uploads reconciler', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         title: `video-${videoId}`,
         status,
         sourceKey: `raw/${videoId}/source.mp4`,

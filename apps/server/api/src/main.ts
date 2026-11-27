@@ -1,5 +1,5 @@
-import type { ProcessHost } from '@vp/composition';
-import { createLogger } from '@vp/logger';
+import type { ProcessHost } from '@kit/composition';
+import { createLogger } from '@kit/logger';
 import { run } from './process';
 
 if (process.env.NODE_ENV !== 'test') {

@@ -1,12 +1,12 @@
+import { Icon, IconButton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Icon, IconButton } from '@vp/ui';
 import { CommandPalette, keepEnterFromTheList } from '#app/components/shell/command-palette';
 import { recentSearchesQueryOptions } from '#app/features/search/api/search-history-queries';
 import { useRemoveRecentSearch } from '#app/features/search/hooks/use-remove-recent-search';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
+import { useT } from '#app/lib/messages';
 
 /** The viewer's newest searches, each runnable and removable; nothing renders when there are none. */
 export function RecentSearchGroup() {

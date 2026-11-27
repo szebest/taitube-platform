@@ -1,11 +1,10 @@
-import { expectOk } from '@vp/testing/result';
+import type { FlowProducerSubject, JobQueueSubject } from '@kit/ports/contract';
+import { expectOk } from '@kit/testing/result';
 import type { ConnectionOptions } from 'bullmq';
 import { BullMqFlowProducer } from '../../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../../bullmq/connection';
-import type { FlowProducerSubject } from './flow-producer.contract';
 import { inMemoryFlowProducerSubject, inMemoryJobQueueSubject } from './in-memory-port-subjects';
-import type { JobQueueSubject } from './job-queue.contract';
 import { claimRealServices } from './real-services';
 
 const PREFIX = 'contract';

@@ -1,9 +1,9 @@
-import type { Comment, CommentReportReason, Video } from '@vp/domain';
+import { type Result, andThen, map } from '@kit/result';
+import type { Comment, CommentHost, CommentReportReason } from '@vp/domain';
 import { type UserContext, canReportComment } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import { type InvalidReportNote, validateReportNote } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import { type ReadCommentHostFailure, decideCommentHostRead } from './comment-host';
 import type { CommentNotFound } from './failures';
 import { locateComment } from './located-comment';
 
@@ -11,7 +11,7 @@ export interface ReportCommentInput {
   readonly reporter: UserContext | null;
   readonly comment: Comment | null;
   readonly commentId: string;
-  readonly video: Video | null;
+  readonly host: CommentHost | null;
   readonly reason: CommentReportReason;
   readonly note: string | undefined;
 }
@@ -25,10 +25,10 @@ export interface CommentToReport {
 export type ReportCommentFailure =
   | AuthorizationFailure
   | CommentNotFound
-  | ReadVideoFailure
+  | ReadCommentHostFailure
   | InvalidReportNote;
 
-/** A viewer reports what they can see: a comment under a video they may not read is not there. */
+/** A viewer reports what they can see: a comment under something they may not read is not there. */
 export function decideCommentReport(
   input: ReportCommentInput
 ): Result<CommentToReport, ReportCommentFailure> {
@@ -38,8 +38,8 @@ export function decideCommentReport(
       subject: 'Comment',
     }),
     (reporter): Result<CommentToReport, ReportCommentFailure> =>
-      andThen(locateComment(input), ({ comment, video }) =>
-        andThen(decideVideoRead({ viewer: reporter, video, videoId: video.id }), () =>
+      andThen(locateComment(input), ({ comment, host }) =>
+        andThen(decideCommentHostRead(reporter, host), () =>
           map(validateReportNote(input.note), (note) => ({
             comment,
             reason: input.reason,

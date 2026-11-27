@@ -1,9 +1,9 @@
+import type { Logger } from '@kit/logger';
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { CaptionsConfig, CdnBase } from '@vp/env-schema';
+import type { CaptionsConfig, CdnBase, ScreeningConfig } from '@vp/env-schema';
 import type { FfmpegProcessLimits, MediaTools } from '@vp/ffmpeg';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 
 export interface CaptionsStageDeps {
@@ -26,4 +26,5 @@ export interface CaptionsStageDeps {
     minTimeoutMs: number;
   };
   captions: CaptionsConfig;
+  screening: Pick<ScreeningConfig, 'enabled' | 'thresholds'>;
 }

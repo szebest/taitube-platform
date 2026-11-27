@@ -1,3 +1,5 @@
+import { type Failure } from '@kit/errors';
+import { assertNever, err, ignore, isErr, map, ok, parseJson, type Result } from '@kit/result';
 import {
   type LiveChatBroadcast,
   LiveChatClientFrameSchema,
@@ -20,29 +22,24 @@ import {
   type LiveStreamNotFound,
 } from '@vp/domain-rules';
 import type { LiveChatTuning } from '@vp/env-schema';
-import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type Failure,
-} from '@vp/errors';
+import { type CacheUnavailable, type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import { canModerateLiveStream, type UserContext } from '@vp/permissions';
-import { assertNever, err, ignore, isErr, map, ok, parseJson, type Result } from '@vp/result';
 import {
   type InvalidField,
-  type InvalidLiveChatMessage,
+  type InvalidChatMessage,
   invalidField,
-  validateLiveChatMessage,
+  validateChatMessage,
 } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import { followsChannel } from './account-subscription';
 import { type LiveAccessDeps, type ReadLiveFailure, readLive } from './live-access';
-import { readLiveChatBacklog } from './live-chat-backlog';
+import { readChatBacklog } from './live-chat-backlog';
 import { type LiveChatHub, publishLiveChat } from './live-chat-hub';
 import { liveChatMode, toLiveChatMessageView } from './live-views';
 
 export interface LiveChatServiceDeps extends LiveAccessDeps {
   liveChat: LiveChatRepositoryPort;
-  subscriptions: Pick<SubscriptionRepositoryPort, 'isSubscribed'>;
+  subscriptions: Pick<SubscriptionRepositoryPort, 'getUserSubscriptionChannelIds'>;
   gate: LiveChatGatePort;
   hub: LiveChatHub;
   cache: Pick<CacheClient, 'publish'>;
@@ -71,7 +68,7 @@ export type OpenLiveChatFailure =
 
 type SendFailure =
   | LiveChatTicketInvalid
-  | InvalidLiveChatMessage
+  | InvalidChatMessage
   | LiveStreamNotFound
   | LiveChatClosed
   | LiveChatSubscribersOnly
@@ -156,7 +153,7 @@ export class LiveChatService {
       else held.push(event);
     });
 
-    const backlog = await readLiveChatBacklog(
+    const backlog = await readChatBacklog(
       liveChat,
       session.liveStreamId,
       after,
@@ -214,14 +211,14 @@ export class LiveChatService {
     const { viewer, liveStreamId, ownerId } = session;
     if (viewer === null) return err(liveChatTicketInvalid());
 
-    const message = validateLiveChatMessage(text);
+    const message = validateChatMessage(text);
     if (isErr(message)) return message;
     const stream = await liveStreams.findById(liveStreamId);
     if (isErr(stream)) return stream;
     if (stream.value === null) return err(liveStreamNotFound(liveStreamId));
 
     const subscribed = stream.value.chatSubscribersOnly
-      ? await subscriptions.isSubscribed(viewer.id, stream.value.channelId)
+      ? await followsChannel(subscriptions, viewer.id, stream.value.channelId)
       : ok(true);
     if (isErr(subscribed)) return subscribed;
     const grant = decideLiveChatPost({

@@ -1,10 +1,11 @@
-import { useT } from '@vp/intl-react';
-import { Switch } from '@vp/ui';
+import { Switch } from '@kit/ui';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 type SwitchRowId =
   | 'autoplay-next'
   | 'hover-preview'
+  | 'hover-play'
   | 'stats-overlay'
   | 'pause-history'
   | 'subscriptions-visible'

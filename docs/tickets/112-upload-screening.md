@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.5 State machine](../SDD.md#35-state-machine) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.3 Fan-out / fan-in](../SDD.md#93-fan-out--fan-in-with-flows) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** Nothing screens an upload today. [44](44-creator-studio-video-management-visibility.md) lists automated
 > copyright scanning as out of scope, and moderation is manual afterwards: an admin takedown (`moderate Video`, one CAS to
@@ -40,7 +40,7 @@ native library.
 | Worker stage | `apps/server/worker/src/stages/screen/`, registered in `registry.ts` and `composition/stages.module.ts`; `package.ts` reads its result |
 | Repositories | `packages/server/core/repositories` (interfaces), Postgres implementations in `packages/server/adapters/postgres/repositories/`, tables in `packages/server/db` |
 | `fpcalc` in the image | `libchromaprint-tools` in the `worker` stage's `apt-get` line of the root `Dockerfile`, next to `ffmpeg`; `FPCALC_PATH` (default `fpcalc`) in the closed env schema for a run outside Docker |
-| ONNX model and pins | fetched in the root `Dockerfile` build stage, URL and SHA-256 in `apps/server/worker/assets.lock` (the file 111 creates; whichever of the two tickets lands first creates it); `SCREENING_MODEL_PATH` for a run outside Docker, filled by `pnpm models:fetch` |
+| ONNX model and pins | fetched in the root `Dockerfile` build stage, URL and SHA-256 in `apps/server/worker/screening.lock` (beside the `assets.lock` of 111, so a change to one leaves the other's image layers cached); `SCREENING_MODEL_PATH` for a run outside Docker, filled by `pnpm models:fetch` |
 | Evidence and admin UI | `apps/client/studio` (admin area from 61 and the creator hold and appeal screens); keys in `packages/server/storage/src/keys.ts` |
 
 Why a package for fingerprints but not for classification: the matcher and `fpcalc` wrapper are server logic with no port to
@@ -55,11 +55,11 @@ hide, while the model runner is an SDK and belongs behind a port in the adapters
   and costs no extra latency while it stays under the 480p transcode time. A video is screened before it can go public,
   because `READY` (the master) is the moment it becomes watchable; a transcript is only available after `READY`, so text
   from 111 can raise a flag but not a hold (see 5).
-- **Contract.** `ScreenJob` in `@vp/job-contracts` (`Base` plus `sourceKey` and `durationMs`), `ids.screen(videoId,
+- **Contract.** `ScreenJob` in `@vp/job-contracts` (`Base` plus `sourceKey`, `durationMs` and `hasAudio`, which probe sets from the audio stream it found), `ids.screen(videoId,
   generation)`, `QUEUES`, `stagePolicies.screen` (`attempts: 4`, exponential 10 s), `WorkerStageName`, `registry.ts`. It
   returns a `ScreenResult` that `package` reads like it reads `ThumbnailResult`.
 - **Fencing.** The stage claims a `screen` step row with a lock token and commits fenced (rule 6); a re-run is idempotent
-  because the result row is keyed by video and source checksum.
+  because the result row is keyed by video and source checksum, the source object's ETag. `package` gets `screened` on its job when probe added the child, so a missing result from a screened flow holds the video and a flow without the child publishes as before.
 - **Retry classes (rule 7).** `PermanentError`: corrupt stream the probe let through, model checksum mismatch.
   `TransientError`: storage, database, queue, worker killed. When retries are exhausted the video is held with reason
   `SCREEN_ERROR` (fail closed): a broken model must not wave uploads through. `SCREENING_ENABLED=false` skips the child

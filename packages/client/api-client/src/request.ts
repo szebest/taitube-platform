@@ -1,4 +1,4 @@
-import { type EndpointContract, buildPath, endpointKey } from '@vp/api-contracts';
+import { CHANNEL_HEADER, type EndpointContract, buildPath, endpointKey } from '@vp/api-contracts';
 import { ApiContractError, toApiError } from './api-error';
 
 export interface ApiClientOptions {
@@ -7,6 +7,8 @@ export interface ApiClientOptions {
   fetch?: typeof globalThis.fetch;
   credentials?: RequestCredentials;
   getAuthToken?: () => string | null | undefined;
+  /** The channel a studio acts on, sent as `X-Channel-Id` on the endpoints that are channel scoped. */
+  getChannelId?: () => string | undefined;
   headers?: Record<string, string>;
 }
 
@@ -51,6 +53,11 @@ export async function sendRequest(
   const token = client.getAuthToken?.();
   if (token) {
     headers['authorization'] = `Bearer ${token}`;
+  }
+
+  const channelId = contract.channelScoped ? client.getChannelId?.() : undefined;
+  if (channelId) {
+    headers[CHANNEL_HEADER] = channelId;
   }
 
   const hasBody = options.body !== undefined && options.body !== null;

@@ -1,5 +1,5 @@
+import { writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
-import { writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 import { requestDevicePreferences } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';

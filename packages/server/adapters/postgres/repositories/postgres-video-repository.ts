@@ -1,4 +1,4 @@
-import { trace } from '@opentelemetry/api';
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -11,23 +11,23 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
+import { type NewChannelAuditEntry, publicFeedWalkInstant } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { transitionNotificationJobs } from '@vp/job-contracts';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   keysetBefore,
+  msTimestamp,
   notDeletedScope,
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
-import { enqueueNotificationJobs } from './notification-jobs';
-import { appendUserEvent } from './postgres-user-event-repository';
+import { appendChannelAudit } from './channel-audit-writes';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
-import type { PostgresDatabase, VideoInsert } from './types';
+import type { PostgresDatabase } from './types';
 import { videoScanScope } from './video-scan-query';
+import { commitVideoTransition } from './video-transition';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -42,7 +42,23 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('findById')
     );
 
-    return map(rows, ([row]) => row ?? null);
+    return map(rows, ([row]) => (row ? toVideoRecord(row) : null));
+  }
+
+  async listReadyAfter(
+    videoIds: readonly string[],
+    readyAfter: Date
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
+    if (videoIds.length === 0) return ok([]);
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(v)
+          .where(and(inArray(v.id, [...videoIds]), gt(v.readyAt, readyAfter))),
+      databaseUnavailable.during('listReadyAfter')
+    );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
@@ -64,15 +80,25 @@ export class PostgresVideoRepository extends VideoRepository {
     return map(details, ([renditions, steps, events]) => ({ video, renditions, steps, events }));
   }
 
-  async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
+  async create(
+    data: NewVideoInput,
+    audit?: NewChannelAuditEntry
+  ): Promise<Result<VideoRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.insert(v).values(data).returning(),
+      () =>
+        this.db.transaction(async (tx) => {
+          const inserted = await tx.insert(v).values(data).returning();
+          if (audit) await appendChannelAudit(tx, audit);
+          return inserted;
+        }),
       databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
     const [created] = rows.value;
-    return created ? ok(created) : err(databaseUnavailable('create', 'insert returned no row'));
+    return created
+      ? ok(toVideoRecord(created))
+      : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
   async listByOwner(
@@ -83,19 +109,24 @@ export class PostgresVideoRepository extends VideoRepository {
       ownerScope(v, ownerId),
       videoReadScope(viewer ?? null),
       status ? eq(v.status, status) : notDeletedScope(v),
-      keysetBefore(v.createdAt, v.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+      keysetBefore(
+        msTimestamp(v.createdAt),
+        v.id,
+        cursor && { sort: cursor.createdAt, tie: cursor.id }
+      )
     );
 
-    return await fromPromise(
+    const rows = await fromPromise(
       () =>
         this.db
           .select()
           .from(v)
           .where(whereClause)
-          .orderBy(desc(v.createdAt), desc(v.id))
+          .orderBy(desc(msTimestamp(v.createdAt)), desc(v.id))
           .limit(limit + 1),
       databaseUnavailable.during('listByOwner')
     );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async listPublic(
@@ -120,64 +151,15 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     return map(rows, (found) => ({
-      items: found,
+      items: found.map(toVideoRecord),
       total: total.value,
       instant: instantMs,
     }));
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
-    const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
-    const effectiveTraceId = traceId || trace.getActiveSpan()?.spanContext().traceId || null;
-
     return fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          const statusCond = Array.isArray(from) ? inArray(v.status, from) : eq(v.status, from);
-
-          const rows = await tx
-            .update(v)
-            .set({
-              ...patch,
-              status: to,
-              updatedAt: new Date(),
-              ...(to === 'READY' ? { readyAt: new Date() } : {}),
-            } as VideoInsert)
-            .where(and(eq(v.id, videoId), statusCond))
-            .returning({ ownerId: v.ownerId, visibility: v.visibility });
-
-          const [owner] = rows;
-          if (!owner) return false;
-
-          await tx.insert(ve).values({
-            videoId,
-            type: eventType || `video.${to.toLowerCase()}`,
-            payload: eventPayload,
-            traceId: effectiveTraceId,
-            createdAt: new Date(),
-          });
-
-          if (options.outbox) {
-            await tx.insert(schema.outbox).values({
-              id: options.outbox.id || sql`gen_random_uuid()`,
-              kind: options.outbox.kind,
-              payload: options.outbox.payload,
-              createdAt: new Date(),
-              attempts: 0,
-            });
-          }
-
-          await appendUserEvent(tx, {
-            userId: owner.ownerId,
-            ...videoStatusChanged(videoId, to),
-          });
-          await enqueueNotificationJobs(
-            tx,
-            transitionNotificationJobs(videoId, from, to, owner.visibility)
-          );
-
-          return true;
-        }),
+      () => this.db.transaction((tx) => commitVideoTransition(tx, options)),
       databaseUnavailable.during('transition')
     );
   }
@@ -194,7 +176,7 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('scan')
     );
 
-    return rows;
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {

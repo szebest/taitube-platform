@@ -10,9 +10,17 @@
 Everything a browser does not import. This is the default tier — a package is `universal` or `client`
 only when it has earned it with a real consumer.
 
-Members: `adapters`, `composition`, `concurrency`, `config`, `core`, `db`, `env-schema`, `events`,
-`ffmpeg`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `vite-preset` (the client apps'
-Vite config, build tooling), `whisper`, plus the CLI packages `compose-autoscaler`, `dev-token`, `gen-video`, `lighthouse`, `upload-client`.
+Members (app packages, `@vp/*`): `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`,
+`job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `whisper`, plus `demo`, `deploy`, `dev-identity`, `stack` and the CLI packages `gen-video`,
+`lighthouse` and `upload-client`. The platform packages (`@kit/*`) sit in `packages/platform/server/`: `compose-autoscaler`,
+`composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`,
+`vite-preset` (the client apps' Vite config, build tooling).
+
+**Platform or app, first.** A server package that names no product value belongs in `packages/platform/server/`, and
+it never depends on, imports or names a `@vp/*` package. What the app owns (its env schema, key namespace, metric
+prefix, dev-token issuer, log level) is a required, typed parameter the app passes from its composition root:
+`@kit/config` takes the schema, `@kit/keyspace` takes the namespace, `@kit/observability` takes the metric config. See
+[docs/standards/platform-packages.md](../../docs/standards/platform-packages.md).
 
 CLI packages live here rather than in `tools/` because they are workspace packages with a
 `package.json`. `tools/` is for scripts and static assets that are not packages.
@@ -34,7 +42,7 @@ CLI packages live here rather than in `tools/` because they are workspace packag
 
 Ask whether the portable part is separable, and whether anything client-side would import it. `@vp/core`
 was 38 of 39 files portable — only `ports/storage-client.ts` needs `Buffer` and `NodeJS.ReadableStream` —
-so the entities and policy left as `@vp/domain` and the keyset cursors left as `@vp/pagination`, both
+so the entities and policy left as `@vp/domain` and the keyset cursors left as `@kit/pagination`, both
 `universal`, and each deleted a copy `@vp/api-contracts` had been keeping.
 
 Two packages were looked at and deliberately kept whole:

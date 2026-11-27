@@ -1,9 +1,8 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Button, Icon, IconButton, Switch, useToast } from '@kit/ui';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { canManageCategory } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { Button, Icon, IconButton, Switch, useToast } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,
@@ -13,6 +12,7 @@ import {
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { useAdminCategories } from '#app/features/admin/hooks/use-admin-categories';
 import { useUpdateCategory } from '#app/features/admin/hooks/use-category-mutations';
+import { useT } from '#app/lib/messages';
 import { CategoryDeleteDialog } from '../category-delete-dialog/category-delete-dialog';
 import { CategoryDialog } from '../category-dialog/category-dialog';
 import { CategoryReorderDialog } from '../category-reorder-dialog/category-reorder-dialog';
@@ -181,7 +181,7 @@ export function CategoryTable() {
       {open?.kind === 'delete' && <CategoryDeleteDialog category={open.category} onClose={close} />}
       {open?.kind === 'reorder' && (
         <CategoryReorderDialog
-          categories={[...data].sort((a, b) => a.sortOrder - b.sortOrder)}
+          categories={data.toSorted((a, b) => a.sortOrder - b.sortOrder)}
           onClose={close}
         />
       )}

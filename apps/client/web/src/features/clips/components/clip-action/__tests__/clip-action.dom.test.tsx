@@ -14,13 +14,17 @@ vi.mock(import('#app/components/player/taitube-preview/taitube-preview'), async 
 beforeAll(() => LazyClipDialog.preload());
 
 describe('apps/client/web: Clip action', () => {
-  it('sends a guest to sign-in and opens no dialog', async () => {
+  it('asks a guest to sign in, on the same page, and opens no clip dialog', async () => {
     const { user, router } = await renderWatch({ video: { durationMs: 120_000 } });
+    const page = router.state.location.pathname;
 
     await user.click(screen.getByRole('button', { name: 'Clip' }));
 
-    expect(router.state.location.pathname).toBe('/login');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to make a clip' })
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(page);
+    expect(screen.queryByRole('dialog', { name: 'Clip this video' })).not.toBeInTheDocument();
   });
 
   it('opens the dialog for a signed-in viewer', async () => {

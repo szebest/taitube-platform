@@ -1,7 +1,7 @@
+import { Button } from '@kit/ui';
 import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
-import { useT } from '@vp/intl-react';
-import { Button } from '@vp/ui';
 import type { ChangeEvent } from 'react';
+import { useT } from '#app/lib/messages';
 
 /** The body is sent as a JSON string, so that is the size the API's limit applies to. */
 function sentBytes(vtt: string): number {

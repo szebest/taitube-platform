@@ -1,10 +1,12 @@
+import type { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters } from '@vp/adapters/composition';
 import { MAX_WEB_VITALS_PER_BATCH } from '@vp/api-contracts';
-import type { Container } from '@vp/composition';
 import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
+import { startTitleTest } from '../../services/__tests__/running-test';
 
 const URL = '/v1/telemetry/vitals';
 const LCP = { name: 'LCP', value: 1250, route: '/watch/$videoId' };
@@ -165,6 +167,74 @@ describe('playback telemetry route', () => {
     const statuses: number[] = [];
     for (let sent = 0; sent < 3; sent++) {
       statuses.push((await send(limited.app, EVENT)).statusCode);
+    }
+    await limited.app.close();
+
+    expect(statuses).toEqual([204, 204, 429]);
+  });
+});
+
+describe('impression telemetry route', () => {
+  const IMPRESSIONS_URL = '/v1/telemetry/impressions';
+  const ITEM = {
+    videoId: '0f8fad5b-d9cb-469f-a165-70867728950e',
+    experimentId: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+    variantId: 'b',
+  };
+
+  let app: FastifyInstance;
+  let container: Container;
+
+  const send = (target: FastifyInstance, payload: unknown, contentType = 'application/json') =>
+    target.inject({
+      method: 'POST',
+      url: IMPRESSIONS_URL,
+      payload: JSON.stringify(payload),
+      headers: { 'content-type': contentType },
+    });
+
+  beforeAll(async () => {
+    const built = await buildTelemetryApp();
+    ({ app, container } = built);
+    await startTitleTest(built.repositories, {
+      videoId: ITEM.videoId,
+      ownerId: '00000000-0000-7000-8000-0000000000b1',
+      control: 'A',
+      challenger: 'B',
+      id: ITEM.experimentId,
+    });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it.each(['application/json', 'text/plain;charset=UTF-8'])(
+    'buffers a full %s batch with an empty 204',
+    async (contentType) => {
+      const res = await send(app, { items: Array.from({ length: 50 }, () => ITEM) }, contentType);
+      const batch = expectOk(await container.get(Adapters.ViewBuffer).snapshot('impressions'));
+
+      expect([res.statusCode, res.body]).toEqual([204, '']);
+      expect(batch?.experiments).toEqual([expect.objectContaining({ impressions: 50 })]);
+    }
+  );
+
+  it.each([
+    ['an empty batch', { items: [] }],
+    ['a variant no test has', { items: [{ ...ITEM, variantId: 'd' }] }],
+  ])('refuses %s with a 400', async (_name, payload) => {
+    expect((await send(app, payload)).statusCode).toBe(400);
+  });
+
+  it('answers 429 past the batches one address may send in a minute', async () => {
+    const limited = await buildTestApp({
+      config: inProcessAppConfig({ playbackTelemetry: { ratePerMinute: 2 } }),
+    });
+
+    const statuses: number[] = [];
+    for (let sent = 0; sent < 3; sent++) {
+      statuses.push((await send(limited.app, { items: [ITEM] })).statusCode);
     }
     await limited.app.close();
 

@@ -1,12 +1,14 @@
+import type { Result } from '@kit/result';
 import type {
+  Chapter,
   CreatorLibraryCursor,
   LibrarySort,
   SortOrder,
+  VideoAuditField,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
 import type { DatabaseUnavailable, VersionConflict } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { VideoRecord } from './video-repository';
 
 export interface StudioMetadataPatch {
@@ -16,6 +18,9 @@ export interface StudioMetadataPatch {
   categoryId?: string | null;
   tags?: string[];
   customThumbnailKey?: string | null;
+  commentsEnabled?: boolean;
+  /** The whole set replaces the stored one; empty clears it. */
+  chapters?: Chapter[];
 }
 
 export interface UpdateStudioMetadataOptions {
@@ -23,6 +28,18 @@ export interface UpdateStudioMetadataOptions {
   expectedVersion: number;
   patch: StudioMetadataPatch;
   userId: string;
+  /** The personal access token the edit was made with, named in the audit entries beside `userId`. */
+  tokenId?: string;
+  /**
+   * Audited as `video.updated` by `userId` on the channel of the video owner, in the edit transaction,
+   * unless empty; a `commentsEnabled` in the patch is audited on its own as `video.comments.toggled`.
+   */
+  auditFields: VideoAuditField[];
+  /**
+   * Every landed edit appends a `video_metadata` revision at its new version in the same
+   * transaction; a restore names the version it went back to.
+   */
+  revision?: { restoredFromVersion?: number };
 }
 
 /** Absence is an answer, not a failure: the service decides which error each one becomes. */
@@ -32,8 +49,8 @@ export type StudioMetadataOutcome =
   | { type: 'category-missing'; categoryId: string };
 
 export interface VideoLibraryQuery {
-  /** Absent for an operator, who lists everyone's videos. */
-  ownerId?: string;
+  /** The channel the library is of; absent for an operator, who lists every channel's videos. */
+  channelId?: string;
   sort: LibrarySort;
   /** Defaults to `desc`; the cursor must have been minted for the same sort and order. */
   order?: SortOrder;
@@ -48,7 +65,6 @@ export interface VideoLibraryQuery {
 
 export interface TakeDownVideoOptions {
   videoId: string;
-  from: readonly VideoStatus[];
   moderatorId: string;
   reason?: string;
 }
@@ -66,7 +82,10 @@ export abstract class VideoStudioRepository {
   abstract updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>>;
-  /** `REJECTED` and `private` together, with a `video.taken_down` event; `ok(null)` if `from` missed. */
+  /**
+   * The lifecycle's `takedown` edge, `private` with it, announced to the owner like any other status
+   * change; `ok(null)` when the video was in none of its sources.
+   */
   abstract takeDown(
     options: TakeDownVideoOptions
   ): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;

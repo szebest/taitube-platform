@@ -1,5 +1,6 @@
-import { createCompoundContext } from '@vp/ui';
-import type { ChartFrameSize, ChartFrameState, ChartSeries } from './types';
+import type { ChartSeries } from '@kit/components';
+import { createCompoundContext } from '@kit/ui';
+import type { ChartFrameSize, ChartFrameState } from './types';
 
 export type ChartFrameShared = {
   size: ChartFrameSize;

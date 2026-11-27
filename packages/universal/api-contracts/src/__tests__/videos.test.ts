@@ -1,4 +1,4 @@
-import { Base64UrlCursorCodec } from '@vp/pagination';
+import { Base64UrlCursorCodec } from '@kit/pagination';
 
 const codec = new Base64UrlCursorCodec();
 import { deleteVideo, getVideo, listVideos, reprocessVideo, updateVideo } from '../videos';

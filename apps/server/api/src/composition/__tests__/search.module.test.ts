@@ -1,7 +1,8 @@
+import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 
 const OWNER = '00000000-0000-7000-8000-00000000f201';
@@ -16,6 +17,7 @@ describe('apps/server/api/composition: search module', () => {
       await c.get(Adapters.Repositories).videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(c.get(Adapters.Repositories), OWNER),
         title: 'Composable search',
         visibility: 'public',
         status: 'READY',

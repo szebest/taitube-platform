@@ -16,11 +16,6 @@
       "types": "./dist/settings/index.d.ts",
       "import": "./dist/settings/index.js",
       "default": "./dist/settings/index.js"
-    },
-    "./time": {
-      "types": "./dist/time.d.ts",
-      "import": "./dist/time.js",
-      "default": "./dist/time.js"
     }
   },
   "scripts": {
@@ -29,9 +24,13 @@
     "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
+  "dependencies": {
+    "@kit/appearance": "workspace:*",
+    "@kit/primitives": "workspace:*"
+  },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"

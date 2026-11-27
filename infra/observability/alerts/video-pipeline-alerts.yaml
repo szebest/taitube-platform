@@ -131,3 +131,20 @@ groups:
           summary: "Captions queue is stale: oldest waiting job is older than 6 hours"
           description: "Jobs in the captions queue have been waiting for {{ $value | humanizeDuration }}. Captions run at the lowest priority on their own pods, so a short wait is normal; check the captions workers and their ScaledObject."
           runbook_url: "docs/runbooks/queue-starvation.md"
+
+      # 12. ScreeningHoldRateHigh
+      - alert: ScreeningHoldRateHigh
+        expr: |
+          (
+            sum(increase(screening_outcomes_total{outcome="HOLD"}[24h]))
+            / sum(increase(screening_outcomes_total[24h]))
+          ) > 0.2
+          and on()
+          sum(increase(screening_outcomes_total[24h])) >= 20
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Upload screening holds more than 20% of videos over 24 h ({{ $value | humanizePercentage }})"
+          description: "A miscalibrated threshold floods the moderation queue. Compare screening_outcomes_total by reason, then the thresholds in packages/server/env-schema/src/tuning.ts."
+          runbook_url: "docs/runbooks/screening-hold-rate.md"

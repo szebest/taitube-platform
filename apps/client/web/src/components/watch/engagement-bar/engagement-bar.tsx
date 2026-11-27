@@ -9,8 +9,7 @@ import {
   Skeleton,
   Slot,
   useUiCopy,
-  VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import {
   type ComponentProps,
   type ComponentPropsWithRef,
@@ -18,6 +17,7 @@ import {
   type ReactNode,
   useState,
 } from 'react';
+import { useT } from '#app/lib/messages';
 import { EngagementBarContext, useEngagementBar } from './engagement-bar.context';
 import { engagementBarStyles } from './engagement-bar.variants';
 import type { EngagementBarLayout, EngagementBarReaction as ReactionValue } from './types';
@@ -83,43 +83,6 @@ export function EngagementBarChannel({
   );
 }
 
-export interface EngagementBarSubscribeProps extends Omit<
-  ComponentPropsWithRef<'button'>,
-  'onToggle'
-> {
-  subscribed: boolean;
-  pending?: boolean;
-  onToggle: () => void;
-}
-
-/** A toggle: primary to subscribe, the quiet accent once subscribed; its label is the caller's. */
-export function EngagementBarSubscribe({
-  subscribed,
-  pending = false,
-  onToggle,
-  children,
-  ...props
-}: EngagementBarSubscribeProps) {
-  return (
-    <>
-      <Button
-        data-slot="engagement-bar-subscribe"
-        variant={subscribed ? 'soft' : 'solid'}
-        tone={subscribed ? 'neutral' : 'accent'}
-        shape="pill"
-        aria-pressed={subscribed}
-        loading={pending}
-        onClick={onToggle}
-        {...props}
-      >
-        {subscribed && <Icon name="check" />}
-        {children}
-      </Button>
-      <VisuallyHidden aria-live="polite">{subscribed ? children : null}</VisuallyHidden>
-    </>
-  );
-}
-
 function focusSibling(event: KeyboardEvent<HTMLDivElement>) {
   if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
 
@@ -141,7 +104,8 @@ export function EngagementBarActions({
   ...props
 }: ComponentPropsWithRef<'div'>) {
   const { layout } = useEngagementBar('Actions');
-  const { videoActions } = useUiCopy();
+  const { tOr } = useT();
+  const videoActions = tOr('appUi.videoActions', {}, '');
 
   return (
     <div
@@ -198,7 +162,9 @@ export function EngagementBarReaction({
   className,
   ...props
 }: EngagementBarReactionProps) {
-  const { like, dislike } = useUiCopy();
+  const { tOr } = useT();
+  const like = tOr('appUi.like', {}, '');
+  const dislike = tOr('appUi.dislike', {}, '');
   const styles = engagementBarStyles();
 
   return (

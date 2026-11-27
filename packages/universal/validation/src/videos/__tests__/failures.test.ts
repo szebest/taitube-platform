@@ -1,4 +1,5 @@
-import { ErrorCodes, isInputFailure } from '@vp/errors';
+import { isInputFailure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 import { invalidVideoDescription, invalidVideoTags, invalidVideoTitle } from '../failures';
 
 describe('@vp/validation: video metadata failures', () => {

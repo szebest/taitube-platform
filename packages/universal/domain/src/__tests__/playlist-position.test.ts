@@ -3,6 +3,7 @@ import {
   type PositionWrite,
   type PositionedItem,
   appendPosition,
+  appendPositions,
   movePositions,
   renumberPositions,
 } from '../playlist-position';
@@ -32,6 +33,24 @@ describe('@vp/domain: appendPosition', () => {
 
   it('asks for a renumber when the next slot would overflow an integer column', () => {
     expect(appendPosition(MAX_POSITION - 1)).toBeNull();
+  });
+});
+
+describe('@vp/domain: appendPositions', () => {
+  it.each([
+    { scenario: 'an empty list', items: [], expected: { renumber: [], positions: [0, 1024] } },
+    {
+      scenario: 'a spaced list',
+      items: spaced('a', 'b'),
+      expected: { renumber: [], positions: [2048, 3072] },
+    },
+    {
+      scenario: 'a list ending at the integer ceiling, respaced first',
+      items: [{ id: 'a', position: MAX_POSITION }],
+      expected: { renumber: [{ id: 'a', position: 0 }], positions: [1024, 2048] },
+    },
+  ])('places two items after $scenario', ({ items, expected }) => {
+    expect(appendPositions(items, 2)).toEqual(expected);
   });
 });
 
@@ -102,7 +121,7 @@ describe('@vp/domain: movePositions', () => {
   it('keeps an order stable through many moves into the same gap', () => {
     let items = spaced('a', 'b', 'c');
     for (let round = 0; round < 40; round++) {
-      const last = items[items.length - 1]?.id ?? '';
+      const last = items.at(-1)?.id ?? '';
       const writes = movePositions(items, last, 1) ?? [];
       const moved = new Map(writes.map((write) => [write.id, write.position]));
       items = items

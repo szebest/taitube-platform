@@ -374,7 +374,7 @@ const LIBRARY = {
   {
    "path": "primitives/ui-copy-provider.md",
    "title": "UiCopyProvider",
-   "summary": "The one place a primitive gets the words it prints itself, so @vp/ui stays free of the message catalogue."
+   "summary": "The one place a primitive gets the words it prints itself, so @kit/ui stays free of the message catalogue."
   },
   {
    "path": "primitives/visually-hidden.md",
@@ -406,7 +406,7 @@ const LIBRARY = {
   {
    "path": "components/skeletons.md",
    "title": "Skeletons",
-   "summary": "The loading layout of the @vp/components components, at the loaded layout's exact dimensions, so a pendingComp"
+   "summary": "The loading layout of the @kit/components components, at the loaded layout's exact dimensions, so a pendingComp"
   },
   {
    "path": "components/video-thumbnail.md",
@@ -520,7 +520,7 @@ const LIBRARY = {
   {
    "path": "apps/studio/data-table.md",
    "title": "DataTable",
-   "summary": "The studio's table: the Table primitive from @vp/ui , parts and styling only) wired to TanStack Table state, w"
+   "summary": "The studio's table: the Table primitive from @kit/ui , parts and styling only) wired to TanStack Table state, w"
   },
   {
    "path": "apps/studio/stat-card.md",

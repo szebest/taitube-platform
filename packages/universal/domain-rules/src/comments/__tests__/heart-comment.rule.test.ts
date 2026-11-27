@@ -1,6 +1,7 @@
+import { isErr, isOk } from '@kit/result';
+import type { CommentHost } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, isOk } from '@vp/result';
 import {
   ADMIN,
   AUTHOR,
@@ -13,6 +14,7 @@ import {
 import { decideCommentHeart } from '../heart-comment.rule';
 
 const video = aVideo();
+const host: CommentHost = { type: 'video', video };
 const comment = aComment();
 
 describe('@vp/domain-rules: decideCommentHeart', () => {
@@ -20,8 +22,8 @@ describe('@vp/domain-rules: decideCommentHeart', () => {
     { scenario: 'the video owner', actor: OWNER },
     { scenario: 'an admin who owns the video', actor: ADMIN },
   ])('lets $scenario heart the comment', ({ actor }) => {
-    const owned = { ...video, ownerId: actor.id };
-    const result = decideCommentHeart({ actor, comment, commentId: comment.id, video: owned });
+    const owned: CommentHost = { type: 'video', video: { ...video, ownerId: actor.id } };
+    const result = decideCommentHeart({ actor, comment, commentId: comment.id, host: owned });
 
     expect(isOk(result) && result.value).toBe(comment);
   });
@@ -33,13 +35,13 @@ describe('@vp/domain-rules: decideCommentHeart', () => {
     { scenario: 'an admin', actor: ADMIN, code: ErrorCodes.FORBIDDEN },
     { scenario: 'a stranger', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
   ])('refuses $scenario with $code', ({ actor, code }) => {
-    const result = decideCommentHeart({ actor, comment, commentId: comment.id, video });
+    const result = decideCommentHeart({ actor, comment, commentId: comment.id, host });
 
     expect(isErr(result) && result.error.code).toBe(code);
   });
 
   it('reports an absent comment as COMMENT_NOT_FOUND', () => {
-    const result = decideCommentHeart({ actor: OWNER, comment: null, commentId: 'x', video });
+    const result = decideCommentHeart({ actor: OWNER, comment: null, commentId: 'x', host });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.COMMENT_NOT_FOUND);
   });

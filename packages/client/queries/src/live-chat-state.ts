@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import type { LiveChatMessageView, LiveChatMode, LiveChatServerFrame } from '@vp/api-contracts';
 import { type ErrorCode, ErrorCodes, isErrorCode } from '@vp/errors';
-import { assertNever } from '@vp/result';
 
 type LiveChatLineState = 'sent' | 'pending' | 'failed' | 'removed';
 
@@ -119,6 +119,7 @@ function applyFrame(
         canSend: frame.canSend,
         canModerate: frame.canModerate,
         connection: 'open',
+        refusal: null,
       };
     case 'message':
       return { ...state, lines: withMessage(state.lines, frame.message, self) };

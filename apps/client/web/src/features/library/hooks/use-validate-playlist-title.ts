@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { isErr } from '@vp/result';
+import { isErr } from '@kit/result';
 import { validatePlaylistDescription, validatePlaylistTitle } from '@vp/validation';
+import { useT } from '#app/lib/messages';
 
 /** The title field's validator: the message when the title is not one the server takes. */
 export function useValidatePlaylistTitle() {

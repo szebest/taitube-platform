@@ -1,3 +1,5 @@
+import { MS_PER_SECOND } from '@kit/primitives';
+import { type Result, err, ok } from '@kit/result';
 import {
   MultipartStorage,
   type StorageClient,
@@ -7,9 +9,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 
 interface InFlightPart {
   partNumber: number;
@@ -118,7 +118,7 @@ export class InMemoryMultipartStorage extends MultipartStorage {
       return err(storageUnavailable('completeMultipartUpload', uploadId));
     }
 
-    const sortedParts = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+    const sortedParts = parts.toSorted((a, b) => a.partNumber - b.partNumber);
     const chunks: Buffer[] = [];
     for (const p of sortedParts) {
       const part = upload.parts.get(p.partNumber);

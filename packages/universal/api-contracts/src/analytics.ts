@@ -95,6 +95,7 @@ const ChannelAnalyticsSchema = z.object({
 export const getVideoAnalytics = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/videos/:id/analytics',
+  scope: 'analytics:read',
   tag: 'Creator Analytics',
   summary: 'Views timeline and summary of one owned video',
   description:
@@ -129,6 +130,7 @@ const VideoRetentionSchema = z.object({
 export const getVideoRetention = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/videos/:id/retention',
+  scope: 'analytics:read',
   tag: 'Creator Analytics',
   summary: 'Audience retention curve of one owned video',
   description:
@@ -147,6 +149,8 @@ export const getVideoRetention = defineEndpoint({
 export const getChannelAnalytics = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/channel/analytics',
+  scope: 'analytics:read',
+  channelScoped: true,
   tag: 'Creator Analytics',
   summary: "Views across the caller's channel",
   description:
@@ -164,3 +168,6 @@ export const getChannelAnalytics = defineEndpoint({
 export type VideoAnalytics = z.infer<typeof VideoAnalyticsSchema>;
 export type ChannelAnalytics = z.infer<typeof ChannelAnalyticsSchema>;
 export type VideoRetention = z.infer<typeof VideoRetentionSchema>;
+
+export { getVideoAudience, getVideoBenchmark } from './video-audience';
+export type { VideoAudience, VideoBenchmark } from './video-audience';

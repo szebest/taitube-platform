@@ -8,7 +8,7 @@
 | Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** done
 
 > **Why.** [104](104-channel-page-data.md) leaves the channel page's Community tab hidden "until its own ticket", and this is it.
 > A creator can reach subscribers only by uploading: there is no way to ask them a question, share an update, point at a
@@ -103,6 +103,11 @@ need the same model, so one table serves all three instead of two copies of 42, 
 `post_stats_daily` (`post_id`, `day`, `opens`, `share_clicks`): opens with 43's per-day HyperLogLog pattern, share clicks from
 the post card's click beacon; likes, replies and votes are read from their own tables. Only members with `read PostStats`
 see any of it, and nothing is on the public post resource.
+
+Posts also join [118](118-creator-data-portability-and-api.md)'s channel exports: this ticket adds the `posts` kind to
+`DATA_EXPORT_KINDS`, with its row schema (each post with its poll results) and the page reader the export job pulls. It
+also adds the `posts:write` scope to 118's `API_SCOPES`, granting the post actions in `SCOPE_ABILITIES`, and names it on the
+post write routes, so a personal access token can publish.
 
 ### 5. Viewer threads on a video
 

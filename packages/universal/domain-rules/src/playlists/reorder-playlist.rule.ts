@@ -1,3 +1,4 @@
+import { type Result, assertNever, err, ok } from '@kit/result';
 import {
   type PlaylistReorder,
   type PositionWrite,
@@ -6,7 +7,6 @@ import {
   renumberPositions,
 } from '@vp/domain';
 import { type VersionConflict, versionConflict } from '@vp/errors';
-import { type Result, assertNever, err, ok } from '@vp/result';
 import { type PlaylistItemNotFound, playlistItemNotFound } from './failures';
 
 export type ReorderPlaylistFailure = PlaylistItemNotFound | VersionConflict;

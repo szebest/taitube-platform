@@ -1,11 +1,21 @@
 import { requestHandler } from '@tanstack/react-start/server';
 
-type RequestOptions = { cookie?: string; url?: string; acceptLanguage?: string };
+type RequestOptions = {
+  cookie?: string;
+  url?: string;
+  acceptLanguage?: string;
+  userAgent?: string;
+};
 
 /** Runs server code inside a request the way the app's server answers one, and returns its cookies. */
 export async function inRequest<T>(
   run: () => Promise<T> | T,
-  { cookie = '', url = 'http://localhost:5173/', acceptLanguage = '' }: RequestOptions = {}
+  {
+    cookie = '',
+    url = 'http://localhost:5173/',
+    acceptLanguage = '',
+    userAgent,
+  }: RequestOptions = {}
 ): Promise<{ value: T; setCookies: string[] }> {
   const ran: { result?: Promise<T> } = {};
   const answer = requestHandler(async () => {
@@ -14,7 +24,13 @@ export async function inRequest<T>(
     return new Response(null);
   });
   const response = await answer(
-    new Request(url, { headers: { cookie, 'accept-language': acceptLanguage } }),
+    new Request(url, {
+      headers: {
+        cookie,
+        'accept-language': acceptLanguage,
+        ...(userAgent && { 'user-agent': userAgent }),
+      },
+    }),
     {}
   );
   if (!ran.result) throw new Error('the request never ran the code under test');

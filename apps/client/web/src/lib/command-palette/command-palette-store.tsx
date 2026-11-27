@@ -9,6 +9,8 @@ import {
 
 type CommandPaletteStore = {
   open: boolean;
+  /** Counts the times it was opened: a fresh palette per opening, none while one closes. */
+  session: number;
   setOpen: (open: boolean) => void;
 };
 
@@ -42,7 +44,12 @@ function isModK(event: KeyboardEvent) {
 
 /** Whether the command palette is open; `/` outside a field opens it, Cmd or Ctrl K toggles it anywhere. */
 export function CommandPaletteProvider({ children }: PropsWithChildren) {
-  const [open, setOpen] = useState(false);
+  const [{ open, session }, setState] = useState({ open: false, session: 0 });
+  const setOpen = (next: boolean) =>
+    setState((current) => ({
+      open: next,
+      session: next && !current.open ? current.session + 1 : current.session,
+    }));
 
   const answerShortcut = useEffectEvent((event: KeyboardEvent) => {
     if (event.defaultPrevented || event.isComposing) {
@@ -67,7 +74,9 @@ export function CommandPaletteProvider({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <CommandPaletteStoreContext value={{ open, setOpen }}>{children}</CommandPaletteStoreContext>
+    <CommandPaletteStoreContext value={{ open, session, setOpen }}>
+      {children}
+    </CommandPaletteStoreContext>
   );
 }
 

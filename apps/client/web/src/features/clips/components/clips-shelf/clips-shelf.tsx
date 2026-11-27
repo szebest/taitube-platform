@@ -1,7 +1,7 @@
+import { EmptyLibraryIllustration, EmptyState, Shelf } from '@kit/components';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { EmptyLibraryIllustration, EmptyState, Shelf } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { myClipsQueryOptions, useApi } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 import { ClipCard } from '../clip-card/clip-card';
 
 /** The viewer's own clips, newest first, each linking to its clip page; one empty line when there are none. */

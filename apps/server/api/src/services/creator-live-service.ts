@@ -1,3 +1,4 @@
+import { type Result, andThenAsync, err, isErr, map, ok } from '@kit/result';
 import type { LiveStreamView, UpdateLiveStreamBody } from '@vp/api-contracts';
 import type { CacheClient, LiveGatewayPort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, LiveStreamRepositoryPort } from '@vp/core/repositories';
@@ -16,7 +17,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable, LiveGatewayUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThenAsync, err, isErr, map, ok } from '@vp/result';
 import { type InvalidLiveStreamDetails, validateLiveStreamDetails } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { announceChatMode } from './live-chat-hub';
@@ -66,7 +66,7 @@ export class CreatorLiveService {
   ): Promise<Result<LiveStreamView, ChannelNotFound | DatabaseUnavailable>> {
     const { channels, liveStreams, newSecret } = this.deps;
 
-    const channel = await channels.findByUserId(viewer.id);
+    const channel = await channels.findPrimaryByUserId(viewer.id);
     if (isErr(channel)) return channel;
     if (channel.value === null) return err(channelNotFound(viewer.id));
 
@@ -84,7 +84,7 @@ export class CreatorLiveService {
   ): Promise<Result<LiveStreamView, LiveStreamNotFound | DatabaseUnavailable>> {
     const { channels, liveStreams } = this.deps;
 
-    const channel = await channels.findByUserId(viewer.id);
+    const channel = await channels.findPrimaryByUserId(viewer.id);
     if (isErr(channel)) return channel;
     const open = channel.value && (await liveStreams.findOpenByChannel(channel.value.id));
     if (open && isErr(open)) return open;

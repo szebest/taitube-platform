@@ -1,14 +1,16 @@
 import { screen, waitFor } from '@testing-library/react';
 import {
   type Account,
+  getMyReaction,
   getUnreadNotificationCount,
   listNotifications,
+  listVideoComments,
   markNotificationsRead,
   type Notification,
   type UserEvent,
 } from '@vp/api-contracts';
 import { unreadNotificationCountQueryOptions } from '@vp/queries';
-import { api, mockEndpoint } from '@vp/web-testing';
+import { api, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { renderRoute, stubEventSource } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -55,6 +57,10 @@ export async function renderBell({ items = [], unreadCount = 0, viewer, list }: 
         marked.push(await request.json());
         return HttpResponse.json({ unreadCount: 0 });
       }),
+      mockEndpoint(listVideoComments, () =>
+        HttpResponse.json({ items: [], nextCursor: null, total: 0 })
+      ),
+      mockEndpoint(getMyReaction, () => HttpResponse.json({ videoId: VIDEO_ID, reaction: null })),
       ...loaderApi(),
     ],
   });

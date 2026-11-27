@@ -1,7 +1,8 @@
+import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 
 const VIEWER = { id: '00000000-0000-7000-8000-00000000f301', role: 'USER' } as const;
@@ -18,6 +19,7 @@ describe('apps/server/api/composition: activity module', () => {
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: 'Liked once',
         visibility: 'public',
         status: 'READY',

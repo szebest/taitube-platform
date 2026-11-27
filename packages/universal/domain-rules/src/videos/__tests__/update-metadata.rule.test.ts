@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideVideoMetadataUpdate } from '../update-metadata.rule';
 
@@ -133,4 +133,43 @@ describe('@vp/domain-rules: decideVideoMetadataUpdate — which forbidden it is'
       expect(isErr(result) && 'readable' in result.error && result.error.readable).toBe(readable);
     }
   );
+
+  it.each([
+    {
+      name: 'valid chapters',
+      chapters: [
+        { startMs: 0, title: 'A' },
+        { startMs: 20_000, title: 'B' },
+        { startMs: 40_000, title: 'C' },
+      ],
+      code: undefined,
+    },
+    {
+      name: 'chapters that outlast the video',
+      chapters: [
+        { startMs: 0, title: 'A' },
+        { startMs: 20_000, title: 'B' },
+        { startMs: 90_000, title: 'C' },
+      ],
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
+    {
+      name: 'two chapters',
+      chapters: [
+        { startMs: 0, title: 'A' },
+        { startMs: 20_000, title: 'B' },
+      ],
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
+  ])('decides $name inside the patch', ({ chapters, code }) => {
+    const long = aVideo({ durationMs: 60_000 });
+    const result = decideVideoMetadataUpdate({
+      editor: OWNER,
+      video: long,
+      videoId: long.id,
+      patch: { chapters },
+    });
+
+    expect(isErr(result) ? result.error.code : undefined).toBe(code);
+  });
 });

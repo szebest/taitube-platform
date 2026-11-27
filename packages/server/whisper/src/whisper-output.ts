@@ -1,5 +1,5 @@
+import { type Result, err, isOk, ok, parseJson } from '@kit/result';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, err, isOk, ok, parseJson } from '@vp/result';
 import { z } from 'zod';
 import type { TimedCue } from './cue';
 

@@ -1,6 +1,6 @@
+import { Button, Input } from '@kit/ui';
 import { createColumnHelper, type SortingState, useTable } from '@tanstack/react-table';
 import { render, screen, within } from '@testing-library/react';
-import { Button, Input } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { DataTable, type DataTableFeatures, dataTableFeatures } from '..';
@@ -44,6 +44,7 @@ export interface VideoTableProps {
   selectable?: boolean;
   onRowActivate?: (rowId: string) => void;
   message?: ReactNode;
+  tableClassName?: string;
 }
 
 /** The library as a feature would wire it, with client sorting and paging so the specs see both. */
@@ -57,6 +58,7 @@ function VideoTable({
   selectable = true,
   onRowActivate,
   message,
+  tableClassName,
 }: VideoTableProps) {
   const table = useTable({
     features: dataTableFeatures,
@@ -72,7 +74,7 @@ function VideoTable({
   });
 
   return (
-    <DataTable.Root table={table} state={state} fetching={fetching}>
+    <DataTable.Root table={table} state={state} fetching={fetching} tableClassName={tableClassName}>
       <DataTable.Caption>Your videos</DataTable.Caption>
       <DataTable.Toolbar>
         <Input aria-label="Filter by title" placeholder="Filter by title" />

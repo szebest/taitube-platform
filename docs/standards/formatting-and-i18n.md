@@ -6,14 +6,32 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 
 | Package | Tier, layer | Holds |
 |---|---|---|
-| `@vp/intl` | universal, T2 | formatters, the value union, option allowlists, `IntlCache`, `localeChain` |
-| `@vp/messages` | universal, T3 | `dt()`, `createTranslator()` (`t`, `tOr`), one catalogue per locale, `ERROR_COPY`, the supported-locale list (`SUPPORTED_LOCALES`, `LOCALE_DETAILS`) |
-| `@vp/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, `createLocaleStore()`, zone and clock detection |
-| `@vp/queries` | client, T5 | `requestLocale()`: the negotiation chain, the one module that reads `Accept-Language` and `navigator.languages` |
+| `@kit/intl` | platform, universal | formatters, the value union, option allowlists, `IntlCache`, `localeChain`, `defineLocales`; no locale list |
+| `@kit/i18n` | platform, universal | the message engine: `defineEngine`, `defineKind`, `definePresets`, `defineParams`, `createI18n`; no string, no locale data |
+| `@kit/intl-react` | platform, client | `IntlProvider`, `useFormat`, `<Format>`, `createReactI18n` (a typed `TranslatorProvider` and `useT` per catalogue), `createLocaleStore()` |
+| `@vp/intl-formats` | app, universal | the product's tagged values: `views`, `videoDuration`, `publishedAt`, `fileSize` and the rest |
+| `@vp/shared-messages` | app, universal | the app's engine (`dt`, `defineCatalogue`, `createI18n`, the param vocabulary), the words both apps render (`auth`, `browse`, `videos`, `errors`, `errorPage`, `ui`) in `en/` and `pl/`, `ERROR_COPY`, `LOCALES`; a server may read it |
+| each app's `src/lib/messages/` | app | its own namespaces in `en/` and `pl/`, its catalogue type (`DisjointNamespaces` of its own and the shared), its `useT`, its loader per locale |
+| `@vp/queries` | app, client | `AppWords` and `IntlProvider` over an app's `AppMessages`, the shared words' own translator, `requestLocale()`: the one module that reads `Accept-Language` and `navigator.languages` |
 
 ---
 
-## 1. Formatter or message?
+## 1. The layers
+
+1. **The engine, `@kit/i18n`**, holds no words. The app builds one engine value (`defineEngine({ kinds, presets,
+   params })` in `@vp/shared-messages`), and every type comes from it.
+2. **The shared layer, `@vp/shared-messages`**, holds only a word two consumers render: web and studio, or a
+   client and a server (`translation-layers.test.ts`, over the type-aware scan in `pnpm scan:message-keys`).
+3. **Each app's catalogue**, `apps/client/<app>/src/lib/messages/`, holds the rest. Its namespaces never repeat
+   a shared one (`DisjointNamespaces` fails to compile on a collision), so `t` is typed by the app's own merged
+   catalogue and a key of the other app is a compile error.
+4. **Platform packages ship no words.** A kit component takes its words as props, or through `UiCopy`
+   (`@kit/ui`), which lists only the words a kit package renders itself and has no default. A word only an app
+   component reads lives in that app's catalogue (`appUi`, or the shared `ui` when both apps read it) and is
+   rendered with the app's `useT`.
+5. **Server-only text** lives with the server app that renders it, on the same engine.
+
+## 2. Formatter or message?
 
 - **A value on its own** (a view count badge, a duration, a date in a table cell): a formatter.
   `<Format value={videoDuration(video.durationSeconds)} />` or `useFormat().format(...)`.
@@ -23,7 +41,7 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 
 A component never builds the string itself: no `${n} views`, no `toLocaleString()`, no `toFixed`.
 
-## 2. The value union
+## 3. The value union
 
 A formatter reads a value tagged with one literal `type`, and `formatValue` switches on it:
 
@@ -55,7 +73,7 @@ comparator and `truncate` cuts on graphemes; `pluralCategory` picks a branch.
 A formatter returns `Result<string, FormatFailure>`, one of `FORMAT_UNSUPPORTED_LOCALE`,
 `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`.
 
-## 3. Option allowlists
+## 4. Option allowlists
 
 Each formatter declares the options it takes and derives its option type from the list:
 
@@ -73,7 +91,7 @@ with the key in the failure. A formatter's own option names (`base` on `bytes`, 
 go in `OptionKeys`' second argument. Prefer a named style (`{ style: 'short' }`) to spelt-out fields at a call
 site: one decision instead of thirty that drift.
 
-## 4. Placeholders
+## 5. Placeholders
 
 ```ts
 views: dt('{count:plural}', {
@@ -94,13 +112,35 @@ Argument names and types are read off the template at compile time, so a misspel
 argument does not compile. The grammar is flat: no nesting, no escapes. A plural with `type: 'ordinal'` is
 how `3rd` is written; the suffixes are copy.
 
+The engine's type rules, each a compile error named in the message:
+
+- **The config is exactly the template's**: one entry per kind the template uses, keyed by exactly its names;
+  `plural` and `enum` must be configured (`MissingConfig`), and an extra kind, name or option fails
+  (`UnknownKind`, `UnknownParam`, `UnknownOption`).
+- **A plural branch** holds `other` and any CLDR category, and `{?}` is the only placeholder it may hold
+  (`PlaceholderInBranch`). Which categories a locale needs is checked at test time against
+  `Intl.PluralRules` (`plural-categories.test.ts`): `en` holds `one` and `other`, `pl` `one`, `few`, `many` and
+  `other`, and a category the locale never selects fails too.
+- **Names come from a closed vocabulary**, `PARAMS` in `@vp/shared-messages/src/params.ts`, and are lower
+  camelCase letters (`UnknownParam`, `InvalidParamName`, `message-param-names.test.ts`); one name with two kinds
+  is `ClashingKinds`. Adding a name is one reviewed line there.
+- **Every translation takes the source's params**: `pl` catalogues are declared with
+  `defineCatalogue<typeof en>()`, which compares each message both ways, so renaming `{count}` in `en` fails
+  every other locale until it follows.
+- **`t` is typed by the app's catalogue**: `createI18n<AppCatalogue>()` and `createReactI18n(i18n)` give the
+  app's `useT`; a wrong key or wrong arguments fail in the app.
+- **Presets and kinds are the app's**: `definePresets({ number: { compact: { default: {...}, pl: {...} } } })`
+  names an option set resolved per locale along the chain, a message names it (`formatter: 'compact'`) or
+  overrides it (`{ preset: 'compact', maximumFractionDigits: 1 }`), and an unknown name fails
+  (`UnknownPreset`). A new kind is `defineKind` in the app; the engine is never edited for either.
+
 `t` returns a `Result`, and a missing key is a failure carrying the key. `tOr(key, args, fallback)` is the
-render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, `en`.
+render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, then the source locale `en`.
 
-## 5. SSR rules
+## 6. SSR rules
 
-- The locale, time zone, currency and reference instant are arguments. `@vp/intl` and `@vp/messages` never
-  read `navigator`, the clock, `process` or a `toLocale*` method (`intl-purity.test.ts`).
+- The locale, time zone, currency and reference instant are arguments. `@kit/intl`, `@kit/i18n` and
+  `@vp/shared-messages` never read `navigator`, the clock, `process` or a `toLocale*` method (`intl-purity.test.ts`).
 - `relative` and `calendarDay` measure from the value's `now`, else the context's.
 - `IntlProvider` is told its `locale`, it never detects one. A server render passes `locale`, `timeZone` and
   `now`, and the browser hydrates with the same: the negotiated locale travels in router context and the
@@ -109,7 +149,7 @@ render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, `en`.
 - `queries`' `app-words.dom.test.tsx` hydrates a server render at every supported locale and asserts the
   markup is byte-identical; a new surface that reads the runtime in render fails it before it ships.
 
-## 6. Locale negotiation
+## 7. Locale negotiation
 
 One module decides the locale, `packages/client/queries/src/request-locale.ts`, called from each app's root
 `beforeLoad`. The first candidate a supported locale serves wins (`pl-PL` is `pl`, a malformed tag is skipped):
@@ -126,18 +166,20 @@ again. `navigator.language(s)` is read nowhere else (`single-locale-source.test.
 calls `router.invalidate()`: the root route negotiates again, the app re-renders in place, the query
 cache stays.
 
-## 7. Catalogue loading
+## 8. Catalogue loading
 
-- `en` is in the main chunk and is the fallback every key walks to. Every other catalogue is a dynamic
-  import in `LOCALE_DETAILS[locale].load`, so a visitor downloads the one catalogue they read.
-- `createLocaleStore()` (one per router) holds the active locale and its loaded catalogue; `AppWords`
+- `en` is in the main chunk and is the fallback every key walks to. Each app loads every other locale through
+  its own loader (`loadWebTranslation`, `loadStudioTranslation`): one dynamic import of a module that joins the
+  shared translation and the app's, so a visitor downloads one lazy chunk, and web never ships the studio's
+  words.
+- `createLocaleStore(messages)` (one per router) holds the active locale and its loaded translation; `AppWords`
   renders its snapshot. Nothing imports a translation statically outside a spec.
-- Every catalogue holds exactly `en`'s keys (`catalogue-parity.test.ts`): a new message lands in every
-  catalogue in the same change, translated, with its placeholders unchanged.
+- Every translation holds exactly its app's source keys, shared words included (`catalogue-parity.test.ts`): a
+  new message lands in every catalogue in the same change, translated, with its placeholders unchanged.
 
-## 8. RTL checklist
+## 9. RTL checklist
 
-- `dir` is the whole switch: a locale's `direction` in `LOCALE_DETAILS` puts `dir="rtl"` on `<html>`, and
+- `dir` is the whole switch: a locale's `direction` in `LOCALES` puts `dir="rtl"` on `<html>`, and
   nothing else changes. No component branches on direction.
 - Logical properties only: `inline-start`/`inline-end`, `ms-`/`me-`, `ps-`/`pe-`, `start-`/`end-`, never
   `left`/`right` (`zero-matches` holds it in the client packages and app code).
@@ -148,21 +190,21 @@ cache stays.
   A story that shows catalogue words (a `ui` word, a retry label) is also tagged `translated` and shot
   once per translation; a story whose words are all props stays untagged, its translated shot would
   repeat the English one.
-- Numbers and dates go through `@vp/intl`, which picks the locale's digits and separators.
+- Numbers and dates go through `@kit/intl`, which picks the locale's digits and separators.
 
-## 9. Where a new one goes
+## 10. Where a new one goes
+
 - Specs assert shape, not glyphs: ICU data moves between Node versions and differs in Bun.
-
-
-
-- A formatter: `packages/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
+- A formatter: `packages/platform/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
   tag in `FORMAT_KINDS`, a case in `formatValue`. Test at least three locales, one with a different grouping
   separator and one non-Latin script.
-- A domain value: `packages/universal/intl/src/domain/<name>.ts`, returning a tagged value.
-- A message: the feature file under `packages/universal/messages/src/en/` and the same key in every other
-  catalogue (`pl/`), or `catalogue-parity.test.ts` fails. A new `ErrorCode` needs its entry in `ERROR_COPY`
-  and a message in `en/errors.ts`, or it does not compile.
-- A language: a `packages/universal/messages/src/<tag>/` catalogue with every `en` key (each feature file
-  with its spec), and one entry in `SUPPORTED_LOCALES` and `LOCALE_DETAILS` (its name in itself, its
-  direction, its OpenGraph name, its dynamic import). No other code changes: negotiation, `hreflang`, the language setting and
-  the workbench's locale toolbar all read the list.
+- A domain value: `packages/universal/intl-formats/src/<name>.ts`, returning a tagged value.
+- A message: the feature file under the app's `src/lib/messages/en/` and the same key in its `pl/`, or
+  `catalogue-parity.test.ts` fails. Only a word both apps (or a client and a server) render goes into
+  `packages/universal/shared-messages/src/en/`, or `translation-layers.test.ts` fails. A new `ErrorCode` needs
+  its entry in `ERROR_COPY` and a message in the shared `en/errors.ts`, or it does not compile.
+- A placeholder name not yet used: one line in `PARAMS`.
+- A language: a `<tag>/` directory beside `en/` in `@vp/shared-messages` and in each app's `src/lib/messages/`,
+  with every `en` key (each feature file with its spec), one entry in `LOCALES` (its name in itself, its
+  direction, its OpenGraph name) and one line in each app's loader. No other code changes: negotiation,
+  `hreflang`, the language setting and the workbench's locale toolbar all read `LOCALES`.

@@ -1,6 +1,7 @@
-import { EmptyState } from '@vp/components';
-import { Icon, Slot, useUiCopy } from '@vp/ui';
+import { EmptyState } from '@kit/components';
+import { Icon, Slot } from '@kit/ui';
 import { type ComponentPropsWithRef, type CSSProperties, useRef, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { DEFAULT_OPACITY } from './components/live-chat-menu/live-chat-menu';
 import { LiveChatContext, useLiveChat } from './live-chat.context';
 import { liveChatStyles } from './live-chat.variants';
@@ -31,7 +32,8 @@ export function LiveChatRoot({
   const [unseen, setUnseen] = useState(0);
   const [announce, setAnnounce] = useState(false);
   const [opacity, setOpacity] = useState(defaultOpacity);
-  const { liveChat } = useUiCopy();
+  const { tOr } = useT();
+  const liveChat = tOr('appUi.liveChat', {}, '');
 
   const jumpToLatest = () => {
     const list = listRef.current;
@@ -116,7 +118,8 @@ export function LiveChatPinned({ className, children, ...props }: ComponentProps
 /** In place of the composer once the stream ends or the creator turns chat off. */
 export function LiveChatEnded({ className, children, ...props }: ComponentPropsWithRef<'div'>) {
   const { layout } = useLiveChat('Ended');
-  const { chatEnded } = useUiCopy();
+  const { tOr } = useT();
+  const chatEnded = tOr('appUi.chatEnded', {}, '');
 
   return (
     <div

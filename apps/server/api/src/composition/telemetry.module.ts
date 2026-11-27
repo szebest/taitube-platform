@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { PlaybackTelemetryService, WebVitalsService } from '../services/index';
 import { Services } from './service-tokens';
 
@@ -18,6 +18,8 @@ export function registerTelemetryServices(c: Container): Container {
       (c) =>
         new PlaybackTelemetryService({
           viewBuffer: c.get(Adapters.ViewBuffer),
+          experiments: c.get(Adapters.Repositories).videoExperiments,
+          shareLinks: c.get(Adapters.Repositories).shareLinks,
           metrics: c.get(Adapters.Metrics),
           limits: c.get(Adapters.Config).views,
           now: Date.now,

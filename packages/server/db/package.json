@@ -31,6 +31,11 @@
       "import": "./dist/seed.js",
       "default": "./dist/seed.js"
     },
+    "./seed-identities": {
+      "types": "./dist/seed-identities.d.ts",
+      "import": "./dist/seed-identities.js",
+      "default": "./dist/seed-identities.js"
+    },
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js",
@@ -46,9 +51,9 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/job-contracts": "workspace:*",
-    "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",
     "@vp/validation": "workspace:*",
     "drizzle-orm": "^0.45.4",
@@ -57,15 +62,16 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@electric-sql/pglite-socket": "0.2.11",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "@types/node": "^24.19.1",
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@vp/testing-fixtures": "workspace:*",
     "drizzle-kit": "^0.31.11",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 3
+    "layer": 7
   }
 }

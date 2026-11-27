@@ -1,9 +1,10 @@
+import { expectOk } from '@kit/testing/result';
 import type { RelatedVideosOptions, Repositories } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
+  OWNER_CHANNEL_ID,
   OWNER_ID,
   VIDEO_IDS,
   publicVideo,
@@ -42,7 +43,7 @@ export function describeRelatedVideosRepositoryContract(
 
     const options = (overrides: Partial<RelatedVideosOptions> = {}): RelatedVideosOptions => ({
       videoId: ANCHOR,
-      ownerId: OWNER_ID,
+      channelId: OWNER_CHANNEL_ID,
       categoryId: CATEGORY_MUSIC_ID,
       tags: ['lisbon', 'night'],
       excludeOwnerId: null,
@@ -152,7 +153,7 @@ export function describeRelatedVideosRepositoryContract(
       expect(
         await related({
           videoId: lonely,
-          ownerId: '00000000-0000-7000-8000-0000000000b2',
+          channelId: '00000000-0000-7000-8000-0000000000b2',
           categoryId: null,
           tags: [],
         })

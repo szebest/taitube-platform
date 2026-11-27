@@ -7,6 +7,8 @@ import type { PostgresDatabase } from '../types';
 
 const OWNER = '00000000-0000-7000-8000-000000000101';
 const OTHER = '00000000-0000-7000-8000-000000000102';
+const OWNER_CHANNEL = '00000000-0000-7000-8000-000000000901';
+const OTHER_CHANNEL = '00000000-0000-7000-8000-000000000902';
 const PLAYLIST = '00000000-0000-7000-8000-0000000001a1';
 const VIDEOS = ['0a', '0b', '0c'].map((tail) => `00000000-0000-7000-8000-0000000000${tail}`);
 const ITEMS = ['1a', '1b', '1c'].map((tail) => `00000000-0000-7000-8000-0000000002${tail}`);
@@ -15,17 +17,22 @@ describe('adapters/postgres: playlist query', () => {
   let engine: PGlite;
   let db: PostgresDatabase;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     engine = await migratedPglite();
     db = drizzle(engine, { schema });
     await db.insert(schema.users).values([
       { id: OWNER, email: 'owner@x.local' },
       { id: OTHER, email: 'other@x.local' },
     ]);
+    await db.insert(schema.channels).values([
+      { id: OWNER_CHANNEL, userId: OWNER, handle: 'owner', displayName: 'Owner' },
+      { id: OTHER_CHANNEL, userId: OTHER, handle: 'other', displayName: 'Other' },
+    ]);
     await db.insert(schema.videos).values(
       VIDEOS.map((id, index) => ({
         id,
         ownerId: index === 1 ? OTHER : OWNER,
+        channelId: index === 1 ? OTHER_CHANNEL : OWNER_CHANNEL,
         sourceKey: `raw/${id}/source.mp4`,
         visibility: index === 1 ? ('private' as const) : ('public' as const),
         status: 'READY' as const,
@@ -42,7 +49,7 @@ describe('adapters/postgres: playlist query', () => {
     );
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await engine.close();
   });
 

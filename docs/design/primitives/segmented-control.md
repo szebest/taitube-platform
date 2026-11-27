@@ -20,7 +20,7 @@ A compact choice of exactly one among two to five options, shown as joined segme
 
 ```ts
 // types.ts
-import type { ControlSize, ToneOption } from '@vp/design-tokens';
+import type { ControlSize, ToneOption } from '@kit/design-tokens';
 
 export type SegmentedTone = Extract<ToneOption, 'neutral' | 'accent'>;
 export type SegmentedSize = ControlSize;
@@ -71,7 +71,7 @@ ground: it moves and resizes over `duration-base` with `ease-settle` from the mo
 direction change and (in a scrolling group) the scroll, and does not animate its first placement. The thumb is `surface` with `elevation-1` and the `control` radius role. The
 selected option keeps its text colour change, so the state reads even before the indicator arrives. Under the
 `reduced` motion set (chosen, or forced by `prefers-reduced-motion`) the indicator changes position without
-sliding. One shared helper in `@vp/ui` measures the selected option and drives the indicator for every group
+sliding. One shared helper in `@kit/ui` measures the selected option and drives the indicator for every group
 that has one (`useSlidingIndicator`); no component positions its own.
 
 ## Tokens

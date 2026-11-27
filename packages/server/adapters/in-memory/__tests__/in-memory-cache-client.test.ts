@@ -1,6 +1,6 @@
+import { describeCacheClientContract } from '@kit/ports/contract';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
-import { describeCacheClientContract } from '../../__tests__/contract/cache-client.contract';
 import { inMemoryCacheClientSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { InMemoryCacheClient } from '../in-memory-cache-client';
 

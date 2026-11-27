@@ -1,5 +1,11 @@
 import type { Browser } from '@playwright/test';
-import { expect, type Persona, type Stack, test } from '../../../../tests/playwright/fixtures';
+import {
+  expect,
+  hydrateEveryPage,
+  type Persona,
+  type Stack,
+  test,
+} from '../../../../tests/playwright/fixtures';
 import { sessionCookie } from '../../../../tests/playwright/session-cookie';
 
 // React's production build names a hydration mismatch only by its error code.
@@ -10,13 +16,14 @@ const HYDRATION_ERROR = /hydrat|react\.dev\/errors\/(418|419|423|425)/i;
 const SHELL_PAGE = '/search';
 
 const GUEST_ICONS = ['Home', 'Shorts', 'Trending'];
-const GUEST_LINKS = ['Home', 'Shorts', 'Trending', 'Live'];
+const GUEST_LINKS = ['Home', 'Shorts', 'Trending', 'Live', 'Settings'];
 const SIGNED_IN_LINKS = [
   'Home',
   'Shorts',
   'Subscriptions',
   'Trending',
   'Live',
+  'Settings',
   'You',
   'Watch history',
   'Your channel',
@@ -91,6 +98,7 @@ async function openShell(
   javaScriptEnabled: boolean
 ) {
   const context = await browser.newContext({ baseURL, javaScriptEnabled });
+  if (javaScriptEnabled) hydrateEveryPage(context, baseURL);
   if (row.sidebar) {
     await context.addCookies([{ name: 'vp.sidebar', value: row.sidebar, url: baseURL }]);
   }

@@ -1,4 +1,4 @@
-import { cn, Progress, type ProgressProps } from '@vp/ui';
+import { cn, Progress, type ProgressProps } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** A goal over video: its label and count above a bar, on the scrim. */

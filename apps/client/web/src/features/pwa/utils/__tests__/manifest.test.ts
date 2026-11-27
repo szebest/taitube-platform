@@ -1,4 +1,4 @@
-import { appearance } from '@vp/ui/appearance/registry';
+import { appearance } from '@kit/ui/appearance/registry';
 import { webManifest } from '../manifest';
 
 const [sand, nocturne] = appearance.themes;

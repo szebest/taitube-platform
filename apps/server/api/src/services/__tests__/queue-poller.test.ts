@@ -1,11 +1,11 @@
+import { err } from '@kit/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { queueUnavailable } from '@vp/errors';
-import { createMetricsRegistry } from '@vp/observability';
-import { err } from '@vp/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { pollQueueMetrics } from '../queue-poller';
 
-async function gauge(metrics: ReturnType<typeof createMetricsRegistry>, name: string) {
+async function gauge(metrics: ReturnType<typeof createPipelineMetrics>, name: string) {
   const all = await metrics.registry.getMetricsAsJSON();
   return all.find((metric) => metric.name === name)?.values ?? [];
 }
@@ -14,7 +14,7 @@ describe('apps/server/api/services: pollQueueMetrics', () => {
   it('records the job counts of every queue it is given', async () => {
     const probe = new InMemoryJobQueue('probe');
     await probe.add('probe', { videoId: 'v1' });
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, Date.now);
 
@@ -27,7 +27,7 @@ describe('apps/server/api/services: pollQueueMetrics', () => {
   it('counts a job with a priority as prioritized, which is where BullMQ keeps it', async () => {
     const probe = new InMemoryJobQueue('probe');
     await probe.add('probe', { videoId: 'v1' }, { priority: 5 });
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, Date.now);
 
@@ -44,7 +44,7 @@ describe('apps/server/api/services: pollQueueMetrics', () => {
     vi.advanceTimersByTime(60_000);
     await probe.add('probe', { videoId: 'second' });
     vi.useRealTimers();
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     const now = () => start + 901_000;
     await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, now);
@@ -62,7 +62,7 @@ describe('apps/server/api/services: pollQueueMetrics', () => {
     });
     const healthy = new InMemoryJobQueue('notify');
     await healthy.add('notify', { videoId: 'v1' });
-    const metrics = createMetricsRegistry();
+    const metrics = createPipelineMetrics();
 
     await pollQueueMetrics(
       new Map<string, JobQueue>([

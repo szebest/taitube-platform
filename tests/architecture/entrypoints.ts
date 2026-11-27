@@ -1,3 +1,8 @@
+import { packageDir } from '../../scripts/workspace-packages';
+
+const WEB_TELEMETRY = packageDir('@kit/web-telemetry');
+const WEB_TESTING = packageDir('@kit/web-testing');
+
 /**
  * Where a process starts. Module-level side effects, `console` and reading the environment belong
  * here and nowhere else; every module below one takes what it needs as a value.
@@ -12,13 +17,14 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/client/workbench/visual/playwright.config.ts',
   'apps/server/worker/src/instrument.ts',
   'apps/server/worker/src/main.ts',
-  'packages/server/compose-autoscaler/src/main.ts',
-  'packages/server/dev-token/src/main.ts',
+  'packages/server/demo/src/main.ts',
+  'packages/server/deploy/src/main.ts',
   'packages/server/gen-video/src/main.ts',
   'packages/server/lighthouse/src/main.ts',
   'packages/server/upload-client/src/main.ts',
-  'packages/client/web-telemetry/src/*.setup.ts',
+  `${WEB_TELEMETRY}/src/*.setup.ts`,
   'packages/client/web-testing/src/*.setup.ts',
+  `${WEB_TESTING}/src/*.setup.ts`,
   'apps/client/web/src/sw.ts',
   'scripts/*.ts',
   'tests/browser/playback.ts',
@@ -27,16 +33,16 @@ export const ENTRYPOINTS: readonly string[] = [
   'tests/e2e/web-stack.ts',
 ];
 
-/** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */
+/** Not entrypoints, and still allowed to touch the environment: the test harness and the app config modules. */
 export const ENV_HOMES: readonly string[] = [
-  'packages/server/config/src/load-env.ts',
-  'packages/server/testing/src/index.ts',
+  'packages/platform/server/testing/src/index.ts',
+  'tests/integration/use-real-services.ts',
   'apps/client/*/src/lib/config/index.ts',
   'tests/playwright/config.ts',
 ];
 
 function matcher(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
+  const escaped = pattern.split('*').map(RegExp.escape).join('[^/]*');
   return new RegExp(`^${escaped}$`);
 }
 

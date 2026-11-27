@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
-import { useAppearance } from '@vp/ui';
+import { useAppearance } from '@kit/ui';
 import { ChoiceCards } from '#app/components/settings/choice-cards';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 /** The theme's colours drawn by the theme's own stylesheet, so a registered theme looks like itself with no edit here. */

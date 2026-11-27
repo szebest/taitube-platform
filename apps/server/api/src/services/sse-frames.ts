@@ -1,6 +1,6 @@
+import { assertNever } from '@kit/result';
 import type { StreamResume, UserEventFrame } from '@vp/api-contracts';
 import type { SseMessageEnvelope } from '@vp/events';
-import { assertNever } from '@vp/result';
 import type { SseFrame } from './sse-connection';
 
 export function videoFrame({ id, event, data }: SseMessageEnvelope): SseFrame {
@@ -25,8 +25,17 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'notification.created':
     case 'notification.read':
     case 'comment.created':
+    case 'comment.held':
     case 'live.started':
+    case 'channel.image.ready':
+    case 'channel.image.failed':
+    case 'party.controls.updated':
+    case 'export.ready':
+    case 'export.failed':
+    case 'video.generation.updated':
       return undefined;
+    case 'video.stats.updated':
+      return `stats:${event.payload.videoId}`;
     default:
       return assertNever(event, 'UserEventFrame');
   }

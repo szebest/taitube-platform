@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { appearance } from '@kit/ui/appearance/registry';
 import { expect, test } from '@playwright/test';
-import { FALLBACK_LOCALE } from '@vp/intl';
-import { SUPPORTED_LOCALES } from '@vp/messages';
-import { appearance } from '@vp/ui/appearance/registry';
+import { LOCALES } from '@vp/shared-messages/locales';
 import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotVariant, shotsFor, storiesFor } from './stories';
 
@@ -13,6 +12,9 @@ declare global {
 }
 
 const SHOWN_MODES = ['dark', 'light', 'oled'];
+
+/** The instant every shot is taken at, so a story's "4 weeks ago" reads as it did when its baseline was drawn. */
+const SHOT_AT = new Date('2026-11-12T12:00:00.000Z');
 
 const index: { entries: Record<string, StoryEntry> } = JSON.parse(
   readFileSync(new URL('../storybook-static/index.json', import.meta.url), 'utf8')
@@ -29,15 +31,16 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  locales: SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE),
+  locales: LOCALES.tags.filter((locale) => locale !== LOCALES.source),
 });
 
 for (const shot of shots) {
   const { story, theme, mode } = shot;
-  const { motion = THEME_DEFAULT, direction = 'ltr', locale = FALLBACK_LOCALE } = shot;
+  const { motion = THEME_DEFAULT, direction = 'ltr', locale = LOCALES.source } = shot;
   const variant = shotVariant(shot);
   test(`${story} at ${theme} ${mode}${variant}`, async ({ page }) => {
     const globals = `theme:${theme};mode:${mode};motion:${motion};direction:${direction};locale:${locale}`;
+    await page.clock.setFixedTime(SHOT_AT);
     await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=${globals}`);
     const root = page.locator('#storybook-root');
     await expect(root.locator(':scope > *').first()).toBeAttached();
@@ -61,6 +64,7 @@ for (const shot of shots) {
           (element) => getComputedStyle(element).fontFamily
         )
       );
+      families.delete('');
       return Promise.all([...families].map((family) => document.fonts.load(`1em ${family}`)));
     });
     await page.evaluate(() => document.fonts.ready);

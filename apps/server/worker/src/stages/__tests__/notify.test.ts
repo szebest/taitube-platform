@@ -1,11 +1,11 @@
+import { createLogger } from '@kit/logger';
+import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/logger';
-import { ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { OWNER_ID } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
@@ -20,6 +20,7 @@ describe('apps/server/worker/stages: notify', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: OWNER_ID,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         title: 'Notify Video',
         status: 'PROCESSING',
         sourceKey: 'raw/notify-test.mp4',

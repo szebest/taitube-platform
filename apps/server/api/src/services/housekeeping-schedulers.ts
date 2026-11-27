@@ -1,19 +1,29 @@
+import { type Result, isErr, ok } from '@kit/result';
 import type { JobQueue, UpsertJobSchedulerOptions } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
 import type { HousekeepingJob } from '@vp/job-contracts';
-import { type Result, isErr, ok } from '@vp/result';
 
 type HousekeepingTask = HousekeepingJob['task'];
 
 const CRON_SCHEDULERS = [
   { id: 'reconcile-uploads', pattern: '*/15 * * * *' },
   { id: 'reconcile-processing', pattern: '*/10 * * * *' },
+  { id: 'reconcile-live', pattern: '*/10 * * * *' },
   { id: 'purge-deleted', pattern: '0 * * * *' },
   { id: 'expire-raw', pattern: '30 3 * * *' },
   { id: 'tmp-sweep', pattern: '*/30 * * * *' },
   { id: 'reconcile-reaction-counters', pattern: '0 * * * *' },
   { id: 'reconcile-captions', pattern: '*/20 * * * *' },
   { id: 'purge-search-history', pattern: '15 3 * * *' },
+  { id: 'purge-channel-audit', pattern: '45 3 * * *' },
+  { id: 'purge-comment-moderation', pattern: '0 4 * * *' },
+  { id: 'purge-screening-evidence', pattern: '0 4 * * *' },
+  { id: 'purge-channel-images', pattern: '0 4 * * *' },
+  { id: 'purge-handle-history', pattern: '15 4 * * *' },
+  { id: 'purge-exports', pattern: '30 * * * *' },
+  { id: 'prune-revisions', pattern: '30 4 * * *' },
+  { id: 'purge-generations', pattern: '45 * * * *' },
+  { id: 'publish-due-posts', pattern: '* * * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
 export interface HousekeepingScheduleSettings {

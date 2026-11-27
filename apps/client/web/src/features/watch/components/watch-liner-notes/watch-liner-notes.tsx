@@ -1,7 +1,7 @@
+import { Format, useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import type { Video } from '@vp/api-contracts';
-import { publishedAt, videoDuration } from '@vp/intl';
-import { Format, useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { publishedAt, videoDuration } from '@vp/intl-formats';
 import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { LinerNotes } from '#app/components/watch/liner-notes';
 import {
@@ -10,6 +10,7 @@ import {
   type DescriptionToken,
   tokenizeDescription,
 } from '#app/features/watch/utils/timecodes';
+import { useT } from '#app/lib/messages';
 
 function ChapterStrip({ chapters }: { chapters: readonly Chapter[] }) {
   const { format } = useFormat();
@@ -49,13 +50,20 @@ function DescriptionPart({ token }: { token: DescriptionToken }) {
   }
 }
 
+/** The chapters the creator stored, else the ones the description lists. */
+function chaptersOfVideo({ chapters, description }: Video): Chapter[] {
+  return chapters.length > 0
+    ? chapters.map(({ startMs, title }) => ({ seconds: startMs / 1000, title }))
+    : chaptersOf(description ?? '');
+}
+
 /** The views and date, the description with links and timecodes that seek the player, and its chapters. */
 export function WatchLinerNotes({ video }: { video: Video }) {
   const { tOr } = useT();
   const { seek } = usePlayerSeek();
 
   const description = video.description ?? '';
-  const chapters = chaptersOf(description);
+  const chapters = chaptersOfVideo(video);
 
   return (
     <LinerNotes.Root onSeek={seek}>

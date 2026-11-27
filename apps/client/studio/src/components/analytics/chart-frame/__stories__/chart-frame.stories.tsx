@@ -1,13 +1,7 @@
+import { CHART_SERIES } from '@kit/components';
+import { variantNames } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '@vp/ui';
-import {
-  CHART_SERIES,
-  ChartFrame,
-  ChartSkeleton,
-  chartFrameStyles,
-  useChartFrame,
-  useChartTheme,
-} from '..';
+import { ChartFrame, ChartSkeleton, chartFrameStyles, useChartFrame, useChartTheme } from '..';
 import { ChartFrameRoot, type ChartFrameRootProps } from '../chart-frame';
 
 const meta = {

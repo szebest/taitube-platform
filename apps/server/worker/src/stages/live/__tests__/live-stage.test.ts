@@ -1,9 +1,10 @@
+import { TransientError } from '@kit/errors';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { Fmp4Fragment, LiveOptions, MediaTools } from '@vp/ffmpeg';
 import type { LiveJob } from '@vp/job-contracts';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
 import { createLiveStage } from '../live-stage';
 import { LiveUploader } from '../live-uploader';
@@ -113,7 +114,12 @@ describe('worker/live: createLiveStage', () => {
         if (nextLive) {
           await liveStreams.goLive({
             streamId: input.nextId,
-            video: { id: NEXT_VIDEO_ID, ownerId: OWNER_ID, sourceKey: `live/${input.nextId}/` },
+            video: {
+              id: NEXT_VIDEO_ID,
+              ownerId: OWNER_ID,
+              channelId: world.stream.channelId,
+              sourceKey: `live/${input.nextId}/`,
+            },
             startedAt: new Date(),
             outbox: [],
           });

@@ -2,7 +2,7 @@ import type { HomeShelf } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders, signedIn } from '#app/__tests__/providers';
+import { AppProvidersWithToasts, signedInWithToasts } from '#app/__tests__/providers';
 import { homeQueryOptions } from '#app/lib/query-keys/home-keys';
 import { HomePage, HomePageSkeleton } from '../home-page';
 
@@ -11,7 +11,7 @@ const TRENDING: HomeShelf = {
   items: [{ ...videoSummary({ title: 'Tram ride' }), reason: { kind: 'trending' as const } }],
 };
 
-function renderHome(shelves: HomeShelf[], Providers = AppProviders) {
+function renderHome(shelves: HomeShelf[], Providers = AppProvidersWithToasts) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(homeQueryOptions(api).queryKey, { shelves });
   return renderPage(<HomePage />, Providers, { queryClient });
@@ -31,8 +31,8 @@ describe('apps/client/web: home page', () => {
   });
 
   it.each([
-    { viewer: 'a guest', Providers: AppProviders, offered: true },
-    { viewer: 'a signed-in viewer', Providers: signedIn(), offered: false },
+    { viewer: 'a guest', Providers: AppProvidersWithToasts, offered: true },
+    { viewer: 'a signed-in viewer', Providers: signedInWithToasts(), offered: false },
   ])(
     'offers $viewer the sign-in line of the subscriptions section: $offered',
     async ({ Providers, offered }) => {
@@ -51,7 +51,7 @@ describe('apps/client/web: home page', () => {
 
     const markup = await renderPage(
       <HomePage clientShelves={{ shorts: <p>Tram flip</p> }} />,
-      AppProviders,
+      AppProvidersWithToasts,
       { queryClient }
     );
 
@@ -63,7 +63,7 @@ describe('apps/client/web: home page', () => {
   });
 
   it('holds the place of the shelves with no text of its own', async () => {
-    const markup = await renderPage(<HomePageSkeleton />, AppProviders);
+    const markup = await renderPage(<HomePageSkeleton />, AppProvidersWithToasts);
 
     expect(markup).not.toMatch(/>[^<]+</);
   });

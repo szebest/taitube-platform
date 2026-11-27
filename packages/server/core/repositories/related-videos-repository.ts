@@ -1,11 +1,12 @@
+import type { Result } from '@kit/result';
 import type { RelatedSignals } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { VideoRecord } from './video-repository';
 
 export interface RelatedVideosOptions {
   videoId: string;
-  ownerId: string;
+  /** The channel the video is on; its other videos are related. */
+  channelId: string;
   categoryId: string | null;
   tags: readonly string[];
   /** The caller's own uploads never come back. */

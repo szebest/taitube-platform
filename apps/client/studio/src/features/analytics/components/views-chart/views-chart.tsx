@@ -1,7 +1,7 @@
+import type { FormatValue } from '@kit/intl';
+import { Format } from '@kit/intl-react';
+import { Skeleton } from '@kit/ui';
 import { HOURLY_WINDOW_HOURS } from '@vp/domain';
-import type { FormatValue } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
-import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import type { RangeAnalytics } from '#app/features/analytics/api/analytics-queries';
@@ -12,6 +12,7 @@ import type {
   ViewsGranularity,
 } from '#app/features/analytics/types';
 import { dayInstant } from '#app/features/analytics/utils/day-instant';
+import { useT } from '#app/lib/messages';
 import type { ViewsPoint } from '../views-plot/views-plot';
 import { LazyViewsPlot } from '../views-plot/views-plot.lazy';
 

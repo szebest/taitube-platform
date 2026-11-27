@@ -9,8 +9,9 @@ import {
   Skeleton,
   Slot,
   useUiCopy,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, type ReactNode, useRef } from 'react';
+import { useT } from '#app/lib/messages';
 import { CommandPaletteContext, useCommandPalette } from './command-palette.context';
 import { commandPaletteStyles } from './command-palette.variants';
 import type { CommandPaletteVariant } from './types';
@@ -41,7 +42,8 @@ export function CommandPaletteRoot({
   className,
   children,
 }: CommandPaletteRootProps) {
-  const { paletteLabel } = useUiCopy();
+  const { tOr } = useT();
+  const paletteLabel = tOr('appUi.paletteLabel', {}, '');
   const styles = commandPaletteStyles({ variant });
 
   return (
@@ -80,7 +82,10 @@ export type CommandPaletteInputProps = Omit<
 /** The field: Enter on the raw words submits them when no item is active; Escape closes (Cancel on compact). */
 export function CommandPaletteInput({ className, onKeyDown, ...props }: CommandPaletteInputProps) {
   const { variant, query, setQuery, submit, close } = useCommandPalette('Input');
-  const { palettePlaceholder, clear, cancel } = useUiCopy();
+  const { tOr } = useT();
+  const palettePlaceholder = tOr('appUi.palettePlaceholder', {}, '');
+  const clear = tOr('appUi.clear', {}, '');
+  const cancel = tOr('ui.cancel', {}, '');
   const inputRef = useRef<HTMLInputElement>(null);
   const styles = commandPaletteStyles({ variant });
 
@@ -241,7 +246,8 @@ export function CommandPaletteNotice({ className, ...props }: ComponentPropsWith
 
 /** The offline line: actions and recent searches still work. */
 export function CommandPaletteOffline({ className }: { className?: string }) {
-  const { paletteOffline } = useUiCopy();
+  const { tOr } = useT();
+  const paletteOffline = tOr('appUi.paletteOffline', {}, '');
 
   return (
     <CommandPaletteNotice role="status" className={className}>
@@ -274,7 +280,10 @@ export const keepEnterFromTheList = (event: KeyboardEvent<HTMLButtonElement>) =>
 /** Key hints, and the action that opens every result for the raw words (Tab reaches it from the field). */
 export function CommandPaletteFooter({ className }: { className?: string }) {
   const { variant, query, submit } = useCommandPalette('Footer');
-  const { paletteNavigate, paletteOpen, paletteSearchAll } = useUiCopy();
+  const { tOr } = useT();
+  const paletteNavigate = tOr('appUi.paletteNavigate', {}, '');
+  const paletteOpen = tOr('appUi.paletteOpen', {}, '');
+  const paletteSearchAll = tOr('appUi.paletteSearchAll', {}, '');
   const styles = commandPaletteStyles({ variant });
   const words = query.trim();
 

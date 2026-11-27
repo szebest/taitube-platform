@@ -1,4 +1,8 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import type { Row } from './zero-matches-rows';
+
+const UI = packageDir('@kit/ui');
+const CLIENT = tierGlob('client');
 
 const NOT_SPECS = [
   ':(exclude,glob)**/*.test.ts',
@@ -11,14 +15,14 @@ const NOT_SPECS = [
 const CLIENT_SOURCE = [
   ':(glob)apps/client/*/src/**/*.ts',
   ':(glob)apps/client/*/src/**/*.tsx',
-  ':(glob)packages/client/*/src/**/*.ts',
-  ':(glob)packages/client/*/src/**/*.tsx',
+  `:(glob)${CLIENT}/*/src/**/*.ts`,
+  `:(glob)${CLIENT}/*/src/**/*.tsx`,
   ...NOT_SPECS,
 ];
 
-/** The stylesheets written by hand that outlive 62: `@vp/ui`'s own and the workbench preview's. */
+/** The stylesheets written by hand that outlive 62: `@kit/ui`'s own and the workbench preview's. */
 const SYSTEM_STYLESHEETS = [
-  ':(glob)packages/client/ui/src/styles/*.css',
+  `:(glob)${UI}/src/styles/*.css`,
   'packages/client/workbench/.storybook/preview.css',
 ];
 
@@ -57,16 +61,17 @@ const PALETTE = [
 /** The rows that keep components on the design system's tokens and inside its packages. */
 export const DESIGN_ROWS: readonly Row[] = [
   {
-    name: 'a raw colour in client source, where a colour role belongs (media is not chrome: the stand-in posters stories paint, the ambient colour sampled from a video, and the workbench accents standing in for one a viewer types)',
+    name: 'a raw colour in client source, where a colour role belongs (media is not chrome: the stand-in posters stories paint, the ambient colour sampled from a video, and the workbench accents standing in for one a viewer types, and the example colour a catalogue sentence names)',
     pattern: /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color-mix)\(/g,
     scope: [
       ...CLIENT_SOURCE,
       'packages/client/workbench/.storybook/preview.css',
-      ':(exclude,glob)packages/client/ui/src/tokens/**',
-      ':(exclude,glob)packages/client/ui/src/themes/**',
+      `:(exclude,glob)${UI}/src/tokens/**`,
+      `:(exclude,glob)${UI}/src/themes/**`,
       ':(exclude,glob)**/*.stories.tsx',
       ':(exclude)apps/client/web/src/hooks/use-ambient-sample.ts',
       ':(exclude)packages/client/workbench/src/toolbars.ts',
+      ':(exclude,glob)apps/client/*/src/lib/messages/*/studio.ts',
     ],
     expected: 0,
     fires: "{ name: 'theme-color', content: '#000000' },",
@@ -78,6 +83,46 @@ export const DESIGN_ROWS: readonly Row[] = [
     scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
     expected: 0,
     fires: "'h-[calc(100dvh-var(--spacing-header))]'",
+  },
+  {
+    name: 'a raw z-index (z-<n>, z-[<n>], -z-<n>, zIndex, z-index), where a role of scale.z belongs: z-behind to z-tooltip, one distinct number each',
+    pattern: new RegExp(`${UTILITY}z-[\\d\\[(]|\\bzIndex\\b|(?<![\\w-])z-index\\s*:`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="relative -z-10 md:z-[2] z-1" style={{ zIndex: 3 }} />',
+    passes: '<div className="z-behind z-stage-hud group-data-open:z-modal" />',
+  },
+  {
+    name: 'a literal duration or delay (duration-200, duration-[300ms]), where a duration token belongs: duration-instant to duration-cinematic, which the motion set (standard, calm, reduced) scales',
+    pattern: new RegExp(`${UTILITY}(?:duration|delay)-(?:\\d|\\[\\d)`, 'g'),
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: '<div className="transition-colors duration-200 md:delay-[150ms]" />',
+    passes: '<div className="transition-colors duration-fast ease-standard" />',
+  },
+  {
+    name: 'a transition of every property or of a layout one (transition-all, transition-[width], transition: height), where only transform, opacity, colour, shadow and the other compositor properties animate; the sliding indicator is absolutely positioned and resizes nothing around it',
+    pattern: new RegExp(
+      `${UTILITY}transition-(?:all\\b|\\[[^\\]]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*|top|left|right|bottom|inset[\\w-]*|gap)\\b[^\\]]*\\])|\\btransition(?:-property)?:[^;{}]*\\b(?:all|width|height|inline-size|block-size|margin[\\w-]*|padding[\\w-]*)\\b`,
+      'g'
+    ),
+    scope: [
+      ...CLIENT_SOURCE,
+      ...SYSTEM_STYLESHEETS,
+      `:(exclude)${UI}/src/lib/sliding-indicator.ts`,
+    ],
+    expected: 0,
+    fires:
+      '<div className="transition-all transition-[width,opacity] hover:transition-[margin-inline-start]" /> a { transition: height 1s }',
+    passes: '<div className="transition-[opacity,translate] transition-colors" />',
+  },
+  {
+    name: 'data-theme set to a mode (dark, light, oled), which is not a theme id: a surface that must be dark sets data-mode="dark"',
+    pattern: /data-theme=["'{]*(?:dark|light|oled)\b/g,
+    scope: CLIENT_SOURCE,
+    expected: 0,
+    fires: '<Container data-theme="dark" className="bg-bg" />',
+    passes: '<Container data-mode="dark" className="bg-media" />',
   },
   {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
@@ -121,7 +166,7 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: '.rail { margin-left: 4px; text-align: left; }',
   },
   {
-    name: 'Radix or @dnd-kit outside @vp/ui, imported or declared: every app and package reaches them through its primitives',
+    name: 'Radix or @dnd-kit outside @kit/ui, imported or declared: every app and package reaches them through its primitives',
     pattern: /['"](?:radix-ui|@radix-ui\/[^'"]+|@dnd-kit\/[^'"]+)['"]/g,
     scope: [
       ':(glob)apps/**/*.ts',
@@ -130,7 +175,8 @@ export const DESIGN_ROWS: readonly Row[] = [
       ':(glob)packages/**/*.ts',
       ':(glob)packages/**/*.tsx',
       ':(glob)packages/*/*/package.json',
-      ':(exclude,glob)packages/client/ui/**',
+      ':(glob)packages/platform/*/*/package.json',
+      `:(exclude,glob)${UI}/**`,
     ],
     expected: 0,
     fires: "import { Slot } from 'radix-ui';",

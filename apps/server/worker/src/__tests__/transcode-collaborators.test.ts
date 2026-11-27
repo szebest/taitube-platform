@@ -1,11 +1,11 @@
+import { createLogger } from '@kit/logger';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { everyInterval } from '../heartbeat';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 import { StreamingSegmentUploader } from '../stages/segment-uploader';
@@ -19,7 +19,7 @@ describe('apps/server/worker: transcode collaborators', () => {
     cache: new InMemoryCacheClient(),
     repositories: new InMemoryRepositories(),
     storage: new InMemoryStorageClient(),
-    metrics: createMetricsRegistry(),
+    metrics: createPipelineMetrics(),
     now: Date.now,
     every: everyInterval,
   });

@@ -1,10 +1,10 @@
+import type { Logger } from '@kit/logger';
+import { isErr, ok, type Result } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { mayHearAbout, NOTIFICATION_EXCERPT_LENGTH, type NotificationActor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyHeartJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifyHeartDeps {
@@ -27,7 +27,7 @@ export function createNotifyHeartProcessor(deps: NotifyHeartDeps) {
     const { commentId, videoId } = job.data;
     const skipped = ok({ commentId, recorded: false });
 
-    const comment = await repositories.comments.findById(commentId);
+    const comment = await repositories.comments.findVisible(null, commentId);
     if (isErr(comment)) return comment;
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
@@ -40,7 +40,7 @@ export function createNotifyHeartProcessor(deps: NotifyHeartDeps) {
     if (isErr(switchedOn)) return switchedOn;
     if (!switchedOn.value.has(authorId)) return skipped;
 
-    const creator = await repositories.channels.findByUserId(video.value.ownerId);
+    const creator = await repositories.channels.findById(video.value.channelId);
     if (isErr(creator)) return creator;
     const actor: NotificationActor | null = creator.value && {
       handle: creator.value.handle,

@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { HttpWebhookDispatcher } from '../http-webhook-dispatcher';
 
 const NOW = Date.UTC(2026, 0, 1);

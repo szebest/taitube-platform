@@ -1,4 +1,4 @@
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
 import { HOUR_MS, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
 import type { VideoContractContext } from './video-contract-context';
 import { SCAN_CASES, type ScanCase } from './video-scan-cases';
@@ -47,14 +47,25 @@ export function describeVideoLifecycleContract(ctx: VideoContractContext): void 
       ]);
     });
 
+    it.each([
+      { name: 'the generation it is at', generation: 1, moved: true },
+      { name: 'a generation it has left behind', generation: 0, moved: false },
+    ])('moves only for $name', async ({ generation, moved }) => {
+      expect(
+        expectOk(
+          await ctx.videos.transition({ videoId: VIDEO_IDS.a, edge: 'complete', generation })
+        )
+      ).toBe(moved);
+    });
+
     it('accepts any of the allowed source states', async () => {
       expect(
         expectOk(
           await ctx.videos.transition({
             videoId: VIDEO_IDS.a,
             from: ['UPLOADED', 'UPLOADING'],
-            to: 'PROBING',
-            eventType: 'video.probing',
+            to: 'DELETED',
+            eventType: 'video.deleted',
           })
         )
       ).toBe(true);

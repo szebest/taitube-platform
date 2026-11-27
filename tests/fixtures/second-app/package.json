@@ -1,0 +1,27 @@
+{
+  "name": "quill-shop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kit/dev-token": "file:tarballs/kit-dev-token.tgz",
+    "@kit/di": "file:tarballs/kit-di.tgz",
+    "@kit/errors": "file:tarballs/kit-errors.tgz",
+    "@kit/intl": "file:tarballs/kit-intl.tgz",
+    "@kit/keyspace": "file:tarballs/kit-keyspace.tgz",
+    "@kit/observability": "file:tarballs/kit-observability.tgz",
+    "@kit/runtime": "file:tarballs/kit-runtime.tgz",
+    "@kit/ui": "file:tarballs/kit-ui.tgz",
+    "prom-client": "^15.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "jsdom": "^30.1.2",
+    "typescript": "^6.0.3",
+    "vitest": "5.1.0"
+  }
+}

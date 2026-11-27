@@ -1,10 +1,10 @@
+import type { Logger } from '@kit/logger';
+import { isErr, ok, type Result } from '@kit/result';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { levelAllows, NOTIFICATION_FANOUT_BATCH, type NotificationActor } from '@vp/domain';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { type NotifySubscribersJob, subscribersOutbox } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifySubscribersDeps {
@@ -43,7 +43,7 @@ export function createNotifySubscribersProcessor(deps: NotifySubscribersDeps) {
       (kind === 'live' || video.value.status === 'READY');
     if (!(video.value && announceable)) return skipped;
 
-    const channel = await repositories.channels.findByUserId(video.value.ownerId);
+    const channel = await repositories.channels.findById(video.value.channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return skipped;
 

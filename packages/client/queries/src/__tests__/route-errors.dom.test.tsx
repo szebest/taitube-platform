@@ -11,6 +11,7 @@ import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
 import { AppWords } from '../app-words';
 import { RouteError, RouteNotFound } from '../route-errors';
+import { SPEC_MESSAGES } from './spec-messages';
 
 function renderRoute(error: unknown) {
   const root = createRootRoute({
@@ -32,7 +33,7 @@ function renderRoute(error: unknown) {
     routeTree: root.addChildren([failing]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
     defaultNotFoundComponent: RouteNotFound,
-    Wrap: AppWords,
+    Wrap: ({ children }) => <AppWords messages={SPEC_MESSAGES}>{children}</AppWords>,
   });
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   render(<RouterProvider router={router} />);

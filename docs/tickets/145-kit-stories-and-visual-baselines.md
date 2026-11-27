@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [131 outcome](131-frontend-folder-structure-names-and-boundaries.md#outcome-the-slices-as-shipped-and-what-was-deferred) - [95 design system 2](95-design-system-2.md) - [frontend-structure.md](../standards/frontend-structure.md) |
 
-**Status:** ready
+**Status:** done
 
 ## What to build
 
@@ -22,10 +22,10 @@ workbench that stands those up from the in-memory API, and not a per-story copy 
 
 ## Acceptance criteria
 
-- [ ] Each of the eight folders has a story at its folder root, none in a subcomponent.
-- [ ] One workbench decorator supplies the providers; no story builds its own.
-- [ ] Baselines are generated with the pinned amd64 Playwright image and committed; the visual shard is green.
-- [ ] `STORYLESS` is gone from `tests/architecture/component-folders-pending.ts`.
+- [x] Each of the eight folders has a story at its folder root, none in a subcomponent.
+- [x] One workbench decorator supplies the providers; no story builds its own.
+- [x] Baselines are generated with the pinned amd64 Playwright image and committed; the visual shard is green.
+- [x] `STORYLESS` is gone from `tests/architecture/component-folders-pending.ts`.
 
 ## Out of scope
 
@@ -42,5 +42,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

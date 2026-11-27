@@ -1,4 +1,4 @@
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { createDbClient, waitForDatabase } from '../client';
 
 describe('packages/db: createDbClient', () => {

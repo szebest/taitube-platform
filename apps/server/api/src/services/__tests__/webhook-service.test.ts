@@ -1,7 +1,8 @@
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes } from '@vp/errors';
+import { err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
+import { InMemoryRepositories, InMemoryWebhookDispatcher } from '@vp/adapters/in-memory';
+import { ErrorCodes, webhookDeliveryRejected } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { WebhookService } from '../webhook-service';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'USER' };
@@ -11,13 +12,16 @@ const BODY = { url: 'https://hooks.example.com/in', events: ['video.ready' as co
 
 describe('apps/server/api/services: WebhookService', () => {
   let repositories: InMemoryRepositories;
+  let dispatcher: InMemoryWebhookDispatcher;
   let service: WebhookService;
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
+    dispatcher = new InMemoryWebhookDispatcher();
     service = new WebhookService({
       webhooks: repositories.webhooks,
       policy: { allowPrivateHosts: false },
+      dispatcher,
       newSecret: () => 'secret-1',
       now: () => NOW,
     });
@@ -54,5 +58,34 @@ describe('apps/server/api/services: WebhookService', () => {
     });
     expectOk(await service.remove(VIEWER, id));
     expect(expectOk(await service.list(VIEWER)).items).toEqual([]);
+  });
+
+  it('sends a signed test delivery to the owner webhook only', async () => {
+    const { id } = expectOk(await service.create(VIEWER, BODY));
+
+    expect(expectOk(await service.test(VIEWER, id))).toEqual({ outcome: 'delivered' });
+    expect(dispatcher.deliveries).toMatchObject([
+      {
+        webhook: { id, url: BODY.url, secret: 'secret-1' },
+        event: 'webhook.test',
+        payload: { webhookId: id, sentAt: '2026-03-01T12:00:00.000Z' },
+      },
+    ]);
+    expect(expectErr(await service.test(STRANGER, id))).toMatchObject({
+      code: ErrorCodes.WEBHOOK_NOT_FOUND,
+    });
+  });
+
+  it('answers what the receiver did with a test it refused', async () => {
+    const { id } = expectOk(await service.create(VIEWER, BODY));
+    vi.spyOn(dispatcher, 'deliver').mockResolvedValue(
+      err(webhookDeliveryRejected(id, 'status', 410))
+    );
+
+    expect(expectOk(await service.test(VIEWER, id))).toEqual({
+      outcome: 'failed',
+      reason: 'status',
+      status: 410,
+    });
   });
 });

@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { videoForbidden, videoNotFound, videoReadRequiresAuth } from '../failures';
 import { decideVideoRead, publicReadFailure } from '../read-video.rule';
@@ -36,6 +36,21 @@ describe('@vp/domain-rules: decideVideoRead', () => {
 
     expect(isOk(decideVideoRead({ viewer, video, videoId: video.id }))).toBe(true);
   });
+
+  it.each([
+    { name: 'its own link', targetId: 'video-1', readable: true },
+    { name: 'the link of another video', targetId: 'video-2', readable: false },
+  ])(
+    'lets an anonymous caller holding $name read a private video: $readable',
+    ({ targetId, readable }) => {
+      const video = aVideo({ visibility: 'private' });
+      const share = { targetType: 'video', targetId } as const;
+
+      expect(isOk(decideVideoRead({ viewer: null, video, videoId: video.id, share }))).toBe(
+        readable
+      );
+    }
+  );
 
   it('names the video id on the failure so the edge can report it', () => {
     const result = decideVideoRead({ viewer: null, video: null, videoId: 'v9' });

@@ -1,19 +1,32 @@
+import { validateWith } from '@kit/forms';
+import { ok } from '@kit/result';
 import { updateMyChannel } from '@vp/api-contracts';
 import { validateBrandColor } from '@vp/domain-rules';
-import { validateWith } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { ok } from '@vp/result';
 import {
   type ChannelImageKind,
   type ChannelLinkInput,
-  validateChannelImage,
+  validateChannelImageUploadRequest,
+  validateBannerLink,
   validateChannelLinks,
+  validateContactEmail,
   validateHandle,
 } from '@vp/validation';
+import { useT } from '#app/lib/messages';
 
 const { displayName, bio } = updateMyChannel.body.shape;
 
 export const validateHandleField = validateWith(validateHandle);
+
+export const validateContactEmailField = validateWith((email: string) =>
+  email.trim() === '' ? ok(email) : validateContactEmail(email.trim())
+);
+
+export const validateBannerLinkField = validateWith(
+  ({ label, url }: { label: string; url: string }) =>
+    label.trim() === '' && url.trim() === ''
+      ? ok({ label, url })
+      : validateBannerLink({ label: label.trim(), url: url.trim() })
+);
 
 export function withoutBlankLinks(links: readonly ChannelLinkInput[]): ChannelLinkInput[] {
   return links.filter(({ label, url }) => label.trim() !== '' || url.trim() !== '');
@@ -25,7 +38,9 @@ export const validateLinksField = validateWith((links: readonly ChannelLinkInput
 
 export const validateChannelImageFile = (kind: ChannelImageKind) =>
   validateWith(([file]: File[]) =>
-    file ? validateChannelImage({ kind, contentType: file.type, sizeBytes: file.size }) : ok(file)
+    file
+      ? validateChannelImageUploadRequest({ kind, contentType: file.type, sizeBytes: file.size })
+      : ok(file)
   );
 
 /** The checks the API runs on the fields no shared rule covers, answering this viewer's words. */

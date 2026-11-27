@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import {
   PRIVATE_VIDEO,
@@ -6,6 +7,7 @@ import {
   VIDEOS,
   buildLibraryApp,
 } from '../../__tests__/library-app';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 
 const [V0, V1, V2] = VIDEOS;
 const COMMENT = (n: number) => `00000000-0000-7000-8000-00000000c0${String(n).padStart(2, '0')}`;
@@ -75,7 +77,12 @@ describe('viewer activity routes', () => {
   });
 
   describe('GET /v1/me/comments', () => {
-    const comment = (
+    const channelOfVideo = async (videoId: string) => {
+      const video = expectOk(await ctx.repositories.videos.findById(videoId));
+      if (!video) throw new Error(`no video ${videoId}`);
+      return video.channelId;
+    };
+    const comment = async (
       id: string,
       authorId: string,
       videoId: string,
@@ -83,8 +90,10 @@ describe('viewer activity routes', () => {
     ) =>
       ctx.repositories.comments.create({
         id,
-        videoId,
+        target: { type: 'video', id: videoId },
+        channelId: await channelOfVideo(videoId),
         authorId,
+        authorChannelId: await seedPrimaryChannel(ctx.repositories, authorId),
         parentId,
         content: `says ${id.slice(-2)}`,
       });

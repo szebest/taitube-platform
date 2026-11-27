@@ -8,6 +8,8 @@ import {
   UploadPartCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { MS_PER_SECOND } from '@kit/primitives';
+import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   MultipartStorage,
   type StorageCompletePartInput,
@@ -16,9 +18,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { isNotFound } from './s3-config';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 
@@ -128,7 +128,7 @@ export class S3MultipartStorage extends MultipartStorage {
     uploadId: string,
     parts: readonly StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>> {
-    const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+    const sorted = parts.toSorted((a, b) => a.partNumber - b.partNumber);
     const sent = await fromPromise(
       () =>
         this.client.send(

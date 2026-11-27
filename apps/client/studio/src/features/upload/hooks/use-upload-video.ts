@@ -1,7 +1,7 @@
-import { type MutateOptions, mutationOptions, useMutation } from '@tanstack/react-query';
+import { assertNever, fromPromise, ignore, isOk } from '@kit/result';
+import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi, videoKeys } from '@vp/queries';
-import { fromPromise, ignore } from '@vp/result';
 import { useEffect, useRef } from 'react';
 import { uploadKeys } from '../api/upload-progress';
 import {
@@ -11,11 +11,23 @@ import {
   uploadVideo,
 } from '../api/upload-video';
 
+/** @internal */
 export interface UploadVariables {
   id: string;
   request: UploadRequest;
   session?: UploadSession;
 }
+
+interface UploadOutcome {
+  onSuccess?: (completed: CompletedUpload) => void;
+  onError?: (cause: unknown) => void;
+}
+
+type InFlightUpload = { controller: AbortController } & (
+  | { kind: 'starting' }
+  | { kind: 'uploading'; uploadId: string }
+  | { kind: 'completing' }
+);
 
 function uploadVideoMutationOptions(api: ApiClient) {
   return mutationOptions({
@@ -31,69 +43,85 @@ function uploadVideoMutationOptions(api: ApiClient) {
   });
 }
 
-interface InFlightUpload {
-  controller: AbortController;
-  uploadId?: string;
+function openUploadId(flight: InFlightUpload): string | undefined {
+  switch (flight.kind) {
+    case 'uploading':
+      return flight.uploadId;
+    case 'starting':
+    case 'completing':
+      return undefined;
+    default:
+      return assertNever(flight, 'openUploadId');
+  }
 }
 
 export function useUploadVideo() {
-  const inFlight = useRef<InFlightUpload | null>(null);
+  const inFlight = useRef(new Map<string, InFlightUpload>());
   const api = useApi();
   const upload = useMutation(uploadVideoMutationOptions(api));
 
-  const start = (
+  const send = async (
     id: string,
     request: UploadRequest,
-    options?: MutateOptions<CompletedUpload, Error, UploadVariables>
+    { onSuccess, onError }: UploadOutcome
   ) => {
-    const flight: InFlightUpload = { controller: new AbortController() };
-    inFlight.current = flight;
+    const flights = inFlight.current;
+    const controller = new AbortController();
+    flights.set(id, { kind: 'starting', controller });
 
-    upload.mutate(
-      {
-        id,
-        request,
-        session: {
-          signal: flight.controller.signal,
-          onStarted: (uploadId) => {
-            flight.uploadId = uploadId;
+    const outcome = await fromPromise(
+      () =>
+        upload.mutateAsync({
+          id,
+          request,
+          session: {
+            signal: controller.signal,
+            onStarted: (uploadId) => flights.set(id, { kind: 'uploading', controller, uploadId }),
+            onCompleting: () => flights.set(id, { kind: 'completing', controller }),
           },
-          onCompleting: () => {
-            flight.uploadId = undefined;
-          },
-        },
-      },
-      {
-        ...options,
-        onSettled: (...settled) => {
-          if (inFlight.current === flight) inFlight.current = null;
-          options?.onSettled?.(...settled);
-        },
-      }
+        }),
+      (cause) => cause
     );
+    flights.delete(id);
+
+    if (isOk(outcome)) onSuccess?.(outcome.value);
+    else onError?.(outcome.error);
   };
 
-  const cancel = () => inFlight.current?.controller.abort();
+  const start = (id: string, request: UploadRequest, outcome: UploadOutcome = {}) => {
+    void send(id, request, outcome);
+  };
+
+  const cancel = (id: string) => inFlight.current.get(id)?.controller.abort();
 
   useEffect(() => {
     const abortOnPageHide = (event: PageTransitionEvent) => {
-      const uploadId = inFlight.current?.uploadId;
-      if (event.persisted || !uploadId) return;
+      if (event.persisted) return;
 
-      ignore(
-        fromPromise(
-          () => api.uploads.abortUpload({ params: { uploadId }, keepalive: true }),
-          (cause) => cause
-        ),
-        'a closing page has nowhere to report a failed abort'
-      );
+      for (const flight of inFlight.current.values()) {
+        const uploadId = openUploadId(flight);
+        if (!uploadId) continue;
+
+        ignore(
+          fromPromise(
+            () => api.uploads.abortUpload({ params: { uploadId }, keepalive: true }),
+            (cause) => cause
+          ),
+          'a closing page has nowhere to report a failed abort'
+        );
+      }
     };
 
     window.addEventListener('pagehide', abortOnPageHide);
     return () => window.removeEventListener('pagehide', abortOnPageHide);
   }, [api]);
 
-  useEffect(() => () => inFlight.current?.controller.abort(), []);
+  useEffect(() => {
+    const flights = inFlight.current;
+    return () => {
+      for (const flight of flights.values()) flight.controller.abort();
+    };
+  }, []);
 
   return { ...upload, start, cancel };
 }

@@ -3,6 +3,7 @@ import { creatorUser, guestUser, standardUser } from '../../__mocks__/fixtures';
 import type { UserContext } from '../../types/index';
 import { defineAnalyticsRules } from '../analytics.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
   it.each<{ scenario: string; user: UserContext | null; ownerId: string; expected: boolean }>([
@@ -18,6 +19,22 @@ describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
   ])('$scenario reading analytics of $ownerId: $expected', ({ user, ownerId, expected }) => {
     const ability = buildAbility(defineAnalyticsRules, user);
 
-    expect(ability.can('read', subject('Analytics', { ownerId }))).toBe(expected);
+    expect(ability.can('read', subject('Analytics', { ownerId, channelId: 'chan-1' }))).toBe(
+      expected
+    );
   });
+
+  it.each(matrixCells('VideoStats'))(
+    'the channel matrix, for the stats of a video: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineAnalyticsRules, user).can(action, target)).toBe(expected);
+    }
+  );
+
+  it.each(matrixCells('Analytics'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineAnalyticsRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

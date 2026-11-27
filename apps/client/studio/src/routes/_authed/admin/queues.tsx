@@ -1,15 +1,16 @@
+import { Button } from '@kit/ui';
 import { createFileRoute } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { prefetched } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { useId } from 'react';
 import {
+  AdminPageSkeleton,
   adminDlqQueryOptions,
   DlqParkedCount,
   DlqSearchSchema,
   DlqTable,
 } from '#app/features/admin';
 import { BULL_BOARD_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 
 function QueuesPage() {
   const { tOr } = useT();
@@ -44,5 +45,6 @@ export const Route = createFileRoute('/_authed/admin/queues')({
   loader: async ({ context: { queryClient, api }, deps: { status } }) => {
     await prefetched(queryClient.infiniteQuery(adminDlqQueryOptions(api, status)));
   },
+  pendingComponent: AdminPageSkeleton,
   component: QueuesPage,
 });

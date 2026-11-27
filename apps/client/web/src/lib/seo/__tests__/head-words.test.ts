@@ -1,4 +1,4 @@
-import { LOCALE_DETAILS } from '@vp/messages';
+import { WEB_MESSAGES } from '#app/lib/messages';
 import { headWords } from '../head-words';
 
 describe('apps/client/web: headWords', () => {
@@ -8,7 +8,7 @@ describe('apps/client/web: headWords', () => {
   ] as const)('words the head in $locale', async ({ locale, expected }) => {
     const words = headWords({
       locale,
-      catalogues: { [locale]: await LOCALE_DETAILS[locale].load() },
+      catalogues: { [locale]: await WEB_MESSAGES.load(locale) },
     });
 
     expect(words.locale).toBe(locale);

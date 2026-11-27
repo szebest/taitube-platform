@@ -1,3 +1,4 @@
+import { type Result, andThen, err, map, ok } from '@kit/result';
 import type { Playlist, PlaylistPatch } from '@vp/domain';
 import {
   type UserContext,
@@ -6,7 +7,6 @@ import {
   canReadPlaylist,
   canUpdatePlaylist,
 } from '@vp/permissions';
-import { type Result, andThen, err, map, ok } from '@vp/result';
 import { type InvalidPlaylistDetails, validatePlaylistDetails } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
@@ -58,12 +58,13 @@ function userEditable(playlist: Playlist): Result<Playlist, SystemPlaylistImmuta
 export function decidePlaylistUpdate(
   input: UpdatePlaylistInput
 ): Result<PlaylistPatch, UpdatePlaylistFailure> {
-  const { visibility } = input.patch;
+  const { visibility, kind } = input.patch;
   return andThen(permitted(input, canUpdatePlaylist, 'update'), (playlist) =>
     andThen(userEditable(playlist), () =>
       map(validatePlaylistDetails(input.patch), (details) => ({
         ...details,
         ...(visibility === undefined ? {} : { visibility }),
+        ...(kind === undefined ? {} : { kind }),
       }))
     )
   );

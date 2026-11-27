@@ -1,7 +1,7 @@
-import { Container } from '@vp/composition';
+import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { CaslAuthorizationAdapter } from '../../authorization/casl-authorization-adapter';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { InMemoryRepositories } from '../../in-memory/repositories/in-memory-repositories';

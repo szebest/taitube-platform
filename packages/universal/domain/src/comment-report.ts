@@ -32,7 +32,7 @@ export type NewCommentReportInput = Pick<
 export interface CommentReportQueueItem extends CommentReport {
   comment: {
     id: string;
-    videoId: string;
+    videoId: string | null;
     authorId: string;
     content: string;
     removed: boolean;

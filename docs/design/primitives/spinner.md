@@ -20,7 +20,7 @@ An indeterminate ring that says something is working when the time or the total 
 
 ```ts
 // types.ts
-import type { IconSize, ToneOption } from '@vp/design-tokens';
+import type { IconSize, ToneOption } from '@kit/design-tokens';
 
 export type SpinnerSize = IconSize;
 export type SpinnerTone = Extract<ToneOption, 'neutral' | 'accent'>;

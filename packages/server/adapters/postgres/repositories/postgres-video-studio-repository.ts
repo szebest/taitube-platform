@@ -1,3 +1,4 @@
+import { err, fromPromise, map, ok, type Result } from '@kit/result';
 import {
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
@@ -7,7 +8,7 @@ import {
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { CREATOR_LIBRARY_COUNTERS, type LibrarySort } from '@vp/domain';
+import { CREATOR_LIBRARY_COUNTERS, type LibrarySort, videoEditAudit } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   databaseUnavailable,
@@ -15,22 +16,25 @@ import {
   versionConflict,
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { err, fromPromise, ok, type Result } from '@vp/result';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   containsScope,
   drizzleWhere,
   keysetPast,
+  msTimestamp,
   notDeletedScope,
-  ownerScope,
 } from '../scopes/index';
+import { appendChannelAudit } from './channel-audit-writes';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
+import { appendVideoRevisions, replaceChapters, selectChapters } from './video-revision-writes';
+import { commitVideoTransition } from './video-transition';
 
 const { videos: v, videoEvents: ve, categories: c } = schema;
 
 function sortKey(sort: LibrarySort) {
-  if (sort === 'newest') return v.createdAt;
+  if (sort === 'newest') return msTimestamp(v.createdAt);
   if (sort === 'title') return sql`${v.title} COLLATE "C"`;
   return v[CREATOR_LIBRARY_COUNTERS[sort]];
 }
@@ -52,19 +56,19 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   }
 
   async listLibrary(query: VideoLibraryQuery): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { ownerId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
+    const { channelId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
     const order = query.order ?? 'desc';
     const key = sortKey(sort);
     const direction = order === 'asc' ? asc : desc;
 
-    return fromPromise(
+    const rows = await fromPromise(
       () =>
         this.db
           .select()
           .from(v)
           .where(
             drizzleWhere(
-              ownerId ? ownerScope(v, ownerId) : undefined,
+              channelId ? eq(v.channelId, channelId) : undefined,
               notDeletedScope(v),
               status && eq(v.status, status),
               visibility && eq(v.visibility, visibility),
@@ -77,12 +81,14 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
           .limit(limit + 1),
       databaseUnavailable.during('listLibrary')
     );
+    return map(rows, (found) => found.map(toVideoRecord));
   }
 
   async updateMetadata(
     options: UpdateStudioMetadataOptions
   ): Promise<Result<StudioMetadataOutcome, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId } = options;
+    const { videoId, expectedVersion, userId, tokenId, auditFields, revision } = options;
+    const { chapters, ...patch } = options.patch;
 
     const committed = await fromPromise(
       () =>
@@ -92,13 +98,8 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             return ok({ type: 'category-missing', categoryId });
           }
 
-          const [before] = patch.visibility
-            ? await tx
-                .select({ visibility: v.visibility })
-                .from(v)
-                .where(eq(v.id, videoId))
-                .for('update')
-            : [];
+          const [before] = await tx.select().from(v).where(eq(v.id, videoId)).for('update');
+          const beforeChapters = before ? await selectChapters(tx, videoId) : [];
 
           const [updated] = await tx
             .update(v)
@@ -117,11 +118,34 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
               : ok({ type: 'video-missing' });
           }
 
+          if (chapters !== undefined) await replaceChapters(tx, videoId, chapters);
+          await appendVideoRevisions(tx, {
+            before: before ?? updated,
+            beforeChapters,
+            after: updated,
+            afterChapters: chapters ?? beforeChapters,
+            authorUserId: userId,
+            restoredFromVersion: revision?.restoredFromVersion,
+          });
           await tx.insert(ve).values({
             videoId,
             type: 'video.metadata_updated',
             payload: { patch, expectedVersion, newVersion: updated.version, requestedBy: userId },
           });
+          const edit = {
+            videoId,
+            fields: auditFields,
+            commentsEnabled: patch.commentsEnabled,
+            restoredFromVersion: revision?.restoredFromVersion,
+          };
+          for (const entry of videoEditAudit(edit)) {
+            await appendChannelAudit(tx, {
+              ...entry,
+              channelId: updated.channelId,
+              actorUserId: userId,
+              actorTokenId: tokenId,
+            });
+          }
           await enqueueNotificationJobs(
             tx,
             visibilityNotificationJobs(
@@ -131,7 +155,7 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
               updated.visibility
             )
           );
-          return ok({ type: 'updated', video: updated });
+          return ok({ type: 'updated', video: toVideoRecord(updated) });
         }),
       databaseUnavailable.during('updateMetadata')
     );
@@ -142,29 +166,25 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
   async takeDown(
     options: TakeDownVideoOptions
   ): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
-    const { videoId, from, moderatorId, reason } = options;
+    const { videoId, moderatorId, reason } = options;
 
     return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const [taken] = await tx
-            .update(v)
-            .set({
-              status: 'REJECTED',
-              visibility: 'private',
-              version: sql`${v.version} + 1`,
-              updatedAt: new Date(),
-            })
-            .where(and(eq(v.id, videoId), inArray(v.status, [...from])))
-            .returning();
+          const taken = await commitVideoTransition(tx, {
+            videoId,
+            edge: 'takedown',
+            patch: { visibility: 'private' },
+            eventPayload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
+          });
           if (!taken) return null;
 
-          await tx.insert(ve).values({
-            videoId,
-            type: 'video.taken_down',
-            payload: { requestedBy: moderatorId, ...(reason ? { reason } : {}) },
-          });
-          return taken;
+          const [bumped] = await tx
+            .update(v)
+            .set({ version: sql`${v.version} + 1` })
+            .where(eq(v.id, videoId))
+            .returning();
+          return bumped ? toVideoRecord(bumped) : null;
         }),
       databaseUnavailable.during('takeDown')
     );

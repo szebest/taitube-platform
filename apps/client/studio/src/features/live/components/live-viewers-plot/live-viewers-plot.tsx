@@ -1,6 +1,7 @@
-import type { FormatValue } from '@vp/intl';
-import { useFormat } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { seriesColor } from '@kit/components';
+import type { FormatValue } from '@kit/intl';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import {
   CartesianGrid,
   Line,
@@ -10,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
+import { useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;
 

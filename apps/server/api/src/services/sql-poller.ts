@@ -1,6 +1,6 @@
+import { isOk } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
-import type { PipelineMetrics } from '@vp/observability';
-import { isOk } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 
 /**
  * Writes `videos_by_status{status}` and `processing_steps_running_stale`. `time_to_ready_seconds`

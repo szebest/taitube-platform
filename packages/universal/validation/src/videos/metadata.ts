@@ -1,5 +1,5 @@
-import { type Result, andThen, err, map, ok } from '@vp/result';
-import type { LengthBounds } from '../failures';
+import { type Result, andThen, err, map, ok } from '@kit/result';
+import type { LengthBounds } from '@kit/validation';
 import { type VideoMetadataFailure, invalidVideoDescription, invalidVideoTitle } from './failures';
 import { validateVideoTags } from './tags';
 

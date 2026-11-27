@@ -1,9 +1,9 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
-import { TOKENS, type TestApp, bearer, buildTestApp } from './test-app';
+import { SEEDED } from '@vp/testing-fixtures';
+import { TOKENS, bearer, buildTestApp, seedPrimaryChannel, type TestApp } from './test-app';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000030';
 const OTHER_VIDEO_ID = '018f0000-0000-7000-8000-000000000031';
@@ -26,6 +26,7 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.userId),
       title: 'Reprocess Test Video',
       status: 'FAILED',
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
@@ -34,6 +35,7 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: OTHER_VIDEO_ID,
       ownerId: SEEDED.otherUserId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.otherUserId),
       title: 'Other User Video',
       status: 'READY',
       sourceKey: `raw/${OTHER_VIDEO_ID}/source.mp4`,
@@ -113,27 +115,23 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.repositories.videos.create({
       id: RATE_LIMIT_VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(ctx.repositories, SEEDED.userId),
       title: 'Rate Limit Test Video',
       status: 'READY',
       sourceKey: `raw/${RATE_LIMIT_VIDEO_ID}/source.mp4`,
       generation: 1,
     });
-    const resetToReady = () =>
-      ctx.repositories.videos.transition({
-        videoId: RATE_LIMIT_VIDEO_ID,
-        from: ['PROBING', 'READY'],
-        to: 'READY',
-        eventType: 'test.reset',
-      });
+    const finishProbe = () =>
+      ctx.repositories.videos.transition({ videoId: RATE_LIMIT_VIDEO_ID, edge: 'completeProbe' });
 
     // The owner's reprocess in the test above already counts toward this window.
     for (let i = 0; i < 4; i++) {
-      await resetToReady();
+      await finishProbe();
       const res = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
       expect(res.statusCode).toBe(202);
     }
 
-    await resetToReady();
+    await finishProbe();
     const limitedRes = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
     expect(limitedRes.statusCode).toBe(429);
     expect(limitedRes.json().code).toBe(ErrorCodes.RATE_LIMITED);

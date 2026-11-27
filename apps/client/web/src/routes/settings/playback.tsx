@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import {
   AutoplayNextRow,
+  HoverPlayRow,
   HoverPreviewRow,
   QualityRow,
   SettingsSectionPage,
@@ -22,6 +23,7 @@ function PlaybackSettings() {
       <SpeedRow />
       <AutoplayNextRow />
       <HoverPreviewRow />
+      <HoverPlayRow />
       <StatsOverlayRow />
     </SettingsSectionPage>
   );

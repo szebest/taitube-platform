@@ -1,3 +1,6 @@
+import type { Container } from '@kit/composition';
+import type { Logger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryJobQueue,
@@ -5,17 +8,16 @@ import {
   InMemorySearchSuggestionIndex,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import type { Container } from '@vp/composition';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
-import { mintToken } from '@vp/dev-token';
-import { SEARCH_SUGGESTIONS } from '@vp/domain';
+import type { Repositories } from '@vp/core/repositories';
+import { mintToken } from '@vp/dev-identity';
+import { type ChannelRole, SEARCH_SUGGESTIONS, type ActingChannel } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { type AdapterOverrides, composeApp } from '../app';
+import { provisionAccount } from '../services/channel-lookup';
 
 export const ADMIN_TOKEN = 'operator-token-for-tests';
 
@@ -80,15 +82,95 @@ type VideoInput = Parameters<InMemoryRepositories['videos']['create']>[0];
 
 type SeedVideo = Pick<VideoInput, 'id' | 'ownerId' | 'title'> & Partial<VideoInput>;
 
+/** The user's primary channel, provisioned the way their first request would when they have none. */
+export async function seedPrimaryChannel(
+  repositories: Pick<Repositories, 'users' | 'channels' | 'playlists'>,
+  userId: string
+): Promise<string> {
+  const [primary] = expectOk(await provisionAccount(repositories, userId));
+  if (!primary) throw new Error(`no primary channel was provisioned for ${userId}`);
+  return primary.id;
+}
+
+/** The user acting as their primary channel, which is what a request without `X-Channel-Id` acts as. */
+export async function actingAsPrimary(
+  repositories: Pick<Repositories, 'users' | 'channels' | 'playlists'>,
+  userId: string
+): Promise<ActingChannel> {
+  return {
+    channelId: await seedPrimaryChannel(repositories, userId),
+    ownerId: userId,
+    role: 'owner',
+  };
+}
+
+/** Published on the owner's primary channel unless `channelId` names another. */
 export async function seedVideo(repositories: InMemoryRepositories, video: SeedVideo) {
+  const channelId = video.channelId ?? (await seedPrimaryChannel(repositories, video.ownerId));
   return expectOk(
     await repositories.videos.create({
       visibility: 'public',
       status: 'READY',
       sourceKey: `raw/${video.id}/source.mp4`,
       ...video,
+      channelId,
     })
   );
+}
+
+const TEAM_INVITE_ID = '00000000-0000-7000-8000-00000000e117';
+
+/**
+ * Puts `memberId` on the team of `ownerId`'s channel the only way the store allows, through an
+ * accepted invite; creates the owner's channel when no request has provisioned it yet.
+ */
+export async function seedTeamMember(
+  repositories: InMemoryRepositories,
+  {
+    ownerId,
+    memberId,
+    role,
+    inviteId = TEAM_INVITE_ID,
+  }: { ownerId: string; memberId: string; role: ChannelRole; inviteId?: string }
+): Promise<string> {
+  const found = expectOk(await repositories.channels.findPrimaryByUserId(ownerId));
+  const channelId =
+    found?.id ??
+    expectOk(
+      await repositories.channels.create({
+        userId: ownerId,
+        handle: 'team-owner',
+        displayName: 'Owner',
+      })
+    ).id;
+  const audit = {
+    channelId,
+    actorUserId: ownerId,
+    targetType: 'invite',
+    targetId: inviteId,
+    meta: { inviteeUserId: memberId, role },
+  } as const;
+  expectOk(
+    await repositories.channelInvites.create(
+      {
+        id: inviteId,
+        channelId,
+        inviteeUserId: memberId,
+        role,
+        invitedBy: ownerId,
+        expiresAt: new Date(Date.now() + 3_600_000),
+      },
+      { ...audit, action: 'invite.created' }
+    )
+  );
+  expectOk(
+    await repositories.channelInvites.accept(inviteId, memberId, {
+      ...audit,
+      actorUserId: memberId,
+      action: 'invite.accepted',
+    })
+  );
+  return channelId;
 }
 
 export async function backdate(

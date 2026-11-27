@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { toAppConfig } from '../app-config';
 import { AppEnvSchema } from '../app-env';
 
@@ -35,6 +35,7 @@ describe('packages/env-schema: toAppConfig', () => {
       pagination: { defaultLimit: 20, maxLimit: 100 },
       sse: { heartbeatMs: 15000, maxPerUser: 20, maxPerPod: 5000 },
       auth: { type: 'dev', adminToken: 'change-me-32-bytes-random' },
+      videoAccess: { secret: 'change-me-video-access' },
       worker: { stage: 'probe', heartbeatPath: '/tmp/vp/heartbeat', tmpDir: '/tmp/vp' },
       captions: {
         enabled: true,
@@ -49,6 +50,12 @@ describe('packages/env-schema: toAppConfig', () => {
         rtmpPublicUrl: 'rtmp://localhost:1935/live',
         packaging: { segmentMs: 2000, partMs: 500, windowSegments: 5 },
       },
+      watchParties: {
+        maxMembers: 200,
+        maxOpenPerUser: 3,
+        guestSalt: 'change-me-party-salt',
+        ticketTtlSeconds: 30,
+      },
     });
   });
 
@@ -58,6 +65,7 @@ describe('packages/env-schema: toAppConfig', () => {
     expect(config.postgres.url).toBe('postgres://db:5432/vp');
     expect(config.auth).toMatchObject({ type: 'dev', adminToken: undefined });
     expect(config.s3.accessKeyId).toBeUndefined();
+    expect(config.videoAccess.secret).toBeUndefined();
   });
 
   it.each([

@@ -1,5 +1,5 @@
-import { ACCENT_GROUNDS, deriveAccent, type ModeFamily } from '@vp/design-tokens';
-import { useT } from '@vp/intl-react';
+import { ACCENT_GROUNDS, deriveAccent, type ModeFamily } from '@kit/design-tokens';
+import { useT } from '#app/lib/messages';
 
 const FAMILIES: readonly ModeFamily[] = ['dark', 'light'];
 

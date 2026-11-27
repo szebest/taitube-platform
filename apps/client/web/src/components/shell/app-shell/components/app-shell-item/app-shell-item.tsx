@@ -1,4 +1,4 @@
-import { Icon, type IconId, Slot, Tooltip } from '@vp/ui';
+import { Icon, type IconId, Slot, Tooltip } from '@kit/ui';
 import { type ComponentPropsWithRef, type SyntheticEvent, use, useState } from 'react';
 import { RailLabelsShown } from '#app/components/shell/app-shell/app-shell.context';
 import { appShellStyles } from '#app/components/shell/app-shell/app-shell.variants';

@@ -1,6 +1,6 @@
 # EmptyState
 
-One editorial line and one action, for any place that has nothing yet. Every surface designs it before it ships. In `@vp/components` because both apps render it.
+One editorial line and one action, for any place that has nothing yet. Every surface designs it before it ships. In `@kit/components` because both apps render it.
 
 ## Anatomy
 
@@ -28,7 +28,7 @@ Plus the standard props. The title is the heading element the caller passes.
 
 ```ts
 // types.ts
-import type { TypeStyleOption } from '@vp/design-tokens';
+import type { TypeStyleOption } from '@kit/design-tokens';
 
 export type EmptyStateSize = 'page' | 'section' | 'inline';
 export type EmptyStateTitleStyle = Extract<TypeStyleOption, 'title-lg' | 'editorial'>;

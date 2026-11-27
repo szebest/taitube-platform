@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NotificationKind } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { usersSwitchedOn } from '../notification-switches';
 import { saveSwitches, userId } from './notification-harness';
 
@@ -25,6 +25,7 @@ describe('apps/server/worker/stages: usersSwitchedOn', () => {
     { kind: 'mention', users: [1, 3] },
     { kind: 'comment', users: [1, 3] },
     { kind: 'processing', users: [1, 2, 3] },
+    { kind: 'team_invite', users: [1, 2, 3] },
   ])('lets $kind through to the accounts $users, an unsaved one on its defaults', async (c) => {
     expect(await switchedOn(c.kind)).toEqual(c.users.map(userId));
   });

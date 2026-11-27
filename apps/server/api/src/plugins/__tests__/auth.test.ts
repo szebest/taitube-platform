@@ -1,13 +1,18 @@
+import { err, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { DevTokenVerifier } from '@vp/adapters/auth';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { getDevJwks, mintToken } from '@vp/dev-token';
+import { InMemoryPartyGuestSessions, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
+import { getDevJwks, mintToken } from '@vp/dev-identity';
+import { apiTokenRefused } from '@vp/domain-rules';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
+import { seedTeamMember } from '../../__tests__/test-app';
 import { channelServiceDeps } from '../../services/__tests__/service-deps';
 import { ChannelService } from '../../services/channel-service';
-import { registerAuth } from '../auth';
+import { RequestIdentity } from '../../services/request-identity';
+import { registerAuth, requireActingChannel } from '../auth';
 import { registerErrorHandler } from '../errors';
 
 const OPERATOR_TOKEN = 'rotated-operator-token';
@@ -28,9 +33,11 @@ const JWKS_AUTH: AuthConfig = {
   fetchTimeoutMs: 1,
 };
 
-function channels(): ChannelService {
-  const repositories = new InMemoryRepositories();
-  return new ChannelService(channelServiceDeps(repositories));
+function identityOver(repositories: InMemoryRepositories): RequestIdentity {
+  return new RequestIdentity({
+    channels: new ChannelService(channelServiceDeps(repositories)),
+    members: repositories.channelMembers,
+  });
 }
 
 const verifier = new DevTokenVerifier({
@@ -40,12 +47,39 @@ const verifier = new DevTokenVerifier({
   now: Date.now,
 });
 
-async function appWith(auth: AuthConfig, channelService = channels()): Promise<FastifyInstance> {
+const GUEST_CREDENTIAL = 'guest-credential';
+
+async function appWith(
+  auth: AuthConfig,
+  identity = identityOver(new InMemoryRepositories()),
+  guestSessions = new InMemoryPartyGuestSessions()
+): Promise<FastifyInstance> {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
-  await app.register(registerAuth, { channelService, verifier, auth });
-  app.get('/whoami', async (request) => ({ user: request.user }));
+  await app.register(registerAuth, {
+    identity,
+    verifier,
+    auth,
+    guestSessions,
+    partyCredentialTtlSeconds: 60,
+    tokens: { authenticate: async () => err(apiTokenRefused('none')), recordUse: async () => ok() },
+    tokenRateLimit: async () => null,
+  });
+  for (const url of ['/whoami', '/v1/watch-parties/:id']) {
+    app.get(url, async (request) => ({ user: request.user, party: request.party }));
+  }
+  app.get('/acting', async (request) => requireActingChannel(request).acting);
   return app;
+}
+
+async function partyApp(): Promise<FastifyInstance> {
+  const guestSessions = new InMemoryPartyGuestSessions();
+  await guestSessions.issue(
+    GUEST_CREDENTIAL,
+    { principal: { kind: 'guest', guestId: 'g_guest', name: 'Guest' }, ipHash: 'ip' },
+    60
+  );
+  return appWith(devAuth(undefined), undefined, guestSessions);
 }
 
 async function whoami(app: FastifyInstance, headers: Record<string, string>) {
@@ -53,17 +87,48 @@ async function whoami(app: FastifyInstance, headers: Record<string, string>) {
   return { status: res.statusCode, user: res.statusCode === 200 ? res.json().user : undefined };
 }
 
-describe('apps/server/api/plugins: auth', () => {
-  it('admits the dev admin token as the provisioned user it names', async () => {
-    const channelService = channels();
-    const provision = vi.spyOn(channelService, 'ensureProvisioned');
-    const app = await appWith(devAuth(OPERATOR_TOKEN), channelService);
+async function acting(app: FastifyInstance, headers: Record<string, string>) {
+  const res = await app.inject({ method: 'GET', url: '/acting', headers });
+  return res.statusCode === 200
+    ? { status: res.statusCode, acting: res.json() }
+    : { status: res.statusCode, code: res.json().code };
+}
 
-    expect(await whoami(app, { 'x-admin-token': OPERATOR_TOKEN })).toEqual({
-      status: 200,
-      user: { id: OPERATOR_ID, role: 'ADMIN' },
+describe('apps/server/api/plugins: auth', () => {
+  it.each([
+    { scenario: 'a partyGuest route', url: '/v1/watch-parties/room-1', resolved: true },
+    { scenario: 'any other route', url: '/whoami', resolved: false },
+  ])('reads a party credential on $scenario only: $resolved', async ({ url, resolved }) => {
+    const app = await partyApp();
+    const res = await app.inject({ url, headers: { 'x-party-credential': GUEST_CREDENTIAL } });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      user: null,
+      party: resolved ? { principal: { kind: 'guest' } } : null,
     });
-    expect(provision).toHaveBeenCalledWith(OPERATOR_ID, undefined);
+  });
+
+  it('refuses a party credential that resolves to nothing', async () => {
+    const app = await partyApp();
+    const res = await app.inject({
+      url: '/v1/watch-parties/room-1',
+      headers: { 'x-party-credential': 'expired' },
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ code: 'WATCH_PARTY_CREDENTIAL_INVALID' });
+  });
+
+  it('admits the dev admin token as the provisioned user it names', async () => {
+    const repositories = new InMemoryRepositories();
+    const app = await appWith(devAuth(OPERATOR_TOKEN), identityOver(repositories));
+
+    expect(await whoami(app, { 'x-admin-token': OPERATOR_TOKEN })).toMatchObject({
+      status: 200,
+      user: { id: OPERATOR_ID, role: 'ADMIN', memberships: {} },
+    });
+    expect(expectOk(await repositories.channels.findPrimaryByUserId(OPERATOR_ID))).not.toBeNull();
   });
 
   it.each([
@@ -83,9 +148,9 @@ describe('apps/server/api/plugins: auth', () => {
     const app = await appWith(devAuth(undefined));
     const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a1', role: 'user' });
 
-    expect(await whoami(app, { authorization: `Bearer ${token}` })).toEqual({
+    expect(await whoami(app, { authorization: `Bearer ${token}` })).toMatchObject({
       status: 200,
-      user: { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER' },
+      user: { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER', memberships: {} },
     });
   });
 
@@ -102,14 +167,89 @@ describe('apps/server/api/plugins: auth', () => {
     expect(res.json()).toMatchObject({ code: 'UNAUTHORIZED' });
   });
 
-  it('answers 503 rather than 401 when provisioning the caller cannot reach the database', async () => {
-    const channelService = channels();
-    vi.spyOn(channelService, 'ensureProvisioned').mockResolvedValue(
-      err(databaseUnavailable('users.upsert'))
-    );
-    const app = await appWith(devAuth(undefined), channelService);
+  it('answers 503, not 401, when provisioning cannot reach the database', async () => {
+    const repositories = new InMemoryRepositories();
+    const identity = new RequestIdentity({
+      channels: { ensureProvisioned: async () => err(databaseUnavailable('users.upsert')) },
+      members: repositories.channelMembers,
+    });
+    const app = await appWith(devAuth(undefined), identity);
     const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a2', role: 'user' });
 
     expect((await whoami(app, { authorization: `Bearer ${token}` })).status).toBe(503);
+  });
+
+  describe('the acting channel', () => {
+    const OWNER_ID = '00000000-0000-7000-8000-0000000000c1';
+    const MEMBER_ID = '00000000-0000-7000-8000-0000000000c2';
+    const bearer = (sub: string) => ({
+      authorization: `Bearer ${mintToken({ sub, role: 'user' })}`,
+    });
+
+    async function team() {
+      const repositories = new InMemoryRepositories();
+      const identity = identityOver(repositories);
+      const owner = expectOk(await identity.resolve({ id: OWNER_ID, role: 'USER' }));
+      expectOk(await identity.resolve({ id: MEMBER_ID, role: 'USER' }));
+      await seedTeamMember(repositories, {
+        ownerId: OWNER_ID,
+        memberId: MEMBER_ID,
+        role: 'editor',
+      });
+      return {
+        app: await appWith(devAuth(undefined), identity),
+        repositories,
+        channelId: expectOk(owner.acting).channelId,
+      };
+    }
+
+    it('acts as a member, with their role, on the channel X-Channel-Id names', async () => {
+      const { app, channelId } = await team();
+
+      const headers = { ...bearer(MEMBER_ID), [CHANNEL_HEADER]: channelId };
+
+      expect(await whoami(app, headers)).toMatchObject({
+        status: 200,
+        user: { memberships: { [channelId]: { role: 'editor', ownerId: OWNER_ID } } },
+      });
+      expect(await acting(app, headers)).toEqual({
+        status: 200,
+        acting: { channelId, ownerId: OWNER_ID, role: 'editor' },
+      });
+    });
+
+    it('refuses a stranger, and a member removed since, only where a channel is needed', async () => {
+      const { app, repositories, channelId } = await team();
+      const asMember = { ...bearer(MEMBER_ID), [CHANNEL_HEADER]: channelId };
+      const stranger = {
+        ...bearer('00000000-0000-7000-8000-0000000000c4'),
+        [CHANNEL_HEADER]: channelId,
+      };
+
+      expect(await acting(app, stranger)).toEqual({
+        status: 403,
+        code: 'CHANNEL_MEMBERSHIP_REQUIRED',
+      });
+
+      expect((await acting(app, asMember)).status).toBe(200);
+      expectOk(
+        await repositories.channelMembers.remove(
+          { channelId, userId: MEMBER_ID, role: 'editor' },
+          {
+            channelId,
+            actorUserId: OWNER_ID,
+            action: 'member.removed',
+            targetType: 'member',
+            targetId: MEMBER_ID,
+            meta: { role: 'editor' },
+          }
+        )
+      );
+      expect(await acting(app, asMember)).toEqual({
+        status: 403,
+        code: 'CHANNEL_MEMBERSHIP_REQUIRED',
+      });
+      expect((await whoami(app, asMember)).status).toBe(200);
+    });
   });
 });

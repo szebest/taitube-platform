@@ -1,3 +1,4 @@
+import { SECONDS_PER_DAY } from '@kit/primitives';
 import type { SearchHit, SearchQuery } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -6,9 +7,9 @@ import {
   type SearchResultKind,
   searchHandleOf,
 } from '@vp/domain';
-import { SECONDS_PER_DAY } from '@vp/domain/time';
-import { type SQL, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
+import { type SQL, and, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
+import { toVideoRecord } from '../mappers/video.mapper';
 import {
   drizzleWhere,
   notDeletedScope,
@@ -106,7 +107,12 @@ export const videoSource = sourceOf({
       .where(where)
       .orderBy(desc(key), desc(v.id))
       .limit(limit);
-    return rows.map(({ video, key }) => ({ kind: 'video', key, id: video.id, video }));
+    return rows.map(({ video, key }) => ({
+      kind: 'video',
+      key,
+      id: video.id,
+      video: toVideoRecord(video),
+    }));
   },
 });
 
@@ -195,7 +201,7 @@ export const playlistSource = sourceOf({
       })
       .from(p)
       .innerJoinLateral(stats, sql`true`)
-      .leftJoin(ch, eq(ch.userId, p.ownerId))
+      .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
       .where(where)
       .orderBy(desc(key), desc(p.id))
       .limit(limit);

@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { ProbeJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { recordProbeFailure } from '../probe-failure';
 
@@ -32,6 +32,7 @@ describe('apps/server/worker: recordProbeFailure', () => {
       await repositories.videos.create({
         id: videoId,
         ownerId: OWNER_ID,
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         sourceKey: `raw/${videoId}/source.mp4`,
         status: 'PROBING',
       })

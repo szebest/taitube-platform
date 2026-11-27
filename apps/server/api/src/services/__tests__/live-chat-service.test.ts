@@ -1,3 +1,5 @@
+import { createLogger } from '@kit/logger';
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryLiveChatGate,
@@ -6,12 +8,18 @@ import {
 import type { LiveChatServerFrame } from '@vp/api-contracts';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { createLogger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { LiveChatHub } from '../live-chat-hub';
 import { type LiveChatSession, LiveChatService } from '../live-chat-service';
-import { liveWorld, MODERATOR, OWNER, STARTED, STREAM_ID, VIEWER } from './live-harness';
+import {
+  liveWorld,
+  MODERATOR,
+  OWNER,
+  STARTED,
+  STREAM_ID,
+  VIEWER,
+  VIEWER_CHANNEL_ID,
+} from './live-harness';
 
 const ORIGIN = 'http://localhost:5173';
 const TUNING = inProcessAppConfig().live.chat;
@@ -179,8 +187,10 @@ describe('apps/server/api/services: LiveChatService', () => {
     expect(expectErr(await viewer.send({ type: 'send', message: 'hi' })).code).toBe(
       ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY
     );
-    const channel = expectOk(await repositories.channels.findByUserId(OWNER.id));
-    expectOk(await repositories.subscriptions.subscribe(VIEWER.id, channel?.id ?? ''));
+    const channel = expectOk(await repositories.channels.findPrimaryByUserId(OWNER.id));
+    expectOk(
+      await repositories.subscriptions.subscribe(VIEWER.id, VIEWER_CHANNEL_ID, channel?.id ?? '')
+    );
     expectOk(await viewer.send({ type: 'send', message: 'hi' }));
     expect(expectErr(await viewer.send({ type: 'send', message: 'again' }))).toMatchObject({
       code: ErrorCodes.LIVE_CHAT_SLOW_MODE,

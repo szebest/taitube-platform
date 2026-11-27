@@ -1,3 +1,4 @@
+import { type Result, andThen } from '@kit/result';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { Video } from '@vp/domain';
 import {
@@ -8,7 +9,6 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen } from '@vp/result';
 
 export type CaptionAccessFailure = ReadVideoFailure | DatabaseUnavailable;
 

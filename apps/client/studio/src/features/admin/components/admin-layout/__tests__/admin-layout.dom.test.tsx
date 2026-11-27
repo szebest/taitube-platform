@@ -6,6 +6,7 @@ describe('apps/client/studio: AdminLayout', () => {
     { section: 'Categories', href: '/admin/categories' },
     { section: 'Curation', href: '/admin/curation' },
     { section: 'Moderation', href: '/admin/moderation' },
+    { section: 'Held and flagged', href: '/admin/screening' },
     { section: 'Queues', href: '/admin/queues' },
   ])('links the $section section and marks the open one', async ({ section, href }) => {
     await adminSection(href);

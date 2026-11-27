@@ -1,6 +1,11 @@
-import { InMemoryChannelRepository, InMemoryVideoRepository } from '@vp/adapters/in-memory';
+import { expectOk } from '@kit/testing/result';
+import {
+  InMemoryChannelAuditRepository,
+  InMemoryChannelHandleHistoryRepository,
+  InMemoryChannelRepository,
+  InMemoryVideoRepository,
+} from '@vp/adapters/in-memory';
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import {
   loadChannelsOf,
   playbackUrl,
@@ -81,20 +86,22 @@ describe('apps/server/api/services: video views', () => {
   });
 
   describe('toCreatorVideoView', () => {
-    it('adds the comment counter and the tags to the summary', () => {
+    it('adds the comment counter, the tags and the comments switch to the summary', () => {
       const subject = video({ commentsCount: 4, tags: ['lofi'], customThumbnailKey: 'c.png' });
 
       expect(toCreatorVideoView(subject, CDN, SPRITE, CHANNEL)).toEqual({
         ...toVideoSummaryView(subject, CDN, SPRITE, CHANNEL),
         commentsCount: 4,
         tags: ['lofi'],
+        commentsEnabled: true,
       });
     });
 
-    it('reads absent counters and tags as their column defaults', () => {
+    it('reads absent counters, tags and the comments switch as their column defaults', () => {
       expect(toCreatorVideoView(video(), CDN, SPRITE, CHANNEL)).toMatchObject({
         commentsCount: 0,
         tags: [],
+        commentsEnabled: true,
       });
     });
   });
@@ -133,14 +140,18 @@ describe('apps/server/api/services: video views', () => {
   });
 
   describe('loadChannelsOf', () => {
-    it('reads the channel of each owner, null for an owner without one', async () => {
-      const channels = new InMemoryChannelRepository(new InMemoryVideoRepository());
+    it('reads the card of each channel, null for an id with no channel', async () => {
+      const channels = new InMemoryChannelRepository(
+        new InMemoryVideoRepository(),
+        new InMemoryChannelHandleHistoryRepository(),
+        new InMemoryChannelAuditRepository()
+      );
       const owner = '00000000-0000-7000-8000-0000000000e2';
       expectOk(await channels.create({ ...CHANNEL, userId: owner }));
 
-      const channelOf = expectOk(await loadChannelsOf(channels, [owner, VIDEO_ID]));
+      const channelOf = expectOk(await loadChannelsOf(channels, [CHANNEL.id, VIDEO_ID]));
 
-      expect([channelOf(owner), channelOf(VIDEO_ID)]).toEqual([CHANNEL, null]);
+      expect([channelOf(CHANNEL.id), channelOf(VIDEO_ID)]).toEqual([CHANNEL, null]);
     });
   });
 

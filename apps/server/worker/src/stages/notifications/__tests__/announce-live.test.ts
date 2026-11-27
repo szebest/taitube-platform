@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { AnnounceLiveJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createAnnounceLiveProcessor } from '../announce-live';
 import {
   CHANNEL_ID,
@@ -55,7 +55,13 @@ describe('apps/server/worker/stages: announce-live', () => {
     expectOk(
       await repositories.liveStreams.goLive({
         streamId: STREAM_ID,
-        video: { id: VIDEO_ID, ownerId: CREATOR_ID, visibility, sourceKey: `live/${STREAM_ID}/` },
+        video: {
+          id: VIDEO_ID,
+          ownerId: CREATOR_ID,
+          channelId: CHANNEL_ID,
+          visibility,
+          sourceKey: `live/${STREAM_ID}/`,
+        },
         startedAt: STARTED,
         outbox: [],
       })

@@ -1,6 +1,6 @@
 import { fallbackPick, scheduledPick, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { spotlightOf } from '#app/features/browse/utils/spotlight';
 import { SpotlightCard } from '../spotlight-card';
 
@@ -11,7 +11,7 @@ const VIDEO = videoSummary({
 });
 
 const renderCard = (view: Parameters<typeof spotlightOf>[0]) =>
-  renderPage(<SpotlightCard spotlight={spotlightOf(view)} />, AppProviders);
+  renderPage(<SpotlightCard spotlight={spotlightOf(view)} />, AppProvidersWithToasts);
 
 describe('apps/client/web: SpotlightCard', () => {
   it('names the section, links the video and offers to watch it', async () => {

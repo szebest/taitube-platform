@@ -1,7 +1,7 @@
+import { Button, DropdownMenu, Icon } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_SORTS } from '@vp/domain';
-import { useT } from '@vp/intl-react';
-import { Button, DropdownMenu, Icon } from '@vp/ui';
+import { useT } from '#app/lib/messages';
 
 const route = getRouteApi('/search');
 
@@ -14,7 +14,7 @@ export function SearchSortMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="soft" tone="neutral" size="sm">
+        <Button variant="soft" tone="neutral" size="sm" className="shrink-0">
           <Icon name="sort" />
           {tOr('search.sort', { sort }, '')}
         </Button>

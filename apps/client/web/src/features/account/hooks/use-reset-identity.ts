@@ -1,5 +1,5 @@
+import { useAppearance } from '@kit/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAppearance } from '@vp/ui';
 import { useDevicePreferences } from '#app/lib/preferences/device-preferences-provider';
 import { type GuestSections, resetIdentityState } from '../api/identity-reset';
 import { useMergeState } from '../components/preferences-sync/merge-state.context';

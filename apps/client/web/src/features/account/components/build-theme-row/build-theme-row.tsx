@@ -1,13 +1,13 @@
-import { ErrorCodes } from '@vp/errors';
-import { useT } from '@vp/intl-react';
 import {
   Button,
   CUSTOM_THEME_ID,
   CUSTOM_THEME_START,
   registerCustomTheme,
   useAppearance,
-} from '@vp/ui';
+} from '@kit/ui';
+import { ErrorCodes } from '@vp/errors';
 import { useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
 const colourInput =

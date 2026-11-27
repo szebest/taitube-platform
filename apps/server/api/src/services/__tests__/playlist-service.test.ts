@@ -1,9 +1,9 @@
+import { type Result, isErr, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistService } from '../playlist-service';
 import { ViewerProgress } from '../viewer-progress';
@@ -84,6 +84,24 @@ describe('PlaylistService', () => {
       expect(expectErr(await act(id)).code).toBe(ErrorCodes.PLAYLIST_NOT_FOUND);
     }
   );
+
+  it('refuses a series conversion while the playlist holds a video of another channel the owner cannot watch', async () => {
+    const hidden = '00000000-0000-7000-8000-00000000e003';
+    await seedVideo(repositories, {
+      id: hidden,
+      ownerId: '00000000-0000-7000-8000-00000000e009',
+      visibility: 'private',
+    });
+    const id = await created();
+    expectOk(await repositories.playlists.addItem(id, { id: 'item-hidden', videoId: hidden }));
+
+    const converted = await service.update(OWNER, id, { kind: 'series' });
+
+    expect(expectErr(converted)).toMatchObject({
+      code: ErrorCodes.SERIES_VIDEO_NOT_OWNED,
+      videoId: hidden,
+    });
+  });
 
   it('hands the reorder rule the items as the write transaction sees them', async () => {
     const id = await created();

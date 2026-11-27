@@ -3,12 +3,15 @@ import { load } from 'js-yaml';
 import { budgetFindings } from './ci-budget-rules';
 import { checks, type Job, needsOf, runs, triggersOf, type Workflow } from './ci-workflow';
 
-const matrixShards = (job: Job): (string | number)[] => [...(job.strategy?.matrix?.shard ?? [])];
+const matrixShards = (job: Job): string | (string | number)[] => {
+  const shards = job.strategy?.matrix?.shard ?? [];
+  return typeof shards === 'string' ? shards : [...shards];
+};
 
 const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
 
-/** build 3, a unit shard 5 and the aggregate 1: the longest chain of timeouts. */
-const CRITICAL_PATH_MINUTES = 9;
+/** build 4 and extractable 9: the longest chain of timeouts. */
+const CRITICAL_PATH_MINUTES = 13;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';
@@ -94,6 +97,14 @@ export function shapeFindings(source: string): string[] {
     );
   }
 
+  if (!/\bpnpm gen:env-docs --check\b/.test(runs(jobNamed('lint-typecheck') ?? {}))) {
+    findings.push('lint-typecheck: docs/ENVIRONMENT.md is not checked for drift');
+  }
+
+  if (!/\bpnpm gen:state-machines --check\b/.test(runs(jobNamed('lint-typecheck') ?? {}))) {
+    findings.push('lint-typecheck: docs/state-machines.md is not checked for drift');
+  }
+
   const e2e = jobNamed('e2e-smoke');
   if (e2e && needsOf(e2e).join() !== 'build') findings.push('e2e-smoke: needs more than build');
 
@@ -126,10 +137,9 @@ export function shapeFindings(source: string): string[] {
   }
 
   for (const [key, job] of Object.entries(workflow.jobs)) {
-    const shards = matrixShards(job);
-    const divided = /--shard=\$\{\{\s*matrix\.shard\s*\}\}\/(\d+)/.exec(runs(job))?.[1];
-    if (divided !== undefined && !isDeepStrictEqual(shards, rangeTo(Number(divided)))) {
-      findings.push(`${key}: its matrix does not run every one of the ${divided} shards`);
+    const divisor = /--shard=\$\{\{\s*matrix\.shard\s*\}\}\/(\d+)\b/.exec(runs(job))?.[1];
+    if (divisor !== undefined && !isDeepStrictEqual(matrixShards(job), rangeTo(Number(divisor)))) {
+      findings.push(`${key}: its matrix does not run every one of the ${divisor} shards`);
     }
   }
 

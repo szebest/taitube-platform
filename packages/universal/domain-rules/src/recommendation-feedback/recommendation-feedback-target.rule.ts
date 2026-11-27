@@ -1,6 +1,6 @@
+import { err, isErr, map, ok, type Result } from '@kit/result';
 import type { Channel, FeedbackTarget, Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, map, ok, type Result } from '@vp/result';
 import { type ChannelNotFound, channelNotFound } from '../channels/failures';
 import type { VideoForbidden, VideoNotFound, VideoReadRequiresAuth } from '../videos/failures';
 import { decideVideoRead, publicReadFailure } from '../videos/read-video.rule';

@@ -12,10 +12,15 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./dev-personas": {
-      "types": "./dist/dev-only/index.d.ts",
-      "import": "./dist/dev-only/index.js",
-      "default": "./dist/dev-only/index.js"
+    "./demo-personas": {
+      "types": "./dist/demo-personas/index.d.ts",
+      "import": "./dist/demo-personas/index.js",
+      "default": "./dist/demo-personas/index.js"
+    },
+    "./intl": {
+      "types": "./dist/intl/index.d.ts",
+      "import": "./dist/intl/index.js",
+      "default": "./dist/intl/index.js"
     }
   },
   "scripts": {
@@ -25,21 +30,29 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@kit/components": "workspace:*",
+    "@kit/errors": "workspace:*",
+    "@kit/i18n": "workspace:*",
+    "@kit/intl-react": "workspace:*",
+    "@kit/query": "workspace:*",
+    "@kit/result": "workspace:*",
+    "@kit/security-headers": "workspace:*",
+    "@kit/ui": "workspace:*",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
-    "@vp/components": "workspace:*",
+    "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
-    "@vp/intl": "workspace:*",
-    "@vp/intl-react": "workspace:*",
-    "@vp/messages": "workspace:*",
+    "@vp/shared-messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
-    "@vp/result": "workspace:*",
-    "@vp/security-headers": "workspace:*",
-    "@vp/ui": "workspace:*",
+    "cookie-es": "^3.1.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@kit/vite-preset": "workspace:*",
+    "@kit/web-testing": "workspace:*",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.41",
     "@tanstack/react-router-ssr-query": "^1.167.3",
@@ -50,9 +63,6 @@
     "@testing-library/user-event": "^14.6.7",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
-    "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "msw": "~3.0.2",
@@ -71,6 +81,6 @@
     "react": "^19.3.0"
   },
   "vp": {
-    "layer": 5
+    "layer": 9
   }
 }

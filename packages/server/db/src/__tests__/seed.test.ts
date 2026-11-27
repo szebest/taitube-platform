@@ -1,4 +1,4 @@
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import { runMigrations } from '../migrate';
 import { seedDatabase } from '../seed';
 import { type SocketDatabase, startSocketDatabase } from './socket-database';
@@ -39,6 +39,17 @@ describe('db: seedDatabase', () => {
         visibility: 'private',
         status: 'READY',
       },
+    ]);
+  });
+
+  it('gives every seeded user one primary channel and files each video under it', async () => {
+    expect(
+      await rows(
+        'select c.id, c.user_id, c.is_primary, count(v.id)::int as videos from channels c left join videos v on v.channel_id = c.id group by c.id order by c.id'
+      )
+    ).toEqual([
+      { id: SEEDED.channelId, user_id: SEEDED.userId, is_primary: true, videos: 1 },
+      { id: SEEDED.otherChannelId, user_id: SEEDED.otherUserId, is_primary: true, videos: 1 },
     ]);
   });
 

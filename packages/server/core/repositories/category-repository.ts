@@ -1,3 +1,4 @@
+import type { Result } from '@kit/result';
 import type {
   Category,
   CategoryWithVideoCount,
@@ -6,7 +7,6 @@ import type {
   UpdateCategoryInput,
 } from '@vp/domain';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 /**
  * Absence is not a failure: `findById`, `findBySlug` and `update` answer `ok(null)` for a row that

@@ -1,5 +1,5 @@
+import type { Failure } from '@kit/errors';
 import { ErrorCodes } from './error-codes';
-import type { Failure } from './failure';
 
 /**
  * Failures a store reports because a constraint said no. They live here rather than in
@@ -55,5 +55,18 @@ export function versionConflict(id: string, expectedVersion?: number): VersionCo
     message: 'The record was modified by another request',
     id,
     ...(expectedVersion === undefined ? {} : { expectedVersion }),
+  };
+}
+
+export type ChannelLimitReached = Failure<
+  typeof ErrorCodes.CHANNEL_LIMIT_REACHED,
+  { limit: number }
+>;
+
+export function channelLimitReached(limit: number): ChannelLimitReached {
+  return {
+    code: ErrorCodes.CHANNEL_LIMIT_REACHED,
+    message: `An account owns at most ${limit} channels`,
+    limit,
   };
 }

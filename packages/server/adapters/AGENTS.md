@@ -19,6 +19,7 @@ adapters/
 ├── composition/   # Adapter tokens and registerAdapters: the one in-memory/external switch
 ├── in-memory/     # In-memory test doubles for zero-dependency unit tests
 ├── metered/       # MeteredStorageClient & MeteredMultipartStorage (storage op metrics)
+├── onnx/          # OnnxFrameClassifier (FrameClassifier over onnxruntime-node, the pinned model checked at start)
 ├── postgres/      # PostgresDatabaseClient, Drizzle repositories, mappers, CASL-to-SQL scopes
 ├── redis/         # RedisCacheClient, pub/sub, category, reaction, subscription, comment and playhead caches, view buffer, search suggestion index
 ├── resilient/     # FallbackViewBuffer: holds views in process behind a circuit breaker while Redis is down
@@ -48,7 +49,7 @@ adapters and the composition module; the doubles are reached only through `@vp/a
   foreign structures.
 
 ### Rule 3: Every SDK Call Is Wrapped Where It Is Made
-- Outside `@vp/result` and an entrypoint's top-level handler, this package is the only home for `catch`
+- Outside `@kit/result` and an entrypoint's top-level handler, this package is the only home for `catch`
   (`tests/architecture/catch-confinement.test.ts`). Write it as `tryCatch` / `fromPromise` **at the exact line
   the SDK is called** - never around a block. A wrapper around ten statements cannot say which one failed. Raw
   `catch` still exists in `bullmq/bullmq-processor.ts` (reclassifies a stage throw for BullMQ),
@@ -64,6 +65,8 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 - The in-memory doubles return the **same** `Result` types as the real adapters, and the contract conformance
   suite asserts they agree on failures as well as on values - the `channels.handle` unique violation surfaces
   as `HANDLE_ALREADY_TAKEN` from both.
+- The cache, queue and flow producer suites are `@kit/ports/contract`; `__tests__/contract/` keeps the subjects that
+  make them (`redis-subjects.ts`, `bullmq-subjects.ts`, `in-memory-port-subjects.ts`) and the suites of the app's own ports.
 - **`fromPromise` takes a thunk.** An SDK builder chain runs synchronously up to its last call, so handing the
   finished promise over leaves everything before it outside the boundary.
 
@@ -103,6 +106,12 @@ pnpm --filter @vp/adapters typecheck
 
 # Run adapter unit tests
 pnpm --filter @vp/adapters test
+
+# Run the pinned-model spec and the 500-video fingerprint lookup (what the integration job runs)
+pnpm --filter @vp/adapters test:integration
+
+# Measure the fingerprint lookup against 10 000 videos (on demand, about 20 s, never in CI)
+pnpm --filter @vp/adapters test:perf
 
 # Build package
 pnpm --filter @vp/adapters build

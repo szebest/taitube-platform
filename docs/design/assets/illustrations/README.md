@@ -13,7 +13,7 @@ They are built from the mark's language, so a state reads as Taitube without a m
 - **Strokes**: 3 units, round caps and joins, matching the mark's frame stroke.
 - **Colour**: the root carries `color="#C9A66B"` (Sand dark `accent`) so an `<img>` renders tinted. An
   `<img>` cannot inherit CSS `color`, so it stays ochre in every theme and mode; inlined (an SVGR component in
-  `@vp/components`), any CSS `color` overrides the attribute and the drawing takes `accent` per theme.
+  `@kit/components`), any CSS `color` overrides the attribute and the drawing takes `accent` per theme.
 - **Decorative**: `aria-hidden="true"`; the state's heading and line carry the meaning, so an `<img>` gets
   `alt=""`.
 - **No text** inside a drawing, so nothing needs translating or mirroring under RTL.

@@ -10,6 +10,8 @@ export const PRIVACY_SETTINGS = defineSection({
     scope: 'account',
   }),
   subscriptionsVisible: flag({ default: false, scope: 'account' }),
+  /** "Show me in party previews and on Discord": `toRosterPreview` shows a face only when it is on. */
+  showInParties: flag({ default: true, scope: 'account' }),
 });
 
 export type PrivacyPreferences = SectionValues<typeof PRIVACY_SETTINGS>;

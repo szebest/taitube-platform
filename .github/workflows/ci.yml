@@ -15,6 +15,8 @@ concurrency:
 
 permissions:
   contents: read
+  # setup-workspace downloads the build job's turbo-cache artifact through the REST API.
+  actions: read
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
@@ -26,9 +28,10 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
+      platform: ${{ github.event_name != 'pull_request' || steps.platform.outputs.platform == 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -45,6 +48,25 @@ jobs:
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
 
+      - name: Detect a change the extractability proof can see
+        id: platform
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            platform:
+              - 'packages/platform/**'
+              - 'scripts/check-extractable.ts'
+              - 'scripts/extractable/**'
+              - 'scripts/workspace-packages.ts'
+              - 'tests/fixtures/second-app/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.nvmrc'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/setup-workspace/**'
+
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
@@ -55,8 +77,17 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
 
-      - name: Save the build for the jobs that follow
+      - name: Hand the build to the jobs that follow, for this run only
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: turbo-cache
+          path: .turbo/cache
+          include-hidden-files: true
+          retention-days: 7
+
+      - name: Keep main's build as the starting point of the next run's
+        if: github.ref == 'refs/heads/main'
         uses: actions/cache/save@v6
         with:
           path: .turbo/cache
@@ -67,20 +98,28 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 7
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the typecheck results of an earlier run, so only changed packages check again
         uses: actions/cache/restore@v6
         with:
           path: .turbo/typecheck-cache
-          key: turbo-typecheck-only-${{ runner.os }}-${{ github.sha }}
+          key: turbo-typecheck-only-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+          # This branch's own newest entry first, then the base commit (a slice's base is a feature branch with no entry of its
+          # own), then the newest entry of any ref that is readable here, which is main's when nothing closer exists.
           restore-keys: |
+            turbo-typecheck-only-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            turbo-typecheck-only-${{ runner.os }}-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
             turbo-typecheck-only-${{ runner.os }}-
 
       - name: Set up kustomize
@@ -88,6 +127,14 @@ jobs:
 
       - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
         run: pnpm boundaries
+
+      - name: Fail when a pull request edits or deletes a shipped migration (they only grow)
+        if: github.event_name == 'pull_request'
+        run: pnpm envctl migrations-check --base HEAD^1
+
+      - name: Fail when a platform package's API changed without a changelog entry and a version bump
+        if: github.event_name == 'pull_request'
+        run: pnpm check:platform-changes --base HEAD^1
 
       - name: Check architectural invariants
         id: architecture
@@ -104,7 +151,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: architecture
-          seconds: 20
+          seconds: 40
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
@@ -120,15 +167,28 @@ jobs:
       - name: Fail when tokens.json or the generated stylesheets differ from the registry
         run: pnpm gen:tokens --check
 
+      - name: Fail when docs/ENVIRONMENT.md differs from the environment schema and its docs
+        run: pnpm gen:env-docs --check
+
+      - name: Fail when docs/state-machines.md differs from the machine definitions
+        run: pnpm gen:state-machines --check
+
+      - name: Fail when docs/package-map.md differs from the workspace manifests
+        run: pnpm gen:package-map --check
+
+      - name: Fail when a platform package's api/*.api.txt differs from its exports
+        run: pnpm gen:api --check
+
       # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck
         run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache
 
       - name: Save the typecheck results for the next run
+        if: always()
         uses: actions/cache/save@v6
         with:
           path: .turbo/typecheck-cache
-          key: turbo-typecheck-only-${{ runner.os }}-${{ github.sha }}
+          key: turbo-typecheck-only-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
 
       - name: Find unused files, exports and dependencies (knip)
         run: pnpm knip
@@ -141,20 +201,24 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
+        with:
+          handoff: 'true'
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -172,15 +236,15 @@ jobs:
           restore-keys: |
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
+
       - name: Run unit tests (Node 24)
         id: unit-tests
         run: |
           echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
-          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 --retry=1 $(pnpm -s quarantine) \
-            --reporter=default --reporter=json --reporter=./scripts/timings/timings-reporter.ts \
-            --reporter=./scripts/vitest-retried-reporter.ts \
-            --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json" \
-            --outputFile.timings="$RUNNER_TEMP/unit-timings-${{ matrix.shard }}.json"
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/14 --retry=1 $(pnpm -s quarantine) \
+            --reporter=default --reporter=./scripts/vitest-retried-reporter.ts
 
       - name: Hold the unit tests to their budget
         uses: ./.github/actions/budget
@@ -188,16 +252,6 @@ jobs:
           step: unit-tests
           seconds: 240
           started-at: ${{ steps.unit-tests.outputs.started-at }}
-
-      - name: Keep the shard's JSON report and its spec costs, which pnpm timings:update reads
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: unit-reports-${{ matrix.shard }}
-          path: |
-            ${{ runner.temp }}/unit-${{ matrix.shard }}.json
-            ${{ runner.temp }}/unit-timings-${{ matrix.shard }}.json
-          retention-days: 14
 
   unit:
     name: unit
@@ -224,22 +278,25 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
         with:
+          handoff: 'true'
           bun: 'true'
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -249,8 +306,11 @@ jobs:
         with:
           only: *unit-fixtures
 
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
+
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
-        run: pnpm test:bun --shard=${{ matrix.shard }}/3
+        run: pnpm test:bun --shard=${{ matrix.shard }}/5
 
       - name: Run the two suites that once raced a real clock twenty times over
         if: matrix.shard == 1
@@ -276,12 +336,36 @@ jobs:
           JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
         run: *name-failed-shards
 
+  extractable:
+    name: extractable
+    needs: [build]
+    if: needs.build.outputs.code == 'true' && needs.build.outputs.platform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # A package builds its own copy of the closure; the second app replays the turbo cache this restores.
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
+          build: 'false'
+
+      - name: Install, typecheck and test every platform package and the second app outside the repository, offline, four at a time
+        run: |
+          set -o pipefail
+          targets=$(pnpm -s check:extractable --list | jq -r '.[]')
+          test -n "$targets"
+          echo "$targets" | xargs -P 4 -n 1 pnpm -s check:extractable
+
   integration:
     name: integration
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -295,6 +379,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
@@ -304,6 +390,9 @@ jobs:
 
       - name: Verify video fixtures against manifest
         run: pnpm gen-video --check
+
+      - name: Restore or fetch the screening model
+        uses: ./.github/actions/screening-model
 
       - name: Migrate the database and create the buckets
         run: |
@@ -332,7 +421,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           step: integration-tests
-          seconds: 120
+          seconds: 240
           started-at: ${{ steps.integration-tests.outputs.started-at }}
 
   e2e:
@@ -340,7 +429,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Move Docker to the containerd image store, where a build lands without a tarball load
         run: |
@@ -355,6 +444,8 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
@@ -423,24 +514,29 @@ jobs:
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml --profile '*' logs --tail=200 || true
 
   e2e-client:
-    name: e2e-${{ matrix.app }}
+    name: e2e-${{ matrix.app }}-${{ matrix.shard }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
         app: [web, studio]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Install FFmpeg beside the workspace setup
+        uses: ./.github/actions/setup-ffmpeg
+        with:
+          background: 'true'
+
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
+        with:
+          handoff: 'true'
 
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
@@ -462,14 +558,17 @@ jobs:
         if: steps.chromium.outputs.cache-hit != 'true'
         run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
-      - name: Run the app's browser suite
-        run: pnpm --filter @vp/${{ matrix.app }} test:e2e
+      - name: Wait for FFmpeg
+        uses: ./.github/actions/ffmpeg-ready
+
+      - name: Run this shard of the app's browser suite
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e --shard=${{ matrix.shard }}/3
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-${{ matrix.app }}-report
+          name: e2e-${{ matrix.app }}-${{ matrix.shard }}-report
           path: |
             apps/client/${{ matrix.app }}/e2e/playwright-report
             apps/client/${{ matrix.app }}/e2e/test-results
@@ -480,17 +579,40 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
     steps:
       - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
         uses: actions/checkout@v7
+        env:
+          GIT_LFS_SKIP_SMUDGE: 1
         with:
-          lfs: true
           fetch-depth: 0
+
+      - name: Name the baselines this commit holds, so the LFS objects of an earlier one are restored
+        id: lfs
+        run: echo "key=$(git lfs ls-files --long | cut -d' ' -f1 | sort | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the LFS objects of the baselines
+        id: lfs-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: .git/lfs
+          key: lfs-${{ runner.os }}-${{ steps.lfs.outputs.key }}
+          restore-keys: lfs-${{ runner.os }}-
+
+      - name: Fetch the baselines the restored objects lack
+        run: git lfs pull
+
+      - name: Keep main's LFS objects for the pull requests that follow
+        if: github.ref == 'refs/heads/main' && matrix.shard == 1 && steps.lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: .git/lfs
+          key: ${{ steps.lfs-cache.outputs.cache-primary-key }}
 
       - name: Name the Playwright image the baselines were drawn in, its Chromium and fonts pinned by digest
         id: image
@@ -501,13 +623,15 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
+        with:
+          handoff: 'true'
 
       - name: Restore the workbench build of these sources
         id: storybook
         uses: actions/cache@v6
         with:
           path: packages/client/workbench/storybook-static
-          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'apps/client/*/src/**', 'packages/server/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
+          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'packages/platform/client/*/src/**', 'packages/platform/universal/*/src/**', 'apps/client/*/src/**', 'packages/**/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
 
       - name: Build the workbench
         if: steps.storybook.outputs.cache-hit != 'true'
@@ -530,7 +654,7 @@ jobs:
             -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
-            --shard=${{ matrix.shard }}/10 "${no_tests[@]}"
+            --shard=${{ matrix.shard }}/24 "${no_tests[@]}"
 
       - name: Run this shard's stories as tests in the same image, their a11y checks included
         run: |
@@ -538,11 +662,11 @@ jobs:
             -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/vitest/vitest.mjs run --config .storybook/vitest.config.ts \
-            --shard=${{ matrix.shard }}/10 --retry=1 \
+            --shard=${{ matrix.shard }}/24 --retry=1 \
             --reporter=default --reporter=../../../scripts/vitest-retried-reporter.ts
 
       - name: Keep the report and the diffs of a failed run
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: visual-${{ matrix.shard }}-report

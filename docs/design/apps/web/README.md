@@ -1,9 +1,9 @@
 # Web's app kit
 
 Specs for the components in `apps/client/web/src/components/<area>/<name>/`. Each is presentational and compound,
-built from `@vp/components` (shared: `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError`)
-and `@vp/ui` primitives. Nothing here goes into a package, and studio never imports it
-([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@vp/components` the day studio
+built from `@kit/components` (shared: `PageHeader`, `VideoThumbnail`, `EmptyState`, `ErrorState`, `SectionError`)
+and `@kit/ui` primitives. Nothing here goes into a package, and studio never imports it
+([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@kit/components` the day studio
 needs it. [Ticket 95](../../../tickets/95-design-system-2.md) section 7 builds it.
 
 Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`.
@@ -23,12 +23,16 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
 | [Stage](stage.md) | watch | media ground and ambient glow | `AspectRatio`, `Spinner`, `Button` | [57](../../../tickets/57-production-video-player-hls-streaming-controls.md), [58](../../../tickets/58-modern-browse-layout-microinteractions-motion.md), [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md) |
 | [EngagementBar](engagement-bar.md) | watch | channel, subscribe, reactions, actions | `Avatar`, `Button`, `ToggleGroup`, `DropdownMenu` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md), [73](../../../tickets/73-frontend-youtube-playlists-library-player-queue.md) |
 | [LinerNotes](liner-notes.md) | watch | description, chapters | `Card`, `Chip`, `ScrollArea` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md) |
+| [PlayerCardLayer](player-card-layer.md) | watch | timed cards over the picture, one at a time | `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [AccessGate](access-gate.md) | watch | a password gate or a dead share link in place of the video | `EmptyState`, `Field`, `Input`, `Button` | [116](../../../tickets/116-video-management-power-tools.md) |
+| [RetentionStrip](retention-strip.md) | watch | the retention curve as bars with a marker per drop-off | `IconButton` | [114](../../../tickets/114-creator-stats-on-the-watch-page.md) |
 | [Queue](queue.md) | watch | the viewer's reorderable queue | `VideoCard`, `ToggleGroup`, `Drawer` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md), [73](../../../tickets/73-frontend-youtube-playlists-library-player-queue.md) |
 | [CommentItem](comment-item.md) | discussion | one comment, replies, reactions | `Avatar`, `Badge`, `IconButton`, `DropdownMenu` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md) |
 | [OfflineState](offline-state.md) | states | what still works offline | `Callout`, `Button`, `Card` | [68](../../../tickets/68-pwa-service-worker-offline-cache-background-sync.md), [70](../../../tickets/70-frontend-resilient-error-handling-retry-policy.md) |
 | [CommentThread](comment-thread.md) | watch | discussion shell | [CommentItem](comment-item.md), `Textarea`, `SegmentedControl` | [59](../../../tickets/59-video-watch-page-responsive-layout-enhancements.md) |
 | [ChannelHeader](channel-header.md) | channel | banner, identity, tabs | `Avatar`, `Tabs`, `Button` | [58](../../../tickets/58-modern-browse-layout-microinteractions-motion.md), [74](../../../tickets/74-frontend-multi-resource-search-discovery-ui.md) |
 | [StartHereShelf](start-here-shelf.md) | channel | pinned or popular videos for newcomers | `Shelf`, `VideoCard` | [58](../../../tickets/58-modern-browse-layout-microinteractions-motion.md), [96](../../../tickets/96-channel-featured-videos-start-here.md) |
+| [ChannelSpotlight](channel-spotlight.md) | channel | the channel's trailer or returning-subscriber video | `VideoCard`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
 | [LiveChat](live-chat.md) | live | docked or overlay chat | `ScrollArea`, `Textarea`, `Slider` | [76](../../../tickets/76-live-streaming-rtmp-whip-llhls-packaging-chat.md), [95](../../../tickets/95-design-system-2.md) |
 | [ShortsPlayerFrame](shorts-player-frame.md) | shorts | 9:16 player with actions | `IconButton`, `Progress`, Stage ground | [95](../../../tickets/95-design-system-2.md) |
 
@@ -40,7 +44,7 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
    context, one folder per component (`<name>.tsx`, `<name>.context.ts` with `useX()`, `<name>.variants.ts`,
    `types.ts`, story, test, `index.ts`). Content is children, never a `title` or `footer` prop.
 3. **Shared unions.** Every union prop is a shared one (`SizeOption`, `ControlSize`, `ToneOption`... from
-   `@vp/design-tokens`; `Side`, `Orientation`... from `@vp/ui`; `VideoStatus`, `ReactionType`, `CommentSort`,
+   `@kit/design-tokens`; `Side`, `Orientation`... from `@kit/ui`; `VideoStatus`, `ReactionType`, `CommentSort`,
    `SearchType`... from `@vp/domain`), narrowed with `Extract` or `Exclude` in the folder's `types.ts`. A union
    only this component uses lives in the same `types.ts`. No inline literal union in a props interface
    ([architecture section 3](../../architecture.md#3-shared-option-unions)).
@@ -99,6 +103,7 @@ it; props are the entity (or its id) and at most one placement fact. `Video`, `V
 | [ChannelHeader](channel-header.md) | `ChannelPageHeader` | `channels` | `channel: Channel` | `useSubscription`, `useChannelTabs`, `useAmbientSample` |
 | | `ChannelResultHeader` | `search` | `channel: ChannelCard` | `useSubscription` |
 | [StartHereShelf](start-here-shelf.md) | `ChannelStartHere` | `channels` | `channelId: string` | `useChannelFeatured`, `useChannelVideos` |
+| [ChannelSpotlight](channel-spotlight.md) | `ChannelPageSpotlight` | `channel` | `channelId: string` | `useChannelSpotlight`, `useFormat` |
 | [LiveChat](live-chat.md) | `LiveStreamChat` | `live` | `streamId: string` | `useLiveChat`, `usePlayerLayout` |
 | [ShortsPlayerFrame](shorts-player-frame.md) | `ShortsFeedFrame` | `shorts` | `short: VideoSummary` | `useShortsNavigation`, `useReaction` |
 

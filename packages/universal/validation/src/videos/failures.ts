@@ -1,4 +1,5 @@
-import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures';
+import type { LengthBounds } from '@kit/validation';
+import { type InvalidField, invalidField, invalidLength } from '../field-failures';
 
 export type InvalidVideoTitle = InvalidField<LengthBounds>;
 export type InvalidVideoDescription = InvalidField<{ maxLength: number }>;

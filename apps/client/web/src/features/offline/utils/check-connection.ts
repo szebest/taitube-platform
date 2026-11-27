@@ -1,4 +1,4 @@
-import { fromPromise, isOk } from '@vp/result';
+import { fromPromise, isOk } from '@kit/result';
 
 const PROBE_URL = '/robots.txt';
 

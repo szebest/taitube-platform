@@ -1,15 +1,17 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { VideoStudioRepository } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
+  VIDEO_IDS,
   publicVideo,
   seedCategories,
   seedOwners,
-  VIDEO_IDS,
+  seededChannel,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -55,6 +57,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
           expectedVersion: expectedVersion ?? (await versionOf(VIDEO_IDS.a)),
           patch,
           userId: OWNER_ID,
+          auditFields: [],
         });
 
       it('writes the studio fields, bumps the version and records the edit', async () => {
@@ -79,6 +82,68 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
           },
         });
         expect(await eventTypesOf(VIDEO_IDS.a)).toContain('video.metadata_updated');
+      });
+
+      it('audits the edit on the channel of the video owner, as whoever made it', async () => {
+        const channel = await seededChannel(subject.repositories, OWNER_ID);
+
+        expectOk(
+          await studio.updateMetadata({
+            videoId: VIDEO_IDS.a,
+            expectedVersion: await versionOf(VIDEO_IDS.a),
+            patch: { title: 'Edited' },
+            userId: OTHER_OWNER_ID,
+            auditFields: ['title'],
+          })
+        );
+
+        const log = expectOk(
+          await subject.repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+        );
+        expect(log).toMatchObject([
+          {
+            channelId: channel.id,
+            actorUserId: OTHER_OWNER_ID,
+            action: 'video.updated',
+            targetType: 'video',
+            targetId: VIDEO_IDS.a,
+            meta: { fields: ['title'] },
+          },
+        ]);
+      });
+
+      it.each([
+        {
+          scenario: 'a toggle alone',
+          fields: [] as const,
+          actions: ['video.comments.toggled'],
+        },
+        {
+          scenario: 'a toggle and a field, as two rows',
+          fields: ['title'] as const,
+          actions: ['video.comments.toggled', 'video.updated'],
+        },
+      ])('turns comments off and audits $scenario', async ({ fields, actions }) => {
+        const channel = await seededChannel(subject.repositories, OWNER_ID);
+
+        const outcome = expectOk(
+          await studio.updateMetadata({
+            videoId: VIDEO_IDS.a,
+            expectedVersion: await versionOf(VIDEO_IDS.a),
+            patch: { commentsEnabled: false, ...(fields.length > 0 && { title: 'Edited' }) },
+            userId: OWNER_ID,
+            auditFields: [...fields],
+          })
+        );
+
+        expect(outcome).toMatchObject({ type: 'updated', video: { commentsEnabled: false } });
+        const log = expectOk(
+          await subject.repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+        );
+        expect(log.map(({ action }) => action).sort()).toEqual([...actions].sort());
+        expect(log.find(({ action }) => action === 'video.comments.toggled')?.meta).toEqual({
+          enabled: false,
+        });
       });
 
       it('clears a category and a custom thumbnail with null', async () => {
@@ -116,6 +181,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
             expectedVersion: 1,
             patch: { title: 'Ghost' },
             userId: OWNER_ID,
+            auditFields: [],
           })
         );
 
@@ -152,7 +218,6 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         const taken = expectOk(
           await studio.takeDown({
             videoId: VIDEO_IDS.a,
-            from: ['READY'],
             moderatorId: OTHER_OWNER_ID,
             reason: 'Terms of service',
           })
@@ -170,22 +235,33 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
         });
       });
 
-      it('answers null and changes nothing when the video is not in a from status', async () => {
+      it('tells the owner: a status event and a rejected notification', async () => {
+        expectOk(await studio.takeDown({ videoId: VIDEO_IDS.a, moderatorId: OTHER_OWNER_ID }));
+
+        const told = expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10));
+        expect(told).toMatchObject([videoStatusChanged(VIDEO_IDS.a, 'REJECTED')]);
+        const queued = expectOk(await subject.repositories.outbox.claimBatch(10));
+        expect(queued.filter(({ kind }) => kind === 'notification')).toMatchObject([
+          { payload: { job: { data: { videoId: VIDEO_IDS.a, outcome: 'rejected' } } } },
+        ]);
+      });
+
+      it('answers null and changes nothing when the video is past every takedown source', async () => {
+        await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b, status: 'DELETED' }));
+
         const taken = expectOk(
-          await studio.takeDown({ videoId: VIDEO_IDS.a, from: ['FAILED'], moderatorId: OWNER_ID })
+          await studio.takeDown({ videoId: VIDEO_IDS.b, moderatorId: OWNER_ID })
         );
 
         expect(taken).toBeNull();
-        expect(expectOk(await subject.repositories.videos.findById(VIDEO_IDS.a))?.status).toBe(
-          'READY'
+        expect(expectOk(await subject.repositories.videos.findById(VIDEO_IDS.b))?.status).toBe(
+          'DELETED'
         );
       });
 
       it('makes an edit read before the takedown a version conflict', async () => {
         const readBefore = await versionOf(VIDEO_IDS.a);
-        expectOk(
-          await studio.takeDown({ videoId: VIDEO_IDS.a, from: ['READY'], moderatorId: OWNER_ID })
-        );
+        expectOk(await studio.takeDown({ videoId: VIDEO_IDS.a, moderatorId: OWNER_ID }));
 
         const failure = expectErr(
           await studio.updateMetadata({
@@ -193,6 +269,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
             expectedVersion: readBefore,
             patch: { visibility: 'public' },
             userId: OWNER_ID,
+            auditFields: [],
           })
         );
 

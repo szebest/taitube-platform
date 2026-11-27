@@ -1,6 +1,6 @@
+import type { AnyFailure } from '@kit/errors';
+import type { Result } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, type Problem, problemFor } from '@vp/api-contracts';
-import type { AnyFailure } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /**
@@ -18,6 +18,8 @@ export interface SendResultOptions<E extends AnyFailure> {
   readonly on?: FailureOverrides<E>;
   /** A total presenter for the whole union, when the route owns a real mapping. */
   readonly present?: (failure: E) => Problem;
+  /** Headers a failure carries beside its Problem, such as `Retry-After`. */
+  readonly headers?: (failure: E) => Readonly<Record<string, string>>;
 }
 
 /**
@@ -46,6 +48,12 @@ export function sendResult<T, E extends AnyFailure>(
   const problem =
     override?.(failure) ?? options.present?.(failure) ?? problemFor(failure, request.url);
 
+  for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
+    reply.header(name, value);
+  }
   reply.header('content-type', PROBLEM_CONTENT_TYPE);
+  for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
+    reply.header(name, value);
+  }
   return reply.status(problem.status).send(problem);
 }

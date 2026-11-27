@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import { CommentThread, CommentThreadSkeleton } from '..';
@@ -95,6 +95,18 @@ describe('apps/client/web: CommentThread', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Comment' }));
 
     expect(screen.getByRole('textbox')).toHaveAttribute('readonly');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('shows the wait on a disabled submit button and ignores the shortcut until it is over', async () => {
+    const onSubmit = vi.fn();
+    renderThread({ composer: { value: 'Watched it twice.', onSubmit, wait: 'Wait 12 s' } });
+
+    await userEvent.click(screen.getByRole('textbox'));
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
+
+    expect(screen.getByRole('button', { name: 'Wait 12 s' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Comment' })).not.toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

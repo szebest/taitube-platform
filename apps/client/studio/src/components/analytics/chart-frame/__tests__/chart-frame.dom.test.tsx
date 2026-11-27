@@ -1,7 +1,7 @@
+import { variantNames } from '@kit/ui';
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { variantNames } from '@vp/ui';
-import { axeViolations } from '@vp/web-testing/dom';
 import { AppProviders } from '#app/__tests__/providers';
 import { ChartFrame, ChartSkeleton, chartFrameStyles, useChartFrame } from '..';
 import type { ChartFrameRootProps } from '../chart-frame';

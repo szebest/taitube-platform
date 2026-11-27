@@ -1,4 +1,5 @@
 import type {
+  ChannelAuditRepositoryPort,
   EventRepository,
   OutboxRepository,
   RenditionRepository,
@@ -7,6 +8,7 @@ import type {
   UserEventRepository,
 } from '@vp/core/repositories';
 import type { StepStatus } from '@vp/domain';
+import type { Clock } from './clock';
 
 export interface InternalStep {
   id: string;
@@ -35,7 +37,9 @@ export interface InMemoryVideoRepositoryOptions {
   uploadsRepo?: UploadLookup;
   outboxRepo?: OutboxRepository;
   userEventsRepo?: UserEventRepository;
+  auditRepo?: Pick<ChannelAuditRepositoryPort, 'append'>;
+  now?: Clock;
 }
 
 /** A video's upload is the one thing this repository reads back from uploads. */
-export type UploadLookup = Pick<UploadRepository, 'findByVideoId'>;
+type UploadLookup = Pick<UploadRepository, 'findByVideoId'>;

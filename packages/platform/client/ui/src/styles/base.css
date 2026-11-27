@@ -1,0 +1,536 @@
+@theme {
+  --animate-*: initial;
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
+  --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
+  --animate-fade-in: fade-in var(--duration-fast) var(--ease-enter);
+  --animate-fade-out: fade-out var(--duration-fast) var(--ease-exit);
+  --animate-pop-in: pop-in var(--duration-fast) var(--ease-enter);
+  --animate-pop-out: pop-out var(--duration-fast) var(--ease-exit);
+  --animate-spin-in: spin-in var(--duration-base) var(--ease-enter);
+  --animate-slide-in-from-top: slide-in-from-top var(--duration-base) var(--ease-enter);
+  --animate-slide-in-from-right: slide-in-from-right var(--duration-base) var(--ease-enter);
+  --animate-slide-in-from-bottom: slide-in-from-bottom var(--duration-base) var(--ease-enter);
+  --animate-slide-in-from-left: slide-in-from-left var(--duration-base) var(--ease-enter);
+  --animate-slide-out-to-top: slide-out-to-top var(--duration-fast) var(--ease-exit);
+  --animate-slide-out-to-right: slide-out-to-right var(--duration-fast) var(--ease-exit);
+  --animate-slide-out-to-bottom: slide-out-to-bottom var(--duration-fast) var(--ease-exit);
+  --animate-slide-out-to-left: slide-out-to-left var(--duration-fast) var(--ease-exit);
+
+  @keyframes spin {
+    to {
+      rotate: 360deg;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+  @keyframes live-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @keyframes indeterminate {
+    from {
+      background-position: -100% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: calc(1 - 0.05 * var(--motion-travel));
+    }
+  }
+  @keyframes pop-out {
+    to {
+      opacity: 0;
+      scale: calc(1 - 0.05 * var(--motion-travel));
+    }
+  }
+  @keyframes enter {
+    from {
+      opacity: var(--enter-opacity, 0);
+      translate: var(--enter-translate, 0 calc(4px * var(--motion-travel)));
+      scale: var(--enter-scale, calc(1 - 0.02 * var(--motion-travel)));
+    }
+  }
+  @keyframes exit {
+    to {
+      opacity: var(--enter-opacity, 0);
+      translate: var(--enter-translate, 0 calc(4px * var(--motion-travel)));
+      scale: var(--enter-scale, calc(1 - 0.02 * var(--motion-travel)));
+    }
+  }
+  @keyframes spin-in {
+    from {
+      opacity: 0;
+      rotate: calc(-90deg * var(--motion-travel));
+      scale: calc(1 - 0.5 * var(--motion-travel));
+    }
+  }
+  @keyframes slide-in-from-top {
+    from {
+      translate: 0 calc(-100% * var(--motion-travel));
+    }
+  }
+  @keyframes slide-in-from-right {
+    from {
+      translate: calc(100% * var(--motion-travel)) 0;
+    }
+  }
+  @keyframes slide-in-from-bottom {
+    from {
+      translate: 0 calc(100% * var(--motion-travel));
+    }
+  }
+  @keyframes slide-in-from-left {
+    from {
+      translate: calc(-100% * var(--motion-travel)) 0;
+    }
+  }
+  @keyframes slide-out-to-top {
+    to {
+      translate: 0 calc(-100% * var(--motion-travel));
+    }
+  }
+  @keyframes slide-out-to-right {
+    to {
+      translate: calc(100% * var(--motion-travel)) 0;
+    }
+  }
+  @keyframes slide-out-to-bottom {
+    to {
+      translate: 0 calc(100% * var(--motion-travel));
+    }
+  }
+  @keyframes slide-out-to-left {
+    to {
+      translate: calc(-100% * var(--motion-travel)) 0;
+    }
+  }
+}
+
+:root {
+  --modal-max-height: calc(100dvh - 2rem);
+}
+
+/* How far a move travels: 0 under the reduced set, so every keyframe built on it is a fade only. */
+:root {
+  --motion-travel: 1;
+}
+:root[data-motion="reduced"] {
+  --motion-travel: 0;
+}
+/* The reduced set is chosen as well as forced by the system, so both variants follow `data-motion` too. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion="reduced"], [data-motion="reduced"] *) {
+    @slot;
+  }
+}
+@custom-variant motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    &:not(:where([data-motion="reduced"], [data-motion="reduced"] *)) {
+      @slot;
+    }
+  }
+}
+
+/* A page with and without a scrollbar lays out alike. The gutter stays reserved while the scroll lock Radix
+   applies to `body` hides the scrollbar, so the end margin the lock adds for that width would shrink the
+   content a second time: it is dropped. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  margin-inline: 0 !important;
+}
+
+[data-mode="dark"],
+[data-mode="oled"] {
+  color-scheme: dark;
+}
+
+[data-mode="light"] {
+  color-scheme: light;
+}
+
+/* One attribute more specific than a theme rule, so the theme's own border and muted text lose. */
+:root[data-theme][data-contrast="more"] {
+  --border: var(--border-strong);
+  --fg-muted: var(--fg);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html,
+  body {
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html:has([data-obs-overlay]),
+  body:has([data-obs-overlay]) {
+    background: transparent;
+  }
+
+  /* Chrome is never selected by a drag or a double click: controls, tab and menu roles, key hints, badges,
+     thumbnails, avatars and anything painted as clickable. Content (titles, descriptions, comments, chat,
+     table cells, hints, errors) stays selectable; `select-text` brings it back inside a chrome ancestor. */
+  button,
+  summary,
+  kbd,
+  nav a,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="slider"],
+  a[data-slot="card"],
+  [data-slot="avatar"],
+  [data-slot="badge"],
+  [data-slot="chip"],
+  [data-slot="chip-group-item"],
+  [data-slot="kbd"],
+  [data-slot="label"],
+  [data-slot="tooltip-content"],
+  [data-slot="video-thumbnail"],
+  [data-slot="page-header-tabs"],
+  .cursor-pointer,
+  .touch-none {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+/* A shared element, a card's thumbnail into the watch stage, lands with `settle`; the page cross-fades. */
+::view-transition-group(*) {
+  animation-duration: var(--duration-cinematic);
+  animation-timing-function: var(--ease-settle);
+}
+
+::view-transition-group(root) {
+  animation-duration: var(--duration-cinematic);
+  animation-timing-function: var(--ease-standard);
+}
+
+:root[data-motion="reduced"]::view-transition-group(*),
+:root[data-motion="reduced"]::view-transition-old(*),
+:root[data-motion="reduced"]::view-transition-new(*) {
+  animation: none;
+}
+
+/* The one place the system setting is read: it forces what `data-motion="reduced"` chooses. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-travel: 0;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+/* Not inherited, so a surface nested in another starts from the defaults. */
+@property --enter-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --enter-translate {
+  syntax: "*";
+  inherits: false;
+}
+@property --enter-scale {
+  syntax: "*";
+  inherits: false;
+}
+@property --enter-duration {
+  syntax: "*";
+  inherits: false;
+}
+@property --exit-duration {
+  syntax: "*";
+  inherits: false;
+}
+@property --enter-ease {
+  syntax: "*";
+  inherits: false;
+}
+@property --sheet-inline {
+  syntax: "*";
+  inherits: false;
+}
+
+/* A surface Radix opens and closes through `data-state`: fade, a 4 px lift and a 0.98 scale by default,
+   leaving a step faster than it came. Opened from the keyboard, focus lands inside it before the first
+   frame and it appears at once (foundations/motion.md, rule 1). */
+@utility motion-enter {
+  &:is([data-state="open"], [data-state="delayed-open"], [data-state="instant-open"]) {
+    animation: enter var(--enter-duration, var(--duration-base))
+      var(--enter-ease, var(--ease-enter));
+  }
+  &[data-state="closed"] {
+    animation: exit var(--exit-duration, var(--duration-fast)) var(--ease-exit);
+  }
+  &:is([data-state="open"], [data-state="delayed-open"]):is(:focus-visible, :has(:focus-visible)) {
+    animation: none;
+  }
+}
+
+@utility motion-enter-scrim {
+  --enter-translate: 0 0;
+  --enter-scale: 1;
+  --enter-ease: var(--ease-standard);
+}
+
+@utility motion-enter-toast {
+  --enter-translate: 0 calc(12px * var(--motion-travel));
+  --enter-scale: 1;
+  --enter-duration: var(--duration-slow);
+  --exit-duration: var(--duration-base);
+}
+
+/* A sheet slides from its edge with no fade; with no travel left it fades instead. */
+@utility motion-enter-sheet {
+  --enter-opacity: calc(1 - var(--motion-travel));
+  --enter-scale: 1;
+  --enter-duration: var(--duration-slow);
+  --exit-duration: var(--duration-base);
+  --sheet-inline: calc(100% * var(--motion-travel));
+  &:dir(rtl) {
+    --sheet-inline: calc(-100% * var(--motion-travel));
+  }
+}
+
+@utility motion-from-bottom {
+  --enter-translate: 0 calc(100% * var(--motion-travel));
+}
+
+@utility motion-from-inline-start {
+  --enter-translate: calc(-1 * var(--sheet-inline)) 0;
+}
+
+@utility motion-from-inline-end {
+  --enter-translate: var(--sheet-inline) 0;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: var(--border-focus) solid var(--focus-ring);
+    outline-offset: var(--border-focus-offset);
+  }
+}
+
+/* The clipped edges of a scroll area fade, driven by its own scroll position where the browser has
+   scroll timelines; an axis that does not overflow has no timeline, so it never fades. */
+@property --fade-inline-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-inline-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-block-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-block-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes scroll-fade-inline {
+  0% {
+    --fade-inline-end: var(--gutter-compact);
+  }
+  10%,
+  90% {
+    --fade-inline-start: var(--gutter-compact);
+    --fade-inline-end: var(--gutter-compact);
+  }
+  100% {
+    --fade-inline-start: var(--gutter-compact);
+  }
+}
+
+@keyframes scroll-fade-block {
+  0% {
+    --fade-block-end: var(--gutter-compact);
+  }
+  10%,
+  90% {
+    --fade-block-start: var(--gutter-compact);
+    --fade-block-end: var(--gutter-compact);
+  }
+  100% {
+    --fade-block-start: var(--gutter-compact);
+  }
+}
+
+@utility scroll-fade {
+  --fade-inline-direction: to right;
+  &:dir(rtl) {
+    --fade-inline-direction: to left;
+  }
+  mask-image:
+    linear-gradient(
+      var(--fade-inline-direction),
+      transparent,
+      #000 var(--fade-inline-start),
+      #000 calc(100% - var(--fade-inline-end)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-block-start),
+      #000 calc(100% - var(--fade-block-end)),
+      transparent
+    );
+  mask-composite: intersect;
+  animation:
+    scroll-fade-inline linear both,
+    scroll-fade-block linear both;
+  animation-timeline: scroll(self inline), scroll(self block);
+}
+
+/* A control's hit area grows to the touch target under a coarse pointer; the painted box does not. */
+@utility touch-target {
+  position: relative;
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: min(0px, calc((100% - var(--layout-touch-target)) / 2));
+      inset-block: min(0px, calc((100% - var(--layout-touch-target)) / 2));
+    }
+  }
+}
+
+/* The player draws on a black frame whatever the page theme: its controls take the fixed `on-media` white, a
+   shadow under glyphs and text, and a ring that is white with a black halo, so it is seen on a black frame
+   and on a white one. */
+[data-media-controls] {
+  color: var(--on-media);
+  text-shadow: 0 1px 2px var(--media);
+}
+
+[data-media-controls] svg {
+  filter: drop-shadow(0 1px 2px var(--media));
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]) {
+  background: transparent;
+  color: var(--on-media);
+}
+
+[data-media-controls] :is([data-slot="icon-button"], [data-slot="button"]):hover {
+  background: color-mix(in srgb, var(--on-media) 20%, transparent);
+}
+
+[data-media-controls] :focus-visible {
+  outline: var(--border-focus) solid var(--on-media);
+  outline-offset: var(--border-focus-offset);
+  box-shadow: 0 0 0 calc(var(--border-focus) + var(--border-focus-offset) + 1px) var(--media);
+}
+
+@utility media-seek {
+  --track-played: var(--accent);
+  --track-buffered: color-mix(in srgb, var(--on-media) 45%, transparent);
+  --track-rest: color-mix(in srgb, var(--on-media) 20%, transparent);
+  --seek-direction: to right;
+  &:dir(rtl) {
+    --seek-direction: to left;
+  }
+  height: 1.25rem;
+  appearance: none;
+  background: transparent;
+  &::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      var(--seek-direction),
+      var(--track-played) var(--played),
+      var(--track-buffered) var(--played) var(--buffered),
+      var(--track-rest) var(--buffered)
+    );
+  }
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-block-start: -0.25rem;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
+  }
+  &::-moz-range-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--on-media);
+    box-shadow: 0 0 0 2px var(--media);
+  }
+}

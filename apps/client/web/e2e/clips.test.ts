@@ -11,7 +11,7 @@ test.describe('clips', () => {
   }) => {
     const { clippable } = stack.videos;
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${clippable.id}`);
 
     await page.getByRole('button', { name: 'Clip', exact: true }).click();
@@ -40,12 +40,12 @@ test.describe('clips', () => {
     await expect(page.getByRole('button', { name: 'Delete clip' })).toHaveCount(0);
   });
 
-  test('a guest asking for a clip is sent to sign-in', async ({ page, stack }) => {
-    await page.goto(`/watch/${stack.videos.clippable.id}`);
+  test('a guest asking for a clip is asked to sign in', async ({ page, stack }) => {
+    await page.goto(`/watch/${stack.videos.clippable.id}`, { waitUntil: 'networkidle' });
 
     await page.getByRole('button', { name: 'Clip', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole('dialog', { name: 'Sign in to make a clip' })).toBeVisible();
   });
 
   test('its creator deletes a clip and the link stops resolving', async ({
@@ -54,12 +54,12 @@ test.describe('clips', () => {
     signIn,
     stack,
   }) => {
-    const viewer = await api('viewer');
-    const created = await viewer.post(`/v1/videos/${stack.videos.clippable.id}/clips`, {
+    const stranger = await api('stranger');
+    const created = await stranger.post(`/v1/videos/${stack.videos.clippable.id}/clips`, {
       data: CLIP,
     });
     const { id } = await created.json();
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/clip/${id}`);
 
     await page.getByRole('button', { name: 'Delete clip' }).click();

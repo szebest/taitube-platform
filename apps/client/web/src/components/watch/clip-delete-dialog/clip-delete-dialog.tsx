@@ -1,5 +1,6 @@
-import { AlertDialog, Button, useUiCopy } from '@vp/ui';
+import { AlertDialog, Button } from '@kit/ui';
 import type { ComponentProps } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface ClipDeleteDialogProps extends ComponentProps<typeof AlertDialog.Root> {
   triggerLabel: string;
@@ -20,7 +21,8 @@ export function ClipDeleteDialog({
   onConfirm,
   ...props
 }: ClipDeleteDialogProps) {
-  const { cancel } = useUiCopy();
+  const { tOr } = useT();
+  const cancel = tOr('ui.cancel', {}, '');
 
   return (
     <AlertDialog.Root {...props}>

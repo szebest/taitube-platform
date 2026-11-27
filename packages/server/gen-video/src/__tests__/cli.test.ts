@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { createLogger } from '@vp/logger';
-import { captureLog } from '@vp/testing/log-capture';
+import { createLogger } from '@kit/logger';
+import { captureLog } from '@kit/testing/log-capture';
 import { type CliHost, run } from '../cli';
 
 function recordingHost(argv: string[]) {

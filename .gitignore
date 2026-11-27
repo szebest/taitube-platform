@@ -34,6 +34,9 @@ coverage/
 /tmp/
 tmp/
 
+# Demo state and generated clips
+.demo/
+
 # Video fixtures
 fixtures/
 tests/fixtures/
@@ -61,7 +64,7 @@ storybook-static/
 
 packages/client/workbench/visual/test-results/
 packages/client/workbench/visual/playwright-report/
-packages/client/ui/.scaffold-*/
+packages/**/client/ui/.scaffold-*/
 
 # Speech-to-text models, filled by pnpm models:fetch
 .models/
@@ -69,3 +72,14 @@ packages/client/ui/.scaffold-*/
 
 # The Vite+ hook dispatcher `vp config` writes; the repo installs its own shim (scripts/install-git-hooks.ts)
 .vite-hooks/_/
+
+# Demo stack state
+demo/.run/
+demo/minio-data/
+
+# pnpm perf:clicks output
+.perf/
+
+# deploy: rendered overlays and per-environment secrets
+.deploy/
+.secrets/

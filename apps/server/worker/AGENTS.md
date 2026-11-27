@@ -8,10 +8,14 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 `apps/server/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
 - **Composition Root:** `composeWorker` in `apps/server/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` (`@vp/adapters/composition`) the API uses, so `config.kind` is the only switch between adapter families; `registerStages` in `composition/stages.module.ts` binds the stage's processor to its queue as a Startable. `composeWorker` starts nothing.
-- **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Adding a stage is one registry entry.
+- **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Each stage's processor is built from its `StageDeps` by a function in `stage-processors.ts`; adding a stage is one registry entry and one builder.
 - **Configuration is a value:** `main.ts` hands a `ProcessHost` (`process.env`, signal hook, exit) to `run` in `process.ts`, which calls `loadEnv()` on its env and hands `toAppConfig()`'s result to `composeWorker`. Stages take buckets, the CDN base and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
 - **Collaborators are values too:** a stage gets `metrics` and `media` (the FFmpeg processes, `MediaTools` from `@vp/ffmpeg`) in `StageDeps`, and a transcode gets its progress reporter and segment uploader as factories. A spec fails a stage by handing it a `MediaTools` double, never by spying on `@vp/ffmpeg`; the captions stage gets `speech` (`SpeechTools` from `@vp/whisper`) the same way.
 - **Captions (`src/stages/captions/`):** one `captions` queue carries a run's own job (`single`, or the `merge` of a long source) and its `window` children; probe starts it through the outbox and nothing in the video pipeline waits for it. A run works only on the track version it was asked for (`inClaimedStep` in `captions-run.ts`), and a failure past its last attempt marks the track `failed` (`captions-failure.ts`), never the video.
+
+- **Screen (`src/stages/screen/`):** a Flow child of `package` on the `screen` queue (`SCREENING_ENABLED` off, no child). `screen-stage.ts` claims the `screen` step, reuses the result stored for the video and the source's ETag, else runs `fingerprint-findings.ts` (frame hashes, `fpcalc` when the job says audio, the catalogue lookup, the blank rule), `content-findings.ts` (the `FrameClassifier` over a frame every 10 s, evidence JPEGs under `evidence/{videoId}/`) and `metadata-finding.ts`, and stores what `decideScreening` says. It never holds a video itself and reads no `MAX_*` limit: `package` reads the result through `screeningGate` (`package-screening.ts`) and moves the video `PROCESSING -> HELD` before it writes a master, failing closed when the flow had a `screen` child and no result came back.
+
+- **Apply edits (`src/stages/apply-edits/`):** rides the `transcode-1080p` queue by job name (`APPLY_EDITS`). It claims a `video_generations` row with a fresh `lockToken`, fetches what the generation renders from (`generation-source.ts`: a replacement's upload, or an edit's base top rendition from the public bucket), encodes every rung once through `@vp/ffmpeg`'s edit filter graph into `hls/g{n}/`, writes the master last and swaps the generation in with `videoGenerations.swap`, one compare-and-set under that token. The video stays `READY` on its old renditions the whole time; a retry is fenced, a video that moved on fails the generation, and a terminal failure fails it in `failure-handler.ts` without touching the video, its steps or its renditions. `purge-generations` (housekeeping) deletes a retired generation after its grace.
 
 ---
 
@@ -30,7 +34,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 ### Rule 3: The Consumer Is the Only Throw
 - A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `composition/stages.module.ts` converts:
-  `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
+  `if (isErr(outcome)) throw toPipelineError(errorCodeRegistry, outcome.error)`, because BullMQ's retry contract *is* the exception
   - a stage that returns normally is a completed job.
 - `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
   per code in the vocabulary and the throw site has no judgement left to make. Never classify by inspecting
@@ -42,14 +46,14 @@ Instructions for any coding agent working on the Taitube distributed worker runt
   `safeParse` before the stage runs, and `instrument` validates the job id; a stage receives a typed job.
 - The unknown-error default is unchanged: anything that escapes a stage as a raw throw is transient with an
   attempt cap of 3.
-- Dual-runtime parity is unaffected: `@vp/result` is plain TypeScript with no `Bun.*` and no `node:*`.
+- Dual-runtime parity is unaffected: `@kit/result` is plain TypeScript with no `Bun.*` and no `node:*`.
 
 ### Rule 4: Bounded Temp File Cleanup
 - FFmpeg work happens in a per-job directory from `createScratchDir(tmpRoot, prefix)` (`src/stages/scratch-dir.ts`), under `config.worker.tmpDir` (`TMP_DIR`, default `/tmp/vp`, a tmpfs in compose).
 - The stage removes it with `removeScratchDir` in a `finally` (`probe.ts`, `thumbnail.ts`, `transcode.ts`); a directory left behind is removed by the `tmp-sweep` housekeeping task.
 
 ### Rule 5: Graceful Shutdown & Liveness
-- `SIGTERM` and `SIGINT` run `shutdownOnce` from `@vp/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
+- `SIGTERM` and `SIGINT` run `shutdownOnce` from `@kit/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
 - The handlers are installed before `start()`, so a signal while the worker boots drains too. `start()` runs the metrics server and the heartbeat before the consumer (`resolveStartOrder`, held by `tests/in-process/start-order.test.ts`), so a bound metrics port fails the boot before a job is taken.
 - `Heartbeat` (`src/heartbeat.ts`) is the only writer of `WORKER_HEARTBEAT_PATH` (default `/tmp/vp/heartbeat`): integer epoch seconds and a newline, every 15 s (the `WORKER_HEARTBEAT_INTERVAL_MS` constant in `@vp/env-schema`'s `tuning.ts`). Liveness fails when the file is missing or 45 s old; readiness is `/readyz` on the metrics port, which asks the consume queue's Redis connection.
 
@@ -79,3 +83,7 @@ pnpm --filter @vp/worker test
 # Run tests under Bun
 pnpm --filter @vp/worker test:bun
 ```
+
+## State machines
+
+A value whose legal moves depend on its status is a `defineMachine` table in a `*.machine.ts` beside the rule that uses it; see [docs/state-machines.md](../../../docs/state-machines.md).

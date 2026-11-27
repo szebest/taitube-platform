@@ -1,5 +1,5 @@
-import { definePackageTestConfig } from '@vp/testing';
-import { reactPlugins } from '@vp/vite-preset/react-plugins';
+import { definePackageTestConfig } from '@kit/testing';
+import { reactPlugins } from '@kit/vite-preset/react-plugins';
 
 export default definePackageTestConfig({
   plugins: reactPlugins(),
@@ -7,6 +7,6 @@ export default definePackageTestConfig({
     name: 'workbench (jsdom)',
     environment: 'jsdom',
     include: ['{src,visual}/**/__tests__/**/*.test.{ts,tsx}'],
-    setupFiles: ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup'],
+    setupFiles: ['@testing-library/jest-dom/vitest', '@kit/web-testing/jsdom.setup'],
   },
 });

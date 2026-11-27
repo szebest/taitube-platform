@@ -7,6 +7,7 @@ import type { VideoFormat, VideoStatus, VideoVisibility } from './status-vocabul
 export interface Video {
   id: string;
   ownerId: string;
+  channelId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -30,11 +31,14 @@ export interface Video {
   errorMessage?: string | null;
   viewsCount?: number;
   commentsCount?: number;
+  commentsEnabled?: boolean;
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;
   tags?: string[];
   customThumbnailKey?: string | null;
+  /** Set while a password guards the video; the hash itself never leaves its repository. */
+  passwordProtected?: boolean;
   generation: number;
   version: number;
   createdAt: Date;

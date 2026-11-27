@@ -3,20 +3,26 @@ import {
   getAccount,
   getChannel,
   getChannelFeatured,
+  getChannelSpotlight,
+  getCreatorStats,
   getCurrentPick,
   getFeed,
   getHome,
+  getMyReaction,
   getPreferences,
   getRelatedVideos,
   getShorts,
   getSubscriptionFeed,
   getUnreadNotificationCount,
   getVideo,
+  getVideoRetention,
   isSubscribedToChannel,
   listCategories,
   listCaptions,
   listChannelVideos,
   listLiveStreams,
+  listVideoCorrections,
+  listVideoThreads,
   listMySubscriptions,
   listVideos,
   search,
@@ -24,6 +30,7 @@ import {
 import {
   account,
   channel,
+  creatorStats,
   type EndpointResolver,
   fallbackPick,
   mockEndpoint,
@@ -123,6 +130,8 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),
     recorded(listLiveStreams, () => HttpResponse.json({ items: [] })),
+    recorded(listVideoCorrections, () => HttpResponse.json({ items: [] })),
+    recorded(listVideoThreads, () => HttpResponse.json({ items: [], markers: [] })),
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listVideos, () => HttpResponse.json(FEED)),
     recorded(isSubscribedToChannel, ({ params }) =>
@@ -138,8 +147,16 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getChannelFeatured, () =>
       HttpResponse.json({ source: 'popular' as const, items: FEED.items })
     ),
+    recorded(getChannelSpotlight, () => HttpResponse.json({ source: null, video: null })),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))
+    ),
+    recorded(getCreatorStats, () => HttpResponse.json(creatorStats())),
+    recorded(getVideoRetention, ({ params }) =>
+      HttpResponse.json({ videoId: String(params.id), curve: [] })
+    ),
+    recorded(getMyReaction, ({ params }) =>
+      HttpResponse.json({ videoId: String(params.id), reaction: null })
     ),
   ];
 }

@@ -1,12 +1,12 @@
+import { assertNever } from '@kit/result';
+import { Avatar, Icon } from '@kit/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
-import { Avatar, Icon } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { type PaletteResult, paletteResultKey } from '#app/features/search/utils/palette-results';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette-store';
+import { useT } from '#app/lib/messages';
 import { MatchedText } from '../matched-text/matched-text';
 
 export interface PaletteResultItemProps {

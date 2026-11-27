@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import {
   InMemoryJobQueue,
   InMemoryRepositories,
@@ -6,12 +7,12 @@ import {
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const MB = 1024 * 1024;
 const SIZE = 3;
 
@@ -27,7 +28,7 @@ describe('apps/server/api/services: complete upload', () => {
 
   async function startSingle(sizeBytes = SIZE) {
     const started = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes,
         contentType: 'video/mp4',
@@ -120,10 +121,26 @@ describe('apps/server/api/services: complete upload', () => {
     );
   });
 
+  it('refuses to complete an upload an abort closed while its object was checked', async () => {
+    const started = await startSingle();
+    await store(started.sourceKey, SIZE);
+    const head = storage.headObject.bind(storage);
+    vi.spyOn(storage, 'headObject').mockImplementation(async (bucket, key) => {
+      await repositories.uploads.updateStatus(started.uploadId, 'ABORTED');
+      return head(bucket, key);
+    });
+
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.UPLOAD_NOT_OPEN
+    );
+    expect(expectOk(await repositories.uploads.findById(started.uploadId))?.status).toBe('ABORTED');
+    expect(expectOk(await repositories.videos.findById(started.videoId))?.status).toBe('UPLOADING');
+  });
+
   it('refuses to complete an upload whose session has expired', async () => {
     const expired = build({ uploadSessionTtlSeconds: 0 });
     const started = expectOk(
-      await expired.initiate(OWNER, {
+      await expired.initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: SIZE,
         contentType: 'video/mp4',
@@ -142,7 +159,7 @@ describe('apps/server/api/services: complete upload', () => {
     ['fewer parts than expected', [{ partNumber: 1, etag: 'a' }]],
   ])('refuses a multipart completion with %s', async (_label, parts) => {
     const started = expectOk(
-      await service.initiate(OWNER, {
+      await service.initiate(OWNER, OWNER_ACTING, {
         filename: 'big.mp4',
         sizeBytes: 50 * MB,
         contentType: 'video/mp4',

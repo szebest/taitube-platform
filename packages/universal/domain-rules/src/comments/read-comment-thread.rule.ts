@@ -1,26 +1,23 @@
-import type { Comment, Video } from '@vp/domain';
+import { type Result, err, map } from '@kit/result';
+import type { Comment, CommentHost } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, map } from '@vp/result';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import { type ReadCommentHostFailure, decideCommentHostRead } from './comment-host';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface ReadCommentThreadInput {
   readonly viewer: UserContext | null;
   readonly comment: Comment | null;
   readonly commentId: string;
-  readonly video: Video | null;
+  readonly host: CommentHost | null;
 }
 
-export type ReadCommentThreadFailure = CommentNotFound | ReadVideoFailure;
+export type ReadCommentThreadFailure = CommentNotFound | ReadCommentHostFailure;
 
 export function decideCommentThreadRead(
   input: ReadCommentThreadInput
-): Result<{ comment: Comment; video: Video }, ReadCommentThreadFailure> {
-  const { comment, video } = input;
-  if (!(comment && video)) return err(commentNotFound(input.commentId));
+): Result<{ comment: Comment; host: CommentHost }, ReadCommentThreadFailure> {
+  const { comment, host } = input;
+  if (!(comment && host)) return err(commentNotFound(input.commentId));
 
-  return map(decideVideoRead({ viewer: input.viewer, video, videoId: video.id }), () => ({
-    comment,
-    video,
-  }));
+  return map(decideCommentHostRead(input.viewer, host), () => ({ comment, host }));
 }

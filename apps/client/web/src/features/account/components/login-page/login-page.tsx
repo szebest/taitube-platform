@@ -1,7 +1,7 @@
+import { LoginCard } from '@kit/components';
 import { useSearch } from '@tanstack/react-router';
-import { LoginCard } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
+import { useT } from '#app/lib/messages';
 
 export type LoginPageProps = {
   /** A failed sign-in, in the words to show the viewer. */

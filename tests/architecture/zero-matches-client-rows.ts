@@ -1,5 +1,9 @@
+import { packageDir, tierGlob } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import type { Row } from './zero-matches-rows';
+
+const UI = packageDir('@kit/ui');
+const CLIENT = tierGlob('client');
 
 const APPS = clientApps();
 
@@ -26,14 +30,14 @@ export const WEB_ROWS: readonly Row[] = [
       ':(exclude,glob)**/*.test.tsx',
       ':(exclude,glob)**/__tests__/**',
       ':(exclude,glob)**/*.lazy.ts',
-      ':(exclude)packages/client/ui/src/lib/lazy-component.tsx',
+      `:(exclude)${UI}/src/lib/lazy-component.tsx`,
     ],
     expected: 0,
     fires: "const Player = lazyComponent(() => import('./player'), { name: 'Player' });",
     passes: 'export const lazyLoaded = true;',
   },
   {
-    name: 'a client app module reading the build environment outside src/lib/config (the dev-only gates in the *.lazy.ts files read import.meta.env.DEV themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
+    name: 'a client app module reading the build environment outside src/lib/config (the dev-only and demo-personas gates in the *.lazy.ts files read import.meta.env.DEV and VITE_DEMO_PERSONAS themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
     pattern: /import\.meta\.env/g,
     scope: [
       ...inEachApp('src/**/*.ts'),
@@ -104,16 +108,32 @@ export const WEB_ROWS: readonly Row[] = [
     fires: '<p dangerouslySetInnerHTML={{ __html: video.description }} />',
   },
   {
-    name: 'a token kept in browser storage, where a script can read it (the session is an httpOnly cookie)',
-    pattern: /\b(?:localStorage|sessionStorage)\b[^\n]*(?:token|session|AUTH_)/gi,
+    name: 'a token or an account slot kept in browser storage, where a script can read it (each slot is an httpOnly vp.session.<slot> cookie)',
+    pattern: /\b(?:localStorage|sessionStorage)\b[^\n]*(?:token|session|bearer|slot|AUTH_)/gi,
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
-      ':(glob)packages/client/*/src/**/*.ts',
-      ':(glob)packages/client/*/src/**/*.tsx',
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
     ],
     expected: 0,
     fires: "const token = window.localStorage.getItem('AUTH_TOKEN');",
+    passes: "window.localStorage.setItem('vp.prefs.device', saved);",
+  },
+  {
+    name: "a query cache cleared under its readers (a switch, a sign-in or a sign-out builds the identity's next QueryClient and drops the last one, so a response in flight lands nowhere)",
+    pattern: /[qQ]ueryClient(?:\(\))?\.clear\(\)/g,
+    scope: [
+      ...inEachApp('src/**/*.ts'),
+      ...inEachApp('src/**/*.tsx'),
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
+      ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
+      `:(exclude,glob)${CLIENT}/*/src/**/__tests__/**`,
+    ],
+    expected: 0,
+    fires: 'queryClientOf(router).clear(); router.options.context.queryClient.clear();',
+    passes: 'listeners.clear();',
   },
   {
     name: 'a dependency or import of the legacy front end (Bootstrap, react-bootstrap, bootstrap-icons, Sass, react-player, react-pro-sidebar, react-toastify, react-horizontal-scrolling-menu), which the design system and its toasts replaced',
@@ -125,8 +145,8 @@ export const WEB_ROWS: readonly Row[] = [
       ':(glob)packages/**/package.json',
       ':(glob)apps/client/**/*.ts',
       ':(glob)apps/client/**/*.tsx',
-      ':(glob)packages/client/**/*.ts',
-      ':(glob)packages/client/**/*.tsx',
+      `:(glob)${CLIENT}/**/*.ts`,
+      `:(glob)${CLIENT}/**/*.tsx`,
     ],
     expected: 0,
     fires: '    "react-bootstrap": "^2.10.10",',
@@ -137,9 +157,9 @@ export const WEB_ROWS: readonly Row[] = [
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
-      ':(glob)packages/client/*/src/**/*.ts',
-      ':(glob)packages/client/*/src/**/*.tsx',
-      ':(glob)packages/client/ui/src/styles/**/*.css',
+      `:(glob)${CLIENT}/*/src/**/*.ts`,
+      `:(glob)${CLIENT}/*/src/**/*.tsx`,
+      `:(glob)${UI}/src/styles/**/*.css`,
     ],
     expected: 0,
     fires: "import { VideosContainer } from '#app/modules/shared/components';",

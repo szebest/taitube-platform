@@ -1,5 +1,7 @@
+import { Container, DisposeFailed, type StartupFailed } from '@kit/composition';
+import type { LogContext, Logger } from '@kit/logger';
+import { type Result, isErr, ok } from '@kit/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container, DisposeFailed, type StartupFailed } from '@vp/composition';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -10,9 +12,8 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
-import type { LogContext, Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok } from '@vp/result';
+import type { FingerprintTools } from '@vp/fingerprint';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { SpeechTools } from '@vp/whisper';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
@@ -34,6 +35,7 @@ export interface WorkerRunnerOptions {
   logContext: LogContext;
   media: MediaTools;
   speech: SpeechTools;
+  fingerprint: FingerprintTools;
   workerId: string;
   adapters?: WorkerAdapterOverrides;
   disableOutboxRelay?: boolean;
@@ -81,6 +83,7 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     workerId: options.workerId,
     media: options.media,
     speech: options.speech,
+    fingerprint: options.fingerprint,
     outboxRelay: { enabled: !options.disableOutboxRelay },
   });
   resolveStartOrder(container);

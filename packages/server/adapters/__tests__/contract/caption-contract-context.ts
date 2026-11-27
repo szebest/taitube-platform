@@ -1,12 +1,11 @@
+import { expectOk } from '@kit/testing/result';
 import type { CaptionRecord, CaptionRepository } from '@vp/core/repositories';
 import type { TranscriptCue } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export const GENERATED_ID = '00000000-0000-7000-8000-0000000004a1';
 export const UPLOADED_ID = '00000000-0000-7000-8000-0000000004a2';
-export const CHANNEL_ID = '00000000-0000-7000-8000-0000000004c1';
 export const ABSENT_ID = '00000000-0000-7000-8000-0000000004ff';
 
 export const CUES: TranscriptCue[] = [

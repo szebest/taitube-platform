@@ -1,7 +1,7 @@
+import { VideoCard } from '@kit/components';
 import { Link } from '@tanstack/react-router';
-import { VideoCard } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import type { PlaylistHit } from '#app/features/search/utils/search-hits';
+import { useT } from '#app/lib/messages';
 import { MatchedText } from '../matched-text/matched-text';
 
 export interface SearchPlaylistResultProps {

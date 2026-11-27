@@ -1,6 +1,9 @@
-import { MS_PER_DAY, MS_PER_SECOND } from '@vp/domain/time';
+import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
+import type { ExperimentCount } from './experiments';
 import { type HourlyViewCount, type ViewHour, viewHourOf } from './hourly-views';
 import type { RetentionCount } from './retention';
+import type { ShareLinkCount } from './share-links';
+import type { DeviceViewCount } from './view-devices';
 
 /** A UTC calendar day, `YYYY-MM-DD`: the bucket a view is counted in. */
 export type ViewDate = string;
@@ -18,6 +21,9 @@ export interface ViewBatch {
   readonly counts: readonly ViewCount[];
   readonly retention: readonly RetentionCount[];
   readonly hourly: readonly HourlyViewCount[];
+  readonly devices: readonly DeviceViewCount[];
+  readonly shareLinks: readonly ShareLinkCount[];
+  readonly experiments: readonly ExperimentCount[];
 }
 
 export type ViewBatchOutcome =
@@ -140,6 +146,11 @@ export function averageRetention(totals: ViewTotals, durationMs: number | null):
   if (!durationMs || totals.views === 0) return null;
   const ratio = (totals.watchSeconds * MS_PER_SECOND) / (totals.views * durationMs);
   return Math.min(1, ratio);
+}
+
+/** Seconds one view watched on average, zero while nothing was viewed. */
+export function averageViewDurationSeconds(totals: ViewTotals): number {
+  return totals.views === 0 ? 0 : totals.watchSeconds / totals.views;
 }
 
 export function mergeViewCounts(counts: readonly ViewCount[]): ViewCount[] {

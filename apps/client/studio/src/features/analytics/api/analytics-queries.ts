@@ -1,7 +1,7 @@
+import { assertNever } from '@kit/result';
 import { queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { VideoAnalytics } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
 import type { AnalyticsRange, AnalyticsScope } from '../types';
 
 export type RangeAnalytics = Pick<
@@ -14,6 +14,9 @@ const analyticsKeys = {
   channel: (range: AnalyticsRange) => [...analyticsKeys.all, 'channel', range] as const,
   video: (videoId: string, range: AnalyticsRange) =>
     [...analyticsKeys.all, 'video', videoId, range] as const,
+  audience: (videoId: string, range: AnalyticsRange) =>
+    [...analyticsKeys.all, 'audience', videoId, range] as const,
+  benchmark: (videoId: string) => [...analyticsKeys.all, 'benchmark', videoId] as const,
 };
 
 const fetchChannelAnalytics = (api: ApiClient, range: AnalyticsRange, signal: AbortSignal) =>
@@ -58,5 +61,24 @@ export function channelAnalyticsQueryOptions(api: ApiClient, range: AnalyticsRan
   return queryOptions({
     queryKey: analyticsKeys.channel(range),
     queryFn: ({ signal }) => fetchChannelAnalytics(api, range, signal),
+  });
+}
+
+export function videoAudienceQueryOptions(api: ApiClient, videoId: string, range: AnalyticsRange) {
+  return queryOptions({
+    queryKey: analyticsKeys.audience(videoId, range),
+    queryFn: ({ signal }) =>
+      api.analytics.getVideoAudience({
+        params: { id: videoId },
+        query: { range },
+        signal,
+      }),
+  });
+}
+
+export function videoBenchmarkQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: analyticsKeys.benchmark(videoId),
+    queryFn: ({ signal }) => api.analytics.getVideoBenchmark({ params: { id: videoId }, signal }),
   });
 }

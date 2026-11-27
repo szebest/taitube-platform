@@ -202,6 +202,7 @@ export const generateCaptions = defineEndpoint({
 export const setChannelAutoCaptions = defineEndpoint({
   method: 'PUT',
   path: '/v1/me/channel/auto-captions',
+  channelScoped: true,
   tag: 'Captions',
   summary: 'Set the channel default for generated captions',
   description:

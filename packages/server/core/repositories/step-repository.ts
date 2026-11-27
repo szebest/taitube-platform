@@ -1,6 +1,6 @@
+import type { Result } from '@kit/result';
 import type { StepStatus } from '@vp/domain';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface ProcessingStepRecord {
   id: string;
@@ -82,6 +82,8 @@ export abstract class StepRepository {
   abstract fail(options: FailStepOptions): Promise<Result<FailStepResult, DatabaseUnavailable>>;
   abstract markDead(options: MarkDeadOptions): Promise<Result<boolean, DatabaseUnavailable>>;
   abstract heartbeat(lockToken: string): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** Forgets every step of a video, so a reprocess claims them afresh and an older run's token is fenced. */
+  abstract reset(videoId: string): Promise<Result<number, DatabaseUnavailable>>;
   abstract findByVideoId(
     videoId: string
   ): Promise<Result<ProcessingStepRecord[], DatabaseUnavailable>>;

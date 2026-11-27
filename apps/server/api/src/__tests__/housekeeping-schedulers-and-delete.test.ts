@@ -1,11 +1,11 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { TOKENS, bearer, buildTestApp, inMemoryQueues } from './test-app';
+import { TOKENS, bearer, buildTestApp, inMemoryQueues, seedPrimaryChannel } from './test-app';
 
 describe('housekeeping schedulers and video deletion', () => {
   let app: FastifyInstance;
@@ -18,6 +18,7 @@ describe('housekeeping schedulers and video deletion', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(repositories, SEEDED.userId),
       sourceKey: `raw/${videoId}/source.mp4`,
       status,
     });
@@ -46,12 +47,22 @@ describe('housekeeping schedulers and video deletion', () => {
     it.each([
       { id: 'reconcile-uploads', repeat: { pattern: '*/15 * * * *' } },
       { id: 'reconcile-processing', repeat: { pattern: '*/10 * * * *' } },
+      { id: 'reconcile-live', repeat: { pattern: '*/10 * * * *' } },
       { id: 'purge-deleted', repeat: { pattern: '0 * * * *' } },
       { id: 'expire-raw', repeat: { pattern: '30 3 * * *' } },
       { id: 'tmp-sweep', repeat: { pattern: '*/30 * * * *' } },
       { id: 'reconcile-reaction-counters', repeat: { pattern: '0 * * * *' } },
       { id: 'reconcile-captions', repeat: { pattern: '*/20 * * * *' } },
       { id: 'purge-search-history', repeat: { pattern: '15 3 * * *' } },
+      { id: 'purge-channel-audit', repeat: { pattern: '45 3 * * *' } },
+      { id: 'purge-comment-moderation', repeat: { pattern: '0 4 * * *' } },
+      { id: 'purge-screening-evidence', repeat: { pattern: '0 4 * * *' } },
+      { id: 'purge-channel-images', repeat: { pattern: '0 4 * * *' } },
+      { id: 'purge-handle-history', repeat: { pattern: '15 4 * * *' } },
+      { id: 'purge-exports', repeat: { pattern: '30 * * * *' } },
+      { id: 'prune-revisions', repeat: { pattern: '30 4 * * *' } },
+      { id: 'purge-generations', repeat: { pattern: '45 * * * *' } },
+      { id: 'publish-due-posts', repeat: { pattern: '* * * * *' } },
       { id: 'flush-video-views', repeat: { every: 10_000 } },
     ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
@@ -69,9 +80,19 @@ describe('housekeeping schedulers and video deletion', () => {
       expect(schedulers.map((s) => s.id).sort()).toEqual([
         'expire-raw',
         'flush-video-views',
+        'prune-revisions',
+        'publish-due-posts',
+        'purge-channel-audit',
+        'purge-channel-images',
+        'purge-comment-moderation',
         'purge-deleted',
+        'purge-exports',
+        'purge-generations',
+        'purge-handle-history',
+        'purge-screening-evidence',
         'purge-search-history',
         'reconcile-captions',
+        'reconcile-live',
         'reconcile-processing',
         'reconcile-reaction-counters',
         'reconcile-uploads',

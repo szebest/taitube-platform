@@ -1,5 +1,5 @@
-import type { Theme } from '@vp/design-tokens';
-import { appearance } from '@vp/ui/appearance/registry';
+import type { Theme } from '@kit/design-tokens';
+import { appearance } from '@kit/ui/appearance/registry';
 import { themeBackground } from './theme-color';
 
 type ManifestIcon = {

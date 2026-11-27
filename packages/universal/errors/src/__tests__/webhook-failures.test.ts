@@ -1,5 +1,5 @@
 import { ErrorCodes } from '../error-codes';
-import { retryClass } from '../retry-class';
+import { RETRY_CLASS } from '../retry-class';
 import { webhookDeliveryFailed, webhookDeliveryRejected } from '../webhook-failures';
 
 describe('@vp/errors: webhook failures', () => {
@@ -18,7 +18,7 @@ describe('@vp/errors: webhook failures', () => {
     },
   ])('a $name delivery carries its code and is $expected', ({ failure, code, expected }) => {
     expect(failure).toMatchObject({ code, webhookId: 'w1' });
-    expect(retryClass(failure.code)).toBe(expected);
+    expect(RETRY_CLASS[failure.code]).toBe(expected);
   });
 
   it('omits the status when the receiver never answered', () => {

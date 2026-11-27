@@ -1,13 +1,15 @@
+import { Singleflight } from '@kit/concurrency';
+import { Paginator } from '@kit/pagination';
+import { ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { ok } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
 import { CommentReportService } from '../comment-report-service';
 import { CommentService } from '../comment-service';
+import { commentUpdateDeps } from './comment-deps';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
 const AUTHOR: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
@@ -26,16 +28,15 @@ describe('CommentReportService', () => {
     repositories = new InMemoryRepositories();
     invalidated = [];
     const commentCache: CommentCachePort = {
-      getHot: async (_videoId, fetcher) => fetcher(),
-      invalidate: async (videoId) => {
-        invalidated.push(videoId);
+      getHot: async (_target, fetcher) => fetcher(),
+      invalidate: async (target) => {
+        invalidated.push(target.id);
         return ok();
       },
     };
     const paginator = new Paginator();
     const commentService = new CommentService({
-      comments: repositories.comments,
-      videos: repositories.videos,
+      ...commentUpdateDeps(repositories),
       commentCache,
       singleflight: new Singleflight(),
       paginator,
@@ -43,6 +44,9 @@ describe('CommentReportService', () => {
     service = new CommentReportService({
       comments: repositories.comments,
       videos: repositories.videos,
+      posts: repositories.channelPosts,
+      threads: repositories.videoThreads,
+      channels: repositories.channels,
       reports: repositories.commentReports,
       commentService,
       paginator,
@@ -54,12 +58,20 @@ describe('CommentReportService', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         sourceKey: `raw/${id}/source.mp4`,
         visibility,
         status: 'READY',
       });
     }
-    commentId = expectOk(await commentService.create(AUTHOR, VIDEO_ID, { content: 'spam' })).id;
+    commentId = expectOk(
+      await commentService.create(
+        AUTHOR,
+        await actingAsPrimary(repositories, AUTHOR.id),
+        { type: 'video', id: VIDEO_ID },
+        { content: 'spam' }
+      )
+    ).id;
   });
 
   const report = (reporter = REPORTER, id = commentId) =>
@@ -82,8 +94,10 @@ describe('CommentReportService', () => {
     const hidden = expectOk(
       await repositories.comments.create({
         id: '77777777-7777-7777-8777-777777777777',
-        videoId: PRIVATE_ID,
+        target: { type: 'video', id: PRIVATE_ID },
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         authorId: OWNER.id,
+        authorChannelId: await seedPrimaryChannel(repositories, OWNER.id),
         parentId: null,
         content: 'draft',
       })

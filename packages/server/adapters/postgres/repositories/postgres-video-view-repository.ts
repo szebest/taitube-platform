@@ -1,8 +1,12 @@
+import { type Result, fromPromise, map } from '@kit/result';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type DeviceViews,
+  type FirstWeekRow,
+  type PeerVideo,
   type HourlyViews,
   type RetentionPoint,
   type TopVideo,
@@ -10,18 +14,17 @@ import {
   type ViewBatchOutcome,
   type ViewDateRange,
   type ViewHourRange,
-  mergeHourlyCounts,
-  mergeViewCounts,
-  viewsByVideo,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
-import { and, asc, between, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, between, desc, eq, isNull, lt, sql } from 'drizzle-orm';
+import { firstWeekRows, recentPeerVideos } from './first-week-queries';
 import type { PostgresDatabase } from './types';
+import { applyViewBatch } from './view-batch-writes';
 
 const {
   videos: v,
   videoViewsDaily: d,
+  videoViewsDeviceDaily: dev,
   videoViewsHourly: h,
   videoViewBatches: batches,
   videoRetentionMilestones: milestones,
@@ -36,74 +39,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
 
   async applyBatch(batch: ViewBatch): Promise<Result<ViewBatchOutcome, DatabaseUnavailable>> {
     return await fromPromise(
-      () =>
-        this.db.transaction(async (tx): Promise<ViewBatchOutcome> => {
-          const [claimed] = await tx
-            .insert(batches)
-            .values({ batchId: batch.batchId })
-            .onConflictDoNothing()
-            .returning({ batchId: batches.batchId });
-          if (!claimed) return { type: 'already-applied' };
-
-          const counts = mergeViewCounts(batch.counts);
-          const hours = mergeHourlyCounts(batch.hourly);
-          const videoIds = [
-            ...new Set([...counts, ...batch.retention, ...hours].map(({ videoId }) => videoId)),
-          ];
-          if (videoIds.length === 0) return { type: 'applied', views: 0 };
-
-          const known = await tx.select({ id: v.id }).from(v).where(inArray(v.id, videoIds));
-          const existing = new Set(known.map((row) => row.id));
-          const kept = counts.filter((count) => existing.has(count.videoId));
-          const keptRetention = batch.retention.filter((step) => existing.has(step.videoId));
-          const keptHours = hours.filter((count) => existing.has(count.videoId));
-
-          const deltas = viewsByVideo(kept);
-          if (deltas.length > 0) {
-            const tuples = sql.join(
-              deltas.map(({ videoId, views }) => sql`(${videoId}::uuid, ${views}::bigint)`),
-              sql`, `
-            );
-            await tx
-              .update(v)
-              .set({ viewsCount: sql`${v.viewsCount} + b.delta` })
-              .from(sql`(VALUES ${tuples}) AS b(video_id, delta)`)
-              .where(eq(v.id, sql`b.video_id`));
-
-            await tx
-              .insert(d)
-              .values([...kept])
-              .onConflictDoUpdate({
-                target: [d.videoId, d.viewDate],
-                set: {
-                  views: sql`${d.views} + excluded.views`,
-                  watchSeconds: sql`${d.watchSeconds} + excluded.watch_seconds`,
-                },
-              });
-          }
-
-          if (keptRetention.length > 0) {
-            await tx
-              .insert(milestones)
-              .values([...keptRetention])
-              .onConflictDoUpdate({
-                target: [milestones.videoId, milestones.percent],
-                set: { viewers: sql`${milestones.viewers} + excluded.viewers` },
-              });
-          }
-
-          if (keptHours.length > 0) {
-            await tx
-              .insert(h)
-              .values(keptHours.map((count) => ({ ...count, viewHour: new Date(count.viewHour) })))
-              .onConflictDoUpdate({
-                target: [h.videoId, h.viewHour],
-                set: { views: sql`${h.views} + excluded.views` },
-              });
-          }
-
-          return { type: 'applied', views: deltas.reduce((sum, delta) => sum + delta.views, 0) };
-        }),
+      () => this.db.transaction((tx) => applyViewBatch(tx, batch)),
       databaseUnavailable.during('applyViewBatch')
     );
   }
@@ -142,6 +78,25 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
     );
   }
 
+  async videoDevices(
+    videoId: string,
+    range: ViewDateRange
+  ): Promise<Result<DeviceViews[], DatabaseUnavailable>> {
+    const views = sql<string>`sum(${dev.views})`;
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ device: dev.device, views })
+          .from(dev)
+          .where(and(eq(dev.videoId, videoId), between(dev.viewDate, range.from, range.to)))
+          .groupBy(dev.device)
+          .orderBy(desc(views), asc(dev.device)),
+      databaseUnavailable.during('videoDevices')
+    );
+
+    return map(rows, (found) => found.map((row) => ({ ...row, views: Number(row.views) })));
+  }
+
   async videoTimeline(
     videoId: string,
     range: ViewDateRange
@@ -158,7 +113,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelTimeline(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange
   ): Promise<Result<DailyViews[], DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -173,7 +128,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(v, eq(v.id, d.videoId))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(d.viewDate, range.from, range.to)
             )
@@ -212,7 +167,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async channelHourly(
-    ownerId: string,
+    channelId: string,
     range: ViewHourRange
   ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
     const rows = await fromPromise(
@@ -223,7 +178,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(v, eq(v.id, h.videoId))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(h.viewHour, ...hourBounds(range))
             )
@@ -238,7 +193,28 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
     );
   }
 
-  async channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
+  async firstWeekViews(
+    videoIds: readonly string[]
+  ): Promise<Result<FirstWeekRow[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () => firstWeekRows(this.db, videoIds),
+      databaseUnavailable.during('firstWeekViews')
+    );
+  }
+
+  async recentPeers(
+    channelId: string,
+    excludeVideoId: string,
+    readyBefore: Date,
+    limit: number
+  ): Promise<Result<PeerVideo[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () => recentPeerVideos(this.db, channelId, excludeVideoId, readyBefore, limit),
+      databaseUnavailable.during('recentPeers')
+    );
+  }
+
+  async channelTotals(channelId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -247,7 +223,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
             videoCount: sql<string>`count(*)`,
           })
           .from(v)
-          .where(and(eq(v.ownerId, ownerId), isNull(v.deletedAt))),
+          .where(and(eq(v.channelId, channelId), isNull(v.deletedAt))),
       databaseUnavailable.during('channelTotals')
     );
 
@@ -258,7 +234,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   }
 
   async topVideos(
-    ownerId: string,
+    channelId: string,
     range: ViewDateRange,
     limit: number
   ): Promise<Result<TopVideo[], DatabaseUnavailable>> {
@@ -271,7 +247,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .innerJoin(d, eq(d.videoId, v.id))
           .where(
             and(
-              eq(v.ownerId, ownerId),
+              eq(v.channelId, channelId),
               isNull(v.deletedAt),
               between(d.viewDate, range.from, range.to)
             )

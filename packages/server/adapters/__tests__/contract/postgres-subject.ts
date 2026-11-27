@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import * as schema from '@vp/db';
-import { expectOk } from '@vp/testing/result';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -10,32 +10,18 @@ import { migratedPglite } from './pglite-snapshot';
 import { claimRealServices } from './real-services';
 import type { RepositoriesSubject } from './subjects';
 
-const TRUNCATE = sql.raw(
-  `TRUNCATE ${[
-    'video_view_batches',
-    'video_views_daily',
-    'watch_history',
-    'clips',
-    'channel_featured_videos',
-    'picks',
-    'playlist_items',
-    'playlists',
-    'channel_subscriptions',
-    'video_comments',
-    'video_reactions',
-    'outbox',
-    'user_events',
-    'dlq_entries',
-    'video_events',
-    'renditions',
-    'processing_steps',
-    'uploads',
-    'videos',
-    'categories',
-    'channels',
-    'users',
-  ].join(', ')} RESTART IDENTITY CASCADE`
-);
+const EMPTY_EVERY_TABLE = sql.raw(`
+  DO $$
+  DECLARE name text;
+  BEGIN
+    SET LOCAL session_replication_role = replica;
+    FOR name IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '__vp_migration_hash' LOOP
+      EXECUTE format('DELETE FROM %I', name);
+    END LOOP;
+    FOR name IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' LOOP
+      EXECUTE format('SELECT setval(%L, 1, false)', name);
+    END LOOP;
+  END $$`);
 
 function subjectOver(db: PostgresDatabase, close: () => Promise<void>): RepositoriesSubject {
   const repositories = new PostgresRepositories({ type: 'drizzle', db });
@@ -50,7 +36,18 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
       return moved;
     },
     adjustComment: async (id, patch) => {
-      await db.update(schema.videoComments).set(patch).where(eq(schema.videoComments.id, id));
+      await db.update(schema.comments).set(patch).where(eq(schema.comments.id, id));
+    },
+    backdatePost: async (id, createdAt) => {
+      await db.update(schema.channelPosts).set({ createdAt }).where(eq(schema.channelPosts.id, id));
+    },
+    placePost: async (id, patch) => {
+      await db.update(schema.channelPosts).set(patch).where(eq(schema.channelPosts.id, id));
+    },
+    seedDraftPost: async (input) => {
+      await db
+        .insert(schema.channelPosts)
+        .values({ ...input, kind: input.payload.kind, status: 'draft' });
     },
     backdatePlaylist: async (id, updatedAt) => {
       await db.update(schema.playlists).set({ updatedAt }).where(eq(schema.playlists.id, id));
@@ -60,8 +57,20 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
         sql`update notifications set created_at = created_at - make_interval(secs => ${ms / 1000})`
       );
     },
+    spreadAcrossMicroseconds: async ({ stamp, key, ids, at }) => {
+      const { table } = stamp;
+      await db.execute(sql`
+        update ${table}
+        set ${sql.identifier(stamp.name)} =
+          ${at.toISOString()}::timestamptz + ranked.n * interval '100 microseconds'
+        from (
+          select ${key} as key, row_number() over (order by ${key} desc) as n
+          from ${table} where ${inArray(key, [...ids])}
+        ) ranked
+        where ${key} = ranked.key`);
+    },
     reset: async () => {
-      await db.execute(TRUNCATE);
+      await db.execute(EMPTY_EVERY_TABLE);
     },
     close,
   };

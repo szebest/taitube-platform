@@ -29,7 +29,7 @@ Plus the standard props. The image URL, alt text, duration and progress are the 
 
 ```ts
 // types.ts
-import type { RadiusOption } from '@vp/design-tokens';
+import type { RadiusOption } from '@kit/design-tokens';
 
 export type VideoThumbnailAspect = 'landscape' | 'portrait';
 export type VideoThumbnailRadius = Extract<RadiusOption, 'thumb'>;

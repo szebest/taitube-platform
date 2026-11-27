@@ -1,14 +1,15 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { Container } from '@kit/composition';
+import { LogContext, createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger } from '@vp/logger';
-import { expectOk } from '@vp/testing/result';
+import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';
 import { completionOf } from '../../__tests__/flow-harness';
 import { OutboxRelay } from '../../stages/housekeeping/outbox-relay';
@@ -24,6 +25,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     logContext: new LogContext(),
     media: mediaTools,
     speech: speechTools,
+    fingerprint: fingerprintTools,
     workerId: 'stages-test',
     outboxRelay: { enabled: outbox },
   });

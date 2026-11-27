@@ -1,4 +1,4 @@
-import { recordPlayback, recordWebVitals } from '@vp/api-contracts';
+import { recordImpressions, recordPlayback, recordWebVitals } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { acceptBeaconBodies } from '../plugins/beacon-body';
@@ -42,6 +42,24 @@ export async function telemetryRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) =>
       sendResult(reply, request, await playbackTelemetryService.record(request.body), {
         status: recordPlayback.status,
+      })
+  );
+
+  server.post(
+    recordImpressions.path,
+    {
+      bodyLimit: app.config.playbackTelemetry.impressionsBodyLimitBytes,
+      config: {
+        rateLimit: { max: app.config.playbackTelemetry.ratePerMinute, timeWindow: '1 minute' },
+      },
+      schema: {
+        ...contractSchema(recordImpressions),
+        body: recordImpressions.body,
+      },
+    },
+    async (request, reply) =>
+      sendResult(reply, request, await playbackTelemetryService.recordImpressions(request.body), {
+        status: recordImpressions.status,
       })
   );
 }

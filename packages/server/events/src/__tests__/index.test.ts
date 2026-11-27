@@ -1,5 +1,5 @@
+import { err, ok } from '@kit/result';
 import { cacheUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
 import { publishVideoEvent, videoChannel } from '../index';
 
 const VIDEO_ID = '11111111-1111-7111-8111-111111111111';

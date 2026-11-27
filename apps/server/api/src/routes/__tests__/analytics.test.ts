@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
@@ -32,6 +32,9 @@ describe('analytics routes', () => {
         counts: [{ videoId: PUBLIC_VIDEO, viewDate: today, views: 5, watchSeconds: 50 }],
         retention: [],
         hourly: [],
+        devices: [{ videoId: PUBLIC_VIDEO, viewDate: today, device: 'mobile', views: 3 }],
+        shareLinks: [],
+        experiments: [],
       })
     );
   });
@@ -58,6 +61,9 @@ describe('analytics routes', () => {
           { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
         ],
         hourly: [],
+        devices: [],
+        shareLinks: [],
+        experiments: [],
       })
     );
 
@@ -77,6 +83,55 @@ describe('analytics routes', () => {
 
     expect((await get(url)).statusCode).toBe(401);
     expect((await get(url, TOKENS.otherUser)).statusCode).toBe(403);
+  });
+
+  it("serves the owner's device split for the requested range, shares summing to one", async () => {
+    const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/audience?range=7d`, TOKENS.user);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      videoId: PUBLIC_VIDEO,
+      range: '7d',
+      devices: [{ device: 'mobile', views: 3, share: 1 }],
+    });
+  });
+
+  it("serves the owner's first week with no envelope while the channel has fewer than three earlier videos", async () => {
+    const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/benchmark`, TOKENS.user);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ videoId: PUBLIC_VIDEO, peerCount: 0 });
+    expect(res.json().days).toHaveLength(7);
+    expect(res.json().days[0]).toMatchObject({ day: 0, p25: null, median: null, p75: null });
+  });
+
+  it.each(['audience', 'benchmark'])(
+    'answers the %s of a video like its analytics',
+    async (leaf) => {
+      const url = (videoId: string) => `/v1/creator/videos/${videoId}/${leaf}`;
+
+      expect((await get(url(PUBLIC_VIDEO))).statusCode).toBe(401);
+      expect((await get(url(PUBLIC_VIDEO), TOKENS.otherUser)).statusCode).toBe(403);
+      expect((await get(url(PRIVATE_VIDEO), TOKENS.otherUser)).statusCode).toBe(404);
+      expect((await get(url(ABSENT_VIDEO), TOKENS.otherUser)).statusCode).toBe(404);
+    }
+  );
+
+  it('serves the device split over a lifetime', async () => {
+    const res = await get(
+      `/v1/creator/videos/${PUBLIC_VIDEO}/audience?range=lifetime`,
+      TOKENS.user
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ videoId: PUBLIC_VIDEO, range: 'lifetime' });
+  });
+
+  it('refuses an audience range outside the ones offered with 400', async () => {
+    const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/audience?range=365d`, TOKENS.user);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().code).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 
   it("serves the caller's channel analytics over a lifetime, with no previous period", async () => {

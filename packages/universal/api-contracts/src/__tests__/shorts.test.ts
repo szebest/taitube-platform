@@ -1,4 +1,4 @@
-import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT } from '@kit/pagination';
 import { getShorts } from '../shorts';
 
 describe('packages/api-contracts: shorts', () => {

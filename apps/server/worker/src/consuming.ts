@@ -1,6 +1,6 @@
+import type { AnyFailure } from '@kit/errors';
+import { err, type Result } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
-import type { AnyFailure } from '@vp/errors';
-import { err, type Result } from '@vp/result';
 import { invalidField } from '@vp/validation';
 import type { ZodType } from 'zod';
 

@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import {
   type ClaimStepOptions,
   type ClaimStepResult,
@@ -10,11 +11,15 @@ import {
   StepRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { type Clock, realClock } from './clock';
 import type { InternalStep } from './types';
 
 export class InMemoryStepRepository extends StepRepository {
   private readonly stepsMap = new Map<string, InternalStep>();
+
+  constructor(private readonly now: Clock = realClock) {
+    super();
+  }
 
   private getStepKey(videoId: string, step: string, rendition: string): string {
     return `${videoId}:${step}:${rendition}`;
@@ -114,6 +119,12 @@ export class InMemoryStepRepository extends StepRepository {
     return ok(false);
   }
 
+  async reset(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const keys = [...this.stepsMap].filter(([, step]) => step.videoId === videoId);
+    for (const [key] of keys) this.stepsMap.delete(key);
+    return ok(keys.length);
+  }
+
   async findByVideoId(
     videoId: string
   ): Promise<Result<ProcessingStepRecord[], DatabaseUnavailable>> {
@@ -127,7 +138,7 @@ export class InMemoryStepRepository extends StepRepository {
   }
 
   async countRunningStale(thresholdMs: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoffTime = Date.now() - thresholdMs;
+    const cutoffTime = this.now() - thresholdMs;
     let count = 0;
     for (const step of this.stepsMap.values()) {
       if (step.status === 'RUNNING') {

@@ -4,6 +4,7 @@ const NOW = new Date('2026-03-01T12:00:00.000Z');
 const REQUIRED = {
   id: '00000000-0000-7000-8000-0000000000c1',
   ownerId: '00000000-0000-7000-8000-0000000000c2',
+  channelId: '00000000-0000-7000-8000-0000000000c3',
   sourceKey: 'raw/c1/source.mp4',
 };
 
@@ -33,11 +34,13 @@ describe('newVideoRecord', () => {
       errorMessage: null,
       viewsCount: 0,
       commentsCount: 0,
+      commentsEnabled: true,
       likesCount: 0,
       dislikesCount: 0,
       categoryId: null,
       tags: [],
       customThumbnailKey: null,
+      passwordProtected: false,
       generation: 1,
       version: 1,
       createdAt: NOW,

@@ -1,5 +1,5 @@
+import type { Align } from '@kit/ui';
 import type { RowData, Table } from '@tanstack/react-table';
-import type { Align } from '@vp/ui';
 import type { dataTableFeatures } from './data-table.context';
 
 export type DataTableState = 'ready' | 'loading' | 'empty' | 'error';

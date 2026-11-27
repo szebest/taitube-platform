@@ -1,0 +1,15 @@
+import { panelVariants } from '../panel';
+
+describe('@kit/ui: panel', () => {
+  it('opens a select on the popover surface, from its trigger', () => {
+    const content = panelVariants({ kind: 'select' }).content();
+
+    expect(content.split(' ')).toEqual(
+      expect.arrayContaining(['bg-raised', 'origin-(--radix-select-content-transform-origin)'])
+    );
+  });
+
+  it('leaves a select row room on the right for its check', () => {
+    expect(panelVariants({ kind: 'select' }).item().split(' ')).toContain('pe-8');
+  });
+});

@@ -1,6 +1,6 @@
-import { useT } from '@vp/intl-react';
+import type { IconId } from '@kit/ui';
 import { useAccount } from '@vp/queries';
-import type { IconId } from '@vp/ui';
+import { useT } from '#app/lib/messages';
 
 export type ShellTarget =
   | {
@@ -12,7 +12,8 @@ export type ShellTarget =
         | '/live'
         | '/subscriptions/videos'
         | '/feed/you'
-        | '/feed/history';
+        | '/feed/history'
+        | '/settings';
     }
   | { kind: 'channel'; channelId: string }
   | { kind: 'studio' };
@@ -67,8 +68,16 @@ export function useShellDestinations(): ShellDestinations {
     compact: false,
   };
 
+  const settings: ShellDestination = {
+    id: 'settings',
+    label: tOr('shell.settings', {}, ''),
+    icon: 'settings',
+    target: { kind: 'page', to: '/settings' },
+    compact: false,
+  };
+
   if (!account) {
-    return { main: [home, shorts, trending, live], you: [] };
+    return { main: [home, shorts, trending, live, settings], you: [] };
   }
 
   const subscriptions: ShellDestination = {
@@ -80,7 +89,7 @@ export function useShellDestinations(): ShellDestinations {
   };
 
   return {
-    main: [home, shorts, subscriptions, trending, live],
+    main: [home, shorts, subscriptions, trending, live, settings],
     hub: {
       id: 'you',
       label: tOr('shell.you', {}, ''),

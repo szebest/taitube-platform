@@ -1,14 +1,5 @@
+import { Avatar, Button, Icon, SegmentedControl, Skeleton, Slot, Textarea } from '@kit/ui';
 import { COMMENT_SORTS } from '@vp/domain';
-import {
-  Avatar,
-  Button,
-  Icon,
-  SegmentedControl,
-  Skeleton,
-  Slot,
-  Textarea,
-  useUiCopy,
-} from '@vp/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -19,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { CommentItemSkeleton } from '#app/components/discussion/comment-item';
+import { useT } from '#app/lib/messages';
 import { CommentThreadContext, useCommentThread } from './comment-thread.context';
 import { commentThreadStyles } from './comment-thread.variants';
 import type { CommentThreadLayout, CommentThreadSort } from './types';
@@ -76,13 +68,13 @@ export function CommentThreadHeader({
   ...props
 }: CommentThreadHeaderProps) {
   const { sort, setSort, headingId } = useCommentThread('Header');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = commentThreadStyles();
   const Heading = asChild ? Slot.Root : 'h2';
-  const labels = { top: copy.sortTop, newest: copy.sortNewest } satisfies Record<
-    CommentThreadSort,
-    string
-  >;
+  const labels = {
+    top: tOr('appUi.sortTop', {}, ''),
+    newest: tOr('appUi.sortNewest', {}, ''),
+  } satisfies Record<CommentThreadSort, string>;
 
   return (
     <div data-slot="comment-thread-header" className={styles.header({ className })} {...props}>
@@ -91,7 +83,7 @@ export function CommentThreadHeader({
       </Heading>
       <SegmentedControl.Root
         size="sm"
-        aria-label={copy.sortComments}
+        aria-label={tOr('appUi.sortComments', {}, '')}
         value={sort}
         onValueChange={(next) => isSort(next) && setSort(next)}
       >
@@ -116,6 +108,8 @@ export interface CommentThreadComposerProps extends Omit<
   submitting?: boolean;
   /** Why the last post failed, in the caller's words. */
   error?: string;
+  /** Slow mode is on: the time left to wait, finished by the app, shown on the submit button until it is over. */
+  wait?: string;
 }
 
 /** One row that grows; Comment and Cancel appear on focus or once there is text. */
@@ -126,11 +120,12 @@ export function CommentThreadComposer({
   viewerAvatar,
   submitting = false,
   error,
+  wait,
   className,
   ...props
 }: CommentThreadComposerProps) {
   const { layout } = useCommentThread('Composer');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const [focused, setFocused] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
   const errorId = useId();
@@ -138,7 +133,7 @@ export function CommentThreadComposer({
   const open = focused || value.length > 0 || submitting;
 
   const submit = () => {
-    if (submitting || value.trim().length === 0) return;
+    if (submitting || wait !== undefined || value.trim().length === 0) return;
     onSubmit();
     field.current?.focus();
   };
@@ -177,10 +172,10 @@ export function CommentThreadComposer({
         ref={field}
         autoGrow
         rows={1}
-        aria-label={copy.addComment}
+        aria-label={tOr('appUi.addComment', {}, '')}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        placeholder={copy.addComment}
+        placeholder={tOr('appUi.addComment', {}, '')}
         readOnly={submitting}
         value={value}
         className={styles.composerField()}
@@ -205,16 +200,16 @@ export function CommentThreadComposer({
               field.current?.blur();
             }}
           >
-            {copy.cancel}
+            {tOr('ui.cancel', {}, '')}
           </Button>
           <Button
             type="submit"
             variant="solid"
             tone="accent"
             loading={submitting}
-            disabled={value.trim().length === 0}
+            disabled={value.trim().length === 0 || wait !== undefined}
           >
-            {copy.postComment}
+            {wait ?? tOr('appUi.postComment', {}, '')}
           </Button>
         </div>
       )}
@@ -299,7 +294,8 @@ export function CommentThreadMore({
   ...props
 }: CommentThreadMoreProps) {
   const { endReached } = useCommentThread('More');
-  const { showMoreComments } = useUiCopy();
+  const { tOr } = useT();
+  const showMoreComments = tOr('appUi.showMoreComments', {}, '');
   const sentinel = useEndSentinel(endReached);
 
   return (

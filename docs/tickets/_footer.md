@@ -45,6 +45,9 @@ End-to-end behaviour from the user's/operator's perspective — not a layer list
 ## Acceptance criteria
 - [ ] …
 
+## Setup & environment
+New env keys, services, ports, seed data or demo scenarios this ticket adds, and the docs it updates in the same PR: docs/ENVIRONMENT.md (`pnpm gen:env-docs`), docs/GETTING_STARTED.md, docs/DEMO.md and the seed; "none" when it adds none.
+
 ## Out of scope
 ## Notes for the implementer   (decision-rich only; no file paths that go stale beyond the package names fixed in SDD §15.1)
 ## Testing plan

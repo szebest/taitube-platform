@@ -1,6 +1,6 @@
+import { CHART_SERIES, seriesColor } from '@kit/components';
 import type { ChartPalette } from '../types';
 import { SEQUENTIAL } from '../utils/sequential-scale';
-import { CHART_SERIES, seriesColor } from '../utils/series-color';
 
 const CHART_THEME = {
   categorical: CHART_SERIES.map(seriesColor),

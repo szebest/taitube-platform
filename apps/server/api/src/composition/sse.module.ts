@@ -1,5 +1,5 @@
+import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
 import { SseHub, SseService } from '../services/index';
 import { Services } from './service-tokens';
 
@@ -22,6 +22,7 @@ export function registerSseServices(c: Container): Container {
           logger: c.get(Services.Logger),
           liveStreams: repositories().liveStreams,
           liveViewers: (liveStreamId) => c.get(Services.LiveViewerTracker).viewers(liveStreamId),
+          gate: c.get(Services.VideoAccessGate),
         })
     )
     .provide(

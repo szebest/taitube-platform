@@ -1,9 +1,10 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
@@ -22,6 +23,7 @@ describe('apps/server/api/services: video lifecycle', () => {
       await repositories.videos.create({
         id: VIDEO_ID,
         ownerId: OWNER.id,
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         title: 'Reprocess fixture',
         visibility: 'public',
         status,
@@ -35,7 +37,9 @@ describe('apps/server/api/services: video lifecycle', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     probeQueue = new InMemoryJobQueue('probe');
-    service = new VideoService(videoServiceDeps(repositories.videos, { probeQueue }));
+    service = new VideoService(
+      videoServiceDeps(repositories.videos, { probeQueue, steps: repositories.steps })
+    );
   });
 
   describe('reprocess', () => {
@@ -52,14 +56,32 @@ describe('apps/server/api/services: video lifecycle', () => {
       expect(jobs[0]?.opts?.jobId).toBe(ids.probe(VIDEO_ID, 2));
     });
 
+    it('forgets the steps of the run it replaces, so the new probe is not fenced', async () => {
+      await seed();
+      expectOk(
+        await repositories.steps.claim({
+          id: '00000000-0000-7000-8000-0000000000c5',
+          videoId: VIDEO_ID,
+          step: 'probe',
+          rendition: '-',
+          jobId: ids.probe(VIDEO_ID, 1),
+          attempt: 1,
+          workerId: 'worker-1',
+          lockToken: 'token-1',
+        })
+      );
+
+      expectOk(await service.reprocess(OWNER, VIDEO_ID));
+
+      expect(expectOk(await repositories.steps.findByVideoId(VIDEO_ID))).toEqual([]);
+    });
+
     it('clears the previous failure so a retried video stops reporting a stale error', async () => {
-      await seed('FAILED');
+      await seed('PROCESSING');
       expectOk(
         await repositories.videos.transition({
           videoId: VIDEO_ID,
-          from: 'FAILED',
-          to: 'FAILED',
-          eventType: 'video.failed',
+          edge: 'fail',
           patch: { errorCode: 'CORRUPT_CONTAINER', errorMessage: 'boom' },
         })
       );

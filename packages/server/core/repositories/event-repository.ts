@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
 export interface VideoEventRecord {
   id: number;

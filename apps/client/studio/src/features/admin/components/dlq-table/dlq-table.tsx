@@ -1,19 +1,20 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Format } from '@kit/intl-react';
+import { Button } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { createColumnHelper, useTable } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import { canAccessAdmin } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-import { Button } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
+import { FilterSelect } from '#app/components/table/filter-select';
 import { LoadMore } from '#app/components/table/load-more';
 import {
   adminDlqQueryOptions,
@@ -21,9 +22,9 @@ import {
   type DlqEntry,
   knownDlqStatus,
 } from '#app/features/admin/api/admin-dlq';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { type DlqAction, DlqActionDialog } from '../dlq-action-dialog/dlq-action-dialog';
-import { FilterSelect } from '../filter-select/filter-select';
 
 const route = getRouteApi('/_authed/admin/queues');
 const column = createColumnHelper<DataTableFeatures, DlqEntry>();

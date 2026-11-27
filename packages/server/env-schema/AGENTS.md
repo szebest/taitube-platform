@@ -13,7 +13,7 @@ Instructions for any coding agent working on `@vp/env-schema`.
 `src/app-config.ts`, `inProcessAppConfig` in `src/in-process-config.ts`). It parses a plain
 `Record<string, string | undefined>` and knows nothing about where that record came from.
 
-Validating a live environment and reporting the failure belongs to `@vp/config` (`parseEnv`, `loadEnv`,
+Validating a live environment and reporting the failure belongs to `@kit/config` (`parseEnv`, `loadEnv`,
 `loadEnvOrExit`), one layer up. Before the split the two
 lived in one file and the boundary was drawn at runtime by `typeof process !== 'undefined'` — a
 feature-detect standing in for a tier.
@@ -44,10 +44,10 @@ declares its own default now.
    time and no server process reads it, so it is declared in `apps/client/web/src/lib/config/index.ts` and left
    commented in `.env.example`. Declaring it here is what put the whole schema in the frontend bundle.
 6. **A default the wire contract also states comes from the package that owns it.** `PAGE_SIZE_DEFAULT`
-   and `PAGE_SIZE_MAX` are imported from `@vp/pagination`, which `@vp/api-contracts` reads too, so the
-   env default and the advertised page bound cannot drift. That edge, and `@vp/pagination` being layer 2, is
-   why this package is layer 3 (its other dependencies, `@vp/domain`, `@vp/result` and `zod`, sit lower).
-   `OTEL_TRACES_SAMPLER` is the same kind of edge: its names are `TraceSamplerName` from `@vp/observability`
+   and `PAGE_SIZE_MAX` are imported from `@kit/pagination`, which `@vp/api-contracts` reads too, so the
+   env default and the advertised page bound cannot drift. That edge, and `@kit/pagination` being layer 2, is
+   why this package is layer 3 (its other dependencies, `@vp/domain`, `@kit/result` and `zod`, sit lower).
+   `OTEL_TRACES_SAMPLER` is the same kind of edge: its names are `TraceSamplerName` from `@kit/observability`
    (layer 2), imported as a type only, so loading the schema loads no OpenTelemetry module.
 7. **A secret has no default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
    `REDIS_PASSWORD`) are optional outside production and required in it, and a production boot refuses any
@@ -59,6 +59,26 @@ declares its own default now.
    `src/tuning.ts`, declared once and folded into `AppConfig` by `toAppConfig` (the barrel does not export it);
    `tests/architecture/env-keys-consumed.test.ts` and `tests/architecture/no-tuning-literals.test.ts` hold both.
 
+9. **Every key is documented, and the docs are generated.** `ENV_DOCS` (`src/env-docs.ts`, filled by the
+   `src/env-docs-*.ts` group files) holds one `EnvKeyDoc` per `AppEnvSchema` key: group, description, example,
+   visibility, readers, and when it is required. It is typed `Record<AppEnvKey, EnvKeyDoc>`, so a schema key
+   without an entry, or an entry for a key the schema lacks, is a type error. Type and default are never
+   written down: `describeEnvKey` reads them from the schema. Keys outside the schema (client build-time keys,
+   `platform-env.json`, tooling keys left commented in `.env.example`) are documented in `EXTRA_ENV_DOCS`
+   (`src/env-docs-extra.ts`). `docs/ENVIRONMENT.md` is rendered from both by `pnpm gen:env-docs`, and CI runs
+   it with `--check`. `tests/architecture/env-key-closure.test.ts` holds the rest: an empty description, a
+   secret whose example is not a placeholder, a stale `docs/ENVIRONMENT.md`, and a `.env.example` that
+   disagrees with the schema.
+
+### Adding a key
+
+1. Declare it in the sub-schema it belongs to in `src/app-env.ts` (a secret uses `secret()` and has no default).
+2. Add its entry to the group file in `src/env-docs-*.ts` (a key outside the schema goes in `src/env-docs-extra.ts`).
+3. Add its line to `.env.example` under the matching `# ----` heading, a secret marked 🔒.
+
+Then run `pnpm gen:env-docs` and commit `docs/ENVIRONMENT.md` with the change. A key that `platform-env.json`
+gains needs steps 2 and the regenerate only.
+
 ---
 
 ## 3. Local Commands
@@ -66,4 +86,6 @@ declares its own default now.
 ```bash
 pnpm --filter @vp/env-schema typecheck
 pnpm --filter @vp/env-schema test
+pnpm gen:env-docs            # rewrite docs/ENVIRONMENT.md
+pnpm gen:env-docs --check    # what CI runs: fails when the file is stale
 ```

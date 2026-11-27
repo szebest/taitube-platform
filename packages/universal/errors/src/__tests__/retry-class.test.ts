@@ -1,5 +1,5 @@
 import { ErrorCodes } from '../error-codes';
-import { RETRY_CLASS, retryClass } from '../retry-class';
+import { RETRY_CLASS } from '../retry-class';
 
 describe('@vp/errors: RETRY_CLASS', () => {
   it('classifies every code in the taxonomy', () => {
@@ -19,10 +19,6 @@ describe('@vp/errors: RETRY_CLASS', () => {
     { code: ErrorCodes.FFMPEG_OOM, expected: 'transient' },
     { code: ErrorCodes.DISK_FULL, expected: 'transient' },
   ])('follows ADR-18 for $code', ({ code, expected }) => {
-    expect(retryClass(code)).toBe(expected);
-  });
-
-  it('defaults an unknown code to transient', () => {
-    expect(retryClass('SOMETHING_ELSE')).toBe('transient');
+    expect(RETRY_CLASS[code]).toBe(expected);
   });
 });

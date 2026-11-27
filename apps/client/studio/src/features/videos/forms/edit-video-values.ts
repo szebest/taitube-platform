@@ -10,6 +10,7 @@ export interface EditVideoValues {
   categoryId: string;
   tags: string[];
   usePoster: boolean;
+  commentsEnabled: boolean;
 }
 
 export function valuesOf(video: Video): EditVideoValues {
@@ -20,6 +21,7 @@ export function valuesOf(video: Video): EditVideoValues {
     categoryId: video.categoryId ?? NO_CATEGORY,
     tags: video.tags ?? [],
     usePoster: false,
+    commentsEnabled: video.commentsEnabled,
   };
 }
 

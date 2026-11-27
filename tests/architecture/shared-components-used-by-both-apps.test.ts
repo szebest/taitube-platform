@@ -1,11 +1,14 @@
 import { posix } from 'node:path';
 import ts from 'typescript';
+import { packageDir } from '../../scripts/workspace-packages';
 import { clientApps } from './client-apps';
 import { parseSource } from './parsed-sources';
 import { productionSources, read, trackedFiles } from './repo-files';
 
-const BARREL = 'packages/client/components/src/index.ts';
-const PACKAGE = '@vp/components';
+const COMPONENTS = packageDir('@kit/components');
+
+const BARREL = `${COMPONENTS}/src/index.ts`;
+const PACKAGE = '@kit/components';
 
 const isTypeOnly = (node: ts.Node) =>
   ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node);
@@ -70,7 +73,7 @@ function components(readModule: ReadModule): Map<string, string[]> {
   return found;
 }
 
-/** The value names `sources` import from `@vp/components`, by their exported name. */
+/** The value names `sources` import from `@kit/components`, by their exported name. */
 function importedNames(sources: readonly { file: string; source: string }[]): Set<string> {
   const names = new Set<string>();
   for (const { file, source } of sources) {
@@ -106,14 +109,14 @@ function appOnly(
   });
 }
 
-describe('architecture: @vp/components holds only what both apps render', () => {
+describe('architecture: @kit/components holds only what both apps render', () => {
   it('reads each component of the barrel, through a nested export *, values only', () => {
     const planted: Record<string, string> = {
       [BARREL]: "export * from './states/empty-state';\nexport * from './illustrations';",
-      'packages/client/components/src/states/empty-state/index.ts':
+      [`${COMPONENTS}/src/states/empty-state/index.ts`]:
         "export const EmptyState = {};\nexport { useEmptyState } from './ctx';\nexport type { EmptyStateSize } from './types';",
-      'packages/client/components/src/illustrations/index.ts': "export * from './illustrations';",
-      'packages/client/components/src/illustrations/illustrations.tsx':
+      [`${COMPONENTS}/src/illustrations/index.ts`]: "export * from './illustrations';",
+      [`${COMPONENTS}/src/illustrations/illustrations.tsx`]:
         'export function EmptyIllustration() {}\nexport interface IllustrationProps {}',
     };
 
@@ -136,15 +139,15 @@ describe('architecture: @vp/components holds only what both apps render', () => 
         importedNames([
           {
             file: 'a.tsx',
-            source: "import { ErrorState, PageHeader as Header } from '@vp/components';",
+            source: "import { ErrorState, PageHeader as Header } from '@kit/components';",
           },
         ]),
       ],
       [
         'apps/client/studio',
         importedNames([
-          { file: 'b.tsx', source: "import { ErrorState } from '@vp/components';" },
-          { file: 'c.tsx', source: "import type { PageHeader } from '@vp/components';" },
+          { file: 'b.tsx', source: "import { ErrorState } from '@kit/components';" },
+          { file: 'c.tsx', source: "import type { PageHeader } from '@kit/components';" },
         ]),
       ],
     ]);
@@ -168,7 +171,7 @@ describe('architecture: @vp/components holds only what both apps render', () => 
       clientApps().map((app) => [app, new Set([...importedBy(`${app}/src/`), ...throughQueries])])
     );
 
-    const tracked = new Set(trackedFiles('packages/client/components/src'));
+    const tracked = new Set(trackedFiles(`${COMPONENTS}/src`));
     const readTracked = (file: string) => (tracked.has(file) ? read(file) : undefined);
 
     expect(appOnly(components(readTracked), importsByApp)).toEqual([]);

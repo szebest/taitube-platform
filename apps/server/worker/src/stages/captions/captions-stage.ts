@@ -7,7 +7,7 @@ import type { CaptionsStageDeps } from './captions-deps';
 
 type StageCollaborators = Omit<
   CaptionsStageDeps,
-  'rawBucket' | 'publicBucket' | 'cdn' | 'tmpDir' | 'ffmpeg' | 'captions'
+  'rawBucket' | 'publicBucket' | 'cdn' | 'tmpDir' | 'ffmpeg' | 'captions' | 'screening'
 > & { config: AppConfig };
 
 /** Windows and the run's own job share the queue; the plan says which one a job is. */
@@ -26,6 +26,7 @@ export function createCaptionsStage(d: StageCollaborators) {
       minTimeoutMs: config.worker.ffmpegProcess.minTranscodeTimeoutMs,
     },
     captions: config.captions,
+    screening: config.screening,
   };
   const track = createCaptionsProcessor(deps);
   const window = createCaptionsChunkProcessor(deps);

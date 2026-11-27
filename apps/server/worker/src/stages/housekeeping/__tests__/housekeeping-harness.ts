@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewOutboxInput, NewVideoInput, VideoRecord } from '@vp/core/repositories';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 
 export const HOUR_MS = 60 * 60 * 1000;
@@ -8,7 +8,7 @@ export const DAY_MS = 24 * HOUR_MS;
 
 export const hoursAgo = (hours: number): Date => new Date(Date.now() - hours * HOUR_MS);
 
-export type VideoSeed = Omit<NewVideoInput, 'id' | 'ownerId' | 'sourceKey'> & {
+export type VideoSeed = Omit<NewVideoInput, 'id' | 'ownerId' | 'channelId' | 'sourceKey'> & {
   idleSince?: Date;
 };
 
@@ -21,6 +21,7 @@ export async function seedVideo(
     await repositories.videos.create({
       id,
       ownerId: uuidv7(),
+      channelId: uuidv7(),
       sourceKey: `raw/${id}/source.mp4`,
       ...fields,
     })

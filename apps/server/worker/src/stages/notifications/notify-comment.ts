@@ -1,17 +1,17 @@
+import type { Logger } from '@kit/logger';
+import { isErr, ok, type Result } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
   type Comment,
-  mayHearAbout,
   mentionedHandles,
   NOTIFICATION_EXCERPT_LENGTH,
   type NotificationActor,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyCommentJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
+import { type CommentSubject, commentSubjectOf } from './notify-comment-subject';
 
 export interface NotifyCommentDeps {
   repositories: Repositories;
@@ -24,22 +24,24 @@ export interface NotifyCommentResult {
 }
 
 const GROUP_KEYS = {
-  comment: (comment: Comment) => `comment:${comment.videoId}`,
+  comment: (comment: Comment) => `comment:${comment.target.id}`,
   reply: (comment: Comment) => `reply:${comment.parentId}`,
   mention: (comment: Comment) => `mention:${comment.id}`,
 } as const;
 
 type CommentKind = keyof typeof GROUP_KEYS;
 
-/** Who a comment is for, one kind each: a mention outranks a reply, which outranks a comment on the video. */
+/** Who a comment is for, one kind each: a mention outranks a reply, which outranks a comment on a video. */
 function recipientsOf(
   comment: Comment,
   parentAuthorId: string | null,
   mentionedUserIds: readonly string[],
-  videoOwnerId: string
+  subject: CommentSubject
 ): Map<string, CommentKind> {
   const recipients = new Map<string, CommentKind>();
-  if (comment.parentId === null) recipients.set(videoOwnerId, 'comment');
+  if (comment.parentId === null && comment.target.type === 'video') {
+    recipients.set(subject.ownerId, 'comment');
+  }
   if (parentAuthorId) recipients.set(parentAuthorId, 'reply');
   for (const userId of mentionedUserIds) recipients.set(userId, 'mention');
 
@@ -47,20 +49,26 @@ function recipientsOf(
   return recipients;
 }
 
+/**
+ * Re-reads the comment as an anonymous reader would: one that was held, hidden or shadow banned
+ * since it was queued has nobody to tell, and a held one never meets this job again until it is
+ * approved.
+ */
 export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
   const { repositories, logger } = deps;
 
   return async function processNotifyComment(
     job: QueueJob<NotifyCommentJob>
   ): Promise<Result<NotifyCommentResult, DatabaseUnavailable>> {
-    const { commentId, videoId } = job.data;
+    const { commentId, target } = job.data;
     const skipped = ok({ commentId, recorded: 0 });
 
-    const comment = await repositories.comments.findById(commentId);
+    const comment = await repositories.comments.findVisible(null, commentId);
     if (isErr(comment)) return comment;
-    const video = await repositories.videos.findById(videoId);
-    if (isErr(video)) return video;
-    if (!(comment.value && video.value)) return skipped;
+    const subject = await commentSubjectOf(repositories, target);
+    if (isErr(subject)) return subject;
+    if (!(comment.value && subject.value)) return skipped;
+    const { videoId, videoTitle, link } = subject.value;
 
     const parent = comment.value.parentId
       ? await repositories.comments.findById(comment.value.parentId)
@@ -78,10 +86,10 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
       comment.value,
       parent.value?.authorId ?? null,
       mentioned,
-      video.value.ownerId
+      subject.value
     );
     for (const userId of recipients.keys()) {
-      if (!mayHearAbout(video.value, userId)) recipients.delete(userId);
+      if (!subject.value.mayHear(userId)) recipients.delete(userId);
     }
     const allowed = new Map<string, CommentKind>();
     for (const kind of new Set(recipients.values())) {
@@ -91,7 +99,7 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
       for (const userId of switchedOn.value) allowed.set(userId, kind);
     }
 
-    const author = await repositories.channels.findByUserId(comment.value.authorId);
+    const author = await repositories.channels.findById(comment.value.authorChannelId);
     if (isErr(author)) return author;
     const actor: NotificationActor | null = author.value && {
       handle: author.value.handle,
@@ -110,9 +118,10 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
         groupKey: GROUP_KEYS[kind](comment.value),
         payload: {
           actor,
-          videoTitle: video.value.title,
+          videoTitle,
           excerpt: comment.value.content.slice(0, NOTIFICATION_EXCERPT_LENGTH),
           outcome: null,
+          ...link,
         },
       });
       if (isErr(saved)) return saved;

@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { StageVariant } from './types';
 
 export const [StageContext, useStage] = createCompoundContext<{

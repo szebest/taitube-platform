@@ -22,7 +22,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
     the creator side without web.
   - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,
-    `worker-captions` (`cpus: 4`, 2 GiB, `CAPTIONS_THREADS=4`, model paths under `/opt/whisper`), `worker-package`, `worker-notify`, `worker-housekeeping`, `worker-live` (one broadcast per job, 55 s grace;
+    `worker-screen` (`cpus: 2`, 1.5 GiB, the classifier at `/opt/screening`), `worker-captions` (`cpus: 4`, 2 GiB, `CAPTIONS_THREADS=4`, model paths under `/opt/whisper`), `worker-package`, `worker-notify`, `worker-housekeeping`, `worker-live` (one broadcast per job, 55 s grace;
     reads MediaMTX at `LIVE_INGEST_URL` `rtsp://mediamtx:8554`).
   - `mediamtx` (profiles `api` and `worker`, SDD ADR-29): the live ingest gateway, configured by
     `mediamtx/mediamtx.yml`. RTMP on `:1935` (`rtmp://localhost:1935/live/{key}`), WHIP on `:8889`, WebRTC

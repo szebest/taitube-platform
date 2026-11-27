@@ -21,16 +21,18 @@
   },
   "dependencies": {
     "@casl/ability": "^7.0.1",
+    "@kit/permissions": "workspace:*",
+    "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*"
   },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 2
+    "layer": 6
   }
 }

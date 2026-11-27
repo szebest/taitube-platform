@@ -2,7 +2,12 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { QUEUED, renderPlaylistWatch, renderWatch } from '#app/__tests__/render-watch';
+import {
+  QUEUED,
+  renderPlaylistWatch,
+  renderSeriesWatch,
+  renderWatch,
+} from '#app/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
@@ -159,5 +164,22 @@ describe('apps/client/web: watch queue', () => {
     await user.click(queue.getByRole('button', { name: before }));
 
     expect(queue.getByRole('button', { name: after })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('labels the queued entries of a series by episode, and those of a plain playlist by nothing', async () => {
+    await renderSeriesWatch();
+
+    const queue = screen.getByRole('region', { name: 'Your queue' });
+
+    expect(await within(queue).findByText(/^Episode 1 ·/)).toBeInTheDocument();
+    expect(within(queue).getByText(/^Episode 3 ·/)).toBeInTheDocument();
+  });
+
+  it('puts no episode number on the entries of a plain playlist', async () => {
+    await renderPlaylistWatch();
+
+    await screen.findByText(`Queued ${QUEUED[0]}`);
+
+    expect(screen.queryByText(/^Episode/)).not.toBeInTheDocument();
   });
 });

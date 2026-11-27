@@ -1,7 +1,7 @@
-import { useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef, KeyboardEvent, PointerEvent } from 'react';
 import { useNowPlayingBar } from '#app/components/shell/now-playing-bar/now-playing-bar.context';
 import { nowPlayingBarStyles } from '#app/components/shell/now-playing-bar/now-playing-bar.variants';
+import { useT } from '#app/lib/messages';
 
 const DEFAULT_SEEK_STEP = 0.01;
 
@@ -25,7 +25,8 @@ export function NowPlayingBarProgress({
   ...props
 }: NowPlayingBarProgressProps) {
   const { progress, status, onSeek } = useNowPlayingBar('Progress');
-  const { seek } = useUiCopy();
+  const { tOr } = useT();
+  const seek = tOr('appUi.seek', {}, '');
   const styles = nowPlayingBarStyles();
 
   if (status === 'live') {

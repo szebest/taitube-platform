@@ -1,10 +1,11 @@
+import { loadEnv } from '../../packages/platform/server/config/src/index';
 import {
   realServiceClaims,
   useRealServices,
 } from '../../packages/server/adapters/__tests__/contract/real-services';
-import { loadEnv } from '../../packages/server/config/src/index';
+import { AppEnvSchema } from '../../packages/server/env-schema/src/index';
 
-const env = loadEnv();
+const env = loadEnv(AppEnvSchema, process.env);
 
 useRealServices({
   databaseUrl: env.DATABASE_URL,

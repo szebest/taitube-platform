@@ -1,3 +1,5 @@
+import { getActiveTraceparent } from '@kit/observability';
+import { expectOk } from '@kit/testing/result';
 import { context, SpanKind, SpanStatusCode, type Tracer, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
@@ -8,9 +10,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type NotifyJob, type ProbeJob } from '@vp/job-contracts';
-import { getActiveTraceparent } from '@vp/observability';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
@@ -88,6 +88,7 @@ describe('withTelemetry across the pipeline', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId: SEEDED.userId,
+      channelId: SEEDED.channelId,
       title: 's60 E2E Traced Video',
       status: 'UPLOADING',
       sourceKey,

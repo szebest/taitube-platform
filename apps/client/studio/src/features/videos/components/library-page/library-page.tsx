@@ -1,7 +1,7 @@
-import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { PageHeader } from '@kit/components';
 import { DataTableSkeleton } from '#app/components/table/data-table';
 import { useSelectedVideo } from '#app/hooks/use-selected-video';
+import { useT } from '#app/lib/messages';
 import { LIBRARY_SKELETON_COLUMNS } from '../library-columns/library-columns';
 import { LibraryTable } from '../library-table/library-table';
 

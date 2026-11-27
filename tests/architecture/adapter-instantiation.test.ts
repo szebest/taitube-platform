@@ -6,7 +6,7 @@ import { productionSources, read, trackedFiles } from './repo-files';
  * An import only says a name is reachable; `new` is the decision. The adapters package builds its
  * own parts, composition modules build the graph, and nothing else constructs a concrete adapter.
  */
-const HOMES = ['packages/server/adapters/', 'packages/server/testing/'];
+const HOMES = ['packages/server/adapters/', 'packages/server/testing-fixtures/'];
 const COMPOSITION = /\/composition\//;
 const SCOPE = /^(apps|packages)\//;
 
@@ -57,8 +57,8 @@ describe('architecture: a concrete adapter is constructed only where the graph i
 });
 
 /**
- * A service or a stage builds values, never collaborators. `SseConnection` and `LiveSession` are the
- * classes here: one per request or per packager run, each owns only the response or the archive it
+ * A service or a stage builds values, never collaborators. `SseConnection`, `RoomConnection` and
+ * `LiveSession` are the classes here: one per request, socket or packager run, each owns only the response or the archive it
  * writes, and has nothing a composition root could hand in ahead of time. `Promise` and
  * `AbortController` are per-call values like `Date`.
  */
@@ -71,6 +71,7 @@ const VALUES: ReadonlySet<string> = new Set([
   'Promise',
   'AbortController',
   'SseConnection',
+  'RoomConnection',
   'LiveSession',
 ]);
 

@@ -232,6 +232,118 @@
       "when": 1793869408814,
       "tag": "0032_live_streaming",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794003622512,
+      "tag": "0033_channel_team",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794223324030,
+      "tag": "0034_channel_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794306125953,
+      "tag": "0035_watch_parties",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794306370044,
+      "tag": "0036_screening",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794306380000,
+      "tag": "0037_screening_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794315849498,
+      "tag": "0038_comment_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794490184391,
+      "tag": "0039_outbox_dead_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794823044149,
+      "tag": "0040_data_exports",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794827257533,
+      "tag": "0041_api_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794835517491,
+      "tag": "0042_subscription_source_video",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794986267648,
+      "tag": "0043_video_views_device_daily",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794986951691,
+      "tag": "0044_multiple_channels",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794994229808,
+      "tag": "0045_video_revisions_chapters_corrections",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1795099045893,
+      "tag": "0046_video_access_experiments",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1795420992798,
+      "tag": "0047_video_generations_edits",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1795701076047,
+      "tag": "0049_community_posts",
+      "breakpoints": true
     }
   ]
 }

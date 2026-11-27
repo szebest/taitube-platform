@@ -1,8 +1,8 @@
 # ShortsPlayerFrame
 
-Location: `apps/client/web/src/components/shorts/shorts-player-frame/`. Web's app kit, presentational and compound, built from `IconButton`, `AspectRatio`, `Progress` and the [Stage](stage.md) ground.
+Location: `apps/client/web/src/components/shorts/shorts-player-frame/`. Web's app kit, presentational and compound, built from `IconButton`, `AspectRatio`, `Slider` and the [Stage](stage.md) ground.
 
-The Shorts surface: a 9:16 player centred on the stage, the action column beside it, previous and next buttons on pointer devices, and the discussion as a sheet. It ships now as a shell for `/shorts`, rendering its empty state until the feature wires data ([95](../../../tickets/95-design-system-2.md) section 8).
+One Short's surface: a 9:16 player centred on the stage, the action column beside it, previous and next buttons on pointer devices, a toolbar over the picture's corner and a seek bar along its foot. The frame is one slide of the feed; the feed's scroller is the one `region`, and it owns the keys ([136](../../../tickets/136-frontend-ui-and-feel-overhaul-web-and-studio.md) slice d2).
 
 ## Anatomy
 
@@ -21,7 +21,8 @@ The Shorts surface: a 9:16 player centred on the stage, the action column beside
 | 1 | `Previous`, `Next` | `control.lg` `IconButton`s, pointer devices only, at the inline start |
 | 2 | `Player` | 9:16 on a `media` ground (Stage `vertical`), radius `card`, height `min(100dvh - layout.header - 32px, 900px)` |
 | 3 | `Actions` | `control.lg` `IconButton`s with a `caption` count below, at the inline end |
-| 4 | progress | 3 px, flush to the bottom edge, `accent` |
+| 4 | `Progress` | a `Slider` named by `label`, flush to the bottom edge, `accent`; the thumb shows on focus, `onSeek` takes 0 to 1 |
+| 5 | `Toolbar` | a `toolbar` named by `label` at the top end: mute, captions, speed, which the wrapper composes |
 
 ## Props
 
@@ -35,6 +36,7 @@ export type ShortsActionsLayout = 'beside' | 'overlay';
 interface ShortsPlayerFrameRootProps {
   state?: ShortsFrameState;
   layout?: ShortsActionsLayout;
+  playback?: { paused: boolean; onTogglePlay: () => void };
   onPrevious?: () => void;
   onNext?: () => void;
 }
@@ -61,7 +63,6 @@ Previous and next appear when their callback is given (no first or last flag). `
 | State | What changes |
 |---|---|
 | paused | a centred 64 px play glyph on `scrim` |
-| muted | a speaker-off marker at the top end, tap to unmute |
 | liked | the Like action takes `accent-soft` and `accent-ink` |
 | loading | a spinner after 400 ms |
 | error | a centred message and retry inside the frame |
@@ -70,7 +71,7 @@ Previous and next appear when their callback is given (no first or last flag). `
 
 ## Responsive behaviour
 
-Compact: full width and height under the header, actions overlaid, swipe for next and previous, the tab bar stays. Medium: frame up to 405 px, actions beside. Expanded: 450 px, with buttons. Large: up to 506 px, arrows at the outer sides.
+Compact: full width and height under the header, actions overlaid, a swipe scrolls the feed (scroll snap), the tab bar stays. Medium: frame up to 405 px, actions beside. Expanded: 450 px, with buttons. Large: up to 506 px, arrows at the outer sides.
 
 ## Skeleton
 
@@ -78,11 +79,11 @@ Compact: full width and height under the header, actions overlaid, swipe for nex
 
 ## Motion
 
-Next and previous slide vertically at `slow` with `settle`. Like scales at `fast`; the paused glyph fades at `fast`. Reduced motion: switching is a cut, glyphs fade only.
+The feed scrolls and snaps natively; a key moves it smoothly, and a cut under reduced motion. Like scales at `fast`; the paused glyph fades at `fast`.
 
 ## Accessibility
 
-- A `region` labelled "Shorts player". Up and Down arrows, `J` and `K` move between Shorts; Space plays and pauses; `M` mutes.
+- The feed is the one `region` labelled "Shorts player" and takes focus when it opens. Up and Down arrows, `J` and `K` move between Shorts; Space plays and pauses; `M` mutes; `C` toggles captions; `L` likes. Each slide is a group named by its title; the ones off screen are `inert`.
 - Actions are toggles with the count in the name; discussion opens a modal sheet with focus trap and return.
 - A polite live region announces the new title and channel. Swipe is an enhancement: every gesture has a button. Autoplay respects the motion setting and starts muted.
 
@@ -90,16 +91,17 @@ Next and previous slide vertically at `slow` with `settle`. Like scales at `fast
 
 - `className` on every part, merged with `cn`.
 - `asChild` on `Action` and `Caption`.
-- `useShortsPlayerFrame()` returns `{ state, layout, paused, muted }` for an app-local overlay.
+- `useShortsPlayerFrame()` returns `{ state, layout, paused, playback }` for an app-local overlay.
 - `tv({ extend: shortsPlayerFrameStyles, variants: { ... } })` for a local look.
 
 ## Smart wrappers
 
 | Wrapper | Folder (`features/...`) | Props | Hooks |
 |---|---|---|---|
-| `ShortsFeedFrame` | `shorts/components/` | `short: VideoSummary` | `useShortsNavigation`, `useReaction(short.id)`, `useVideoActions`, `useFormat`, `useT` |
+| `ShortsFeed` | `shorts/components/` | `shorts`, `named`, `hasMore`, `loadMore`, `renderComments` | `useShortsScroll`, `useShortsPlayback`, `useShortsUrl`, `useReaction` |
+| `ShortsSlide` | `shorts/components/` | `short`, `distance`, `layout`, `playback` | `useQuery(captionsQueryOptions)` |
 
-It fixes the actions to Like, Discussion, Share and Queue, opens `ShortsCommentSheet`, and maps feed and player state to `ShortsFrameState`.
+`ShortsFeed` is the scroll-snap container (`snap-y snap-mandatory overscroll-contain touch-pan-y`): it reads which Short rests on screen, keeps the keys, and mirrors the Short into the URL with a replace once it rests. `ShortsSlide` mounts the Short on screen and the one beside it each side (paused, muted, `inert`, so a step finds the player built); the others hold their place. The playhead reaches only `ShortsFeedProgress` through the player channel, so the caption and the actions do not render with it. The actions are Like, Discussion, Share, Queue, Play next and Save (`ShortsFeedActions`); Subscribe is in the caption.
 
 ## Used by
 
@@ -107,4 +109,4 @@ It fixes the actions to Like, Discussion, Share and Queue, opens `ShortsCommentS
 
 ## Workbench stories
 
-Ready with side actions; overlay at compact; paused and muted; liked; loading and error; empty; last Short; RTL (column mirrors, arrows keep their meaning); skeleton.
+Ready with side actions; overlay at compact; paused; liked; loading and error; empty; last Short; RTL (column mirrors, arrows keep their meaning); skeleton.

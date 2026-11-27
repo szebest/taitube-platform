@@ -4,7 +4,7 @@
    implementation of each token set (typography, fontSize, spacing, sizing, radius, border, shadow, ambient,
    motion). Classes are prefixed tt-.
    The apps never import this file: they style with Tailwind utilities generated from the same tokens and the
-   tv() variants inside @vp/ui and @vp/components. A tt- class here maps to one of those
+   tv() variants inside @kit/ui and @kit/components. A tt- class here maps to one of those
    (.tt-btn--primary is <Button variant="primary">, .tt-vcard is <VideoCard.Root>). */
 
 *, *::before, *::after { box-sizing: border-box; }

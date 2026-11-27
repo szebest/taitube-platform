@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { decideVideoRead } from '@vp/domain-rules';
-import { isErr, isOk } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, validateStartUpload } from '@vp/validation';
 
 /**
@@ -28,6 +28,7 @@ describe('client tier: the shared rules are reachable from a browser-only packag
     const video = {
       id: 'video-1',
       ownerId: 'user-1',
+      channelId: 'channel-1',
       title: 'Clip',
       description: null,
       visibility: 'public',

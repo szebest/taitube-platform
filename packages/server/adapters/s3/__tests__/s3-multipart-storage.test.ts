@@ -1,5 +1,5 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
 import { s3MultipartStorageSubject } from '../../__tests__/contract/s3-subjects';
 import { S3MultipartStorage } from '../s3-multipart-storage';
@@ -84,6 +84,8 @@ describe('S3MultipartStorage', () => {
       expect(part.url).toContain('partNumber=3');
       expect(part.url).toContain(`uploadId=${UPLOAD_ID}`);
       expect(part.url).toContain('X-Amz-Expires=600');
+      expect(part.url.toLowerCase()).not.toContain('x-amz-checksum');
+      expect(part.url.toLowerCase()).not.toContain('x-amz-sdk-checksum-algorithm');
       expect(new Date(part.expiresAt).getTime()).toBeGreaterThan(Date.now());
     });
   });

@@ -1,5 +1,5 @@
+import { createCompoundContext } from '@kit/ui';
 import type { VideoVisibility } from '@vp/domain';
-import { createCompoundContext } from '@vp/ui';
 import { type PropsWithChildren, useState } from 'react';
 import { useUploadVideo } from '#app/features/upload/hooks/use-upload-video';
 
@@ -64,7 +64,7 @@ export function UploadDockProvider({ children }: PropsWithChildren) {
   };
 
   const cancel = (id: string) => {
-    upload.cancel();
+    upload.cancel(id);
     remove(id);
   };
 

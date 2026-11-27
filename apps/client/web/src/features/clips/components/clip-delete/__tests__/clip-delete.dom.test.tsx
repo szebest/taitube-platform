@@ -36,10 +36,7 @@ describe('apps/client/web: deleting a clip', () => {
   });
 
   it('stays open and busy while the delete is in flight', async () => {
-    let release = () => {};
-    const released = new Promise<void>((resolve) => {
-      release = resolve;
-    });
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
     const { user, confirm } = await askToDelete(
       mockEndpoint(deleteClip, async () => {
         await released;

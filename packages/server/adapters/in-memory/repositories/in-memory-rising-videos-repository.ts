@@ -1,3 +1,4 @@
+import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   RisingVideosOptions,
@@ -7,11 +8,10 @@ import type {
 } from '@vp/core/repositories';
 import { RISING, isPublicFeedEligible, rankRising } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok, unwrapOr } from '@vp/result';
 
 export interface RisingVideosLookups {
   videosRepo: { getAllVideos(): VideoRecord[] };
-  channelsRepo: Pick<ChannelRepositoryPort, 'findByUserId'>;
+  channelsRepo: Pick<ChannelRepositoryPort, 'findById'>;
   viewsRepo: Pick<VideoViewRepositoryPort, 'retentionCurve'>;
 }
 
@@ -37,7 +37,7 @@ export class InMemoryRisingVideosRepository implements RisingVideosRepositoryPor
 
     const candidates = [];
     for (const video of recent) {
-      const channel = unwrapOr(await this.lookups.channelsRepo.findByUserId(video.ownerId), null);
+      const channel = unwrapOr(await this.lookups.channelsRepo.findById(video.channelId), null);
       if (!channel) continue;
 
       const curve = unwrapOr(await this.lookups.viewsRepo.retentionCurve(video.id), []);
@@ -46,7 +46,7 @@ export class InMemoryRisingVideosRepository implements RisingVideosRepositoryPor
       candidates.push({
         video,
         id: video.id,
-        ownerId: video.ownerId,
+        channelId: video.channelId,
         createdAt: video.createdAt,
         subscriberCount: channel.subscriberCount,
         sessions: viewersAt(RISING.startPercent),

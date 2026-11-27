@@ -1,6 +1,6 @@
 # OfflineState
 
-Location: `apps/client/web/src/components/states/offline-state/`. Web's app kit, presentational and compound, built from `@vp/ui` primitives. Studio has no service worker ([93](../../../tickets/93-creator-studio-separate-app.md)), so it stays here until studio adds an offline route.
+Location: `apps/client/web/src/components/states/offline-state/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives. Studio has no service worker ([93](../../../tickets/93-creator-studio-separate-app.md)), so it stays here until studio adds an offline route.
 
 What still works when the connection is gone. It is honest and specific: it lists what is available offline, not an apology.
 
@@ -31,7 +31,7 @@ Plus the standard props. What is available offline is a list of children the app
 
 ```ts
 // types.ts
-import type { ToneOption } from '@vp/design-tokens';
+import type { ToneOption } from '@kit/design-tokens';
 
 export type OfflineStateSize = 'page' | 'banner' | 'section';
 export type OfflineStateTone = Extract<ToneOption, 'neutral' | 'success'>;

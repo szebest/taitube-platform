@@ -1,22 +1,24 @@
+import { expectOk } from '@kit/testing/result';
 import type { VideoLibraryQuery, VideoStudioRepository } from '@vp/core/repositories';
-import { creatorLibraryCursorOf, type LibrarySort } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
+import * as schema from '@vp/db';
+import { type CreatorLibraryCursor, creatorLibraryCursorOf, type LibrarySort } from '@vp/domain';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   HOUR_MS,
   idsOf,
   OTHER_OWNER_ID,
-  OWNER_ID,
+  OWNER_CHANNEL_ID,
   publicVideo,
   seedCategories,
   seedOwners,
   VIDEO_IDS,
 } from './fixtures';
+import { SHARED_MILLISECOND, walkOneAtATime } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeVideoStudioLibraryContract(makeSubject: MakeRepositoriesSubject): void {
-  describe('VideoStudioRepository.listLibrary contract', () => {
+  describe('VideoStudioLibrary contract', () => {
     let subject: RepositoriesSubject;
     let studio: VideoStudioRepository;
 
@@ -57,7 +59,12 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
       const list = async (query: Partial<VideoLibraryQuery> = {}) =>
         idsOf(
           expectOk(
-            await studio.listLibrary({ ownerId: OWNER_ID, sort: 'newest', limit: 10, ...query })
+            await studio.listLibrary({
+              channelId: OWNER_CHANNEL_ID,
+              sort: 'newest',
+              limit: 10,
+              ...query,
+            })
           )
         );
 
@@ -87,7 +94,7 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
 
       it('returns one row past the limit and resumes after the cursor without repeating', async () => {
         const firstPage = expectOk(
-          await studio.listLibrary({ ownerId: OWNER_ID, sort: 'views', limit: 1 })
+          await studio.listLibrary({ channelId: OWNER_CHANNEL_ID, sort: 'views', limit: 1 })
         );
         expect(idsOf(firstPage)).toEqual([VIDEO_IDS.c, VIDEO_IDS.b]);
 
@@ -97,6 +104,36 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
 
         expect(await list({ sort: 'views', cursor })).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
       });
+
+      it.each([{ order: 'desc' as const }, { order: 'asc' as const }])(
+        'walks the newest sort $order through videos created within one millisecond',
+        async ({ order }) => {
+          const ids = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c];
+          await subject.spreadAcrossMicroseconds({
+            stamp: schema.videos.createdAt,
+            key: schema.videos.id,
+            ids,
+            at: SHARED_MILLISECOND,
+          });
+
+          const served = await walkOneAtATime(
+            async (cursor: CreatorLibraryCursor | null) =>
+              expectOk(
+                await studio.listLibrary({
+                  channelId: OWNER_CHANNEL_ID,
+                  sort: 'newest',
+                  order,
+                  cursor,
+                  limit: 1,
+                })
+              ),
+            (row) => creatorLibraryCursorOf(row, 'newest'),
+            ({ id }) => id
+          );
+
+          expect(served.sort()).toEqual(ids.sort());
+        }
+      );
     });
 
     describe('listLibrary across owners', () => {
@@ -120,7 +157,7 @@ export function describeVideoStudioLibraryContract(makeSubject: MakeRepositories
       const list = async (query: Partial<VideoLibraryQuery> = {}) =>
         idsOf(expectOk(await studio.listLibrary({ sort: 'newest', limit: 10, ...query })));
 
-      it('lists every owner except deleted videos when no owner is given', async () => {
+      it('lists every channel except deleted videos when no channel is given', async () => {
         expect(await list()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c]);
       });
 

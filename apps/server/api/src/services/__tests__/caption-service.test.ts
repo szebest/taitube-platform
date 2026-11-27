@@ -1,9 +1,10 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { CaptionService } from '../caption-service';
 import {
   CAPTIONED,
+  CAPTION_CHANNEL_ID,
   CAPTION_OWNER,
   CAPTION_STRANGER,
   PRIVATE_CAPTIONED,
@@ -11,8 +12,9 @@ import {
   seedCaptionVideos,
   seedTrack,
 } from './caption-fixture';
-import { TEST_CDN } from './service-deps';
+import { ownerActing, TEST_CDN } from './service-deps';
 
+const CHANNEL_ID = '00000000-0000-7000-8000-00000000ca0c';
 const ORIGIN = { requestId: 'req-1' };
 
 describe('CaptionService', () => {
@@ -229,14 +231,20 @@ describe('CaptionService', () => {
   });
 
   it.each([
-    { name: 'the owner with a channel', actor: CAPTION_OWNER, outcome: { enabled: true } },
     {
-      name: 'a caller with no channel',
+      name: 'the owner of the channel',
+      actor: CAPTION_OWNER,
+      channelId: CAPTION_CHANNEL_ID,
+      outcome: { enabled: true },
+    },
+    {
+      name: 'a channel that is not there',
       actor: CAPTION_STRANGER,
+      channelId: CHANNEL_ID,
       outcome: ErrorCodes.CHANNEL_NOT_FOUND,
     },
-  ])('sets the channel default for $name', async ({ actor, outcome }) => {
-    const set = await service.setChannelDefault(actor, true);
+  ])('sets the channel default for $name', async ({ actor, channelId, outcome }) => {
+    const set = await service.setChannelDefault(actor, ownerActing(actor.id, channelId), true);
 
     expect(set.ok ? set.value : set.error.code).toEqual(outcome);
   });

@@ -4,18 +4,28 @@ import { type ApiClient, ApiError } from '@vp/api-client';
 import type { ContractBody, updateMyChannel } from '@vp/api-contracts';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, type Session, useApi } from '@vp/queries';
+import { actingChannelKeys } from '#app/features/channel/api/acting-channel';
+import { useActiveChannel } from '#app/hooks/use-active-channel';
 
 type ChannelChanges = ContractBody<typeof updateMyChannel>;
 
-function updateChannelMutationOptions(api: ApiClient, refresh: () => Promise<void>) {
+function updateChannelMutationOptions(
+  api: ApiClient,
+  channelId: string,
+  own: boolean,
+  refresh: () => Promise<void>
+) {
   return mutationOptions({
     mutationFn: (changes: ChannelChanges) => api.me.updateMyChannel({ body: changes }),
     onSuccess: (channel, _changes, _snapshot, { client }) => {
-      client.setQueryData<Session>(SESSION_KEY, (session) =>
-        session?.status === 'signed-in'
-          ? { ...session, account: { ...session.account, channel } }
-          : session
-      );
+      client.setQueryData(actingChannelKeys.channel(channelId), channel);
+      if (own) {
+        client.setQueryData<Session>(SESSION_KEY, (session) =>
+          session?.status === 'signed-in'
+            ? { ...session, account: { ...session.account, channel } }
+            : session
+        );
+      }
       return refresh();
     },
   });
@@ -28,9 +38,10 @@ export function failureCodeOf(error: unknown): ErrorCode | undefined {
     : undefined;
 }
 
-/** One save of the channel; the viewer's session carries the channel, so it is rewritten and the router told. */
+/** One save of the acting channel; the session carries the channel only while it is the viewer's own. */
 export function useUpdateChannel() {
+  const { channelId, own } = useActiveChannel();
   const api = useApi();
   const router = useRouter();
-  return useMutation(updateChannelMutationOptions(api, () => router.invalidate()));
+  return useMutation(updateChannelMutationOptions(api, channelId, own, () => router.invalidate()));
 }

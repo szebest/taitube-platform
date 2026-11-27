@@ -1,9 +1,9 @@
+import { Field, Select, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { CaptionListView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Field, Select, useToast } from '@vp/ui';
 import { autoCaptionsMutationOptions } from '#app/features/captions/api/caption-mutations';
+import { useT } from '#app/lib/messages';
 
 type Switch = 'on' | 'off' | 'follow';
 

@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotificationKind } from '@vp/domain';
 import type { NotifySubscribersJob } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createNotifySubscribersProcessor } from '../notify-subscribers';
 import {
   CHANNEL_ID,
@@ -44,6 +44,16 @@ describe('apps/server/worker/stages: notify-subscribers', () => {
     queue = new InMemoryJobQueue('notify');
     await seedCreator(repositories);
     await seedVideo(repositories, videoId(1));
+  });
+
+  it('notifies an account subscribed from two of its channels once, at its louder level', async () => {
+    await seedSubscriber(repositories, userId(1), { level: 'none' });
+    const second = '0000000d-0000-7000-8000-000000000001';
+    expectOk(await repositories.subscriptions.subscribe(userId(1), second, CHANNEL_ID));
+
+    await fanOut(1);
+
+    expect(await received(1)).toEqual(['upload']);
   });
 
   it.each<{ scenario: string; level: 'all' | 'highlights' | 'none'; kind: NotificationKind[] }>([

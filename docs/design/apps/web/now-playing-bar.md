@@ -1,6 +1,6 @@
 # NowPlayingBar
 
-Location: `apps/client/web/src/components/shell/now-playing-bar/`. Web's app kit, presentational and compound, built from `@vp/ui` primitives.
+Location: `apps/client/web/src/components/shell/now-playing-bar/`. Web's app kit, presentational and compound, built from `@kit/ui` primitives.
 
 A bar along the bottom of the content column that keeps the video playing when the viewer leaves the watch page. It carries the "Now playing bar" signature move: Taitube has no corner miniplayer.
 

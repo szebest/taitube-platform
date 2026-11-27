@@ -14,7 +14,7 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 - `cloudflare_api_token.r2_api_app` and `cloudflare_api_token.r2_worker_app`: scoped R2 credentials for the API and the workers. v5 takes permission groups by ID, so `main.tf` looks them up by name in the `cloudflare_api_token_permission_groups_list` data source, scoped to R2 buckets.
 - `hcloud_server.k3s_node`, `hcloud_firewall.vps_firewall` and `hcloud_ssh_key.operator_key`: the Hetzner k3s node, with SSH open only to `operator_ssh_ip`.
 
-`cloudflare_r2_bucket_cors.public` lets `https://<domain>` GET and HEAD the public bucket with `Range`, which the saved-for-offline fetches of posters and segments need; the raw bucket has no CORS rule.
+`cloudflare_r2_bucket_cors.public` lets `https://<domain>` GET and HEAD the public bucket with `Range`, which the saved-for-offline fetches of posters and segments need; `cloudflare_r2_bucket_cors.raw` lets `https://studio.<domain>` PUT to the raw bucket with `Content-Type` and expose `ETag`, which the studio's presigned single and multipart uploads need; the studio reads nothing from the public bucket by script.
 
 ---
 
@@ -22,7 +22,7 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 
 1. **Parity with Local MinIO:** The two R2 buckets must keep the shape `infra/compose/minio-init.sh` gives MinIO: raw private with the same 7-day expiry, public readable. Bucket names differ (`vp-raw`/`vp-public` against `raw`/`public`) and reach the code only through `S3_BUCKET_RAW` / `S3_BUCKET_PUBLIC`; object keys belong to `packages/server/storage/src/keys.ts`.
 2. **Deterministic Inputs:** Variables are declared in `variables.tf`; the non-secret ones have defaults. Values go in a `terraform.tfvars` copied from `terraform.tfvars.example`; `cloudflare_api_token` and `hcloud_token` are `sensitive`. `.gitignore` covers `terraform.tfvars`, `*.tfstate` and `.terraform/`.
-3. **Automated Verification:** the `terraform` job in `.github/workflows/ci.yml` runs `terraform fmt -check -recursive`, then `terraform init -backend=false -lockfile=readonly` and `terraform validate`, with the provider plugins cached by the hash of `.terraform.lock.hcl`; `ci-shape.test.ts` holds the job and its 2-minute budget. No credentials reach CI, so nothing plans or applies. `packages/server/testing/src/__tests__/cloud-terraform.test.ts` reads the `.tf` files through `@cdktf/hcl2json` for the pinned provider, the variables, the resource addresses and the attributes the cloud rung depends on, and `cloud-r2-tokens.test.ts` does the same for each R2 token's buckets and permission groups; keep both in step with any rename.
+3. **Automated Verification:** the `terraform` job in `.github/workflows/ci.yml` runs `terraform fmt -check -recursive`, then `terraform init -backend=false -lockfile=readonly` and `terraform validate`, with the provider plugins cached by the hash of `.terraform.lock.hcl`; `ci-shape.test.ts` holds the job and its 2-minute budget. No credentials reach CI, so nothing plans or applies. `packages/server/testing-fixtures/src/__tests__/cloud-terraform.test.ts` reads the `.tf` files through `@cdktf/hcl2json` for the pinned provider, the variables, the resource addresses and the attributes the cloud rung depends on, and `cloud-r2-tokens.test.ts` does the same for each R2 token's buckets and permission groups; keep both in step with any rename.
 4. **Upgrading a provider:** change the constraint in `terraform.tf`, then refresh the lock for every platform: `terraform providers lock -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_amd64 -platform=darwin_arm64`. CI's `-lockfile=readonly` fails on a lock that no longer matches the constraints.
 
 ---
@@ -50,5 +50,5 @@ terraform -chdir=infra/terraform validate
 cd infra/terraform && terraform plan
 
 # Run the specs that read the HCL
-pnpm --filter @vp/testing test cloud-terraform cloud-r2-tokens
+pnpm --filter @vp/testing-fixtures test cloud-terraform cloud-r2-tokens
 ```

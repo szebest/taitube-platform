@@ -1,4 +1,4 @@
-import { useMediaQuery } from '@vp/ui';
+import { useMediaQuery } from '@kit/ui';
 import { useEffect, useEffectEvent } from 'react';
 import { useAppShell } from '../app-shell.context';
 import { RAIL_OPENS_IN_PLACE, RAIL_OPENS_OVER } from './use-menu-target';

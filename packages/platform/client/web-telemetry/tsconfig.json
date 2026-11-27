@@ -1,0 +1,16 @@
+{
+  "extends": "@kit/tsconfig/client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/**/__mocks__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.setup.ts"
+  ]
+}

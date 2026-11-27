@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, screen, within } from '@testing-library/react';
 import { chatLine, LIVE_STREAM_ID, LIVE_VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({

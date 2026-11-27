@@ -1,13 +1,16 @@
+import { VideoCard } from '@kit/components';
+import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
-import { VideoCard } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
-import { useCan } from '@vp/permissions-react';
+import { publishedAt } from '@vp/intl-formats';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { useHoverPlay } from '#app/hooks/use-hover-play';
+import { useImpression } from '#app/hooks/use-impression';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useT } from '#app/lib/messages';
 import { usePlaybackPreference } from '#app/lib/preferences/device-preferences-provider';
+import { spriteOf } from '#app/lib/video-sprite';
 import { useWatchProgress } from './hooks/use-watch-progress';
 
 type ShelfReason = ReasonedVideo['reason'];
@@ -19,25 +22,33 @@ interface FeedVideoCardProps {
   reason?: ShelfReason;
 }
 
-/** A video in a feed, a grid or a shelf: the card, linked to its watch page and its channel. */
+/** A video in a feed, a grid or a shelf: the card, linked to its watch page and its channel, counting the test variant it shows. */
 export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const { tOr } = useT();
   const progress = useWatchProgress(video);
   const [hoverPreview] = usePlaybackPreference('hoverPreview');
-  const { save, enqueue } = useVideoActions(video);
-  const canGiveFeedback = useCan('create', 'RecommendationFeedback');
+  const hoverPlay = useHoverPlay();
+  const { save, enqueue, playNext } = useVideoActions(video);
+  const impression = useImpression(video);
 
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
   const hideable = reason && !OWN_ACTIVITY_REASONS.includes(reason.kind);
 
   return (
-    <VideoCard.Root variant="shelf" videoId={video.id} expandOnHover={hoverPreview}>
+    <VideoCard.Root
+      ref={impression}
+      variant="shelf"
+      videoId={video.id}
+      expandOnHover={hoverPreview}
+      previewOnHover={hoverPlay}
+    >
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
         duration={clock}
         spokenDuration={spoken}
         progress={progress}
+        frames={spriteOf(video)}
       />
       {channel && (
         <VideoCard.Byline
@@ -63,10 +74,10 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
       {reason && (
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
-      <VideoCard.Menu onSave={save} onQueue={enqueue}>
-        {hideable && canGiveFeedback ? <FeedbackMenuItems video={video} /> : undefined}
+      <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
+        {hideable ? <FeedbackMenuItems video={video} /> : undefined}
       </VideoCard.Menu>
-      <VideoCard.Expanded onSave={save} onQueue={enqueue}>
+      <VideoCard.Expanded onSave={save} onQueue={enqueue} onPlayNext={playNext}>
         {video.description ?? undefined}
       </VideoCard.Expanded>
     </VideoCard.Root>

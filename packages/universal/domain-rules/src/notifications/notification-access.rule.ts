@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import { canReadNotification, canUpdateNotification, type UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 const CAN = { read: canReadNotification, update: canUpdateNotification } as const;

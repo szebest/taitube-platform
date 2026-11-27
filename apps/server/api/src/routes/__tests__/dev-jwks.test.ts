@@ -1,5 +1,5 @@
-import { mintToken } from '@vp/dev-token';
-import { SEEDED } from '@vp/testing';
+import { mintToken } from '@vp/dev-identity';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
 

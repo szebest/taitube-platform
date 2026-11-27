@@ -1,16 +1,18 @@
+import { VideoThumbnail } from '@kit/components';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { ContractResult, listCreatorVideos } from '@vp/api-contracts';
-import { VideoThumbnail } from '@vp/components';
 import { VIDEO_VISIBILITIES } from '@vp/domain';
-import { videoDuration } from '@vp/intl';
-import { useFormat, useT } from '@vp/intl-react';
+import { videoDuration } from '@vp/intl-formats';
 import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { unwrapOr } from '@vp/result';
-import { DropdownMenu, Icon, IconButton } from '@vp/ui';
+import { useAppLink } from '@vp/queries';
 import { useState } from 'react';
 import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
 import { WEB_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 
 const MS_PER_SECOND = 1000;
@@ -67,13 +69,18 @@ const VISIBILITY_ORDER = [...VIDEO_VISIBILITIES].reverse();
 
 export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
   const { tOr } = useT();
+  const appLink = useAppLink();
   const canEdit = useCan(canUpdateVideo, { video });
   const canDelete = useCan(canDeleteVideo, { video });
-  const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
-  const { deleteVideos, setVisibility } = useBatchActions();
+  const canSeeAnalytics = useCan(canReadAnalytics, {
+    analytics: { ownerId: video.ownerId, channelId: video.channelId },
+  });
+  const { deleteVideos, editVideos } = useBatchActions();
   const [confirming, setConfirming] = useState(false);
 
   const title = video.title ?? tOr('browse.untitled', {}, '');
+  const toggleComments = () =>
+    void editVideos([video], { commentsEnabled: !video.commentsEnabled });
   const watchable = video.status === 'READY' && video.visibility !== 'private';
 
   return (
@@ -101,13 +108,20 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
                 {VISIBILITY_ORDER.map((visibility) => (
                   <DropdownMenu.Item
                     key={visibility}
-                    onSelect={() => void setVisibility([video], visibility)}
+                    onSelect={() => void editVideos([video], { visibility })}
                   >
                     {tOr('videos.visibility', { visibility }, '')}
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.SubContent>
             </DropdownMenu.Sub>
+          )}
+          {canEdit && (
+            <DropdownMenu.Item onSelect={toggleComments}>
+              {video.commentsEnabled
+                ? tOr('studio.commentsTurnOff', {}, '')
+                : tOr('studio.commentsTurnOn', {}, '')}
+            </DropdownMenu.Item>
           )}
           {canSeeAnalytics && (
             <DropdownMenu.Item asChild>
@@ -118,7 +132,9 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
           )}
           {watchable && (
             <DropdownMenu.Item asChild>
-              <a href={`${WEB_URL}/watch/${video.id}`}>{tOr('studio.watchOnWeb', {}, '')}</a>
+              <a href={appLink(WEB_URL, `/watch/${video.id}`)}>
+                {tOr('studio.watchOnWeb', {}, '')}
+              </a>
             </DropdownMenu.Item>
           )}
           {canDelete && (

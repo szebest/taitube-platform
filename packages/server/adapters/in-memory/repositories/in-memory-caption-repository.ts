@@ -1,3 +1,4 @@
+import { isErr, ok, type Result } from '@kit/result';
 import {
   type CaptionCommit,
   type CaptionRecord,
@@ -22,14 +23,15 @@ import {
   type UserEvent,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Clock, realClock } from './clock';
 import { searchTokens } from './search-text';
 
 export interface CaptionDependencies {
   videos: Pick<VideoRepository, 'findById'>;
-  channels: Pick<ChannelRepositoryPort, 'findByUserId'>;
+  channels: Pick<ChannelRepositoryPort, 'findById'>;
   events: EventRepository;
   userEvents: UserEventRepository;
+  now?: Clock;
 }
 
 type CaptionEvent = `captions.${string}`;
@@ -51,12 +53,12 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     if (isErr(video)) return video;
     if (!video.value) return ok(null);
 
-    const { ownerId } = video.value;
+    const { ownerId, channelId } = video.value;
     return ok({
       videoId,
       ownerId,
       autoCaptions: this.videoSwitches.get(videoId) ?? null,
-      channelDefault: this.channelDefaults.get(ownerId) ?? false,
+      channelDefault: this.channelDefaults.get(channelId) ?? false,
     });
   }
 
@@ -72,19 +74,19 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     return ok(true);
   }
 
-  async channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    return ok(this.channelDefaults.get(ownerId) ?? false);
+  async channelDefault(channelId: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    return ok(this.channelDefaults.get(channelId) ?? false);
   }
 
   async setChannelDefault(
-    ownerId: string,
+    channelId: string,
     enabled: boolean
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    const channel = await this.deps.channels.findByUserId(ownerId);
+    const channel = await this.deps.channels.findById(channelId);
     if (isErr(channel)) return channel;
     if (!channel.value) return ok(false);
 
-    this.channelDefaults.set(ownerId, enabled);
+    this.channelDefaults.set(channelId, enabled);
     return ok(true);
   }
 
@@ -253,7 +255,7 @@ export class InMemoryCaptionRepository extends CaptionRepository {
     olderThanMs: number,
     limit: number
   ): Promise<Result<CaptionRecord[], DatabaseUnavailable>> {
-    const cutoff = Date.now() - olderThanMs;
+    const cutoff = (this.deps.now ?? realClock)() - olderThanMs;
     const stalled = [...this.tracks.values()]
       .filter(
         (track) =>
@@ -305,11 +307,10 @@ export class InMemoryCaptionRepository extends CaptionRepository {
       payload: { captionId: track.id, language: track.language, reason: track.reason },
     });
     if (isErr(logged)) return logged;
-    if (!announcement) return ok({ type: 'committed', track: { ...track } });
 
-    const video = await this.deps.videos.findById(track.videoId);
+    const video = announcement ? await this.deps.videos.findById(track.videoId) : ok(null);
     if (isErr(video)) return video;
-    if (video.value) {
+    if (announcement && video.value) {
       const announced = await this.deps.userEvents.append({
         userId: video.value.ownerId,
         ...announcement,

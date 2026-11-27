@@ -1,7 +1,7 @@
+import { DropdownMenu, Icon } from '@kit/ui';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { DropdownMenu, Icon } from '@vp/ui';
 import { useRecommendationFeedback } from '#app/hooks/use-recommendation-feedback';
+import { useT } from '#app/lib/messages';
 
 export interface FeedbackMenuItemsProps {
   video: { id: string; channel: VideoSummary['channel'] };

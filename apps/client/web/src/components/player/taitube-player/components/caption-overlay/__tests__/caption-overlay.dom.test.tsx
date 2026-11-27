@@ -1,6 +1,6 @@
+import { showCues } from '@kit/web-testing/dom';
 import { act, render, screen } from '@testing-library/react';
 import { captionTrack } from '@vp/web-testing';
-import { showCues } from '@vp/web-testing/dom';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
 import { CaptionOverlay } from '../caption-overlay';
@@ -52,15 +52,15 @@ describe('apps/client/web: the caption overlay', () => {
     {
       captionsSize: 'small',
       captionsBackground: 'none',
-      classes: ['text-body-sm', '[text-shadow:0_0_0.25em_var(--scrim)]'],
+      classes: ['text-body-sm', '[text-shadow:0_0_0.25em_var(--media)]'],
     },
     {
       captionsSize: 'medium',
       captionsBackground: 'translucent',
-      classes: ['text-body', 'bg-scrim'],
+      classes: ['text-body', 'bg-media/70'],
     },
-    { captionsSize: 'large', captionsBackground: 'solid', classes: ['text-title', 'bg-bg'] },
-    { captionsSize: 'xlarge', captionsBackground: 'solid', classes: ['text-title-lg', 'bg-bg'] },
+    { captionsSize: 'large', captionsBackground: 'solid', classes: ['text-title', 'bg-media'] },
+    { captionsSize: 'xlarge', captionsBackground: 'solid', classes: ['text-title-lg', 'bg-media'] },
   ] as const)(
     'sets the cues $captionsSize on a $captionsBackground background, as the saved preferences say',
     ({ captionsSize, captionsBackground, classes }) => {

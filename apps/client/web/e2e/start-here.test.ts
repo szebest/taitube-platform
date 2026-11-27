@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../tests/playwright/fixtures';
+import { expect, keyboardDragReady, test } from '../../../../tests/playwright/fixtures';
 
 test.describe('start here', () => {
   test.describe.configure({ mode: 'serial' });
@@ -20,7 +20,7 @@ test.describe('start here', () => {
     const pinned = section.getByRole('list', { name: 'Pinned videos' }).getByRole('listitem');
     for (const [index, video] of [watchable, canvas, clippable].entries()) {
       await section.getByRole('button', { name: 'Add videos' }).click();
-      await page.getByRole('combobox').fill(video.title);
+      await page.getByPlaceholder('Search your videos').fill(video.title);
       await expect(page.getByRole('option')).toHaveCount(1);
       await page.getByRole('option', { name: video.title }).click();
       await expect(pinned.nth(index)).toHaveAccessibleName(video.title);
@@ -30,10 +30,7 @@ test.describe('start here', () => {
     const announced = page.getByRole('status').filter({ hasText: /position/ });
     await page.keyboard.press('Space');
     await expect(announced).toContainText('Picked up');
-    // dnd-kit adds its keydown listener in a task after pick-up; two frames on, it has run.
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    );
+    await keyboardDragReady(page);
     await page.keyboard.press('ArrowUp');
     await expect(announced).toContainText('Moved to position 2');
     await page.keyboard.press('ArrowUp');

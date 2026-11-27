@@ -46,14 +46,27 @@ const ListSubscriptionsResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
+const SubscribeBodySchema = z
+  .object({
+    fromVideoId: z
+      .uuid()
+      .optional()
+      .describe(
+        'The video whose watch page the call came from. Kept only when it is a public video of this channel, otherwise dropped without an error'
+      ),
+  })
+  .nullish();
+
 export const subscribeToChannel = defineEndpoint({
   method: 'POST',
   path: '/v1/channels/:id/subscribers',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Subscribe to channel',
   description:
-    'Idempotently subscribes the authenticated caller to the channel. Increments subscriber count and updates Redis cache.',
+    'Idempotently subscribes the authenticated caller to the channel, crediting `fromVideoId` when it qualifies. Increments subscriber count and updates Redis cache.',
   params: ChannelIdParamSchema,
+  body: SubscribeBodySchema,
   status: 200,
   result: SubscriptionStateSchema,
   errors: {
@@ -67,6 +80,7 @@ export const subscribeToChannel = defineEndpoint({
 export const unsubscribeFromChannel = defineEndpoint({
   method: 'DELETE',
   path: '/v1/channels/:id/subscribers',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Unsubscribe from channel',
   description:
@@ -85,6 +99,7 @@ export const unsubscribeFromChannel = defineEndpoint({
 export const isSubscribedToChannel = defineEndpoint({
   method: 'GET',
   path: '/v1/channels/:id/subscribers/me',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Check if authenticated caller is subscribed to channel',
   description:
@@ -102,6 +117,7 @@ export const isSubscribedToChannel = defineEndpoint({
 export const updateSubscriptionLevel = defineEndpoint({
   method: 'PATCH',
   path: '/v1/channels/:id/subscribers/me',
+  channelScoped: true,
   tag: 'Subscriptions',
   summary: 'Set the notification level of a subscription',
   description:

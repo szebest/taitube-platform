@@ -2,7 +2,7 @@ import { COMMENT_REPORT_REASONS, COMMENT_REPORT_RESOLUTIONS } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
-import { videoComments } from './comments-schema';
+import { comments } from './comments-schema';
 import { users } from './schema';
 
 const quoted = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'`).join(', '));
@@ -13,7 +13,7 @@ export const commentReports = pgTable(
     id: uuid('id').primaryKey(),
     commentId: uuid('comment_id')
       .notNull()
-      .references(() => videoComments.id, { onDelete: 'cascade' }),
+      .references(() => comments.id, { onDelete: 'cascade' }),
     reporterId: uuid('reporter_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),

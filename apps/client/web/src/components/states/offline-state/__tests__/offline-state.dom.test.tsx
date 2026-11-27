@@ -1,6 +1,6 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
 import { OfflineState } from '..';
@@ -55,13 +55,9 @@ describe('apps/client/web: OfflineState', () => {
   });
 
   it('shows a spinner on the retry while it checks, then says it is still offline', async () => {
-    let finishCheck: () => void = () => undefined;
+    const { promise: check, resolve: finishCheck } = Promise.withResolvers<void>();
     const { user, onRetry } = renderOffline();
-    onRetry.mockReturnValue(
-      new Promise<void>((resolve) => {
-        finishCheck = resolve;
-      })
-    );
+    onRetry.mockReturnValue(check);
     const retry = screen.getByRole('button', { name: 'Try again' });
 
     await user.click(retry);

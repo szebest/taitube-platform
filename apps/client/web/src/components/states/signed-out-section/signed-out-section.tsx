@@ -1,5 +1,5 @@
-import { EmptyState, type EmptyStatePartProps, SignedOutIllustration } from '@vp/components';
-import type { ButtonProps } from '@vp/ui';
+import { EmptyState, type EmptyStatePartProps, SignedOutIllustration } from '@kit/components';
+import type { ButtonProps } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** What a guest sees in place of a members-only section of a public page: one editorial line and a way to sign in. */

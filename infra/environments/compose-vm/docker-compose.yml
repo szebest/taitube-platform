@@ -1,0 +1,165 @@
+name: ${COMPOSE_PROJECT_NAME:-vp-vm}
+
+x-secrets: &secrets
+  env_file:
+    - path: ../../../.secrets/compose-vm.env
+      required: false
+
+x-app-env: &app-env
+  NODE_ENV: production
+  ADAPTER_FAMILY: external
+  REDIS_URL: redis://redis:6379/0
+  REDIS_PUBSUB_URL: redis://redis:6379/1
+  S3_FORCE_PATH_STYLE: "false"
+  S3_REGION: auto
+  TRUST_PROXY: uniquelocal
+
+x-worker: &worker
+  image: ${VP_REGISTRY:-ghcr.io/szebest}/vp-worker:${VP_TAG:-latest}
+  <<: *secrets
+  restart: unless-stopped
+  stop_signal: SIGTERM
+  depends_on:
+    redis:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+  tmpfs:
+    - /tmp/vp:size=1g,mode=1777
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost:9464/readyz || exit 1"]
+    interval: 10s
+    timeout: 3s
+    retries: 6
+    start_period: 10s
+
+services:
+  redis:
+    image: redis:8-alpine
+    <<: *secrets
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --appendfsync everysec --maxmemory 256mb --maxmemory-policy noeviction --requirepass "$$REDIS_PASSWORD"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    image: ${VP_REGISTRY:-ghcr.io/szebest}/vp-api:${VP_TAG:-latest}
+    <<: *secrets
+    environment: *app-env
+    command: ["node", "dist/migrate.js"]
+    restart: "no"
+
+  api:
+    image: ${VP_REGISTRY:-ghcr.io/szebest}/vp-api:${VP_TAG:-latest}
+    <<: *secrets
+    environment: *app-env
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    stop_signal: SIGTERM
+    stop_grace_period: 25s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/readyz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  worker-probe:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: probe }
+    stop_grace_period: 55s
+
+  worker-transcode-1080p:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: transcode-1080p, FFMPEG_THREADS: "2" }
+    stop_grace_period: 895s
+    tmpfs:
+      - /tmp/vp:size=4g,mode=1777
+
+  worker-transcode-720p:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: transcode-720p, FFMPEG_THREADS: "2" }
+    stop_grace_period: 595s
+    tmpfs:
+      - /tmp/vp:size=4g,mode=1777
+
+  worker-transcode-480p:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: transcode-480p, FFMPEG_THREADS: "1" }
+    stop_grace_period: 295s
+    tmpfs:
+      - /tmp/vp:size=2g,mode=1777
+
+  worker-thumbnail:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: thumbnail }
+    stop_grace_period: 115s
+
+  worker-screen:
+    <<: *worker
+    environment:
+      <<: *app-env
+      WORKER_STAGE: screen
+      FFMPEG_THREADS: "2"
+      SCREENING_MODEL_PATH: /opt/screening/vit-base-nsfw-detector-int8.onnx
+    stop_grace_period: 295s
+    mem_limit: 1536m
+    tmpfs:
+      - /tmp/vp:size=4g,mode=1777
+
+  worker-captions:
+    <<: *worker
+    environment:
+      <<: *app-env
+      WORKER_STAGE: captions
+      CAPTIONS_THREADS: "4"
+      CAPTIONS_MODEL_PATH: /opt/whisper/ggml-small-q5_1.bin
+      CAPTIONS_VAD_MODEL_PATH: /opt/whisper/ggml-silero-v5.1.2.bin
+    stop_grace_period: 890s
+    mem_limit: 2g
+    tmpfs:
+      - /tmp/vp:size=2g,mode=1777
+
+  worker-package:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: package }
+    stop_grace_period: 115s
+
+  worker-notify:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: notify }
+    stop_grace_period: 25s
+
+  worker-housekeeping:
+    <<: *worker
+    environment: { <<: *app-env, WORKER_STAGE: housekeeping }
+    stop_grace_period: 55s
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    profiles:
+      - tunnel
+    restart: unless-stopped
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    command: ["tunnel", "--no-autoupdate", "run"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  redisdata:

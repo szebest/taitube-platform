@@ -1,12 +1,12 @@
+import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
+import { type Result, isErr, ok } from '@kit/result';
 import type { HomeShelf, ReasonedVideo } from '@vp/api-contracts';
 import type {
   RisingVideosRepositoryPort,
   SearchHistoryRepositoryPort,
 } from '@vp/core/repositories';
 import { HOME_SHELVES, RISING, type WatchHistoryEntry } from '@vp/domain';
-import { MS_PER_DAY, MS_PER_HOUR } from '@vp/domain/time';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
 import type { SearchService } from './search-service';
 import type { ListVideosFailure, VideoService } from './video-service';
 import type { VideoSummaryView } from './video-views';

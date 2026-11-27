@@ -1,9 +1,9 @@
-import { CircuitBreaker } from '@vp/concurrency';
+import { CircuitBreaker } from '@kit/concurrency';
+import { type Result, err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import type { ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { type Result, err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import { FallbackViewBuffer } from '../fallback-view-buffer';
 
@@ -33,7 +33,7 @@ describe('FallbackViewBuffer', () => {
     now = 0;
     viewers = 0;
     primary = new FlakyBuffer();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     buffer = new FallbackViewBuffer({
       primary,
       breaker: new CircuitBreaker({ failureThreshold: 2, cooldownMs: 1_000, now: () => now }),
@@ -118,7 +118,7 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('dropped');
   });
 
-  it('records retention and playback through the primary alone', async () => {
+  it('records retention, playback, link opens and test events through the primary alone', async () => {
     expectOk(await buffer.recordRetention({ videoId: 'video-1', sessionId: 's1', percent: 5 }));
     expect(
       expectOk(
@@ -127,14 +127,41 @@ describe('FallbackViewBuffer', () => {
           sessionId: 's1',
           viewDate: DAY,
           viewHour: HOUR,
+          device: 'tablet',
           watchedSeconds: 9,
           requiredSeconds: 5,
+          shareLinkId: null,
+          experiment: null,
         })
       )
     ).toBe('counted');
+    expect(
+      expectOk(
+        await buffer.recordShareLinkOpen({
+          videoId: 'video-1',
+          linkId: 'link-1',
+          viewerKey: 'viewer-1',
+          viewDate: DAY,
+        })
+      )
+    ).toBe('counted');
+    expectOk(
+      await buffer.recordExperimentEvents([
+        {
+          videoId: 'video-1',
+          experimentId: 'exp-1',
+          variantId: 'b',
+          viewDate: DAY,
+          measure: 'impressions',
+        },
+      ])
+    );
 
     expect(expectOk(await primary.snapshot('batch'))).toMatchObject({
       counts: [{ views: 1, watchSeconds: 9 }],
+      devices: [{ device: 'tablet', views: 1 }],
+      shareLinks: [{ linkId: 'link-1', viewDate: DAY, opens: 1 }],
+      experiments: [{ experimentId: 'exp-1', variantId: 'b', impressions: 1 }],
       retention: [{ percent: 0 }, { percent: 5 }],
     });
   });

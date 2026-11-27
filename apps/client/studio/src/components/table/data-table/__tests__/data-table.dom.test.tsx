@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { DataTable } from '..';
 import { renderVideoTable } from './video-table.fixture';
 
@@ -37,6 +37,18 @@ describe('apps/client/studio: DataTable', () => {
     renderVideoTable(props);
 
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', busy);
+  });
+
+  it('puts the classes it is given on the table, so a caller can fix the layout of its columns', () => {
+    renderVideoTable({ tableClassName: 'table-fixed' });
+
+    expect(screen.getByRole('table')).toHaveClass('table-fixed');
+  });
+
+  it('lets the batch bar wrap, so its actions stay in view on a phone', () => {
+    renderVideoTable({ selected: ['lisbon'] });
+
+    expect(document.querySelector('[data-slot="data-table-batch"]')).toHaveClass('flex-wrap');
   });
 
   it('asks for its root around a part', () => {

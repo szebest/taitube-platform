@@ -47,10 +47,10 @@ describe('apps/client/web: the token previews', () => {
     const { container } = renderPreview(MotionPreview);
     const chip = container.querySelector('span');
 
-    expect(chip).toHaveClass('ms-0');
+    expect(chip).toHaveClass('translate-x-0');
     act(() => vi.advanceTimersByTime(1400));
-    expect(chip).toHaveClass('ms-[calc(100%-1.25rem)]');
+    expect(chip).toHaveClass('translate-x-[calc(100cqw-1.25rem)]');
     act(() => vi.advanceTimersByTime(1400));
-    expect(chip).toHaveClass('ms-0');
+    expect(chip).toHaveClass('translate-x-0');
   });
 });

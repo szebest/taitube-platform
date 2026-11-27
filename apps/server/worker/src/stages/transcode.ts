@@ -1,5 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { type Result, err, fromPromise, ignore, isErr, ok } from '@kit/result';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
@@ -11,9 +13,7 @@ import {
 } from '@vp/errors';
 import { type FfmpegProcessLimits, type MediaTools, computeFfmpegThreads } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { purgeChunks, writeConcatList } from './concat-input';
 import { encodeRendition } from './encode-rendition';

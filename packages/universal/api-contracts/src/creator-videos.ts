@@ -49,12 +49,19 @@ const UpdateCreatorVideoSchema = z.object({
     .optional()
     .describe('Replaces every tag; at most 30, each 1 to 30 characters once trimmed'),
   selectedThumbnail: ThumbnailSelectionSchema.optional(),
+  commentsEnabled: z
+    .boolean()
+    .optional()
+    .describe(
+      'false turns comments off for this video; owner, managers and moderators may still comment'
+    ),
   version: z.number().int().nonnegative().describe('The version the edit was made against'),
 });
 
 const CreatorVideoSchema = VideoSummarySchema.extend({
   commentsCount: z.number().int().nonnegative().describe('Comments on the video'),
   tags: z.array(z.string()).describe('Tags the creator set'),
+  commentsEnabled: z.boolean().describe('false when comments are turned off for this video'),
 });
 
 const CreatorLibraryResponseSchema = z.object({
@@ -72,6 +79,8 @@ const CREATOR_VIDEO_ERRORS = {
 export const listCreatorVideos = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/videos',
+  scope: 'videos:write',
+  channelScoped: true,
   tag: 'Creator Studio',
   summary: 'List the caller video library',
   description:
@@ -88,6 +97,7 @@ export const listCreatorVideos = defineEndpoint({
 export const updateCreatorVideo = defineEndpoint({
   method: 'PATCH',
   path: '/v1/creator/videos/:id',
+  scope: 'videos:write',
   tag: 'Creator Studio',
   summary: 'Edit video metadata, tags, category and thumbnail',
   description:

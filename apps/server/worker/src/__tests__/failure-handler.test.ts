@@ -1,19 +1,18 @@
+import { PermanentError, TransientError } from '@kit/errors';
+import type { Logger } from '@kit/logger';
+import { type Result, err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
 import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
-  PermanentError,
   type QueueUnavailable,
-  TransientError,
   databaseUnavailable,
   queueUnavailable,
 } from '@vp/errors';
-import { ids, stagePolicies } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import { type Result, err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { APPLY_EDITS, ids, stagePolicies } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { type FlowWorld, flowWorld, uploadedVideo } from './flow-harness';
@@ -127,6 +126,30 @@ describe('apps/server/worker: DLQ failure handler', () => {
     expect(lines).toContainEqual({ level: 'error', message });
   });
 
+  it('fails a spent render, not the video', async () => {
+    const videoId = await uploadedVideo(world, 'raw/r.mp4');
+    const { repositories: repos } = world;
+    expectOk(
+      await repos.videoGenerations.saveEdit({
+        videoId,
+        generation: 2,
+        baseGeneration: 1,
+        replacesGeneration: 1,
+        edit: { trim: null, blurs: [] },
+        outbox: { kind: APPLY_EDITS, payload: { type: 'pubsub', channel: 'x', message: '' } },
+      })
+    );
+    const before = { ...expectOk(await repos.videos.findById(videoId)) };
+    const data = { videoId, generation: 2, traceparent: 't' };
+
+    await handlerOver()({ id: 'r', name: APPLY_EDITS, data }, FAILURE());
+
+    const [row] = expectOk(await repos.videoGenerations.list(videoId));
+    expect(row).toMatchObject({ status: 'failed', errorCode: ErrorCodes.CORRUPT_CONTAINER });
+    expect(expectOk(await repos.videos.findById(videoId))).toEqual(before);
+    expect(expectOk(await repos.steps.findByVideoId(videoId))).toEqual([]);
+  });
+
   it('parks a permanent failure on its first attempt, marking the step DEAD and the rendition FAILED', async () => {
     const videoId = await uploadedVideo(world, 'raw/corrupt.mp4');
     const jobId = `${videoId}--transcode--720p--g1`;
@@ -230,5 +253,63 @@ describe('apps/server/worker: DLQ failure handler', () => {
     const entries = await dlqEntries();
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ attemptsMade: row.attempts, errorCode: row.code });
+  });
+
+  it.each([
+    {
+      failure: 'a transient error BullMQ will retry',
+      error: () => new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'S3 timeout'),
+      attemptsMade: 1,
+      status: 'PROCESSING',
+      parked: 0,
+    },
+    {
+      failure: 'a transient error on its last attempt',
+      error: () => new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'S3 timeout'),
+      attemptsMade: stagePolicies.package.attempts,
+      status: 'FAILED',
+      parked: 1,
+    },
+    {
+      failure: 'an unclassified error past its cap of 3',
+      error: () => new Error('Uncategorized'),
+      attemptsMade: 3,
+      status: 'FAILED',
+      parked: 1,
+    },
+    {
+      failure: 'a permanent error on its first attempt',
+      error: FAILURE,
+      attemptsMade: 1,
+      status: 'FAILED',
+      parked: 1,
+    },
+  ])('leaves a package job for $failure as $status', async (row) => {
+    const videoId = await uploadedVideo(world, 'raw/package.mp4');
+    for (const to of ['PROBING', 'PROCESSING'] as const) {
+      expectOk(
+        await world.repositories.videos.transition({
+          videoId,
+          from: ['UPLOADED', 'PROBING'],
+          to,
+          eventType: 'test.seed',
+        })
+      );
+    }
+
+    await handlerOver({}, 'package')(
+      {
+        id: `${videoId}--package--g1`,
+        name: 'package',
+        data: { videoId },
+        opts: { attempts: stagePolicies.package.attempts },
+        attemptsMade: row.attemptsMade,
+      },
+      row.error()
+    );
+
+    const video = expectOk(await world.repositories.videos.findById(videoId));
+    expect(video?.status).toBe(row.status);
+    expect(await dlqEntries()).toHaveLength(row.parked);
   });
 });

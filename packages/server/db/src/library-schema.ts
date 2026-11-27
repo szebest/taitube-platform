@@ -1,4 +1,4 @@
-import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
+import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_KINDS, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -14,6 +14,7 @@ import {
 import { timestamptz } from './columns';
 import { users, videos } from './schema';
 
+const KIND_LIST = sql.raw(PLAYLIST_KINDS.map((value) => `'${value}'`).join(', '));
 const VISIBILITY_LIST = sql.raw(PLAYLIST_VISIBILITIES.map((value) => `'${value}'`).join(', '));
 
 export const playlists = pgTable(
@@ -28,6 +29,7 @@ export const playlists = pgTable(
     visibility: text('visibility', { enum: PLAYLIST_VISIBILITIES })
       .notNull()
       .default(DEFAULT_PLAYLIST_VISIBILITY),
+    kind: text('kind', { enum: PLAYLIST_KINDS }).notNull().default('playlist'),
     isSystem: boolean('is_system').notNull().default(false),
     customThumbnailKey: text('custom_thumbnail_key'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
@@ -39,6 +41,7 @@ export const playlists = pgTable(
       .on(table.ownerId)
       .where(sql`${table.isSystem}`),
     check('playlists_visibility_check', sql`${table.visibility} IN (${VISIBILITY_LIST})`),
+    check('playlists_kind_check', sql`${table.kind} IN (${KIND_LIST})`),
   ]
 );
 

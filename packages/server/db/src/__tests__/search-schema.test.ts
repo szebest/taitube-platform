@@ -26,12 +26,16 @@ describe('db: search migration', () => {
   beforeAll(async () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, quiet);
+  });
+
+  beforeEach(async () => {
     await database.engine.exec(`
+      truncate users cascade;
       insert into users (id, email) values ('${USER}', 'search@x.local');
       insert into channels (id, user_id, handle, display_name, bio)
         values ('${USER}', '${USER}', 'fireship', 'Fire Ship', 'short videos');
-      insert into videos (id, owner_id, title, description, tags, source_key)
-        values ('${USER}', '${USER}', 'Learn React', 'hooks', '{frontend}', 'raw/x.mp4');
+      insert into videos (id, owner_id, channel_id, title, description, tags, source_key)
+        values ('${USER}', '${USER}', '${USER}', 'Learn React', 'hooks', '{frontend}', 'raw/x.mp4');
       insert into playlists (id, owner_id, title, description, visibility)
         values ('${USER}', '${USER}', 'Coding Music', 'focus', 'public');
     `);
@@ -88,6 +92,8 @@ describe('db: search migration', () => {
       'playlists_title_trgm_idx',
       'videos_search_vector_idx',
       'videos_title_trgm_idx',
+      'watch_party_rooms_search_text_trgm_idx',
+      'watch_party_rooms_search_vector_idx',
     ]);
     expect(
       rows.filter((row) => row.indexname.startsWith('playlists')).map((row) => row.indexdef)

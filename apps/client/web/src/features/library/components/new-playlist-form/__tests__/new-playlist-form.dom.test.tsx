@@ -1,9 +1,9 @@
+import { createToaster, ToastProvider } from '@kit/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createPlaylist } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';

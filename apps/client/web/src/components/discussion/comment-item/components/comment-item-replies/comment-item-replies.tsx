@@ -1,7 +1,8 @@
-import { Button, Icon, useUiCopy } from '@vp/ui';
+import { Button, Icon } from '@kit/ui';
 import { Children, type ReactNode, useId } from 'react';
 import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
 import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
+import { useT } from '#app/lib/messages';
 
 export interface CommentItemRepliesProps {
   /** The reply count, formatted by the app. */
@@ -20,7 +21,7 @@ export function CommentItemReplies({
   children,
 }: CommentItemRepliesProps) {
   const { level } = useCommentItem('Replies');
-  const { viewReplies, hideReplies } = useUiCopy();
+  const { tOr } = useT();
   const panelId = useId();
   const styles = commentItemStyles();
 
@@ -38,7 +39,7 @@ export function CommentItemReplies({
         onClick={onToggle}
       >
         <Icon name="chevron-down" className={expanded ? 'rotate-180' : undefined} />
-        {expanded ? hideReplies : viewReplies.replace('{count}', count)}
+        {expanded ? tOr('appUi.hideReplies', {}, '') : tOr('appUi.viewReplies', { count }, '')}
       </Button>
       <ul id={panelId} hidden={!expanded} className={styles.repliesList()}>
         {expanded && Children.map(children, (reply) => <li>{reply}</li>)}

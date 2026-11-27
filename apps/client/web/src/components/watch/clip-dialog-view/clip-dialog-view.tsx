@@ -1,5 +1,6 @@
-import { Button, Field, Input, ResponsiveModal, useUiCopy } from '@vp/ui';
+import { Button, Field, Input, ResponsiveModal } from '@kit/ui';
 import type { ComponentProps, ComponentPropsWithRef } from 'react';
+import { useT } from '#app/lib/messages';
 
 export interface ClipDialogViewRootProps extends ComponentProps<typeof ResponsiveModal.Root> {
   title: string;
@@ -73,7 +74,8 @@ export interface ClipDialogViewFooterProps {
 }
 
 export function ClipDialogViewFooter({ saveLabel, saving, canSave }: ClipDialogViewFooterProps) {
-  const { cancel } = useUiCopy();
+  const { tOr } = useT();
+  const cancel = tOr('ui.cancel', {}, '');
 
   return (
     <ResponsiveModal.Footer>

@@ -1,6 +1,7 @@
 const VIDEO_PREFIX = 'video:';
 const USER_PREFIX = 'user:';
 const LIVE_CHAT_PREFIX = 'live-chat:';
+const WATCH_PARTY_PREFIX = 'watch-party:';
 
 export type ChannelType = 'video' | 'user';
 
@@ -21,7 +22,17 @@ export function liveStreamIdOfChat(channel: string): string | null {
   return channel.startsWith(LIVE_CHAT_PREFIX) ? channel.slice(LIVE_CHAT_PREFIX.length) : null;
 }
 
+/** A room's frames and chat, fanned out to the sockets on every pod. */
+export function watchPartyChannel(roomId: string): string {
+  return `${WATCH_PARTY_PREFIX}${roomId}`;
+}
+
+export function roomIdOfWatchParty(channel: string): string | null {
+  return channel.startsWith(WATCH_PARTY_PREFIX) ? channel.slice(WATCH_PARTY_PREFIX.length) : null;
+}
+
 export const LIVE_CHAT_WILDCARD_CHANNEL = `${LIVE_CHAT_PREFIX}*`;
+export const WATCH_PARTY_WILDCARD_CHANNEL = `${WATCH_PARTY_PREFIX}*`;
 export const VIDEO_WILDCARD_CHANNEL = `${VIDEO_PREFIX}*`;
 export const USER_WILDCARD_CHANNEL = `${USER_PREFIX}*`;
 

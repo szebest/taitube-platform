@@ -1,6 +1,10 @@
-import { DEFAULT_PLAYLIST_VISIBILITY, type PlaylistVisibility } from '@vp/domain';
+import { type Result, andThen, map } from '@kit/result';
+import {
+  DEFAULT_PLAYLIST_VISIBILITY,
+  type PlaylistKind,
+  type PlaylistVisibility,
+} from '@vp/domain';
 import { type UserContext, canCreatePlaylist } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
 import {
   type InvalidPlaylistDetails,
   validatePlaylistDescription,
@@ -13,12 +17,14 @@ export interface CreatePlaylistInput {
   readonly title: string;
   readonly description?: string;
   readonly visibility?: PlaylistVisibility;
+  readonly kind?: PlaylistKind;
 }
 
 export interface PlaylistToCreate {
   readonly title: string;
   readonly description: string;
   readonly visibility: PlaylistVisibility;
+  readonly kind: PlaylistKind;
 }
 
 export type CreatePlaylistFailure = AuthorizationFailure | InvalidPlaylistDetails;
@@ -37,6 +43,7 @@ export function decidePlaylistCreate(
           title,
           description,
           visibility: input.visibility ?? DEFAULT_PLAYLIST_VISIBILITY,
+          kind: input.kind ?? 'playlist',
         }))
       )
   );

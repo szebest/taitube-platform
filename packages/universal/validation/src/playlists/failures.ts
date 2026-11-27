@@ -1,4 +1,5 @@
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
+import type { LengthBounds } from '@kit/validation';
+import { type InvalidField, invalidLength } from '../field-failures';
 
 export type InvalidPlaylistDetails = InvalidField<LengthBounds>;
 

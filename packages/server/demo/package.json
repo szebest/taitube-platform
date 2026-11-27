@@ -1,0 +1,34 @@
+{
+  "name": "@vp/demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@kit/errors": "workspace:*",
+    "@kit/result": "workspace:*",
+    "@vp/db": "workspace:*",
+    "@vp/dev-identity": "workspace:*",
+    "@vp/domain": "workspace:*",
+    "@vp/env-schema": "workspace:*",
+    "@vp/errors": "workspace:*",
+    "@vp/upload-client": "workspace:*",
+    "js-yaml": "^5.5.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@types/node": "^24.19.1",
+    "@vp/testing-fixtures": "workspace:*",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:"
+  },
+  "vp": {
+    "layer": 11
+  }
+}

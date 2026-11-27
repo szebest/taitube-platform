@@ -1,9 +1,7 @@
 import { defineConfig } from 'vite-plus';
-import { CostSequencer } from './scripts/timings/sequencer';
 
 export default defineConfig({
   test: {
-    sequence: { sequencer: CostSequencer },
     /**
      * `vitest*.config.ts` rather than `vitest.config.ts`: a package that must prove it runs in a
      * browser as well as on a server ships a second config, and the root run picks it up. A
@@ -12,6 +10,7 @@ export default defineConfig({
     projects: [
       'apps/*/*/vitest*.config.ts',
       'packages/*/*/vitest*.config.ts',
+      'packages/platform/*/*/vitest*.config.ts',
       'tests/architecture/vitest*.config.ts',
       'tests/in-process/vitest.config.ts',
       'scripts/__tests__/vitest.config.ts',
@@ -19,6 +18,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary'],
+      thresholds: { lines: 85, statements: 85, functions: 85, branches: 85 },
       include: ['**/*.{ts,tsx}'],
       exclude: [
         '**/node_modules/**',

@@ -1,5 +1,5 @@
+import { isErr, map, ok } from '@kit/result';
 import type { UserContext } from '@vp/permissions';
-import { isErr, map, ok } from '@vp/result';
 import type { CategoryService } from './category-service';
 import type { ChannelService } from './channel-service';
 

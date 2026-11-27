@@ -10,10 +10,19 @@
 A package belongs in `universal/` when **something client-side actually imports it**. Not when it
 *could* run in a browser — plenty of code is portable without any browser needing it.
 
-Current members: `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`,
-`permissions`, `result`, `tsconfig`, `validation`. `apps/client/web` reaches eight of them at runtime (through
-`@vp/api-client` and `@vp/intl-react` plus its direct `@vp/intl`, `@vp/permissions` and `@vp/result`); `domain-rules` and `validation` qualify through
+Current members: `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `permissions`, `shared-messages` and
+`validation` (the app halves, `@vp/*`), and the platform packages in `packages/platform/universal/`: `appearance`,
+`design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`,
+`runtime`, `tsconfig`, `validation` (`@kit/*`). `apps/client/web` reaches them at runtime through `@vp/api-client` and
+`@kit/intl-react` plus its direct imports; `domain-rules` and `validation` qualify through
 `packages/client/api-client/src/__tests__/universal-rules.test.ts`, which runs both from the client tier.
+
+**Platform or app, first.** A package that names no product value and asks for what varies belongs in
+`packages/platform/universal/` as `@kit/<name>`; the rest stays here as `@vp/<name>`. A platform package never
+depends on, imports or names a `@vp/*` package, with no exception. `errors`, `validation` and `permissions`
+were each split on this rule: the generic half (`@kit/errors`, `@kit/validation`, `@kit/permissions`) owns the codes
+it emits (`@kit/pagination`, moved whole, owns its own), and the app half keeps its name and builds on it. The rule and its
+checks: [docs/standards/platform-packages.md](../../docs/standards/platform-packages.md).
 
 `storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/server/api`,
 `apps/server/worker` and other server packages. `job-contracts` carries BullMQ queue names - backend vocabulary
@@ -31,10 +40,10 @@ whose bulk is server vocabulary is a server module however small the part the br
 
 1. **May depend on `universal` packages only.** Never `server`, never `client`. A `server` dependency
    here is what puts a Redis client in the browser bundle.
-2. **No `node:*`, no `process`, no `Buffer`, no `NodeJS.*` types.** The `@vp/tsconfig/universal.json`
+2. **No `node:*`, no `process`, no `Buffer`, no `NodeJS.*` types.** The `@kit/tsconfig/universal.json`
    preset sets `lib` with `DOM` and `types: []`, so these are compile errors, not review comments.
 3. **Specs are typechecked separately.** `types: []` alone is not enough: the vitest globals a spec
-   uses (`vitest/globals` in `@vp/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
+   uses (`vitest/globals` in `@kit/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
    starts resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
    sibling `tsconfig.spec.json`. Keep that shape when adding a package.
 4. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its

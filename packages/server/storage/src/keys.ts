@@ -11,6 +11,30 @@ export function rawSourceKey(videoId: string, ext = 'mp4'): string {
   return `${rawPrefix(videoId)}source.${cleanExt}`;
 }
 
+/** Evidence for a held or flagged video, in the raw bucket under a prefix its 7 day lifecycle does not cover. */
+export function evidencePrefix(videoId: string): string {
+  return `evidence/${videoId}/`;
+}
+
+export function evidenceFrameKey(videoId: string, index: number): string {
+  return `${evidencePrefix(videoId)}frame-${index}.jpg`;
+}
+
+/** A channel export, in the raw bucket: private, presigned per download, purged after its expiry. */
+export function exportObjectKey(
+  channelId: string,
+  exportId: string,
+  format: 'csv' | 'json'
+): string {
+  return `exports/${channelId}/${exportId}.${format}`;
+}
+
+/** Raw bucket: the file a creator uploaded to replace a video, kept apart from the source it was created from. */
+export function replacementSourceKey(videoId: string, generation: number, ext = 'mp4'): string {
+  const cleanExt = ext.startsWith('.') ? ext.slice(1) : ext;
+  return `${rawPrefix(videoId)}g${generation}/source.${cleanExt}`;
+}
+
 export function videoPrefix(videoId: string): string {
   return `videos/${videoId}/`;
 }
@@ -27,6 +51,22 @@ export function reprocessPrefixesBefore(videoId: string, currentGeneration: numb
     prefixes.push(`${hlsPrefix(videoId, generation)}/`);
   }
   return prefixes;
+}
+
+/**
+ * What purging one generation deletes. Generation 1 lives in `hls/` itself, above every later
+ * generation's `hls/g{n}/`, so it is purged rendition by rendition and its master, never by `hls/`.
+ */
+export function generationPurgeTargets(
+  videoId: string,
+  generation: number,
+  renditions: readonly string[]
+): string[] {
+  if (generation > 1) return [`${hlsPrefix(videoId, generation)}/`];
+  return [
+    ...renditions.map((rendition) => renditionPrefix(videoId, rendition, generation)),
+    masterPlaylistKey(videoId, generation),
+  ];
 }
 
 export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {
@@ -99,12 +139,31 @@ export function spriteVttKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
 }
 
-export function channelImagePrefix(channelId: string, kind: string): string {
+function channelImagePrefix(channelId: string, kind: string): string {
   return `channels/${channelId}/${kind}/`;
 }
 
-export function channelImageKey(channelId: string, kind: string, id: string, ext: string): string {
-  return `${channelImagePrefix(channelId, kind)}${id}.${ext}`;
+/** Raw bucket: the file a creator uploaded for an avatar or banner, until the job has cut its variants. */
+export function channelImageUploadKey(channelId: string, kind: string, uploadId: string): string {
+  return `channel-images/${channelId}/${kind}/${uploadId}`;
+}
+
+/** Public bucket: every variant of one version of an avatar or banner, so a version is purged by its prefix. */
+export function channelImageVersionPrefix(
+  channelId: string,
+  kind: string,
+  version: number
+): string {
+  return `${channelImagePrefix(channelId, kind)}v${version}/`;
+}
+
+export function channelImageVariantKey(
+  channelId: string,
+  kind: string,
+  variant: string,
+  version: number
+): string {
+  return `${channelImageVersionPrefix(channelId, kind, version)}${variant}.webp`;
 }
 
 /** Drops what can carry a credential: the query (a presigned signature) and the user info. */

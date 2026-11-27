@@ -51,7 +51,7 @@ describe('apps/client/web: json-ld', () => {
         author: {
           '@type': 'Person',
           name: 'The Creator',
-          url: `${SITE}/channel/${video.channel?.id}`,
+          url: `${SITE}/@${video.channel?.handle}`,
         },
       });
     });

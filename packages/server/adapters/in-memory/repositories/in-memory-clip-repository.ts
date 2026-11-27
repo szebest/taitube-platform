@@ -1,8 +1,8 @@
+import { ok, type Result } from '@kit/result';
 import type { ClipRepositoryPort, ListClipsOptions } from '@vp/core/repositories';
 import type { Clip, ClipEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { ok, type Result } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { keepWatchable, type VideoLookups } from './watchable-video';
 

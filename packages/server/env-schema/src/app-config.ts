@@ -1,10 +1,11 @@
-import type { TraceSamplerName } from '@vp/observability';
-import { assertNever } from '@vp/result';
+import type { TraceSamplerName } from '@kit/observability';
+import { assertNever } from '@kit/result';
 import type { AppEnv } from './app-env';
 import type { AuthConfig } from './auth-config';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
 import { asCdnBase, type CdnBase } from './cdn-base';
 import { type LiveConfig, liveConfig } from './live-config';
+import { type ScreeningConfig, screeningConfig } from './screening-config';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -28,17 +29,20 @@ import {
   WEB_VITALS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
+import { type WatchPartyConfig, watchPartyConfig } from './watch-party-config';
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
+
+type Numbers<T> = { -readonly [K in keyof T]: number };
 
 export interface AppConfig {
   environment: AppEnv['NODE_ENV'];
   kind: AppEnv['ADAPTER_FAMILY'];
   logLevel: string;
   cdn: CdnBase;
-  /** The web app's public origin, without a path or trailing slash: what oEmbed and webhook payloads link to. */
+  /** The web app's origin: what oEmbed and webhook payloads link to. */
   webUrl: string;
-  /** The sprite sheet's geometry: the thumbnail stage tiles by it and the API hands it to the card. */
+  /** The sprite geometry: the thumbnail stage and the card read it. */
   sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
   buckets: { raw: string; public: string };
   limits: {
@@ -52,6 +56,7 @@ export interface AppConfig {
     uploadSessionTtlSeconds: number;
     rawRetentionDays: number;
     maxDurationSeconds: number;
+    channelsMaxOwned: number;
   };
   pagination: { defaultLimit: number; maxLimit: number };
   featureFlags: readonly string[];
@@ -82,6 +87,8 @@ export interface AppConfig {
     resourceAttributes: string;
   };
   auth: AuthConfig;
+  /** Absent turns video passwords off. */
+  videoAccess: { secret: string | undefined };
   caches: {
     categories: { l1TtlMs: number; l2TtlSeconds: number; maxL1Entries: number };
     reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
@@ -111,26 +118,13 @@ export interface AppConfig {
     reactionReconcileLimit: number;
     scanLimit: number;
   };
-  views: {
-    minWatchSeconds: number;
-    dedupTtlSeconds: number;
-    fallbackCapacity: number;
-    breakerFailureThreshold: number;
-    breakerCooldownMs: number;
-    flushIntervalMs: number;
-    batchRetentionMs: number;
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-  };
+  views: Numbers<typeof VIEWS>;
   playbackTelemetry: {
     bodyLimitBytes: number;
+    impressionsBodyLimitBytes: number;
     ratePerMinute: number;
   };
-  webVitals: {
-    bodyLimitBytes: number;
-    ratePerMinute: number;
-    maxRoutesPerApp: number;
-  };
+  webVitals: { bodyLimitBytes: number; ratePerMinute: number; maxRoutesPerApp: number };
   http: {
     port: number;
     metricsPort: number;
@@ -139,7 +133,9 @@ export interface AppConfig {
     bodyLimitBytes: number;
   };
   captions: CaptionsConfig;
+  screening: ScreeningConfig;
   live: LiveConfig;
+  watchParties: WatchPartyConfig;
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -148,23 +144,14 @@ export interface AppConfig {
     tmpDir: string;
     ffmpegPath: string;
     ffprobePath: string;
+    fpcalcPath: string;
     ffmpegThreads: number;
     x264Preset: string;
     hlsSegmentSeconds: number;
     gopSeconds: number;
     jobTimeoutFactor: number;
-    ffmpegProcess: {
-      killGraceMs: number;
-      stderrTailLines: number;
-      minTranscodeTimeoutMs: number;
-      thumbnailTimeoutMs: number;
-    };
-    segmentUpload: {
-      concurrency: number;
-      maxRetries: number;
-      retryDelayMs: number;
-      pollIntervalMs: number;
-    };
+    ffmpegProcess: Numbers<typeof FFMPEG_PROCESS>;
+    segmentUpload: Numbers<typeof SEGMENT_UPLOAD>;
   };
 }
 
@@ -218,6 +205,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       uploadSessionTtlSeconds: UPLOAD_SESSION_TTL_SECONDS,
       rawRetentionDays: env.RAW_RETENTION_DAYS,
       maxDurationSeconds: env.MAX_DURATION_SEC,
+      channelsMaxOwned: env.CHANNELS_MAX_OWNED,
     },
     pagination: { defaultLimit: env.PAGE_SIZE_DEFAULT, maxLimit: env.PAGE_SIZE_MAX },
     featureFlags: env.FEATURE_FLAGS,
@@ -257,18 +245,10 @@ export function toAppConfig(env: AppEnv): AppConfig {
       resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES,
     },
     auth: authConfig(env),
-    caches: {
-      categories: { ...CACHES.categories },
-      reactions: { ...CACHES.reactions },
-      subscriptions: { ...CACHES.subscriptions },
-      comments: { ...CACHES.comments },
-      playheads: { ...CACHES.playheads },
-    },
+    videoAccess: { secret: env.VIDEO_ACCESS_SECRET },
+    caches: structuredClone(CACHES),
     pollers: { ...POLLERS },
-    httpCache: {
-      categories: { ...HTTP_CACHE.categories },
-      feed: { ...HTTP_CACHE.feed },
-    },
+    httpCache: structuredClone(HTTP_CACHE),
     picks: { ...PICKS },
     webhooks: { allowPrivateHosts: env.WEBHOOK_ALLOW_PRIVATE_HOSTS, ...WEBHOOK_DELIVERY },
     housekeeping: { ...HOUSEKEEPING },
@@ -289,12 +269,21 @@ export function toAppConfig(env: AppEnv): AppConfig {
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
     }),
+    screening: screeningConfig({
+      enabled: env.SCREENING_ENABLED,
+      modelPath: env.SCREENING_MODEL_PATH,
+    }),
     live: liveConfig({
       hookSecret: env.LIVE_HOOK_SECRET,
       ingestUrl: env.LIVE_INGEST_URL,
       gatewayApiUrl: env.LIVE_GATEWAY_API_URL,
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
+    }),
+    watchParties: watchPartyConfig({
+      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
+      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
+      guestSalt: env.WATCH_PARTY_GUEST_SALT,
     }),
     worker: {
       stage: env.WORKER_STAGE,
@@ -304,6 +293,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       tmpDir: env.TMP_DIR,
       ffmpegPath: env.FFMPEG_PATH,
       ffprobePath: env.FFPROBE_PATH,
+      fpcalcPath: env.FPCALC_PATH,
       ffmpegThreads: env.FFMPEG_THREADS,
       x264Preset: env.X264_PRESET,
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,

@@ -1,5 +1,5 @@
-import type { TraceSamplerName } from '@vp/observability';
-import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
+import type { TraceSamplerName } from '@kit/observability';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { z } from 'zod';
 import { heldLocalCredentials } from './local-credentials';
 import { SECRET_KEYS } from './secret-keys';
@@ -57,6 +57,7 @@ const CoreEnvSchema = z.object({
   METRICS_PORT: z.coerce.number().int().nonnegative().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
+  CHANNELS_MAX_OWNED: z.coerce.number().int().positive().default(5),
   FEATURE_FLAGS: commaList(z.string()).default([]),
   WEB_URL: z.url().default('http://localhost:5173'),
   WEBHOOK_ALLOW_PRIVATE_HOSTS: z
@@ -105,6 +106,7 @@ const AuthEnvSchema = z.object({
   AUTH_ALGORITHMS: commaList(z.enum(JWS_ALGORITHMS)).default(['RS256', 'ES256']),
   AUTH_DEV_USER_ID: z.uuid().default('00000000-0000-7000-8000-000000000001'),
   ADMIN_TOKEN: secret(),
+  VIDEO_ACCESS_SECRET: secret(),
 });
 
 const PipelineEnvSchema = z.object({
@@ -115,6 +117,7 @@ const PipelineEnvSchema = z.object({
       'transcode-720p',
       'transcode-480p',
       'thumbnail',
+      'screen',
       'package',
       'notify',
       'housekeeping',
@@ -128,6 +131,7 @@ const PipelineEnvSchema = z.object({
   ),
   FFMPEG_PATH: z.string().default('ffmpeg'),
   FFPROBE_PATH: z.string().default('ffprobe'),
+  FPCALC_PATH: z.string().default('fpcalc'),
   FFMPEG_THREADS: z.coerce.number().int().positive().default(2),
   X264_PRESET: z.string().default('veryfast'),
   HLS_SEGMENT_SECONDS: z.coerce.number().int().positive().default(6),
@@ -151,6 +155,11 @@ const PipelineEnvSchema = z.object({
   CAPTIONS_MODEL_PATH: z.string().default('.models/ggml-small-q5_1.bin'),
   CAPTIONS_VAD_MODEL_PATH: z.string().default('.models/ggml-silero-v5.1.2.bin'),
   CAPTIONS_THREADS: z.coerce.number().int().positive().default(4),
+  SCREENING_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((val) => val === 'true'),
+  SCREENING_MODEL_PATH: z.string().default('.models/vit-base-nsfw-detector-int8.onnx'),
 });
 
 const LiveEnvSchema = z.object({
@@ -159,6 +168,12 @@ const LiveEnvSchema = z.object({
   LIVE_GATEWAY_API_URL: z.url().default('http://localhost:9997'),
   LIVE_RTMP_PUBLIC_URL: z.string().default('rtmp://localhost:1935/live'),
   LIVE_WHIP_PUBLIC_URL: z.url().default('http://localhost:8889/live'),
+});
+
+const WatchPartyEnvSchema = z.object({
+  WATCH_PARTY_MAX_MEMBERS: z.coerce.number().int().min(2).default(200),
+  WATCH_PARTY_MAX_OPEN_PER_USER: z.coerce.number().int().min(1).default(3),
+  WATCH_PARTY_GUEST_SALT: secret(),
 });
 
 const TRACE_SAMPLERS = [
@@ -185,6 +200,7 @@ const AppEnvShape = z.object({
   ...AuthEnvSchema.shape,
   ...PipelineEnvSchema.shape,
   ...LiveEnvSchema.shape,
+  ...WatchPartyEnvSchema.shape,
   ...OtelEnvSchema.shape,
 });
 
@@ -193,6 +209,13 @@ type ParsedEnv = z.infer<typeof AppEnvShape>;
 const URL_KEYS = (Object.keys(AppEnvShape.shape) as (keyof ParsedEnv)[]).filter((key) =>
   /_URL(_|$)/.test(key)
 );
+
+/** Secrets a production boot may go without, switching their feature off, but never with the local value. */
+const FEATURE_SECRET_KEYS = [
+  'LIVE_HOOK_SECRET',
+  'WATCH_PARTY_GUEST_SALT',
+  'VIDEO_ACCESS_SECRET',
+] as const satisfies readonly (keyof ParsedEnv)[];
 
 function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
   const issues: { key: string; message: string }[] = [];
@@ -221,11 +244,11 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
       message: 'is refused in production: a webhook could reach the internal network',
     });
   }
-  if (env.LIVE_HOOK_SECRET !== undefined && heldLocalCredentials(env.LIVE_HOOK_SECRET)) {
-    issues.push({
-      key: 'LIVE_HOOK_SECRET',
-      message: 'holds a credential this repo ships for local use',
-    });
+  for (const key of FEATURE_SECRET_KEYS) {
+    const value = env[key];
+    if (value !== undefined && heldLocalCredentials(value)) {
+      issues.push({ key, message: 'holds a credential this repo ships for local use' });
+    }
   }
   if (env.CORS_ORIGINS.length === 0 || env.CORS_ORIGINS.includes('*')) {
     issues.push({ key: 'CORS_ORIGINS', message: 'must name the allowed origins in production' });

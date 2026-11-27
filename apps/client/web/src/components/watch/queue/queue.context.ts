@@ -1,4 +1,4 @@
-import { createCompoundContext } from '@vp/ui';
+import { createCompoundContext } from '@kit/ui';
 import type { QueueLayout } from './types';
 
 export const [QueueContext, useQueue] = createCompoundContext<{

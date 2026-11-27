@@ -1,6 +1,7 @@
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@kit/errors';
+import { expectOk } from '@kit/testing/result';
+import { ErrorCodes } from '@vp/errors';
 import { NotifyJob, stagePolicies } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
@@ -34,14 +35,9 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
   it("fails the parent package and the video with the child's code, and publishes video.failed", async () => {
     const sourceKey = 'raw/fail-parent.mp4';
     const videoId = await uploadedVideo(world, sourceKey);
-    expectOk(
-      await world.repositories.videos.transition({
-        videoId,
-        from: 'UPLOADED',
-        to: 'PROCESSING',
-        eventType: 'video.processing',
-      })
-    );
+    for (const edge of ['startProbe', 'completeProbe'] as const) {
+      expectOk(await world.repositories.videos.transition({ videoId, edge }));
+    }
     const packageParked = parkFailuresOf('package');
     parkFailuresOf('transcode-720p');
 

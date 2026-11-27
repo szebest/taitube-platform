@@ -1,8 +1,8 @@
+import { err, ok } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import type { CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import { databaseUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 
 export interface CategoryCacheSubject {
   readonly cache: CategoryCachePort;

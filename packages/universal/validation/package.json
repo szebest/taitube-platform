@@ -20,18 +20,20 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/errors": "workspace:*",
-    "@vp/result": "workspace:*"
+    "@kit/errors": "workspace:*",
+    "@kit/result": "workspace:*",
+    "@kit/validation": "workspace:*",
+    "@vp/errors": "workspace:*"
   },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
-    "@vp/tsconfig": "workspace:*",
+    "@kit/testing": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
     "jsdom": "^30.1.2",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
     "vite-plus": "catalog:"
   },
   "vp": {
-    "layer": 2
+    "layer": 6
   }
 }

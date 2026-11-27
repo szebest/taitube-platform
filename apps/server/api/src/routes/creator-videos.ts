@@ -1,7 +1,7 @@
 import { deleteCreatorVideo, listCreatorVideos, updateCreatorVideo } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 import { presentPublicVideoFailure } from './videos.presenter';
@@ -16,8 +16,12 @@ export async function creatorVideosRoutes(app: FastifyInstance): Promise<void> {
       schema: { ...contractSchema(listCreatorVideos), querystring: listCreatorVideos.query },
     },
     async (request, reply) => {
-      const user = requireAuth(request);
-      return sendResult(reply, request, await creatorStudioService.library(user, request.query));
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(
+        reply,
+        request,
+        await creatorStudioService.library(user, acting, request.query)
+      );
     }
   );
 

@@ -1,4 +1,4 @@
-import { err, fromPromise, ok, type Result } from '@vp/result';
+import { err, fromPromise, ok, type Result } from '@kit/result';
 import type { SaveFailure } from './saved-video';
 
 export interface SavedEntry {

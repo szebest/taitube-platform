@@ -1,12 +1,11 @@
+import { type SpriteSheet, SpriteStrip } from '@kit/components';
+import { cn, Slider } from '@kit/ui';
 import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
-import { cn, Slider } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { ClipEditorContext, useClipEditor } from './clip-editor.context';
-import type { ClipEditorSprite, ClipEditorValue } from './types';
-import { spriteFrameStyle } from './utils/sprite-frame';
+import type { ClipEditorValue } from './types';
 
 const MS_PER_SECOND = 1000;
-const FRAMES = 8;
 
 export interface ClipEditorRootProps extends ComponentPropsWithRef<'div'> {
   durationMs: number;
@@ -46,15 +45,11 @@ export function ClipEditorPreview({ className, ...props }: ComponentPropsWithRef
 
 export interface ClipEditorRangeProps extends ComponentPropsWithRef<'fieldset'> {
   /** Frames of the video to lay under the slider; without it the slider stands alone. */
-  sprite?: ClipEditorSprite;
+  sprite?: SpriteSheet;
   startLabel: string;
   endLabel: string;
   /** What the range says in words, finished by the caller and announced as it changes. */
   summary: string;
-}
-
-function percentOf(ms: number, durationMs: number): string {
-  return `${(ms / durationMs) * 100}%`;
 }
 
 /** Two thumbs on a strip of the video's frames: the range stays 5 to 60 seconds by the domain's own bounds. */
@@ -87,33 +82,7 @@ export function ClipEditorRange({
       className={cn('m-0 flex min-w-0 flex-col gap-inline border-0 p-0', className)}
       {...props}
     >
-      {sprite && (
-        <div
-          data-slot="clip-editor-frames"
-          aria-hidden="true"
-          className="relative flex overflow-hidden rounded-thumb"
-        >
-          {Array.from({ length: FRAMES }, (_, index) => (
-            <div
-              key={index}
-              className="min-w-0 flex-1 bg-surface"
-              style={spriteFrameStyle(
-                sprite,
-                span / MS_PER_SECOND,
-                ((index + 0.5) * span) / FRAMES / MS_PER_SECOND
-              )}
-            />
-          ))}
-          <div
-            className="absolute inset-y-0 inset-s-0 bg-scrim"
-            style={{ inlineSize: percentOf(range.startMs, span) }}
-          />
-          <div
-            className="absolute inset-y-0 inset-e-0 bg-scrim"
-            style={{ inlineSize: percentOf(span - range.endMs, span) }}
-          />
-        </div>
-      )}
+      {sprite && <SpriteStrip sprite={sprite} durationMs={span} shade={range} />}
       <Slider.Root
         min={0}
         max={span / MS_PER_SECOND}

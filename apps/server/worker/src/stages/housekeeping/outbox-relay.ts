@@ -1,10 +1,10 @@
+import type { Logger } from '@kit/logger';
+import { MS_PER_SECOND } from '@kit/primitives';
+import { type Result, assertNever, isErr, map, ok } from '@kit/result';
 import type { CacheClient, FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, isErr, map, ok } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {
@@ -75,7 +75,7 @@ export class OutboxRelay {
         const recorded = await repositories.outbox.recordAttempt(item.id);
         if (isErr(recorded)) return recorded;
         logger?.error(
-          { id: item.id, kind: item.kind, code: published.error.code },
+          { id: item.id, kind: item.kind, code: published.error.code, status: recorded.value },
           'failed to publish outbox item'
         );
         continue;

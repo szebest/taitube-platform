@@ -1,7 +1,7 @@
-import { useT } from '@vp/intl-react';
-import { Button, useUiCopy } from '@vp/ui';
+import { Button } from '@kit/ui';
 import { useClearHistory } from '#app/features/library/hooks/use-clear-history';
 import { useClearSearches } from '#app/features/library/hooks/use-clear-searches';
+import { useT } from '#app/lib/messages';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 const { UrlModal, useUrlModal } = urlModals;
@@ -9,7 +9,7 @@ const { UrlModal, useUrlModal } = urlModals;
 /** `?modal=clear-history&scope=`: asks first, because the server cannot bring a cleared history back. */
 export function ClearHistoryDialog() {
   const { tOr } = useT();
-  const { cancel } = useUiCopy();
+  const cancel = tOr('ui.cancel', {}, '');
   const { params, close } = useUrlModal('clear-history');
   const clearHistory = useClearHistory();
   const clearSearches = useClearSearches();

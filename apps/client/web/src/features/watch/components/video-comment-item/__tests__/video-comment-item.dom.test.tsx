@@ -100,27 +100,37 @@ describe('apps/client/web: video comment item', () => {
     expect(screen.getByText('Ines Carvalho')).toBeInTheDocument();
   });
 
-  it.each<{ viewer: string; account?: Account; actions: string[] }>([
-    { viewer: 'a guest', actions: [] },
-    { viewer: 'another viewer', account: viewerAccount(OTHER_ID), actions: ['Report'] },
-    { viewer: 'the author', account: viewerAccount(AUTHOR_ID), actions: ['Edit', 'Delete'] },
-    { viewer: 'the video owner', account: viewerAccount(OWNER_ID), actions: ['Delete', 'Report'] },
+  it.each([
     {
-      viewer: 'a moderator',
-      account: viewerAccount(OTHER_ID, 'MODERATOR'),
-      actions: ['Delete', 'Report'],
+      name: 'a held comment with its reason',
+      top: { status: 'held', moderation: { state: 'held', reason: 'spam', disclosure: 'visible' } },
+      shown: ['Waiting for review', 'Spam'],
+      absent: ['Silent'],
     },
-  ])('gives $viewer these menu actions: $actions', async ({ account, actions }) => {
-    const { user, article } = await renderItem({ viewer: account });
+    {
+      name: 'a hidden comment',
+      top: {
+        status: 'hidden',
+        moderation: { state: 'hidden', reason: 'off_topic', disclosure: 'visible' },
+      },
+      shown: ['Hidden by moderators', 'Off topic'],
+      absent: ['Silent'],
+    },
+    {
+      name: 'a silently held comment as a moderator sees it',
+      top: {
+        status: 'held',
+        moderation: { state: 'held', heldReason: 'link', disclosure: 'silent' },
+      },
+      shown: ['Waiting for review', 'Silent'],
+      absent: ['Spam'],
+    },
+    { name: 'a published comment', top: {}, shown: [], absent: ['Waiting for review', 'Silent'] },
+  ] as const)('marks $name', async ({ top, shown, absent }) => {
+    const { article } = await renderItem({ viewer: viewerAccount(OWNER_ID), top: { ...top } });
 
-    if (actions.length === 0) {
-      expect(article.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
-      return;
-    }
-
-    await user.click(article.getByRole('button', { name: 'More actions' }));
-
-    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual(actions);
+    for (const text of shown) expect(article.getByText(text)).toBeInTheDocument();
+    for (const text of absent) expect(article.queryByText(text)).not.toBeInTheDocument();
   });
 
   it('lets the video owner heart the comment', async () => {

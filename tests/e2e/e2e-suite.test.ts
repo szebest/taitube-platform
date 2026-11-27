@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { createLogger } from '../../packages/server/logger/src/index';
+import { createLogger } from '../../packages/platform/server/logger/src/index';
 import { E2ERunner, type E2ESuiteResult } from './e2e-runner';
 
 describe('Phase 2 Acceptance: Pipeline E2E Suite with Hostile Set', () => {

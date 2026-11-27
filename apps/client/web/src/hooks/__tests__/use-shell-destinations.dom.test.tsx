@@ -7,7 +7,7 @@ describe('apps/client/web: use shell destinations', () => {
     {
       viewer: 'a guest',
       Providers: AppProviders,
-      ids: ['home', 'shorts', 'trending', 'live'],
+      ids: ['home', 'shorts', 'trending', 'live', 'settings'],
       hub: undefined,
     },
     {
@@ -19,6 +19,7 @@ describe('apps/client/web: use shell destinations', () => {
         'subscriptions',
         'trending',
         'live',
+        'settings',
         'history',
         'your-channel',
         'your-videos',

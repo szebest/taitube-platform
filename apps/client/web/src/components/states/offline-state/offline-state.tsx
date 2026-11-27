@@ -6,8 +6,9 @@ import {
   Slot,
   useUiCopy,
   VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, useEffect, useEffectEvent, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { OfflineStateContext, useOfflineState } from './offline-state.context';
 import { offlineStateStyles } from './offline-state.variants';
 import type { OfflineStateSize, OfflineStateTone } from './types';
@@ -34,6 +35,7 @@ export function OfflineStateRoot({
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState('');
   const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = offlineStateStyles({ size, tone });
   const banner = size === 'banner';
 
@@ -41,7 +43,7 @@ export function OfflineStateRoot({
     setChecking(true);
     setResult('');
     await Promise.resolve(onRetry()).finally(() => setChecking(false));
-    setResult(copy.stillOffline);
+    setResult(tOr('appUi.stillOffline', {}, ''));
   };
 
   return (
@@ -123,7 +125,8 @@ export function OfflineStateAvailable({
   ...props
 }: ComponentPropsWithRef<'div'>) {
   const { size, tone } = useOfflineState('Available');
-  const { availableOffline } = useUiCopy();
+  const { tOr } = useT();
+  const availableOffline = tOr('appUi.availableOffline', {}, '');
   const styles = offlineStateStyles({ size, tone });
 
   return (
@@ -192,7 +195,8 @@ export function OfflineStateReconnected({
   ...props
 }: OfflineStateReconnectedProps) {
   const { size, tone } = useOfflineState('Reconnected');
-  const { backOnline } = useUiCopy();
+  const { tOr } = useT();
+  const backOnline = tOr('appUi.backOnline', {}, '');
   const dismiss = useEffectEvent(() => onDismiss?.());
 
   useEffect(() => {

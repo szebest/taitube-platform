@@ -1,10 +1,11 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { getHeaderMapping } from '@kit/object-storage';
+import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import type { Logger } from '@vp/logger';
-import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/result';
-import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
+import { renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 import type { Every, Repeating } from '../heartbeat';
 
 export interface SegmentUploaderOptions {

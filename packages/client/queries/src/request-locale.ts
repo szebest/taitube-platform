@@ -1,9 +1,8 @@
+import { tryCatch } from '@kit/result';
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
-import { FALLBACK_LOCALE } from '@vp/intl';
-import type { LocaleStore } from '@vp/intl-react';
-import { isSupportedLocale, LOCALE_DETAILS, type SupportedLocale } from '@vp/messages';
-import { tryCatch } from '@vp/result';
+import { LOCALES, type SupportedLocale } from '@vp/shared-messages/locales';
+import type { LocaleStore } from './intl';
 
 /** The search param a link, or a crawler following an `hreflang` alternate, names a locale with. */
 export const LOCALE_PARAM = 'lang';
@@ -20,7 +19,7 @@ function matchSupportedLocale(tag: string | null | undefined): SupportedLocale |
   if (!parsed.ok) {
     return undefined;
   }
-  return [parsed.value.baseName, parsed.value.language].find(isSupportedLocale);
+  return [parsed.value.baseName, parsed.value.language].find(LOCALES.isSupported);
 }
 
 /** The tags an `Accept-Language` header lists, most wanted first: `pl-PL,pl;q=0.9,en;q=0.8`. */
@@ -50,7 +49,7 @@ function firstSupported(tags: readonly (string | null | undefined)[]): Supported
 
 /** The first candidate a supported locale serves, most deliberate first, then `en`. */
 function negotiateLocale({ requested, persisted, accepted }: LocaleCandidates): SupportedLocale {
-  return firstSupported([requested, persisted, ...accepted]) ?? FALLBACK_LOCALE;
+  return firstSupported([requested, persisted, ...accepted]) ?? LOCALES.source;
 }
 
 /** The browser's languages, most wanted first; a browser-only read, so a server render calls it never. */
@@ -79,7 +78,7 @@ export type LocaleRequest = Readonly<{ searchStr: string; persisted?: string | n
  * catalogue is loaded before it resolves.
  */
 export async function requestLocale(
-  locales: LocaleStore,
+  locales: Pick<LocaleStore, 'activate'>,
   { searchStr, persisted }: LocaleRequest
 ): Promise<RequestedLocale> {
   const accepted = viewerLanguages();
@@ -91,7 +90,7 @@ export async function requestLocale(
   await locales.activate(locale);
   return {
     locale,
-    direction: LOCALE_DETAILS[locale].direction,
+    direction: LOCALES.details[locale].direction,
     browserLocale: firstSupported(accepted),
   };
 }

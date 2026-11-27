@@ -1,9 +1,9 @@
+import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { CurrentPickView } from '@vp/api-contracts';
 import { cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { CurrentPickCache } from '../current-pick-cache';
 import { toFallbackView } from '../pick-views';

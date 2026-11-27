@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { OfflineState } from '#app/components/states/offline-state';
 import { useOfflineCache } from '#app/features/offline/hooks/use-offline-cache';
 import { useQueuedChanges } from '#app/features/offline/hooks/use-queued-changes';
 import { connectionIsBack } from '#app/features/offline/utils/check-connection';
+import { useT } from '#app/lib/messages';
 
 /**
  * The page the worker serves when a page load fails: what still works, one way back to Home, and a

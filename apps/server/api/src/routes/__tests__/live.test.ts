@@ -1,5 +1,5 @@
-import { mintToken } from '@vp/dev-token';
-import { expectOk } from '@vp/testing/result';
+import { expectOk } from '@kit/testing/result';
+import { mintToken } from '@vp/dev-identity';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 
 const OWNER_ID = '11111111-1111-7111-8111-111111111111';
@@ -33,6 +33,7 @@ describe('live routes', () => {
         video: {
           id: VIDEO_ID,
           ownerId: OWNER_ID,
+          channelId: channel.id,
           visibility: 'public',
           sourceKey: `live/${STREAM_ID}/`,
         },

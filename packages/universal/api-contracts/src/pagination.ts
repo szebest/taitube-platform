@@ -1,4 +1,4 @@
-import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { z } from 'zod';
 
 export const CursorSchema = z.string().describe('Opaque base64url keyset pagination cursor');

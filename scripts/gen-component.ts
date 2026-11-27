@@ -11,6 +11,7 @@ import {
   componentHome,
   isKebab,
 } from './component-templates';
+import { UI_SRC } from './scaffold';
 
 const USAGE =
   'usage: pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound] [root]';
@@ -59,7 +60,7 @@ if (name === '' || !isKind(kind)) {
     spawnSync(vp, ['fmt', folder], { cwd: root, stdio: 'ignore' });
     if (kind === 'primitive') {
       process.stdout.write(
-        `export it from packages/client/ui/src/index.ts: export * from './primitives/${name}';\n`
+        `export it from ${UI_SRC}/index.ts: export * from './primitives/${name}';\n`
       );
     }
   }

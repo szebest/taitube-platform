@@ -1,6 +1,7 @@
+import { Button } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '@vp/ui';
 import type { ReactNode } from 'react';
+import { SubscribeButton } from '#app/components/channel/subscribe-button';
 import { ChannelHeader, ChannelHeaderSkeleton } from '..';
 import { ChannelHeaderRoot, type ChannelHeaderRootProps } from '../channel-header';
 
@@ -17,6 +18,7 @@ const ALL_TABS = ['Home', 'Videos', 'Shorts', 'Live', 'Playlists', 'Community', 
 
 interface StoryHeaderProps extends ChannelHeaderRootProps {
   banner?: boolean;
+  bannerLink?: boolean;
   tabs?: string[];
   name?: string;
   handle?: string;
@@ -26,6 +28,7 @@ interface StoryHeaderProps extends ChannelHeaderRootProps {
 
 function StoryHeader({
   banner = true,
+  bannerLink = false,
   tabs = ALL_TABS,
   name = 'Marta Reis Films',
   handle = '@martareis',
@@ -35,7 +38,16 @@ function StoryHeader({
 }: StoryHeaderProps) {
   return (
     <ChannelHeader.Root {...props}>
-      {banner ? <ChannelHeader.Banner src={BANNER} /> : <ChannelHeader.Banner />}
+      <ChannelHeader.Banner
+        src={banner ? BANNER : undefined}
+        link={
+          bannerLink ? (
+            <ChannelHeader.BannerLink href="https://example.com/shop">
+              Shop
+            </ChannelHeader.BannerLink>
+          ) : undefined
+        }
+      />
       <ChannelHeader.Identity
         name={name}
         handle={handle}
@@ -50,9 +62,9 @@ function StoryHeader({
         </ChannelHeader.Bio>
         <ChannelHeader.Actions>
           {actions ?? (
-            <ChannelHeader.Subscribe subscribed={false} onClick={() => undefined}>
+            <SubscribeButton subscribed={false} onToggle={() => undefined}>
               Subscribe
-            </ChannelHeader.Subscribe>
+            </SubscribeButton>
           )}
         </ChannelHeader.Actions>
       </ChannelHeader.Identity>
@@ -82,6 +94,10 @@ export const FullWithBanner: Story = {
   render: (args) => <StoryHeader {...args} />,
 };
 
+export const WithBannerLink: Story = {
+  render: (args) => <StoryHeader {...args} bannerLink />,
+};
+
 export const GradientFallback: Story = {
   render: (args) => <StoryHeader {...args} banner={false} />,
 };
@@ -92,7 +108,9 @@ export const SubscribedWithBell: Story = {
       {...args}
       actions={
         <>
-          <ChannelHeader.Subscribe subscribed>Subscribed</ChannelHeader.Subscribe>
+          <SubscribeButton subscribed onToggle={() => undefined}>
+            Subscribed
+          </SubscribeButton>
           <ChannelHeader.Bell />
         </>
       }
@@ -105,9 +123,9 @@ export const Pending: Story = {
     <StoryHeader
       {...args}
       actions={
-        <ChannelHeader.Subscribe subscribed pending>
+        <SubscribeButton subscribed pending onToggle={() => undefined}>
           Subscribed
-        </ChannelHeader.Subscribe>
+        </SubscribeButton>
       }
     />
   ),

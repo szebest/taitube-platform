@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { ADMIN, MODERATOR, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import {
   DELETABLE_STATUSES,
@@ -10,6 +10,33 @@ import {
 } from '../lifecycle.rule';
 
 const video = aVideo();
+
+describe('@vp/domain-rules: eligible statuses', () => {
+  it.each([
+    {
+      name: 'REPROCESSABLE_STATUSES',
+      actual: REPROCESSABLE_STATUSES,
+      expected: ['READY', 'FAILED', 'PROCESSING'],
+    },
+    {
+      name: 'DELETABLE_STATUSES',
+      actual: DELETABLE_STATUSES,
+      expected: [
+        'UPLOADING',
+        'UPLOADED',
+        'PROBING',
+        'PROCESSING',
+        'READY',
+        'HELD',
+        'FAILED',
+        'REJECTED',
+        'ABANDONED',
+      ],
+    },
+  ])('$name keeps the contents and order the literal list had', ({ actual, expected }) => {
+    expect(actual).toEqual(expected);
+  });
+});
 
 describe('@vp/domain-rules: decideVideoReprocess', () => {
   it.each(REPROCESSABLE_STATUSES.map((status) => ({ status })))(

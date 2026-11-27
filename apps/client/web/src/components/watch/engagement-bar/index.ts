@@ -5,13 +5,11 @@ import {
   EngagementBarOverflow,
   EngagementBarReaction,
   EngagementBarRoot,
-  EngagementBarSubscribe,
 } from './engagement-bar';
 
 export const EngagementBar = {
   Root: EngagementBarRoot,
   Channel: EngagementBarChannel,
-  Subscribe: EngagementBarSubscribe,
   Actions: EngagementBarActions,
   Reaction: EngagementBarReaction,
   Action: EngagementBarAction,

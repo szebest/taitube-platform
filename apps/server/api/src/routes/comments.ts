@@ -1,8 +1,10 @@
 import {
   createComment,
+  createPostComment,
   deleteComment,
   heartComment,
   listCommentReplies,
+  listPostComments,
   listVideoComments,
   pinComment,
   unheartComment,
@@ -11,7 +13,8 @@ import {
 } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAuth } from '../plugins/auth';
+import { requireActingChannel, requireAuth } from '../plugins/auth';
+import { presentCommentFailure, commentFailureHeaders } from './comments.presenter';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -19,45 +22,68 @@ export async function commentsRoutes(app: FastifyInstance): Promise<void> {
   const { commentService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const { path, hide } of contractPaths(listVideoComments)) {
-    server.get(
-      path,
-      {
-        schema: {
-          ...contractSchema(listVideoComments, { hide }),
-          params: listVideoComments.params,
-          querystring: listVideoComments.query,
+  for (const [contract, type] of [
+    [listVideoComments, 'video'],
+    [listPostComments, 'post'],
+  ] as const) {
+    for (const { path, hide } of contractPaths(contract)) {
+      server.get(
+        path,
+        {
+          schema: {
+            ...contractSchema(contract, { hide }),
+            params: contract.params,
+            querystring: contract.query,
+          },
         },
-      },
-      async (request, reply) =>
-        sendResult(
-          reply,
-          request,
-          await commentService.listForVideo(request.user ?? null, request.params.id, request.query)
-        )
-    );
+        async (request, reply) =>
+          sendResult(
+            reply,
+            request,
+            await commentService.list(
+              request.user ?? null,
+              { type, id: request.params.id },
+              request.query
+            )
+          )
+      );
+    }
   }
 
-  for (const { path, hide } of contractPaths(createComment)) {
-    server.post(
-      path,
-      {
-        schema: {
-          ...contractSchema(createComment, { hide }),
-          params: createComment.params,
-          body: createComment.body,
+  for (const [contract, type] of [
+    [createComment, 'video'],
+    [createPostComment, 'post'],
+  ] as const) {
+    for (const { path, hide } of contractPaths(contract)) {
+      server.post(
+        path,
+        {
+          schema: {
+            ...contractSchema(contract, { hide }),
+            params: contract.params,
+            body: contract.body,
+          },
         },
-      },
-      async (request, reply) => {
-        const user = requireAuth(request);
-        return sendResult(
-          reply,
-          request,
-          await commentService.create(user, request.params.id, request.body),
-          { status: 201 }
-        );
-      }
-    );
+        async (request, reply) => {
+          const { user, acting } = requireActingChannel(request);
+          return sendResult(
+            reply,
+            request,
+            await commentService.create(
+              user,
+              acting,
+              { type, id: request.params.id },
+              request.body
+            ),
+            {
+              status: 201,
+              present: (failure) => presentCommentFailure(failure, request.url),
+              headers: commentFailureHeaders,
+            }
+          );
+        }
+      );
+    }
   }
 
   for (const { path, hide } of contractPaths(listCommentReplies)) {

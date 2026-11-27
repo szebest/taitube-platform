@@ -1,19 +1,23 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { type Result, map, ok } from '@kit/result';
 import {
   type NewUserEventInput,
   type OutboxRepository,
   type UserEventRecord,
   UserEventRepository,
 } from '@vp/core/repositories';
-import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
-import { type Result, map, ok } from '@vp/result';
+import { type Clock, realClock } from './clock';
 
 export class InMemoryUserEventRepository extends UserEventRepository {
   private events: UserEventRecord[] = [];
   private nextId = 1;
 
-  constructor(private readonly outboxRepo: OutboxRepository) {
+  constructor(
+    private readonly outboxRepo: OutboxRepository,
+    private readonly now: Clock = realClock
+  ) {
     super();
   }
 
@@ -52,7 +56,7 @@ export class InMemoryUserEventRepository extends UserEventRepository {
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = Date.now() - retentionDays * MS_PER_DAY;
+    const cutoff = this.now() - retentionDays * MS_PER_DAY;
     const before = this.events.length;
     this.events = this.events.filter((event) => event.createdAt.getTime() >= cutoff);
     return ok(before - this.events.length);

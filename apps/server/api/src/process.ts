@@ -1,14 +1,14 @@
-import type { ProcessHost } from '@vp/composition';
-import { loadEnv } from '@vp/config';
-import { toAppConfig } from '@vp/env-schema';
-import type { Logger } from '@vp/logger';
-import { registeredTracing } from '@vp/observability';
-import { fromPromise, isErr } from '@vp/result';
+import type { ProcessHost } from '@kit/composition';
+import { loadEnv } from '@kit/config';
+import type { Logger } from '@kit/logger';
+import { registeredTracing } from '@kit/observability';
+import { fromPromise, isErr } from '@kit/result';
+import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
 import { composeApp } from './app';
 import { type ApiProcess, serve } from './serve';
 
 async function start(host: ProcessHost): Promise<ApiProcess> {
-  const config = toAppConfig(loadEnv(host.env));
+  const config = toAppConfig(loadEnv(AppEnvSchema, host.env));
   return serve(await composeApp({ config }), config, { tracing: registeredTracing, signals: host });
 }
 

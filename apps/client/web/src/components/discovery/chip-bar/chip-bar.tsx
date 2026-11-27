@@ -1,4 +1,4 @@
-import { Chip, cn, Icon, IconButton, Slot, useUiCopy } from '@vp/ui';
+import { Chip, cn, Icon, IconButton, Slot, useUiCopy } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,

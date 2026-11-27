@@ -8,6 +8,7 @@ const SPEC_FILES = [
   ':(glob)apps/**/__tests__/**/*.ts',
   ':(glob)apps/**/__tests__/**/*.tsx',
   ':(glob)apps/client/*/e2e/**/*.ts',
+  ':(glob)tests/playwright/**/*.ts',
   ':(glob)packages/**/*.test.ts',
   ':(glob)packages/**/*.test.tsx',
   ':(glob)packages/**/__tests__/**/*.ts',
@@ -16,8 +17,8 @@ const SPEC_FILES = [
   ':(glob)tests/**/*.test.ts',
 ];
 
-function ruleNames(source: string): string[] {
-  return violations('fixture.test.ts', source).map((found) => found.split(': ')[1] ?? '');
+function ruleNames(source: string, path = 'apps/client/web/e2e/fixture.test.ts'): string[] {
+  return violations(path, source).map((found) => found.split(': ')[1] ?? '');
 }
 
 describe('architecture: spec discipline', () => {
@@ -56,6 +57,15 @@ describe('architecture: spec discipline', () => {
     ["it.todo('someday');", 'skips or narrows the run'],
     ["it.skipIf(ci)('locally', () => {});", 'skips or narrows the run'],
     ["describe.runIf(ci)('in ci', () => {});", 'skips or narrows the run'],
+    ['await page.waitForTimeout(30);', 'waits on a timer'],
+    [
+      "import { expect, test } from '@playwright/test';",
+      "uses @playwright/test's own test, whose pages skip the hydration wait",
+    ],
+    [
+      'const context = await browser.newContext({ baseURL });',
+      'opens a browser context whose pages skip the hydration wait',
+    ],
   ])('fires on %s', (source, rule) => {
     expect(ruleNames(source)).toEqual([rule]);
   });
@@ -71,8 +81,21 @@ describe('architecture: spec discipline', () => {
     ["vi.spyOn(console, 'error');"],
     ["it.each([1, 2])('reads %s', () => {}); it('reads one', () => {});"],
     ["describe('a', () => { it('x', () => {}); }); describe('b', () => { it('y', () => {}); });"],
+    ["import { test as base, type Page } from '@playwright/test';"],
+    ["import type { Locator } from '@playwright/test';"],
+    ['const context = await browser.newContext(); hydrateEveryPage(context, baseURL);'],
+    ['const api = await playwright.request.newContext({ baseURL });'],
   ])('lets %s through', (source) => {
     expect(ruleNames(source)).toEqual([]);
+  });
+
+  it('reads the hydration rules in the app browser specs only', () => {
+    expect(
+      ruleNames(
+        "import { test } from '@playwright/test';",
+        'packages/client/workbench/visual/a.test.ts'
+      )
+    ).toEqual([]);
   });
 
   it('holds every spec and test helper in the repo', () => {

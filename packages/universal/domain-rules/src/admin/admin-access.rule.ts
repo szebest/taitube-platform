@@ -1,5 +1,5 @@
+import type { Result } from '@kit/result';
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
-import type { Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 const ADMIN_REQUIRED =

@@ -1,5 +1,6 @@
-import { useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
+import { useT } from '#app/lib/messages';
 
 /** A track's language in the creator's own language, by its tag; the tag itself when the browser has no name for it. */
 export function useLanguageLabel(): (language: string | null) => string {

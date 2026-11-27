@@ -1,7 +1,7 @@
+import { useAppForm } from '@kit/forms';
+import { Button, ResponsiveModal } from '@kit/ui';
 import { VIDEO_VISIBILITIES } from '@vp/api-contracts';
-import { useAppForm } from '@vp/forms';
-import { useT } from '@vp/intl-react';
-import { Button, Dialog } from '@vp/ui';
+import { useT } from '#app/lib/messages';
 import {
   VIDEO_FILE_ACCEPT,
   validateVideoFile,
@@ -42,12 +42,13 @@ function UploadForm() {
         void form.handleSubmit();
       }}
     >
-      <Dialog.Body className="flex flex-col gap-stack">
+      <ResponsiveModal.Body className="flex flex-col gap-stack">
         <form.AppField name="file" validators={{ onChange: validateVideoFile }}>
           {(field) => (
             <field.FileField
               accept={VIDEO_FILE_ACCEPT}
               placeholderText={tOr('studio.uploadDrop', {}, '')}
+              selectedText={(count) => tOr('studio.selectedFiles', { count }, '')}
             />
           )}
         </form.AppField>
@@ -64,13 +65,13 @@ function UploadForm() {
           )}
         </form.AppField>
         {sending && <p role="status">{tOr('studio.uploadBusy', {}, '')}</p>}
-      </Dialog.Body>
-      <Dialog.Footer>
-        <Dialog.Close asChild>
+      </ResponsiveModal.Body>
+      <ResponsiveModal.Footer>
+        <ResponsiveModal.Close asChild>
           <Button type="button" variant="ghost">
             {tOr('studio.uploadCancel', {}, '')}
           </Button>
-        </Dialog.Close>
+        </ResponsiveModal.Close>
         <form.Subscribe selector={(state) => state.canSubmit && state.values.file.length > 0}>
           {(canUpload) => (
             <Button type="submit" variant="solid" tone="accent" disabled={!canUpload || sending}>
@@ -78,7 +79,7 @@ function UploadForm() {
             </Button>
           )}
         </form.Subscribe>
-      </Dialog.Footer>
+      </ResponsiveModal.Footer>
     </form>
   );
 }
@@ -89,14 +90,16 @@ export function UploadDialog() {
   const { tOr } = useT();
 
   return (
-    <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>{tOr('studio.uploadTitle', {}, '')}</Dialog.Title>
-          <Dialog.Description>{tOr('studio.uploadDescription', {}, '')}</Dialog.Description>
-        </Dialog.Header>
+    <ResponsiveModal.Root open={dialogOpen} onOpenChange={setDialogOpen}>
+      <ResponsiveModal.Content>
+        <ResponsiveModal.Header>
+          <ResponsiveModal.Title>{tOr('studio.uploadTitle', {}, '')}</ResponsiveModal.Title>
+          <ResponsiveModal.Description>
+            {tOr('studio.uploadDescription', {}, '')}
+          </ResponsiveModal.Description>
+        </ResponsiveModal.Header>
         <UploadForm />
-      </Dialog.Content>
-    </Dialog.Root>
+      </ResponsiveModal.Content>
+    </ResponsiveModal.Root>
   );
 }

@@ -1,6 +1,9 @@
-import { posix } from 'node:path';
-import { BUILD_TOOLING, checkBoundaries, load, type Pkg } from '../../scripts/check-boundaries';
-import { trackedFiles } from './repo-files';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, posix } from 'node:path';
+import { BUILD_TOOLING, checkBoundaries } from '../../scripts/check-boundaries';
+import { load, type Pkg } from '../../scripts/workspace-packages';
+import { read, trackedFiles } from './repo-files';
 
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
   return {
@@ -15,7 +18,8 @@ describe('architecture: package boundaries', () => {
   it('loads every tracked app and package manifest', () => {
     const manifests = trackedFiles(
       ':(glob)apps/*/*/package.json',
-      ':(glob)packages/*/*/package.json'
+      ':(glob)packages/*/*/package.json',
+      ':(glob)packages/platform/*/*/package.json'
     );
 
     expect(
@@ -45,14 +49,62 @@ describe('architecture: package boundaries', () => {
     ]);
   });
 
-  it.each(['apps/web', 'apps/universal/web', 'packages/web'])(
+  it.each(['apps/web', 'apps/universal/web', 'packages/web', 'packages/platform/web'])(
     'reports a manifest at %s, outside a tier directory',
     (dir) => {
       expect(checkBoundaries([pkg({ name: '@vp/web', dir })])).toEqual([
-        '@vp/web: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier',
+        '@vp/web: lives outside packages/<tier>/, packages/platform/<tier>/ and apps/<server|client>/, so it has no tier',
       ]);
     }
   );
+
+  function platformEdge(dep: string, dev: boolean): string[] {
+    return checkBoundaries([
+      pkg({ name: '@kit/di', dir: 'packages/platform/universal/di', deps: [{ name: dep, dev }] }),
+      pkg({ name: dep, dir: `packages/universal/${dep.slice(4)}`, layer: 1 }),
+    ]);
+  }
+
+  it.each([
+    { group: 'a dependency', dev: false, how: 'depends on', dep: '@vp/domain' },
+    { group: 'a devDependency', dev: true, how: 'dev-depends on', dep: '@vp/domain' },
+    { group: 'build tooling', dev: true, how: 'dev-depends on', dep: '@vp/web-testing' },
+  ])('reports a platform package that names an app package as $group', ({ dev, how, dep }) => {
+    expect(platformEdge(dep, dev)).toEqual([
+      `@kit/di (platform) ${how} ${dep} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
+    ]);
+  });
+
+  it('still rejects an app package that package-moves.json sends to @kit/*', () => {
+    const moved = '@vp/concurrency';
+
+    expect(JSON.parse(read('scripts/package-moves.json'))).toHaveProperty([moved]);
+    expect(platformEdge(moved, false)).toEqual([
+      `@kit/di (platform) depends on ${moved} (app) — a platform package depends, peer-depends and dev-depends only on platform packages`,
+    ]);
+  });
+
+  it('reads the tier of a platform package from its path, and lets an app depend on one', () => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@vp/web',
+        dir: 'apps/client/web',
+        layer: 6,
+        deps: [{ name: '@kit/ui', dev: false }],
+      }),
+      pkg({
+        name: '@kit/ui',
+        dir: 'packages/platform/client/ui',
+        layer: 3,
+        deps: [{ name: '@kit/logger', dev: false }],
+      }),
+      pkg({ name: '@kit/logger', dir: 'packages/platform/server/logger', layer: 1 }),
+    ]);
+
+    expect(errors).toEqual([
+      '@kit/ui (client) depends on @kit/logger (server) — a client package or app may only depend on universal or client',
+    ]);
+  });
 
   it.each([
     { dir: 'packages/server/node', parent: 'packages/server' },
@@ -108,6 +160,71 @@ describe('architecture: package boundaries', () => {
     expect(errors).toEqual([
       `@vp/browser (client) depends on ${name} (server) — a client package or app may only depend on universal or client`,
       `@vp/browser (T1) depends on ${name} (T1) — the same layer. Dependencies must point strictly down.`,
+    ]);
+  });
+
+  it.each([
+    {
+      shape: 'a link: path into app code',
+      spec: 'link:../../../server/core',
+      target: 'packages/server/core',
+    },
+    {
+      shape: 'a file: path into app code',
+      spec: 'file:../../../client/queries',
+      target: 'packages/client/queries',
+    },
+    {
+      shape: 'a workspace: path into app code',
+      spec: 'workspace:../../../../apps/client/web',
+      target: 'apps/client/web',
+    },
+  ])('reports $shape in a platform manifest', ({ spec, target }) => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@kit/leaky',
+        dir: 'packages/platform/client/leaky',
+        pathDeps: [{ name: 'q', spec, target }],
+      }),
+    ]);
+
+    expect(errors).toEqual([
+      `@kit/leaky (platform) lists q as "${spec}", a path that resolves to ${target} outside packages/platform/ — a platform package reaches app code through no path either`,
+    ]);
+  });
+
+  it('lets a platform manifest path to another platform package pass', () => {
+    const errors = checkBoundaries([
+      pkg({
+        name: '@kit/leaky',
+        dir: 'packages/platform/client/leaky',
+        pathDeps: [{ name: 'q', spec: 'link:../ui', target: 'packages/platform/client/ui' }],
+      }),
+    ]);
+
+    expect(errors).toEqual([]);
+  });
+
+  it.each([
+    { shape: 'link:', spec: 'link:../../../server/core' },
+    { shape: 'file:', spec: 'file:../../../client/queries' },
+    { shape: 'workspace: path', spec: 'workspace:../../../../apps/client/web' },
+  ])('reads a $shape spec from a manifest', ({ spec }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'boundaries-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const manifest = join(dir, 'packages/platform/client/leaky');
+    mkdirSync(manifest, { recursive: true });
+    writeFileSync(
+      join(manifest, 'package.json'),
+      JSON.stringify({
+        name: '@kit/leaky',
+        vp: { layer: 1 },
+        devDependencies: { q: spec, ok: 'workspace:*' },
+      })
+    );
+
+    expect(checkBoundaries(load(dir))).toEqual([
+      expect.stringContaining('outside packages/platform/'),
     ]);
   });
 });

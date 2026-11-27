@@ -1,9 +1,9 @@
+import { createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { userChannel } from '@vp/events';
-import { createLogger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { TranscodeProgressReporter } from '../progress-reporter';
 
@@ -29,7 +29,7 @@ describe('TranscodeProgressReporter', () => {
     new TranscodeProgressReporter({
       cache,
       repositories,
-      metrics: createMetricsRegistry(),
+      metrics: createPipelineMetrics(),
       videoId,
       rendition,
       logger,
@@ -78,6 +78,7 @@ describe('TranscodeProgressReporter', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       sourceKey: 'raw/source.mp4',
       status: 'PROCESSING',
     });

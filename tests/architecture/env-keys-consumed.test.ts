@@ -1,11 +1,12 @@
-import { join } from 'node:path';
+import { relative } from 'node:path';
 import ts from 'typescript';
+import { inPackageTier } from '../../scripts/workspace-packages';
 import { platformKeys } from './env-keys';
 import { fixtureProgram, productionProgram } from './program';
 import { ROOT, read } from './repo-files';
 
 const ENV_SCHEMA = 'packages/server/env-schema/src/';
-const SERVER_ROOTS = ['apps/server/api/src/', 'apps/server/worker/src/', 'packages/server/'];
+const SERVER_APPS = ['apps/server/api/src/', 'apps/server/worker/src/'];
 
 function declaredKeys(source: string): string[] {
   return [...source.matchAll(/^\s{2}([A-Z][A-Z0-9_]+):/gm)].map((m) => m[1] as string);
@@ -141,7 +142,7 @@ function unconsumedLeaves(
   };
   for (const file of program.getSourceFiles().filter((f) => isConsumer(f.fileName))) visit(file);
 
-  return [...leaves].filter((leaf) => !consumed.has(leaf)).sort();
+  return [...leaves.difference(consumed)].sort();
 }
 
 describe('architecture: every declared key is read and every config leaf is consumed', () => {
@@ -191,8 +192,10 @@ describe('architecture: every declared key is read and every config leaf is cons
 
   it('consumes every AppConfig leaf in production source outside env-schema', () => {
     const { program, roots } = productionProgram();
-    const onServer = (file: string) =>
-      SERVER_ROOTS.some((root) => file.startsWith(join(ROOT, root)));
+    const onServer = (file: string) => {
+      const path = relative(ROOT, file);
+      return SERVER_APPS.some((root) => path.startsWith(root)) || inPackageTier(path, 'server');
+    };
 
     expect(
       unconsumedLeaves(

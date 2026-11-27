@@ -1,5 +1,5 @@
+import { isErr, isOk } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
-import { isErr, isOk } from '@vp/result';
 import { ADMIN, STRANGER } from '../../__tests__/entities';
 import { decideAdminAccess } from '../admin-access.rule';
 

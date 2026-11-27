@@ -9,9 +9,10 @@ import {
   Spinner,
   useUiCopy,
   VisuallyHidden,
-} from '@vp/ui';
+} from '@kit/ui';
 import { type ComponentPropsWithRef, type ReactElement, type ReactNode, useId } from 'react';
 import { RollingCount } from '#app/components/watch/engagement-bar';
+import { useT } from '#app/lib/messages';
 import { CommentItemContext, useCommentItem } from './comment-item.context';
 import { COMMENT_AVATAR, commentItemStyles } from './comment-item.variants';
 import type { CommentLevel, CommentReaction, CommentState } from './types';
@@ -87,7 +88,7 @@ export function CommentItemAuthor({
   ...props
 }: CommentItemAuthorProps) {
   const { level, state, authorId, timeId } = useCommentItem('Author');
-  const copy = useUiCopy();
+  const { tOr } = useT();
   const styles = commentItemStyles();
   const stamp = (
     <time id={timeId} dateTime={dateTime}>
@@ -112,12 +113,12 @@ export function CommentItemAuthor({
         </span>
         {creator && (
           <Badge size="sm" tone="accent">
-            {copy.roleCreator}
+            {tOr('appUi.roleCreator', {}, '')}
           </Badge>
         )}
         {state === 'pending' ? (
           <span aria-hidden="true" className={styles.time()}>
-            <Spinner size="sm">{copy.messagePending}</Spinner>
+            <Spinner size="sm">{tOr('appUi.messagePending', {}, '')}</Spinner>
           </span>
         ) : children ? (
           <Slot.Root className={styles.time()}>
@@ -128,7 +129,7 @@ export function CommentItemAuthor({
           <span className={styles.time()}>{stamp}</span>
         )}
         {state === 'pending' && <VisuallyHidden>{stamp}</VisuallyHidden>}
-        {edited && <span className={styles.edited()}>{copy.edited}</span>}
+        {edited && <span className={styles.edited()}>{tOr('appUi.edited', {}, '')}</span>}
       </div>
     </>
   );
@@ -147,7 +148,8 @@ export function CommentItemTimecode({
   children,
   ...props
 }: CommentItemTimecodeProps) {
-  const { seekTo } = useUiCopy();
+  const { tOr } = useT();
+  const seekTo = tOr('appUi.seekTo', {}, '');
   const id = useId();
 
   return (
@@ -165,11 +167,13 @@ export function CommentItemTimecode({
   );
 }
 
+const ACTIONABLE: ReadonlySet<CommentState> = new Set(['view', 'held', 'hidden']);
+
 /** The row under the text, hidden while editing or once the comment is gone. */
 export function CommentItemActions({ className, ...props }: ComponentPropsWithRef<'div'>) {
   const { state } = useCommentItem('Actions');
 
-  if (state !== 'view') return null;
+  if (!ACTIONABLE.has(state)) return null;
 
   return (
     <div
@@ -188,7 +192,9 @@ export interface CommentItemReactionsProps {
 }
 
 export function CommentItemReactions({ value, likes, onChange }: CommentItemReactionsProps) {
-  const { like, dislike } = useUiCopy();
+  const { tOr } = useT();
+  const like = tOr('appUi.like', {}, '');
+  const dislike = tOr('appUi.dislike', {}, '');
   const styles = commentItemStyles();
 
   return (
@@ -216,7 +222,8 @@ export function CommentItemReactions({ value, likes, onChange }: CommentItemReac
 }
 
 export function CommentItemReply(props: Omit<ComponentPropsWithRef<'button'>, 'children'>) {
-  const { reply } = useUiCopy();
+  const { tOr } = useT();
+  const reply = tOr('appUi.reply', {}, '');
 
   return (
     <Button variant="ghost" size="sm" {...props}>
@@ -254,18 +261,19 @@ export interface CommentItemFailedProps {
 export function CommentItemFailed({ onRetry, onDelete }: CommentItemFailedProps) {
   const { state } = useCommentItem('Failed');
   const copy = useUiCopy();
+  const { tOr } = useT();
 
   if (state !== 'failed') return null;
 
   return (
     <div data-slot="comment-item-failed" className={commentItemStyles().failed()}>
       <Icon name="alert" size="sm" />
-      <span>{copy.notPosted}</span>
+      <span>{tOr('appUi.notPosted', {}, '')}</span>
       <Button variant="ghost" tone="accent" size="sm" onClick={onRetry}>
         {copy.retry}
       </Button>
       <Button variant="ghost" tone="danger" size="sm" onClick={onDelete}>
-        {copy.delete}
+        {tOr('ui.delete', {}, '')}
       </Button>
     </div>
   );

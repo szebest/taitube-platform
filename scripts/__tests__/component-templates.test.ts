@@ -1,4 +1,6 @@
 import { componentFiles, componentFolder, isKebab } from '../component-templates';
+import { UI_SRC } from '../scaffold';
+import { packageDir } from '../workspace-packages';
 
 const request = (overrides: Partial<Parameters<typeof componentFiles>[0]> = {}) => ({
   name: 'chip-bar',
@@ -10,8 +12,12 @@ const request = (overrides: Partial<Parameters<typeof componentFiles>[0]> = {}) 
 
 describe('scripts: the component templates', () => {
   it.each([
-    { kind: 'primitive', area: 'browse', folder: 'packages/client/ui/src/primitives/chip-bar' },
-    { kind: 'shared', area: 'states', folder: 'packages/client/components/src/states/chip-bar' },
+    { kind: 'primitive', area: 'browse', folder: `${UI_SRC}/primitives/chip-bar` },
+    {
+      kind: 'shared',
+      area: 'states',
+      folder: `${packageDir('@kit/components')}/src/states/chip-bar`,
+    },
     { kind: 'web', area: 'discovery', folder: 'apps/client/web/src/components/discovery/chip-bar' },
     { kind: 'studio', area: undefined, folder: 'apps/client/studio/src/components/chip-bar' },
   ] as const)('places a $kind component in $folder', ({ kind, area, folder }) => {
@@ -50,7 +56,7 @@ describe('scripts: the component templates', () => {
 
   it.each([
     { kind: 'primitive', from: "from '../../lib/class-names'" },
-    { kind: 'web', from: "from '@vp/ui'" },
+    { kind: 'web', from: "from '@kit/ui'" },
   ] as const)('takes the helpers of a $kind component $from', ({ kind, from }) => {
     expect(componentFiles(request({ kind }))['chip-bar.variants.ts']).toContain(from);
   });

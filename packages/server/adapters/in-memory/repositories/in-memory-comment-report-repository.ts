@@ -1,3 +1,4 @@
+import { type Result, ok } from '@kit/result';
 import type {
   CommentReportQueueCursor,
   CommentReportRepositoryPort,
@@ -10,13 +11,12 @@ import type {
   NewCommentReportInput,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
 
 export interface CommentLookup {
   peek(
     id: string
   ):
-    | { id: string; videoId: string; authorId: string; content: string; removed: boolean }
+    | { id: string; videoId: string | null; authorId: string; content: string; removed: boolean }
     | undefined;
 }
 

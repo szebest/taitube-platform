@@ -1,4 +1,4 @@
-import { useAppearance } from '@vp/ui';
+import { useAppearance } from '@kit/ui';
 import { themeColorMetas } from '#app/features/pwa/utils/theme-color';
 
 /**

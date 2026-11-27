@@ -1,15 +1,16 @@
+import { type AnyFailure, toPipelineError } from '@kit/errors';
+import { createLogger } from '@kit/logger';
+import { type Result, err, isErr, ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { type AnyFailure, ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
-import { createLogger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
-import { type Result, err, isErr, ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { ErrorCodes, errorCodeRegistry, storageUnavailable } from '@vp/errors';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';
 
 const logger = createLogger({ format: 'json', service: 'queue-boundary-test', level: 'error' });
-const metrics = createMetricsRegistry();
+const metrics = createPipelineMetrics();
 
 const corruptContainer = {
   code: ErrorCodes.CORRUPT_CONTAINER,
@@ -18,7 +19,7 @@ const corruptContainer = {
 
 /** The exact line `runner.ts` runs on every job outcome. */
 function runnerOutcome(outcome: Result<unknown, AnyFailure>): Error | null {
-  return isErr(outcome) ? toPipelineError(outcome.error) : null;
+  return isErr(outcome) ? toPipelineError(errorCodeRegistry, outcome.error) : null;
 }
 
 describe('the worker edge: a stage Result becomes the queue throw', () => {
@@ -94,7 +95,10 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
   );
 
   it('keeps the failure payload on the DLQ row without leaking the cause', () => {
-    const thrown = toPipelineError(storageUnavailable('putObject', new Error('ECONNRESET')));
+    const thrown = toPipelineError(
+      errorCodeRegistry,
+      storageUnavailable('putObject', new Error('ECONNRESET'))
+    );
 
     expect(thrown.details).toEqual({ operation: 'putObject' });
   });

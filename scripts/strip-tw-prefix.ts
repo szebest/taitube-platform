@@ -1,11 +1,12 @@
 import { glob, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { tierGlob } from './workspace-packages';
 
 const SOURCES = [
   'apps/client/*/src/**/*.ts',
   'apps/client/*/src/**/*.tsx',
-  'packages/client/*/src/**/*.ts',
-  'packages/client/*/src/**/*.tsx',
+  `${tierGlob('client')}/*/src/**/*.ts`,
+  `${tierGlob('client')}/*/src/**/*.tsx`,
 ];
 
 const PREFIX = /(?<![\w-])tw:/g;

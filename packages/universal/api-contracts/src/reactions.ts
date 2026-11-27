@@ -37,7 +37,7 @@ export const setReaction = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
-    403: [ErrorCodes.FORBIDDEN],
+    403: [ErrorCodes.FORBIDDEN, ErrorCodes.COMMENTS_BANNED],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
   },
 });

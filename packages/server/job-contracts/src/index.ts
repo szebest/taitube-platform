@@ -1,8 +1,14 @@
+import { SCREENING_OUTCOMES, SCREENING_REASONS } from '@vp/domain';
 import { z } from 'zod';
+import { ChannelImageJob } from './channel-images';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
+export * from './apply-edits';
 export * from './captions-flow';
+export * from './channel-images';
 export * from './chunks';
+export * from './comment-held';
+export * from './exports';
 export * from './ladder';
 export * from './live';
 export * from './notifications';
@@ -14,6 +20,7 @@ export const QUEUES = [
   'transcode-720p',
   'transcode-480p',
   'thumbnail',
+  'screen',
   'package',
   'notify',
   'housekeeping',
@@ -53,8 +60,36 @@ export const ThumbnailJob = Base.extend({
 });
 export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
 
+export const ScreenJob = Base.extend({
+  sourceKey: z.string(),
+  durationMs: z.number().int().positive(),
+  /** Whether probe found an audio stream, so the stage fingerprints the audio only when there is one. */
+  hasAudio: z.boolean(),
+});
+export type ScreenJob = z.infer<typeof ScreenJob>;
+const VideoThumbnailJob = ThumbnailJob.extend({ type: z.literal('video-thumbnail') });
+
+function withDefaultType(payload: unknown): unknown {
+  const fields = z.record(z.string(), z.unknown()).safeParse(payload);
+  return fields.success && fields.data.type === undefined
+    ? { ...fields.data, type: 'video-thumbnail' }
+    : payload;
+}
+
+/**
+ * The thumbnail queue also carries channel images. A payload without a `type` is a video thumbnail:
+ * every job already in Redis and every producer of one predates the tag.
+ */
+export const ThumbnailQueueJob = z.preprocess(
+  withDefaultType,
+  z.discriminatedUnion('type', [VideoThumbnailJob, ChannelImageJob])
+);
+export type ThumbnailQueueJob = z.infer<typeof ThumbnailQueueJob>;
+
 export const PackageJob = Base.extend({
   ladder: z.array(LadderEntry).min(1),
+  /** Probe added a `screen` child: a package that finds no result from it holds the video, never publishes it. */
+  screened: z.boolean().optional(),
 });
 export type PackageJob = z.infer<typeof PackageJob>;
 
@@ -103,6 +138,7 @@ export const HousekeepingJob = z.object({
   task: z.enum([
     'reconcile-uploads',
     'reconcile-processing',
+    'reconcile-live',
     'purge-deleted',
     'expire-raw',
     'tmp-sweep',
@@ -110,6 +146,15 @@ export const HousekeepingJob = z.object({
     'flush-video-views',
     'reconcile-captions',
     'purge-search-history',
+    'purge-channel-audit',
+    'purge-comment-moderation',
+    'purge-screening-evidence',
+    'purge-channel-images',
+    'purge-handle-history',
+    'purge-exports',
+    'prune-revisions',
+    'purge-generations',
+    'publish-due-posts',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;
@@ -151,8 +196,21 @@ export const ThumbnailResult = z.object({
 });
 export type ThumbnailResult = z.infer<typeof ThumbnailResult>;
 
+export const ScreenResult = z.object({
+  type: z.literal('screen'),
+  screeningId: z.uuid(),
+  outcome: z.enum(SCREENING_OUTCOMES),
+  score: z.number().min(0).max(1),
+  reasons: z.array(z.enum(SCREENING_REASONS)),
+});
+export type ScreenResult = z.infer<typeof ScreenResult>;
+
 /** What a package job reads back from its flow children, told apart by the stage that wrote it. */
-export const ChildResult = z.discriminatedUnion('type', [TranscodeResult, ThumbnailResult]);
+export const ChildResult = z.discriminatedUnion('type', [
+  TranscodeResult,
+  ThumbnailResult,
+  ScreenResult,
+]);
 export type ChildResult = z.infer<typeof ChildResult>;
 
 // Deterministic job IDs
@@ -162,7 +220,10 @@ export const ids = {
   transcodeChunk: (v: string, r: RenditionName, chunk: number, g: number) =>
     `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  screen: (v: string, g: number) => `${v}--screen--g${g}`,
+  channelImage: (uploadId: string) => `${uploadId}--channel-image`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
+  packageApproved: (v: string, g: number) => `${v}--package--approved--g${g}`,
   captions: (v: string, modelVersion: string, captionVersion: number) =>
     `${v}--captions--${modelVersion}--v${captionVersion}`,
   captionsChunk: (v: string, modelVersion: string, captionVersion: number, window: number) =>

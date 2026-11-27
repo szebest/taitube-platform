@@ -1,5 +1,4 @@
-import type { Failure } from './failure';
-import { PipelineError } from './pipeline-error';
+import { type Failure, PipelineError } from '@kit/errors';
 import { type PipelineErrorCode, PipelineErrorCodes } from './pipeline-error-codes';
 
 /**
@@ -18,7 +17,7 @@ export function mediaFailure(
 }
 
 function isPipelineErrorCode(code: unknown): code is PipelineErrorCode {
-  return typeof code === 'string' && code in PipelineErrorCodes;
+  return typeof code === 'string' && Object.hasOwn(PipelineErrorCodes, code);
 }
 
 /**

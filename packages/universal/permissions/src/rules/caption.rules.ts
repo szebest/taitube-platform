@@ -1,7 +1,8 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
+import { channelsWith } from './memberships';
 
-/** Whoever may watch the video may read its captions; only its owner may change them. */
+/** Whoever may watch the video may read its captions; its owner and the channel's editors change them. */
 export function defineCaptionRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
@@ -19,4 +20,10 @@ export function defineCaptionRules(
     can('read', 'Caption', { ownerId: user.id });
     can('manage', 'Caption', { ownerId: user.id });
   }
+
+  const readable = channelsWith(user, 'video.read');
+  if (readable) can('read', 'Caption', { channelId: readable });
+
+  const editable = channelsWith(user, 'video.edit');
+  if (editable) can('manage', 'Caption', { channelId: editable });
 }

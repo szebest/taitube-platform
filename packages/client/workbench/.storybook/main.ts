@@ -1,18 +1,21 @@
 import { fileURLToPath } from 'node:url';
+import { workspaceSourceAliases } from '@kit/vite-preset';
+import { reactPlugins } from '@kit/vite-preset/react-plugins';
 import type { StorybookConfig } from '@storybook/react-vite';
 import tailwindcss from '@tailwindcss/vite';
-import { workspaceSourceAliases } from '@vp/vite-preset';
-import { reactPlugins } from '@vp/vite-preset/react-plugins';
 import { mergeConfig } from 'vite';
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../../', import.meta.url));
 
 const START_STUB = fileURLToPath(new URL('./tanstack-start.ts', import.meta.url));
 
+const SRVX_STATIC_STUB = fileURLToPath(new URL('./srvx-static.ts', import.meta.url));
+
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   stories: [
     '../../../client/*/src/**/*.stories.tsx',
+    '../../../platform/client/*/src/**/*.stories.tsx',
     '../../../../apps/client/*/src/**/*.stories.tsx',
   ],
   addons: ['@storybook/addon-a11y', '@storybook/addon-vitest'],
@@ -22,6 +25,7 @@ const config: StorybookConfig = {
       resolve: {
         alias: [
           { find: /^@tanstack\/react-start(\/server)?$/, replacement: START_STUB },
+          { find: /^srvx\/static$/, replacement: SRVX_STATIC_STUB },
           ...workspaceSourceAliases(PACKAGES_DIR),
         ],
       },

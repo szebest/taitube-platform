@@ -1,6 +1,7 @@
 import { normalize } from 'node:path';
 import { loadAll } from 'js-yaml';
-import { BUILD_TOOLING, load } from '../../scripts/check-boundaries';
+import { BUILD_TOOLING } from '../../scripts/check-boundaries';
+import { load } from '../../scripts/workspace-packages';
 import { read } from './repo-files';
 
 /**

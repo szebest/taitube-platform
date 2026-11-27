@@ -1,6 +1,6 @@
+import { EmptyState, NoNotificationsIllustration, SectionError } from '@kit/components';
+import { Icon, Tabs } from '@kit/ui';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
-import { Icon, Tabs } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { NotificationCentre, NotificationCentreSkeleton, NotificationCentreSkeletonRows } from '..';
 import { NotificationCentreRoot, type NotificationCentreRootProps } from '../notification-centre';

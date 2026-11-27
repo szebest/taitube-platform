@@ -2,7 +2,7 @@ import type { ChannelFeaturedView } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProvidersWithToasts } from '#app/__tests__/providers';
 import { channelStartHereQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelStartHere } from '../channel-start-here';
 
@@ -19,7 +19,9 @@ function renderShelf(featured?: ChannelFeaturedView) {
   if (featured) {
     queryClient.setQueryData(channelStartHereQueryOptions(api, CHANNEL_ID).queryKey, featured);
   }
-  return renderPage(<ChannelStartHere channelId={CHANNEL_ID} />, AppProviders, { queryClient });
+  return renderPage(<ChannelStartHere channelId={CHANNEL_ID} />, AppProvidersWithToasts, {
+    queryClient,
+  });
 }
 
 describe('apps/client/web: channel start here', () => {

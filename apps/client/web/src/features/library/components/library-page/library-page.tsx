@@ -1,8 +1,8 @@
+import { PageHeader, PageHeaderSkeleton, VideoCardSkeleton } from '@kit/components';
+import { Tabs } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { PageHeader, PageHeaderSkeleton, VideoCardSkeleton } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { Tabs } from '@vp/ui';
 import { LIBRARY_TABS } from '#app/features/library/utils/library-search';
+import { useT } from '#app/lib/messages';
 import { ClearHistoryDialog } from '../clear-history-dialog/clear-history-dialog';
 import { CommentsList } from '../comments-list/comments-list';
 import { HistoryList } from '../history-list/history-list';

@@ -1,14 +1,23 @@
-import { posix } from 'node:path';
+import { directoryTier, isPlatform, load } from '../../scripts/workspace-packages';
 import { existsInRepo, missingPaths } from './doc-paths';
 import { markdownDocument, trackedDocuments } from './markdown';
-import { read, trackedFiles, trackedPaths } from './repo-files';
+import { read, trackedPaths } from './repo-files';
 import { type Command, commandsIn, makeTargets, phonyTargets, VP_COMMANDS } from './shell-commands';
 
 /** The documents a reader follows as instructions; the rest of `docs/` is a record of past work. */
 function checkedDocuments(): string[] {
   return trackedDocuments().filter(
     (file) =>
-      ['README.md', 'ARCHITECTURE.md', 'CONTEXT.md', 'docs/SDD.md'].includes(file) ||
+      [
+        'README.md',
+        'ARCHITECTURE.md',
+        'CONTEXT.md',
+        'docs/SDD.md',
+        'docs/DEPLOYMENT.md',
+        'docs/GETTING_STARTED.md',
+        'docs/DEMO.md',
+      ].includes(file) ||
+      (file.startsWith('infra/environments/') && file.endsWith('README.md')) ||
       file.startsWith('docs/standards/') ||
       file.startsWith('docs/runbooks/') ||
       file.endsWith('AGENTS.md')
@@ -36,13 +45,7 @@ function scriptsOf(file: string): ReadonlySet<string> {
 }
 
 function workspaces(): Workspace[] {
-  return trackedFiles(':(glob)apps/*/*/package.json', ':(glob)packages/*/*/package.json').map(
-    (manifest) => ({
-      name: manifestOf(manifest).name,
-      dir: posix.dirname(manifest),
-      scripts: scriptsOf(manifest),
-    })
-  );
+  return load().map(({ name, dir }) => ({ name, dir, scripts: scriptsOf(`${dir}/package.json`) }));
 }
 
 interface Scope {
@@ -102,8 +105,6 @@ function phonyFindings(makefile: string): string[] {
 const TREE_GLYPHS = /^[\s│├└─]+/;
 const TREE_INDENT = 4;
 const TOP_LEVEL_DIRECTORY = 1;
-const TIER = 2;
-const PACKAGE = 3;
 
 interface TreeEntry {
   level: number;
@@ -117,15 +118,20 @@ function treeEntry(line: string): TreeEntry {
   return { level: glyphs.length / TREE_INDENT, name };
 }
 
-/** The `packages/<tier>/<name>` directories a monorepo tree draws. */
+function isDrawnPackage(path: readonly string[]): boolean {
+  const dir = path.join('/');
+  const depth = isPlatform(dir) ? 4 : 3;
+  return path[0] === 'packages' && path.length === depth && directoryTier(dir) !== null;
+}
+
+/** The `packages/<tier>/<name>` and `packages/platform/<tier>/<name>` directories a monorepo tree draws. */
 function packagesInTree(tree: string): string[] {
   const drawn: string[] = [];
-  let inPackages = false;
-  let tier = '';
+  const path: string[] = [];
   for (const { level, name } of tree.split('\n').map(treeEntry)) {
-    if (level === TOP_LEVEL_DIRECTORY) inPackages = name === 'packages';
-    else if (inPackages && level === TIER) tier = name;
-    else if (inPackages && level === PACKAGE) drawn.push(`packages/${tier}/${name}`);
+    if (level < TOP_LEVEL_DIRECTORY) continue;
+    path.splice(level - TOP_LEVEL_DIRECTORY, path.length, name);
+    if (isDrawnPackage(path)) drawn.push(path.join('/'));
   }
   return drawn;
 }
@@ -237,30 +243,34 @@ describe('architecture: doc-commands', () => {
     expect(missingPaths(documents, trackedPaths())).toEqual([]);
   });
 
-  it('reads the packages a tree draws under their tier, and stops at the next top-level directory', () => {
+  it('reads the packages a tree draws under their tier on either axis, and stops at the next top-level directory', () => {
     const tree = [
       'repo/',
       '├── apps/',
       '│   └── api/',
       '├── packages/',
-      '│   ├── universal/',
-      '│   │   └── result/          # Result',
+      '│   ├── platform/',
+      '│   │   └── universal/',
+      '│   │       └── result/      # Result',
       '│   └── server/',
       '│       ├── logger/',
+      '│       │   └── src/',
       '│       └── db/',
       '└── infra/',
       '    └── compose/',
     ].join('\n');
 
     expect(packagesInTree(tree)).toEqual([
-      'packages/universal/result',
+      'packages/platform/universal/result',
       'packages/server/logger',
       'packages/server/db',
     ]);
   });
 
   it('draws every workspace package in the README tree, and only those', () => {
-    const packages = trackedFiles(':(glob)packages/*/*/package.json').map(posix.dirname);
+    const packages = load()
+      .map(({ dir }) => dir)
+      .filter((dir) => dir.startsWith('packages/'));
 
     expect(packagesInTree(readmeTree()).sort()).toEqual(packages.sort());
   });

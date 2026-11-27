@@ -1,5 +1,5 @@
 import { InMemorySubscriptionCache } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
 import { type TestApp, bearer, buildTestApp } from './test-app';
@@ -8,6 +8,7 @@ export const CDN = 'http://cdn.videopipeline.local';
 export const CREATOR_ID = '11111111-1111-7111-8111-111111111111';
 export const OTHER_CREATOR_ID = '33333333-3333-7333-8333-333333333333';
 export const SUBSCRIBER_ID = '55555555-5555-7555-8555-555555555555';
+export const SUBSCRIBER_CHANNEL_ID = '66666666-6666-7666-8666-666666666666';
 export const CHANNEL_1 = { id: '22222222-2222-7222-8222-222222222222', handle: 'creator1' };
 export const CHANNEL_2 = { id: '44444444-4444-7444-8444-444444444444', handle: 'creator2' };
 
@@ -18,7 +19,7 @@ export interface SubscriptionsApp extends TestApp {
   subscriptionCache: InMemorySubscriptionCache;
 }
 
-/** Two creators with a channel each, and a subscriber with none. */
+/** Two creators and a subscriber, with a channel each. */
 export async function buildSubscriptionsApp(): Promise<SubscriptionsApp> {
   const subscriptionCache = new InMemorySubscriptionCache();
   const testApp = await buildTestApp({
@@ -47,6 +48,12 @@ export async function buildSubscriptionsApp(): Promise<SubscriptionsApp> {
   });
   await channels.create({ ...CHANNEL_1, userId: CREATOR_ID, displayName: 'Creator One' });
   await channels.create({ ...CHANNEL_2, userId: OTHER_CREATOR_ID, displayName: 'Creator Two' });
+  await channels.create({
+    id: SUBSCRIBER_CHANNEL_ID,
+    userId: SUBSCRIBER_ID,
+    handle: 'subscriber',
+    displayName: 'Subscriber',
+  });
 
   return { ...testApp, subscriptionCache };
 }

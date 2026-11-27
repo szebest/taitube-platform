@@ -1,5 +1,5 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing/dom';
 import { SHORTS } from '#app/__tests__/short-fixtures';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 

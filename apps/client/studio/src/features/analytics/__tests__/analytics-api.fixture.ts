@@ -1,13 +1,18 @@
+import { MS_PER_HOUR } from '@kit/primitives';
 import {
   type ChannelAnalytics,
   getChannelAnalytics,
+  getVideo,
   getVideoAnalytics,
+  getVideoAudience,
+  getVideoBenchmark,
   getVideoRetention,
+  type VideoAudience,
+  type VideoBenchmark,
   type VideoRetention,
 } from '@vp/api-contracts';
 import { HOURLY_WINDOW_HOURS } from '@vp/domain';
-import { MS_PER_HOUR } from '@vp/domain/time';
-import { apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 const SECONDS_PER_VIEW = 90;
@@ -65,7 +70,30 @@ const retentionCurve = (viewers: readonly number[]): VideoRetention => ({
   curve: viewers.map((count, index) => ({ percent: index * 5, viewers: count })),
 });
 
+const DEVICES: VideoAudience['devices'] = [
+  { device: 'mobile', views: 6, share: 0.6 },
+  { device: 'desktop', views: 4, share: 0.4 },
+];
+
+/** Seven days of cumulative views for this video, with an envelope unless `peerCount` is under three. */
+const videoBenchmark = (peerCount: number, reached = 7): VideoBenchmark => ({
+  videoId: VIDEO_ID,
+  publishedAt: '2026-10-01T09:00:00.000Z',
+  peerCount,
+  days: Array.from({ length: 7 }, (_, day) => ({
+    day,
+    views: day < reached ? (day + 1) * 10 : null,
+    p25: peerCount < 3 ? null : (day + 1) * 8,
+    median: peerCount < 3 ? null : (day + 1) * 10,
+    p75: peerCount < 3 ? null : (day + 1) * 14,
+  })),
+});
+
 interface AnalyticsFixture {
+  devices?: VideoAudience['devices'];
+  peerCount?: number;
+  /** The video's length; none leaves the drop-offs unplaced. */
+  durationMs?: number;
   views?: readonly number[];
   hourly?: readonly number[];
   netSubscribers?: number;
@@ -77,9 +105,13 @@ interface AnalyticsFixture {
 /** The creator analytics endpoints; the `range` of each request they saw comes back for assertions. */
 export function analyticsHandlers({
   retention = [100, 80, 40],
+  devices = DEVICES,
+  peerCount = 4,
+  durationMs = 100_000,
   ...figures
 }: AnalyticsFixture = {}) {
   const requests: { scope: 'channel' | 'video'; range: string | null }[] = [];
+  const audienceRanges: (string | null)[] = [];
   const rangeOf = (request: Request) => new URL(request.url).searchParams.get('range');
   const handlers = [
     mockEndpoint(getChannelAnalytics, ({ request }) => {
@@ -97,8 +129,21 @@ export function analyticsHandlers({
       });
     }),
     mockEndpoint(getVideoRetention, () => HttpResponse.json(retentionCurve(retention))),
+    mockEndpoint(getVideoAudience, ({ request }) => {
+      const asked = new URL(request.url).searchParams.get('range');
+      audienceRanges.push(asked);
+      return HttpResponse.json({
+        videoId: VIDEO_ID,
+        range: getVideoAudience.query.parse({ range: asked ?? undefined }).range,
+        from: '2026-10-01',
+        to: '2026-10-30',
+        devices,
+      });
+    }),
+    mockEndpoint(getVideoBenchmark, () => HttpResponse.json(videoBenchmark(peerCount))),
+    mockEndpoint(getVideo, () => HttpResponse.json(video({ durationMs }))),
   ];
-  return { handlers, requests };
+  return { handlers, requests, audienceRanges };
 }
 
 export function serveAnalytics(fixture: AnalyticsFixture = {}) {

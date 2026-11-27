@@ -1,10 +1,10 @@
-import { EmptyState, SectionError } from '@vp/components';
-import { cn, Skeleton, useUiCopy } from '@vp/ui';
+import { type ChartSeries, EmptyState, SectionError, seriesColor } from '@kit/components';
+import { cn, Skeleton, useUiCopy } from '@kit/ui';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
+import { useT } from '#app/lib/messages';
 import { ChartFrameContext, useChartFrame } from './chart-frame.context';
 import { chartFrameStyles } from './chart-frame.variants';
-import type { ChartFrameSize, ChartFrameStatus, ChartSeries } from './types';
-import { seriesColor } from './utils/series-color';
+import type { ChartFrameSize, ChartFrameStatus } from './types';
 
 const SKELETON_GRIDLINES = ['top', 'upper', 'middle', 'lower', 'base'];
 
@@ -64,7 +64,8 @@ export function ChartFrameTitle({ className, ...props }: ComponentPropsWithRef<'
 
 export function ChartFrameLegend({ className, ...props }: ComponentPropsWithRef<'fieldset'>) {
   const { size } = useChartFrame('Legend');
-  const { legend } = useUiCopy();
+  const { tOr } = useT();
+  const legend = tOr('appUi.legend', {}, '');
 
   return (
     <fieldset

@@ -1,4 +1,4 @@
-import { appearance } from '@vp/ui/appearance/registry';
+import { appearance } from '@kit/ui/appearance/registry';
 import { themeColorMetas } from '../theme-color';
 
 const [sand, nocturne] = appearance.themes;

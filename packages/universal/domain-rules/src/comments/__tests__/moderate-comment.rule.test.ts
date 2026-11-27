@@ -1,6 +1,7 @@
+import { isErr, isOk } from '@kit/result';
+import type { CommentHost } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, isOk } from '@vp/result';
 import {
   ADMIN,
   AUTHOR,
@@ -13,6 +14,7 @@ import {
 import { decideCommentDelete, decideCommentPin } from '../moderate-comment.rule';
 
 const video = aVideo();
+const host: CommentHost = { type: 'video', video };
 const comment = aComment();
 
 describe('@vp/domain-rules: decideCommentDelete', () => {
@@ -22,7 +24,7 @@ describe('@vp/domain-rules: decideCommentDelete', () => {
     { scenario: 'a moderator', actor: MODERATOR },
     { scenario: 'an admin', actor: ADMIN },
   ])('lets $scenario delete the comment', ({ actor }) => {
-    const result = decideCommentDelete({ actor, comment, commentId: comment.id, video });
+    const result = decideCommentDelete({ actor, comment, commentId: comment.id, host });
 
     expect(isOk(result) && result.value).toBe(comment);
   });
@@ -31,20 +33,20 @@ describe('@vp/domain-rules: decideCommentDelete', () => {
     { scenario: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },
     { scenario: 'a stranger', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
   ])('refuses $scenario with $code', ({ actor, code }) => {
-    const result = decideCommentDelete({ actor, comment, commentId: comment.id, video });
+    const result = decideCommentDelete({ actor, comment, commentId: comment.id, host });
 
     expect(isErr(result) && result.error.code).toBe(code);
   });
 
   it.each([
-    { scenario: 'an absent comment', target: null, under: video },
+    { scenario: 'an absent comment', target: null, under: host },
     { scenario: 'a comment whose video is gone', target: comment, under: null },
   ])('reports $scenario as COMMENT_NOT_FOUND', ({ target, under }) => {
     const result = decideCommentDelete({
       actor: AUTHOR,
       comment: target,
       commentId: 'comment-1',
-      video: under,
+      host: under,
     });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.COMMENT_NOT_FOUND);
@@ -56,7 +58,7 @@ describe('@vp/domain-rules: decideCommentPin', () => {
     { scenario: 'the video owner', actor: OWNER },
     { scenario: 'an admin', actor: ADMIN },
   ])('lets $scenario pin a top-level comment', ({ actor }) => {
-    const result = decideCommentPin({ actor, comment, commentId: comment.id, video });
+    const result = decideCommentPin({ actor, comment, commentId: comment.id, host });
 
     expect(isOk(result) && result.value).toBe(comment);
   });
@@ -66,21 +68,23 @@ describe('@vp/domain-rules: decideCommentPin', () => {
     { scenario: 'the author', actor: AUTHOR, code: ErrorCodes.FORBIDDEN },
     { scenario: 'a moderator', actor: MODERATOR, code: ErrorCodes.FORBIDDEN },
   ])('refuses $scenario with $code', ({ actor, code }) => {
-    const result = decideCommentPin({ actor, comment, commentId: comment.id, video });
+    const result = decideCommentPin({ actor, comment, commentId: comment.id, host });
 
     expect(isErr(result) && result.error.code).toBe(code);
   });
 
-  it('refuses to pin a reply', () => {
-    const reply = aComment({ parentId: 'root-1' });
-
-    const result = decideCommentPin({ actor: OWNER, comment: reply, commentId: reply.id, video });
+  it.each([
+    { scenario: 'a reply', target: aComment({ parentId: 'root-1' }) },
+    { scenario: 'a held comment', target: aComment({ moderationState: 'held' }) },
+    { scenario: 'a hidden comment', target: aComment({ moderationState: 'hidden' }) },
+  ])('refuses to pin $scenario', ({ target }) => {
+    const result = decideCommentPin({ actor: OWNER, comment: target, commentId: target.id, host });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.COMMENT_NOT_PINNABLE);
   });
 
   it('reports an absent comment as COMMENT_NOT_FOUND', () => {
-    const result = decideCommentPin({ actor: OWNER, comment: null, commentId: 'gone', video });
+    const result = decideCommentPin({ actor: OWNER, comment: null, commentId: 'gone', host });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.COMMENT_NOT_FOUND);
   });

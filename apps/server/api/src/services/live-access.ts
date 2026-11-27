@@ -1,3 +1,4 @@
+import { err, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelRepositoryPort,
   LiveStreamRepositoryPort,
@@ -12,7 +13,6 @@ import {
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, ok, type Result } from '@vp/result';
 
 export interface LiveAccessDeps {
   liveStreams: LiveStreamRepositoryPort;

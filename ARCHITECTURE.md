@@ -19,8 +19,9 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 ## 2. Directory Layout
 
-Shared code sits under `packages/<tier>/` and apps under `apps/<tier>/`, where the directory **is** the runtime tier
-(Invariant 5).
+Shared code sits under `packages/<tier>/` (app packages) or `packages/platform/<tier>/` (platform packages) and apps
+under `apps/<tier>/`, where the directory **is** the runtime tier (Invariant 5) and `platform/` is the scope
+(Invariant 11).
 
 ```
 taitube-platform/
@@ -31,25 +32,32 @@ taitube-platform/
 │   └── client/                     # browser only
 │       └── web/                    # Taitube web client (TanStack Start, React 19)
 │
-├── packages/universal/             # runs in a browser AND on a server
+├── packages/platform/              # reusable by a second app, names no @vp package (Invariant 11)
+│   ├── universal/                  # @kit/appearance, design-tokens, di, errors, i18n, intl, machine, pagination,
+│   │                               #   permissions, primitives, result, runtime, tsconfig, validation
+│   ├── client/                     # @kit/components, forms, intl-react, query, security-headers, ui,
+│   │                               #   web-telemetry, web-testing
+│   └── server/                     # @kit/compose-autoscaler, composition, concurrency, config, dev-token, keyspace,
+│                                   #   logger, object-storage, observability, ports, testing, vite-preset
+│
+├── packages/universal/             # app packages that run in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
-│   ├── design-tokens/              # @vp/design-tokens - the token group schemas of the design system
 │   ├── domain/                     # @vp/domain - entities, value objects, status vocabulary, ranking policy
 │   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
-│   ├── errors/                     # @vp/errors - the ErrorCode vocabulary, failures, RFC 9457 mapping
-│   ├── intl/                       # @vp/intl - every user-facing format, on Intl, context as an argument
-│   ├── messages/                   # @vp/messages - typed dt()/t, the en catalogue, ERROR_COPY
-│   ├── pagination/                 # @vp/pagination - the one keyset Paginator and cursor codec
-│   ├── permissions/                # @vp/permissions - the pure CASL authorization engine
-│   ├── result/                     # @vp/result - Result, tryCatch/fromPromise, ignore
-│   ├── tsconfig/                   # @vp/tsconfig - base / server / universal / client / spec presets
-│   └── validation/                 # @vp/validation - pure rules over submitted input
+│   ├── errors/                     # @vp/errors - the app's error codes, ErrorCode vocabulary, RFC 9457 mapping
+│   ├── intl-formats/               # @vp/intl-formats - the app's format presets
+│   ├── shared-messages/            # @vp/shared-messages - copy shared by both apps, the locale list, the app engine
+│   ├── permissions/                # @vp/permissions - the app's CASL rules
+│   └── validation/                 # @vp/validation - the app's rules over submitted input
 │
-├── packages/client/                # browser only
+├── packages/client/                # app packages, browser only
 │   ├── api-client/                 # @vp/api-client - typed client over @vp/api-contracts
-│   └── intl-react/                 # @vp/intl-react - IntlProvider, useT, useFormat, <Format>
+│   ├── permissions-react/          # @vp/permissions-react - <Can> and the ability hooks
+│   ├── queries/                    # @vp/queries - query factories and the session over the typed client
+│   ├── web-testing/                # @vp/web-testing - spec helpers bound to this product's client
+│   └── workbench/                  # @vp/workbench - Storybook over every app's stories
 │
-├── packages/server/                # Node/Bun only
+├── packages/server/                # app packages, Node/Bun only
 │   ├── core/                       # @vp/core - abstract ports and repository contracts
 │   │   ├── ports/                  # authorization, cache-client, category-cache, database-client,
 │   │   │                           #   flow-producer, health-checkable, job-queue, multipart-storage,
@@ -65,20 +73,17 @@ taitube-platform/
 │   │   ├── postgres/               # repositories/, mappers/, scopes/ (CASL rules -> SQL, keyset)
 │   │   ├── redis/                  # RedisCacheClient and the category, reaction, subscription, comment and playhead caches
 │   │   └── s3/                     # S3StorageClient, S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── composition/                # @vp/composition - Container, tokens, shutdownOnce, exitOnSignals
-│   ├── concurrency/                # @vp/concurrency - Singleflight
-│   ├── config/                     # @vp/config - loadEnv(), the one reader of process.env
 │   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
 │   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
-│   ├── events/                     # @vp/events - publishVideoEvent, SSE framing, channels, cache keys
+│   ├── events/                     # @vp/events - publishVideoEvent, channels, cache keys
 │   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
+│   ├── fingerprint/                # @vp/fingerprint - frame dHash, Chromaprint, the offset-vote matcher
 │   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
-│   ├── logger/                     # @vp/logger - createLogger (pino), json and pretty formats
-│   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
+│   ├── pipeline-metrics/           # @vp/pipeline-metrics - the product's Prometheus metrics and tracer name
 │   ├── storage/                    # @vp/storage - the S3 object key layout
-│   ├── testing/                    # @vp/testing - shared vitest config, fixtures, assertion helpers
+│   ├── testing-fixtures/           # @vp/testing-fixtures - the seeded rows, the production-shaped env, the infra specs
 │   ├── whisper/                    # @vp/whisper - whisper.cpp runner, caption windows, WebVTT
-│   └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # developer CLIs
+│   └── demo/ deploy/ dev-identity/ stack/ gen-video/ lighthouse/ upload-client/   # developer tooling and CLIs
 │
 └── tests/
     ├── architecture/               # the executable form of section 5 - see section 6
@@ -110,17 +115,19 @@ answer with a `HeadBucket` on the raw bucket.
 ### Domain Repositories (`@vp/core/repositories`)
 - **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `listByOwner`, `listPublic`, `updateMetadata` (optimistic version check), `transition` (atomic CAS that appends to `video_events` and announces the new status to the owner in `user_events`), `scan`, `hardDelete`, `countByStatus`, `countInFlightByOwner`, `updateReactionCounters`.
 - **`UploadRepository`**: `findById`, `findByVideoId`, `findWithVideo`, `create`, `updateStatus`.
-- **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `findByVideoId`, `countRunningStale`.
+- **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `reset` (a reprocess forgets the previous run's steps), `findByVideoId`, `countRunningStale`.
 - **`RenditionRepository`**: `create`, `findByVideoId`, `findByVideoIds`, `update`.
 - **`EventRepository`**: `create`, `findByVideoId`, `findAfterId`, `getLatestEventId`.
 - **`UserEventRepository`**: `append` (the event and the outbox row that publishes it, in one transaction), `listFrom`, `prune`.
 - **`UserRepository`**: `findById`, `upsert`.
-- **`DlqRepository`**: `create`, `findById`, `list`, `updateStatus`.
+- **`DlqRepository`**: `create`, `findById`, `list`, `transition` (a compare-and-set over `DLQ_ENTRY`).
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`LiveStreamRepositoryPort`**: `ensureIdle`, `findById`, `findByKey`, `findOpenByChannel`, `findByVideoId`, `goLive` (`IDLE -> LIVE` with its `LIVE` video, the video event and the outbox rows in one transaction), `end` (`LIVE -> ENDED`, handing the stream key to the next `IDLE` row), `update` (SDD ADR-29).
+- **`ScreeningRepository`** and **`FingerprintRepository`**: the result of an upload screening and the four edges that touch `HELD` (`hold`, `approve`, `reject`, `appeal`, each a CAS on the video status that appends its `video_events` row), `dismiss`, `raiseFlag`, `listCases` and the evidence retention; and the frame hashes and audio terms behind the duplicate lookup (SDD §3.2, §5).
+- **`WatchPartyRoomRepositoryPort`** and its eight siblings (`WatchPartyRoleRepositoryPort`, `WatchPartyMemberRepositoryPort`, `WatchPartyQueueRepositoryPort`, `WatchPartyMessageRepositoryPort`, `WatchPartyInviteRepositoryPort`, `WatchPartyInviteLinkRepositoryPort`, `WatchPartyPersonalControlRepositoryPort`, `WatchPartyHousekeepingRepositoryPort`): rooms with the room clock's compare-and-set on `playback_version` and `roles_version`, roles and their assignments, seats and bans, the shared queue, chat lines, invites and invite links, personal controls, and the sweep's reads and purges (SDD §5.4, §10.7, ADR-31).
 - **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`).
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `searchHistory`, `recommendationFeedback`, `rising`, `clips`, `channelFeatured`, `search`, `liveStreams`, `screenings`, `fingerprints`, `watchPartyRooms`, `watchPartyRoles`, `watchPartyMembers`, `watchPartyQueue`, `watchPartyMessages`, `watchPartyInvites`, `watchPartyInviteLinks`, `watchPartyControls`, `watchPartyHousekeeping`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -128,6 +135,8 @@ rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-
 - `getAbility()`: returns the active `@casl/ability` instance.
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
+
+A watch party room is authorised apart from this port: `getWatchPartyPermissions(user, viewer)` in `@vp/permissions` builds a room-scoped ability from the viewer's roles in the room (the closed registry of SDD §10.7), a guest clamped to its ceiling and a platform MODERATOR or ADMIN given the moderation extras. Every REST route and socket frame of a room asks that ability, never a user id or a role inline.
 
 ### `TokenVerifier`
 `verify(token)` answers `Result<Principal, AuthFailure>`. The JWKS adapter checks the signature, `iss`,
@@ -151,6 +160,13 @@ Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscrib
 The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path a publisher sends on:
 `isPublishing(path)` and `kick(path)`, both answering `LiveGatewayUnavailable` when it cannot be reached.
 
+### `WatchPartyGatePort`, `WatchPartyPresencePort`, `PartyGuestSessionsPort` & `PasswordHasherPort`
+The short-lived, cross-pod state of a watch party (SDD §10.7, ADR-31), each over Redis and each with an in-memory double:
+- `WatchPartyGatePort`: `issueTicket` / `redeemTicket` (the one-time socket ticket, a second redeem answers `null`), `consume` / `check` / `reset` (the per-key budgets every pod counts against) and the slow-mode, roles-version and skip-vote keys.
+- `WatchPartyPresencePort`: `admit` (capacity, one Lua script), `touch`, `leave`, `members`; a member that misses three keepalives stops counting.
+- `PartyGuestSessionsPort`: `issue`, `resolve`, `revoke` for the opaque party credential of a guest or a Discord member, read only on `partyGuest` routes (SDD §11).
+- `PasswordHasherPort`: `hash` and `verify`, scrypt through `node:crypto` (`HashingFailed` on failure).
+
 ### `JobQueue` & `FlowProducerPort`
 - `JobQueue`: `add`, `process`, `getName`, `getJobState`, `isPaused`, `pause`, `resume`, `getJobCounts`
   (over `QUEUE_JOB_STATES`), `getJobs`, `upsertJobScheduler`, `getJobSchedulers`, `close`, plus the
@@ -173,6 +189,10 @@ The ingest gateway's control plane (MediaMTX, SDD ADR-29), addressed by the path
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
 | `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
 | `LiveGatewayPort` | `MediaMtxLiveGateway` | `InMemoryLiveGateway` |
+| `WatchPartyGatePort` | `RedisWatchPartyGateAdapter` | `InMemoryWatchPartyGate` |
+| `WatchPartyPresencePort` | `RedisWatchPartyPresenceAdapter` | `InMemoryWatchPartyPresence` |
+| `PartyGuestSessionsPort` | `RedisPartyGuestSessionsAdapter` | `InMemoryPartyGuestSessions` |
+| `PasswordHasherPort` | `ScryptPasswordHasher` | `ScryptPasswordHasher` (no I/O, shared) |
 
 Both families wrap storage in `MeteredStorageClient` / `MeteredMultipartStorage`, and share
 `CaslAuthorizationAdapter`, the token verifier (`JwksTokenVerifier` or `DevTokenVerifier`, chosen by
@@ -198,7 +218,7 @@ in directly.
 - See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
 ### Invariant 3: Autonomous In-Memory Test Doubles
-- In-memory test doubles manage self-contained state and expose `.clear()` (`in-memory-doubles.test.ts`).
+- In-memory test doubles manage self-contained state and expose `.clear()` (`in-memory-doubles.test.ts`), and tell time from an injected clock rather than `Date.now()` (`in-memory-clock.test.ts`).
 - Repositories interact exclusively via port interfaces, never by reaching into foreign private collections.
 
 ### Invariant 4: Deep Domain Services vs Thin Transport Routes
@@ -220,11 +240,14 @@ packages/server/      Node/Bun only
 packages/client/      browser only
 ```
 
+Each tier also exists under `packages/platform/`, for the packages a second app could use unchanged (Invariant 11).
+The table lists the app packages and the platform packages of each tier.
+
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
-| `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
+| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`, `vite-preset` | `universal` + `server` |
+| `client` | `api-client`, `permissions-react`, `queries`, `web-testing`, `workbench`; platform: `components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
 `apps/client/web` and `apps/client/studio` are `client`. No app is `universal`, and an app anywhere else has no tier.
@@ -243,9 +266,9 @@ portability.
 | Layer | Meaning | Packages |
 |---|---|---|
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
-| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
+| T2 | Contracts and policy, and the CLIs that log through `@kit/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `forms`, `intl-react` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `fingerprint`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
@@ -257,8 +280,8 @@ check vacuous.
 
 **`devDependencies` count.** A test-only edge still resolves in CI, and a type it carries still lands in the
 emitted `.d.ts`, where `pnpm deploy --prod` will not be able to resolve it. The exceptions are `BUILD_TOOLING`
-in `scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory and
-fixtures), `@vp/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers) ship
+in `scripts/check-boundaries.ts`: `@kit/tsconfig` (JSON presets), `@kit/testing` (a vitest config factory and
+spec helpers), `@vp/testing-fixtures` (the seeded rows and the shared environment), `@kit/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers) ship
 no code, so nothing they are named by can reach a runtime bundle. The exemption covers a dev edge only.
 
 #### How the boundary is enforced
@@ -272,10 +295,10 @@ Three mechanisms, strongest first:
    direction and that every manifest sits in a tier directory and declares no `vp.tier`, over dependencies,
    peerDependencies and devDependencies alike. Both `pnpm build` and `pnpm typecheck` run it first, so a bad
    *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
-3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
+3. **The type system.** The matching `@kit/tsconfig` preset gives `universal` and `client` packages `lib` with
    `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
    every tier; `apps/client/web` reads the browser-tier packages from source through Vite, which resolves them as they are. Specs run under
-   `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
+   `@kit/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
    `@types/node` back into the package's program.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite — see section 6.
@@ -288,9 +311,7 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
   differences are in [apps/client/studio/AGENTS.md](apps/client/studio/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
-- Every production source with runtime code has a spec of the same name beside it in `__tests__/`,
-  asserted by `tests/architecture/test-correspondence.test.ts` with no exception list (section 6). A module that erases to nothing - types, interfaces, an abstract class of abstract members -
-  is not a target: its spec could only assert that TypeScript compiles.
+- Specs cover behaviour that can break, and the unit run keeps an 85% coverage floor. No spec is required per source file, and none for types, constants, barrels, re-exports, thin wiring or generated code (`docs/standards/testing.md`).
 - No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.
 - Strict 1:1 parity between local developer environments and remote CI pipelines.
 - Unit tests execute against in-memory doubles; database durability tests execute against PostgreSQL.
@@ -300,7 +321,7 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 ### Invariant 7: Results at the Domain Seam
 
-A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
+A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@kit/result`
 instead of throwing it (SDD ADR-24), and only three places unwrap one: `sendResult`, and `sendSocketResult` on an
 open WebSocket, in `apps/server/api/src/routes/`, and `instrument` in `apps/server/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
 the exception.
@@ -309,7 +330,7 @@ the exception.
   `@vp/domain-rules` (T3) sees input plus an entity plus policy. Neither awaits, logs, formats or throws.
 - **Absence is not a failure.** `findById` answers `ok(null)`. Whether a missing row is an error belongs to
   the rule that asked, not the store that looked.
-- **`catch` is confined to the boundary that converts a throw** - `tryCatch` / `fromPromise` in `@vp/result`
+- **`catch` is confined to the boundary that converts a throw** - `tryCatch` / `fromPromise` in `@kit/result`
   and the adapters that call them at the exact line the SDK is called.
 - **The discriminant is the existing `ErrorCode`**, so no second error vocabulary appears. `PROBLEM_STATUS`
   and `RETRY_CLASS` are both total over it.
@@ -320,10 +341,10 @@ Authority: [docs/standards/error-handling.md](docs/standards/error-handling.md).
 
 ### Invariant 8: Configuration Is a Value, Dependencies Are Total
 
-Both deployables build one object graph from one `Container` (`@vp/composition`, SDD ADR-25) over one
+Both deployables build one object graph from one `Container` (`@kit/composition`, SDD ADR-25) over one
 `AppConfig` value, and nothing below the composition modules reaches around it.
 
-- **`process.env` is read where a process starts.** `loadEnv()` in `@vp/config` parses it once at
+- **`process.env` is read where a process starts.** `loadEnv()` in `@kit/config` parses it once at
   `apps/*/*/src/main.ts`; `toAppConfig()` in `@vp/env-schema` shapes it for consumers. Services, stages and
   adapters take configuration as a value.
 - **The schema is closed in both directions.** Every key the deployables read is declared, every declared
@@ -339,7 +360,7 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
 
 - `composeApp()` / `composeWorker()` construct; `container.start()` runs I/O. A test that builds the app
   opens no subscription and leaves no timer.
-- On `SIGTERM`/`SIGINT` both processes run `shutdownOnce` from `@vp/composition`: readiness flips first,
+- On `SIGTERM`/`SIGINT` both processes run `shutdownOnce` from `@kit/composition`: readiness flips first,
   the listener keeps accepting for the drain delay, then the server closes and the container disposes in
   reverse construction order. A close that outlives the grace window is abandoned and the pending disposer
   is named in the log.
@@ -347,20 +368,42 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
 - `terminationGracePeriodSeconds`, the `preStop` hook, compose's `stop_grace_period` and each process's
   grace window are derived from one another (SDD ADR-25).
 
-### Invariant 10: User-Facing Formatting Happens in `@vp/intl`
+### Invariant 10: User-Facing Formatting Happens in `@kit/intl`
 
-Every number, date, duration, list and count a person reads is formatted by `@vp/intl` (SDD ADR-26), and
-every word around it comes from `@vp/messages`.
+Every number, date, duration, list and count a person reads is formatted by `@kit/intl` (SDD ADR-26), and
+every word around it comes from a catalogue: each client app's own (`src/lib/messages/`) or
+`@vp/shared-messages` for the words both apps render.
 
-- **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@vp/intl`, and no
-  `toFixed` as display text in browser-reachable code. `@vp/intl-react`'s `browser-environment.ts` reads the
+- **No ad-hoc formatting.** No `toLocale*` call and no hand-built `Intl` object outside `@kit/intl`, and no
+  `toFixed` as display text in browser-reachable code. `@kit/intl-react`'s `browser-environment.ts` reads the
   runtime's time zone and is the one named exception.
-- **The context is an argument.** Neither `@vp/intl` nor `@vp/messages` reads `navigator`, the clock,
+- **The context is an argument.** Neither `@kit/intl` nor a catalogue reads `navigator`, the clock,
   `process` or a `toLocale*` method, so a server render and its hydration produce the same text.
-- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source or manifest names
-  `@vp/messages`; the client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
+- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source imports a
+  catalogue; the server reads only `@vp/shared-messages/locales`, the locale list. The client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
 
 Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md).
+
+### Invariant 11: Platform Packages Never Name the App
+
+A package under `packages/platform/<tier>/` (`@kit/*`) is reusable by a second app and extractable on its own.
+Whether a package belongs there is the first question for any new one (`packages/AGENTS.md`, "Platform or app").
+
+- **It never depends on, imports or names a `@vp/*` package**: not in a manifest field, an import, a `vi.mock`, a
+  tsconfig path, an alias, a `setupFiles` string, a doc or a test string. There is no allowlist and no carve-out.
+  Where it needs a value the app owns, the dependency is inverted: a required typed parameter, port or prop, or a
+  `@kit/di` token the app provides at its composition root. A generic piece an app package holds moves into a `@kit`
+  package; copying it is never the fix.
+- **It owns the codes it emits and none of the app's**, holds no copy, no product value and no import-time
+  registration, and exposes only what its `exports` map lists.
+- **Its surface is reviewed**: `api/<name>.api.txt` from `pnpm gen:api`, a changelog entry and a version bump for any
+  change, extension rather than edit, a type-level spec for every public generic, and no `any`, assertion, `!` or
+  `@ts-ignore` in its source.
+- **It works outside the repository**: `pnpm check:extractable` (`scripts/check-extractable.ts`, CI job `extractable`)
+  installs each closure offline outside the repository and runs its checks, and `tests/fixtures/second-app/`
+  registers its own values against packed tarballs.
+
+Authority: [docs/standards/platform-packages.md](docs/standards/platform-packages.md). Section 6 lists the assertions.
 
 ## 6. Verification & Enforcement
 
@@ -422,20 +465,32 @@ fails.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package |
-| `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
+| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, or `packages/platform/<tier>/`, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked; a package under `packages/platform/` depends, peer-depends and dev-depends only on platform packages, build tooling included, with no allowance for a package `scripts/package-moves.json` still lists; no dependency, peer or dev spec of a platform manifest is a `link:`, `file:` or `workspace:` path that resolves outside `packages/platform/` | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package; a platform package depending, dev-depending and dev-depending as build tooling on an app package, and one depending on an app package that `scripts/package-moves.json` sends to `@kit/*` (still rejected); a platform `client` package depending on a platform `server` one; a platform manifest entry `link:`, `file:` and `workspace:` pathing into app code (read through `load()` from a temporary tree too), and a path to a platform sibling that passes |
+| `platform-no-app-data.test.ts` | in the non-test source of every package under `packages/platform/` (whichever exist, through `workspace-packages.ts`): no string, template part or JSX text names the product (`taitube`, `video-pipeline`, `vp-dev`, `vp.`, `vp_`), equals a key of `@vp/env-schema`'s `AppEnvSchema`, or is a route path, and no import (`import`, `export from`, `import()`, `require`) names an app-side package, an app or an unknown `@vp/*` package (compiler scanner and AST) | `'taitube'`, `` `video-pipeline/${x}` ``, `'vp-dev'`, `'vp.session'`, `'vp_requests_total'`, JSX text naming the product, `'DATABASE_URL'`, `'/v1/categories'`, and imports of an app package, an app, a dynamic app import and `@vp/ghost`; `rsvp.yes` and a bare `/` pass |
+| `platform-never-names-app.test.ts` | every git-tracked file under `packages/platform/`, of any extension (manifests, source, tsconfigs, configs, markdown, `api/*.api.txt`, CHANGELOGs), never contains the substring `@vp/`: no dependency, import, `vi.mock`, alias, `setupFiles` string, tsconfig path, doc mention or test data names an app package (the holy rule of `packages/AGENTS.md`); the failure names the file, the line and the rule | one pure function over `{ path, text }` pairs, planted with a manifest dependency, an import, a `setupFiles` string, a tsconfig path and an `AGENTS.md` mention; `@kit/*` imports, `rsvp/yes` and app-neutral prose pass |
+| `platform-no-copy.test.ts` | AST over platform non-test source: no `dt(` call (callee or method `dt`, tagged template included), no JSX text with a letter, and no `label`, `title`, `aria-label`, `placeholder` or `message` property or JSX attribute whose value is a plain sentence (two words or a closing full stop; a token, key, constant or identifier is not); no tracked file in a platform package is a data file (`.json` other than manifests and tsconfigs, `.po`, `.xlf`, `.ftl`, ...) or sits in a `locales`, `catalogues`, `translations`, `messages` or `xx-XX` directory | `dt('{count:number} views')`, `engine.dt(...)`, `<button>Save changes</button>`, `<b>Close</b>`, `aria-label="Close the dialog"`, `placeholder={'Search videos'}`, `{ label: 'Sign in to continue' }`, a `message` template, and `en.json`, `locales/en.ts`, `pl-PL/a.ts`, `copy.po` |
+| `platform-no-deep-imports.test.ts` | over every tracked `.ts` and `.tsx` file in `apps`, `packages`, `scripts` and `tests`: no import of a platform package names a subpath its `exports` does not list (`@kit/<pkg>/src/...` included; `*` patterns honoured); over every file in a platform package: no relative import resolves outside the package root (compiler scanner) | `@kit/di/src/registry`, `@kit/di/dist/index`, `@kit/runtime/server`, `@kit/ui/icons` against `icons/*`, `vi.mock(import('@kit/runtime/src/node'))`, and relative imports into a sibling package and the repository root |
+| `platform-no-import-time-registration.test.ts` | AST over platform non-test source: no top-level statement (blocks, `if`, immediately invoked functions included; function, method and class bodies excluded) calls `provide*`, `define*` or `register*` with its result dropped, and none calls `register*` at all; a bound `defineKind(...)` or `provide(token, value)` builds a value and passes | `provide(Locale, 'en');`, `defineErrorCodes(...)`, `registry.register(kind)`, `const off = registerKind(kind)`, `await defineLocale('en')`, a call in a top-level block, in an immediately invoked arrow, in a default export |
+| `platform-manifest.test.ts` | every package under `packages/platform/` has a `name`, a semver `version`, an `exports` map with a `.` entry, `types`, `sideEffects: false`, `"type": "module"`, `README.md`, `AGENTS.md`, `api/<name>.api.txt`, a `CHANGELOG.md` with an entry for its `version`, a `tsconfig.json`, and every `tsconfig*.json` extends only a sibling `./tsconfig*.json` or a preset of `@kit/tsconfig` (the package `package-moves.json` names, `@kit/tsconfig`, once it exists); its `dependencies` are workspace packages only (third-party libraries are peers), and no dependency, peer or dev edge names an app package (`dependsOnAppPackage`, the function `pnpm boundaries` uses) | a manifest missing each field in turn, `sideEffects: true`, a changelog without the version, a tsconfig extending the repository base or another package, a third-party runtime dependency, and an app package as dependency, peer and devDependency |
+| `platform-type-strictness.test.ts` | AST over platform non-test source, with no exception list: no `any`, no type assertion (`as T`, `<T>x`) except `as const`, no non-null `!`, no `@ts-ignore` or `@ts-nocheck` | `a: any`, `Array<any>`, `x as string`, `x as unknown as string`, `<string>x`, `map.get(k)!`, `map.get(k)!.size`, both directives; `as const`, `satisfies`, a mapped-type `as` and `@ts-expect-error` pass |
+| `package-moves.test.ts` | type-aware, on the shared `ts.Program`: every key of `scripts/package-moves.json` is a workspace package; a split package lists every export entry its manifest declares, and each listed entry names exactly the exports the entry has today, each with its destination package | planted moves: a package no manifest declares; an unlisted entry, an export with no destination and one the package no longer exports |
+| `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `onnxruntime-node`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
 | `lockfile-closure.test.ts` | every `apps/client/*` app's runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
-| `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
+| `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@kit/testing` edge that drags in `@vp/job-contracts` |
 | `repo-files.test.ts` | the index reader every text ratchet scans through: `trackedFiles` lists, for a `:(glob)` pathspec, exactly the tracked files `matchesGlob` matches, and `:(exclude,glob)` drops its matches | none - compares against `matchesGlob` over `git ls-files` |
 | `client-app-duplicates.test.ts` | no `.ts`, `.tsx`, `.css` or `.scss` under the `src/` of one `apps/client/*` app is byte-identical to one under another (specs, `export *` barrels and the two Start entry files `src/router.tsx` and `src/start.ts` aside); the client apps are read from their manifests, in `client-apps.ts`; the files at one path in two apps that differ by fewer than 10 lines, and share more than they differ, stay at a per-app count that only goes down | the same `export const a = 1;` planted in both apps, while the same bytes twice in one app pass; a five-line file with one line changed |
-| `shared-unions.test.ts` | AST over production source in `@vp/ui`, `@vp/components` and each `apps/client/*/src/components/`, `types.ts` aside: no member of a `*Props` interface or alias, or of a type literal written onto a parameter, spells a union of two or more string literals; a shared union is narrowed in the folder's `types.ts` | `interface ChipProps { size?: 'sm' \| 'md'; }`, `(props: { variant: 'inline' \| 'palette' })`, while `Omit<X, 'side' \| 'align'>` passes |
+| `shared-unions.test.ts` | AST over production source in `@kit/ui`, `@kit/components` and each `apps/client/*/src/components/`, `types.ts` aside: no member of a `*Props` interface or alias, or of a type literal written onto a parameter, spells a union of two or more string literals; a shared union is narrowed in the folder's `types.ts` | `interface ChipProps { size?: 'sm' \| 'md'; }`, `(props: { variant: 'inline' \| 'palette' })`, while `Omit<X, 'side' \| 'align'>` passes |
 | `live-role-confined.test.ts` | regex over production source of the live surfaces (web `features/live/`, `components/live/`, the `/live` routes, the Live now shelf and the player's control bar; studio `features/live/`, `components/live/` and the `/live` and overlay routes): the `live` tone sits only on a `Badge`, no `live` colour utility or `var(--live)` appears (its ink, `on-live`, may), and no red is written as a value (a hex, `rgb()`/`hsl()`/`oklch()` or a `red`/`rose` palette class), so the live badge is the one red thing on a live page | a `bg-live` ground, `var(--live)`, `tone="live"` on a `Button`, a red hex and `text-red-600`, while the live badge, a badge live only at the edge and `text-on-live` pass |
+| `party-guest-confined.test.ts` | regex over `packages/universal/api-contracts/src/`: `partyGuest: true` appears only in a `watch-party*.ts` / `watch-parties.ts` contract, so a guest's or a Discord member's party credential is read on the watch party routes alone and every other route sees an anonymous caller | `partyGuest: true` planted in `me.ts`, while the watch party contracts pass |
 | `settings-appearance-cookie.test.ts` | regex over production source under `apps/client/web/src/features/account/`: no `vp.appearance` cookie name and no call of `requestAppearancePreference`, `saveAppearancePreference` or `rewriteLegacyAppearance`, so the appearance engine stays the one reader and writer of its cookie | `readCookie('vp.appearance')` in a settings row |
-| `shared-components-used-by-both-apps.test.ts` | AST: every component `packages/client/components/src/index.ts` re-exports has at least one value export imported from `@vp/components` by the production source of every `apps/client/*` app; one app alone moves it to that app's kit | a planted `PageHeader` that only web imports, studio importing it as a type only |
-| `component-folders.test.ts` | every `@vp/ui` primitive (`primitives/<name>/`), `@vp/components` component (a folder with an `index.ts`) and app-kit component (`apps/client/*/src/components/<area>/<name>/`) holds `<name>.tsx`, `index.ts`, `__stories__/<name>.stories.tsx` (none under `components/player/`) and `__tests__/<name>.dom.test.tsx`, and beside them only kebab-case `.ts`/`.tsx` sources (`.context.ts`, `.variants.ts`, `.lazy.ts`, `types.ts`, `constants.ts`, a sibling part), `hooks/use-*.ts`, `utils/*.ts` and subcomponents under `components/<name>/` in the same shape without a story; no source sits loose in a kit; the findings still open are listed and the list only shrinks | a folder without its story and spec, a `.module.css` in one, a nested folder, a story beside its component or in a subcomponent, a hook not named `use-*`, `route-fallbacks.tsx` loose in a kit |
-| `token-sets-stay-data.test.ts` | no source in `apps` or `packages` outside `packages/client/ui/src/tokens/` and `src/themes/` calls `defineTokenSet`, `defineTheme` or `defineRef`, and none but `appearance/registry.ts` imports a theme or a set (`@vp/ui/themes/<name>`, `themes/<name>`, `tokens/<group>/<id>`); no client stylesheet or inline style gives a variable the generated `themes.css` or `sets.css` writes a value, a `var(--token)` alias aside (regex) | `defineTokenSet('radius', 'cozy', {})` in a primitive, `import { nocturne } from '@vp/ui/themes/nocturne'` in an app, `.card { --r-card: 4px; }` |
-| `stylesheets.test.ts` | no tracked `.css`, `.scss`, `.sass`, `.less` or `.styl` file outside `packages/client/ui/src/styles/`, `packages/client/workbench/.storybook/` and `docs/`, with no exception list | `stage.module.css` in a feature, `page-header.scss` in `@vp/components` |
-| `frontend-folder-shape.test.ts` | over the `src/` of every `apps/client/*` app, `@vp/ui` and `@vp/components`: folder names are kebab-case (tool folders such as `__tests__` and the route tree aside), no `pages/`, `modules/`, `shared/`, `common/` or `misc/` folder, a story sits only in `__stories__/`, a spec only under `__tests__/`, and an app holds no stylesheet but `styles/app.css` | a `pages/`, `modules/` and `shared/` folder, a camelCase folder, a story beside its component, a spec outside `__tests__/`, a `.module.css` and a root `studio.css` |
+| `shared-components-used-by-both-apps.test.ts` | AST: every component `packages/platform/client/components/src/index.ts` re-exports has at least one value export imported from `@kit/components` by the production source of every `apps/client/*` app; one app alone moves it to that app's kit | a planted `PageHeader` that only web imports, studio importing it as a type only |
+| `component-folders.test.ts` | every `@kit/ui` primitive (`primitives/<name>/`), `@kit/components` component (a folder with an `index.ts`) and app-kit component (`apps/client/*/src/components/<area>/<name>/`) holds `<name>.tsx`, `index.ts`, `__stories__/<name>.stories.tsx` (none under `components/player/`), and beside them only kebab-case `.ts`/`.tsx` sources (`.context.ts`, `.variants.ts`, `.lazy.ts`, `types.ts`, `constants.ts`, a sibling part), `hooks/use-*.ts`, `utils/*.ts` and subcomponents under `components/<name>/` in the same shape without a story; no source sits loose in a kit; the findings still open are listed and the list only shrinks | a folder without its story, a `.module.css` in one, a nested folder, a story beside its component or in a subcomponent, a hook not named `use-*`, `route-fallbacks.tsx` loose in a kit |
+| `token-sets-stay-data.test.ts` | no source in `apps` or `packages` outside `packages/platform/client/ui/src/tokens/` and `src/themes/` calls `defineTokenSet`, `defineTheme` or `defineRef`, and none but `appearance/registry.ts` imports a theme or a set (`@kit/ui/themes/<name>`, `themes/<name>`, `tokens/<group>/<id>`); no client stylesheet or inline style gives a variable the generated `themes.css` or `sets.css` writes a value, a `var(--token)` alias aside (regex) | `defineTokenSet('radius', 'cozy', {})` in a primitive, `import { nocturne } from '@kit/ui/themes/nocturne'` in an app, `.card { --r-card: 4px; }` |
+| `stylesheets.test.ts` | no tracked `.css`, `.scss`, `.sass`, `.less` or `.styl` file outside `packages/platform/client/ui/src/styles/`, `packages/client/workbench/.storybook/` and `docs/`, with no exception list | `stage.module.css` in a feature, `page-header.scss` in `@kit/components` |
+| `user-select.test.ts` | the one `user-select: none` rule in `@kit/ui`'s `base.css` lists the button, summary, `kbd`, nav link and ARIA roles of a control, the `avatar`, `badge`, `chip`, `kbd`, `label` and `tooltip-content` slots, and the `cursor-pointer` and `touch-none` classes, so no shared variants file that paints a control sits outside it; no per-primitive `select-none` remains in `@kit/ui` or `@kit/components` | a variants file with `cursor-pointer` and a rule without `.cursor-pointer` |
+| `motion.test.ts` | every shared variants file that paints a control (`cursor-pointer`, `touch-none`) has a `transition`, an `animate-` or `motion-enter`; one that moves it (`animate-`, `motion-enter`, a transform transition) has a `motion-reduce` guard; `prefers-reduced-motion: reduce` is read by exactly one media query in the whole stylesheet set, in `base.css` | a variants file with `cursor-pointer` and no transition, a moving one with no guard, a second media query |
+| `surface-roles.test.ts` | `base.css` paints `html` and `body` once from the page background role and sets the colour scheme from `data-mode`; the player container is `data-mode="dark"` on `bg-media`, never a `data-theme` | a second `html` or `body` rule with its own `background`, a player container on `data-theme="dark"` |
+| `frontend-folder-shape.test.ts` | over the `src/` of every `apps/client/*` app, `@kit/ui` and `@kit/components`: folder names are kebab-case (tool folders such as `__tests__` and the route tree aside), no `pages/`, `modules/`, `shared/`, `common/` or `misc/` folder, a story sits only in `__stories__/`, a spec only under `__tests__/`, and an app holds no stylesheet but `styles/app.css` | a `pages/`, `modules/` and `shared/` folder, a camelCase folder, a story beside its component, a spec outside `__tests__/`, a `.module.css` and a root `studio.css` |
 | `frontend-layers.test.ts` | resolves every import of a client app (alias and relative, `import()` and `vi.mock` included) with the compiler API; the import sites from one feature into another, from `components/`, `hooks/`, `utils/`, `lib/` or `integrations/` into a feature, and the features with no `index.ts` stay at a per-app count that only goes down; lint holds the rest of the direction, oxlint `import/no-cycle` over `apps/client/*/src/**` and `no-restricted-imports` over `apps/client/*/src/routes/**` (a route imports a feature through its `index.ts`, specs excepted), both in `lint.config.ts` | in-memory trees on both apps: a feature into another by alias, by a relative path and through a mock, the kit and `lib/` into a feature, a feature with no `index.ts` |
 | `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of every `apps/client/*` app and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
 | `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), not the document each `apps/client/*/src/routes/__root.tsx` renders and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
@@ -443,25 +498,30 @@ fails.
 | `no-process-comments.test.ts` | no comment and no `it`/`test`/`describe`/`suite`/`bench` title names a ticket, an AC, a workstream, a PR number or a numbered step, over `.ts`/`.tsx`/`.js`/`.mjs`/`.mts` in `apps`, `packages`, `scripts` and `tests` (regex prefilter, then the TypeScript parser); `ADR-NN` and `SDD §` stay allowed | `const a = 1; // AC 3`, `describe('Outbox relay (Ticket 30)', ...)` |
 | `react-compiler-opt-outs.test.ts` | every `tests/react-compiler/baseline.json` entry names a tracked file, a reason and a GitHub issue link (the exit condition); every `tests/react-compiler/manual-memo-allowlist.json` entry still memoizes and says why (a `"use no memo"` needs a `// no-memo: <reason>` line above it, which the `house/use-no-memo-reason` lint rule holds) | an entry with no issue link, an allowlisted file with no memo left |
 | `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
-| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it (a `.variants.ts`, `.context.ts` or `constants.ts` part by its own stem or its folder's name; nothing under `__stories__/`), in every tier and `apps/client/*` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
 | `quarantine.test.ts` | `tests/quarantine.json` holds at most five entries, each naming a tracked spec with an `owner`, a `reason`, an `expires` date not yet past and a `ticket`; CI skips a quarantined spec (`pnpm quarantine` prints its vitest `--exclude`, `tests/playwright/config.ts` ignores it) and `pnpm flake-hunt` fails the nightly hunt on a flaky spec the file does not list (the rules live in `scripts/quarantine/entries.ts`) | an entry with no owner, an expired one and a sixth fire, in `scripts/quarantine/__tests__/entries.test.ts` |
-| `unit-timings.test.ts` | `tests/timings/unit.json` lists every unit spec file (every tracked `*.test.ts(x)` outside the architecture, browser, e2e and integration suites) added more than 7 days ago, so the cost sequencer (`scripts/timings/sequencer.ts`) never shards a known spec by the median; `pnpm timings:update --run <id>` regenerates it from a green run | an untimed spec added 8 days ago fires; one added 6 days ago and a timed one do not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
-| `build-tsbuildinfo.test.ts` | every tracked `tsconfig.build.json` under `apps` and `packages` lists `@vp/tsconfig/build.json` in `extends`, so a build and a typecheck keep separate `tsbuildinfo` files (TypeScript's JSONC reader) | `{ "extends": "./tsconfig.json" }` |
-| `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
+| `ecmascript-baseline.test.ts` | every tracked `tsconfig*.json` resolves, through the TypeScript API, to its tier's `target` and ES `lib` from `ecmascript-baseline.ts` (server ES2025; universal and client ES2024 with DOM; the service worker ES2024 with WebWorker; the shared bases set neither), and a config outside every tier is named | a package `tsconfig.json` with `lib: ["ES2023", "DOM"]`, a preset left at ES2022 |
+| `runtime-versions.test.ts` | the Node major agrees across `Dockerfile` `NODE_IMAGE`, `engines.node` and `.nvmrc`, and the Bun minor across `Dockerfile` `BUN_IMAGE` and the `setup-bun` step of `.github/actions/setup-workspace/action.yml` | `.nvmrc` at `25.1` beside `node:24-slim` |
+| `build-tsbuildinfo.test.ts` | every tracked `tsconfig.build.json` under `apps` and `packages` lists `@kit/tsconfig/build.json` in `extends`, so a build and a typecheck keep separate `tsbuildinfo` files (TypeScript's JSONC reader) | `{ "extends": "./tsconfig.json" }` |
+| `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@kit/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
 | `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services/` and `apps/server/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
 | `validation-is-input-only.test.ts` | regex over import specifiers: `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest's dependency groups; `@vp/domain-rules` still declares `@vp/domain` | none - reads the repo |
-| `catch-confinement.test.ts` | a `try/catch` or a `.catch(` (regex over text) appears in production source only in `@vp/result`, `packages/server/adapters/` and the `ENTRYPOINTS` files, and a two-argument `.then(onOk, onErr)` (AST) only in an `ENTRYPOINTS` file; no exception list | `load().then(undefined, () => 0)`, `storage.deleteObject(bucket, key).catch(() => {})` |
+| `catch-confinement.test.ts` | a `try/catch` or a `.catch(` (regex over text) appears in production source only in `@kit/result`, `packages/server/adapters/` and the `ENTRYPOINTS` files, and a two-argument `.then(onOk, onErr)` (AST) only in an `ENTRYPOINTS` file; no exception list | `load().then(undefined, () => 0)`, `storage.deleteObject(bucket, key).catch(() => {})` |
 | `result-returning-ports.test.ts` | regex over method signatures: every `Promise`-returning abstract or interface method in `@vp/core` `ports/` and `repositories/`, and every `export async function` in `@vp/events`, returns `Promise<Result<...>>` | none - reads the repo |
 | `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
 | `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/server/api`, `apps/server/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
-| `intl-purity.test.ts` | AST over production source in `@vp/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
-| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@vp/intl-react`'s `browser-environment.ts`, which reads the runtime zone, and `@vp/queries`' `request-locale.ts`, which parses the tags it negotiates): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
-| `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/server/api`, `apps/server/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
-| `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message `src/en/errors.ts` declares | a planted map holding only `INTERNAL` |
-| `catalogue-parity.test.ts` | every catalogue `SUPPORTED_LOCALES` lists, loaded through `LOCALE_DETAILS`, holds exactly the `feature.key` set `en` holds, in both directions | a planted translation missing `videos.title`, and one declaring `videos.gone` |
+| `intl-purity.test.ts` | AST over production source in `@kit/intl`, `@kit/i18n` and `@vp/shared-messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
+| `no-adhoc-formatting.test.ts` | AST over production source outside `@kit/intl` (and `@kit/intl-react`'s `browser-environment.ts`, which reads the runtime zone, and `@vp/queries`' `request-locale.ts`, which parses the tags it negotiates): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
+| `translation-layers.test.ts` | every key of the shared catalogue (`@vp/shared-messages`) has two consumers in the type-aware scan (`tests/architecture/message-key-usage.json`, `pnpm scan:message-keys`): web and studio, or a client and a server; a key rendered through `@vp/queries` or the `ERROR_COPY` registry reaches both apps | a planted `ui.planted` key only web renders, and one nothing renders |
+| `plural-categories.test.ts` | every plural in each app's source catalogue and translations holds exactly the categories `Intl.PluralRules(locale, { type }).resolvedOptions().pluralCategories` lists for its locale, plus `other` | a planted `pl` plural with only `one` and `other`, and one with `zero` |
+| `message-param-names.test.ts` | AST over every `dt(` template in the shared and app catalogues, and the vocabulary in `params.ts`: each placeholder name is lower camelCase letters, so no positional or numbered name | `dt('{0} views')`, `dt('{count2:number}')`, `dt('Hi {Name}')` |
+| `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message the shared catalogue declares | a planted map holding only `INTERNAL` |
+| `catalogue-parity.test.ts` | every translation each app loads (web and studio, for every locale `LOCALES` lists) holds exactly the `feature.key` set of that app's source catalogue, shared words included, in both directions | a planted translation missing `videos.title`, and one declaring `videos.gone` |
 | `single-locale-source.test.ts` | AST over production source: `navigator.language` / `navigator.languages` (dotted, indexed or destructured, `window.navigator` too) is read in `packages/client/queries/src/request-locale.ts` and nowhere else | `const tags = navigator.languages;` |
 | `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
+| `keyset-timestamps.test.ts` | in `packages/server/adapters/postgres/`, a `keysetBefore`/`keysetPast` sort key, a cursor comparison written by hand in a `sql` template (a row value compared, or an interpolation that reaches `cursor`), and every `orderBy` whose query reaches either, never reads a raw `*At` column of a `@vp/db` table outside `msTimestamp(...)` (an `IS NULL` test aside), following a name to its `const`, local function or the arguments a local function is called with: `now()` stamps microseconds and a cursor `Date` keeps milliseconds (AST) | a destructured, namespaced and named-import column, one behind a `const`, a local function and a rank input, a hand-written row value, timestamp and sort-key row comparison, and an `orderBy` beside a truncated keyset or comparison, beside a truncated walk and comparison, a clock cutoff, a row compared with a row, a counter, a parameter and an unpaged order |
+| `video-transitions-are-edges.test.ts` | every production `transition` call names an edge of `VIDEO_LIFECYCLE`, or writes a `from` to `to` pair that is one (AST) | `transition({ edge: 'resurrect' })`, `transition({ from: 'READY', to: 'UPLOADING' })` |
+| `state-machines.test.ts` | `defineMachine` only in `*.machine.ts`; `docs/state-machines.md` equals the generator output; every machine has no unreachable, dead or unused part; literal `.status`, `.phase`, `.state` comparisons and switches never grow past `state-literal-compares.txt`, and the baseline is lowered when a count drops (AST) | `if (video.status === 'READY')` in a file with no baseline entry |
 | `no-truthy-result.test.ts` | regex over production source in `apps/` and `packages/server/`: a `const x = await ....<repo>.<method>(` binding, for each `Repositories` property whose contract returns only `Promise<Result<...>>`, is not read in its block as a truthy value, a nullish or `\|\|` default, an `Object` walk, a spread, a serialisation, an interpolation, an index or a comparison | `const v = await repo.videos.findById(id);` then `if (!v) return;` |
 | `class-name-inference.test.ts` | regex over production source outside `@vp/errors` and `packages/server/adapters/s3/` (the S3 SDK `name` check is the documented exception): no `constructor.name` or `.name === '...Error'` comparison, no `.isRetryable` probe, no `.code` compared to a bare `ErrorCode` literal | `err.name === 'UnrecoverableError'`, `err.code === 'VERSION_CONFLICT'` |
 | `error-code-drift.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `PROBLEM_STATUS` (`problem.ts`) and `RETRY_CLASS` (`retry-class.ts`), and the SDD §6.2 enumeration lists exactly those codes, both ways | none - reads the repo |
@@ -476,7 +536,9 @@ fails.
 | `minio-images-pinned.test.ts` | every MinIO image in `infra/compose/docker-compose*.yml`, and `image`/`mcImage` in `infra/k8s/helm-values/minio.yaml`, is pinned by `@sha256:` digest (YAML parse) | `image: "cgr.dev/chainguard/minio:latest"` in a planted compose file |
 | `public-bucket-cors.test.ts` | the MinIO `environment` in `infra/compose/docker-compose.yml` and in `infra/k8s/helm-values/minio.yaml` sets `MINIO_API_CORS_ALLOW_ORIGIN` to `*`, so a browser fetch of a saved video from the public bucket is answered (YAML parse) | a MinIO service with no `MINIO_API_CORS_ALLOW_ORIGIN` |
 | `production-secrets.test.ts` | `kustomize build` of the base fails `AppEnvSchema.safeParse` on every `SECRET_KEYS` member and `AUTH_JWKS_URL` until they are overridden; the cloud overlay renders no Secret value, exactly one `ExternalSecret` entry per `SECRET_KEYS` member, no key owned by both it and the ConfigMap, and no local credential | a planted `Secret` with `REDIS_URL: 'redis://:vp@redis:6379/0'` |
-| `zero-matches.test.ts` | regex over text: each of 53 counted patterns stays at its expected match count over its own scope (the client apps' rows in `zero-matches-client-rows.ts`; the design system's in `zero-matches-design-rows.ts`: no raw colour, Tailwind palette class or utility of a default scale the generated theme wipes in client source, no `var()` of a theme-only name, no physical-side utility, inline style or stylesheet property, Radix and `@dnd-kit/*` imported or declared only in `@vp/ui`, nothing outside `docs/` reaching `docs/design/lib/` or using a `tt-` class) (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
+| `environments.test.ts` | every directory under `infra/environments` parses against the typed spec; a production-mode environment lists every key whose `requiredIn` says a production boot needs it, naming the file to edit when one is missing; each cluster environment renders with `kustomize build`, its replica caps and namespace as written, the keys of its `ExternalSecret` equal to its `secrets.keys`, and (production-mode) boots under `AppEnvSchema` with no credential rendered; no environment runs the smoke upload unless it renders dev auth and is not production-mode; a preview render carries no Ingress | a new `requiredIn: ['production']` key absent from `infra/environments/production/environment.yaml`, `smoke: true` on a JWKS environment, an Ingress back in the preview |
+| `compose-environment.test.ts` | the compose environment has a worker for every stage but `live`, sets only keys the env schema declares and pulls from the environment registry; the Makefile and `infra/k8s/charts.env` pin the same chart versions | a stage without its compose worker, an env key the schema lacks, a chart version bumped in one place |
+| `zero-matches.test.ts` | regex over text: each of 55 counted patterns stays at its expected match count over its own scope (the client apps' rows in `zero-matches-client-rows.ts`; the design system's in `zero-matches-design-rows.ts`: no raw colour, Tailwind palette class or utility of a default scale the generated theme wipes in client source, no `var()` of a theme-only name, no raw `z-<n>`, `z-[<n>]`, `-z-<n>`, `zIndex` or `z-index` (a layer is a role of `scale.z`), no literal `duration-<n>` or `delay-<n>`, no `transition-all` or transition of a layout property, no `data-theme` set to a mode, no physical-side utility, inline style or stylesheet property, Radix and `@dnd-kit/*` imported or declared only in `@kit/ui`, nothing outside `docs/` reaching `docs/design/lib/` or using a `tt-` class) (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
 | `spec-discipline.test.ts` | AST over every spec, `__tests__` helper, `tests/architecture`, `tests/in-process` and e2e spec: no runtime import from `vitest`, no timer wait (`setTimeout`/`setImmediate`, bare or on `globalThis`, inside a `new Promise` or as its executor, a static or dynamic `import()` of `timers/promises`), no `sleep`/`settle`/`delay` helper, no elapsed wall-clock assertion, no `typeof import(` or `importOriginal<`, no repeated full test title, no `console` call, no `.skip`/`.only`/`.todo`/`skipIf`/`runIf` | one fixture per rule, and the look-alikes that must pass |
 | `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml` (`on:` as a name, a list or a map): it runs on a pull request into any branch, so a stacked PR gets CI; the `0 4 * * 1,4` schedule keeps `main`'s caches alive and `github.event_name` in the concurrency group stops that run cancelling a push to `main`; a superseded run is cancelled only on a pull request; each job's `timeout-minutes` is its outer bound, no `needs` chain sums past 9 minutes, a sharded job's `--shard=i/N` divides by as many shards as its matrix runs, every `.github/actions/budget` names the step it measures by `id` and sits below its job's timeout, the unit, architecture and integration test steps are held to 240, 20 and 120 s, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, only `unit-bun` sets up Bun, and `lint-typecheck` runs `pnpm gen:tokens --check`, so `docs/design/tokens.json` and the generated CSS cannot drift from the registry (the rules live in `ci-shape-rules.ts` and `ci-budget-rules.ts`) | a fixture workflow that breaks every rule; `on: push` and `on: [push, schedule]` report no pull request trigger, `on: pull_request`, `on: [pull_request]` and `on: [push, pull_request]` do not |
 | `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/server/api`, `apps/server/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
@@ -486,14 +548,15 @@ fails.
 | `tests/in-process/gen-index.test.ts` | spawns `python3 docs/tickets/gen-index.py`: `--check` passes (index current, one status vocabulary, every spec anchor real, every derived status matching its blockers), `--anchors` agrees with `github-slugger` on the SDD, the PRD and edge-case headings, changing a status moves the computed frontier, and a run rewrites `blocked` and `ready` from the blockers while leaving `in-progress` and `done` alone | a ticket with `**Status:** ready-for-agent` in a planted tickets directory |
 | `repository-files.test.ts` | every exported `*Repository` class under `packages/server/adapters/` lives under a `repositories/` folder, in a file named after it in kebab case, with no other class beside it (AST) | a planted repository outside `repositories/`, one under another file name, and two classes in one file |
 | `in-memory-doubles.test.ts` | every class under `packages/server/adapters/in-memory/` that keeps a `Map`, a `Set` or an array field has a `clear()` method (AST) | a planted double with a `Map` field and no `clear()`, beside one that has it and a stateless one |
-| `adapter-instantiation.test.ts` | a class exported from `packages/server/adapters` is `new`-ed (regex) only in a `composition/` module, `@vp/adapters` or `@vp/testing`; a service or a stage `new`s values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) (AST) | `new Singleflight()` in a planted service source; `new CaslAuthorizationAdapter()` at a service path |
+| `adapter-instantiation.test.ts` | a class exported from `packages/server/adapters` is `new`-ed (regex) only in a `composition/` module, `@vp/adapters` or `@vp/testing-fixtures`; a service or a stage `new`s values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) (AST) | `new Singleflight()` in a planted service source; `new CaslAuthorizationAdapter()` at a service path |
 | `total-dependencies.test.ts` | no source in `apps/server/api/src/services/`, `apps/server/worker/src/stages/`, `packages/server/adapters/`, `apps/server/api/src/app.ts` or `apps/server/worker/src/runner.ts` recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig(` (regex), or a parameter or destructuring default that is constructed, called or `default*` (AST) | `function f(cursor: string, paginator = defaultPaginator) {}`, `deps.authorization ?? new CaslAuthorizationAdapter()` |
 | `no-module-state.test.ts` | in production source outside `ENTRYPOINTS`: no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement, awaited or not (AST) | `export const paginator = new Paginator();`, `collectDefaultMetrics({ register });` |
 | `tests/in-process/start-order.test.ts` | both composition roots, built in process over `inProcessAppConfig()`, start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a start order `['Consumer', 'MetricsServer', 'Heartbeat', 'OutboxRelay']` |
 | `route-plugins.test.ts` | regex: every file under `apps/server/api/src/routes/` that registers a route exports `async function xRoutes(app: FastifyInstance): Promise<void>`, declares no `*Options` interface, and is named in `routes/index.ts` | `export function registerVideosRoutes(app, options): void`; `export interface VideosRouteOptions` |
 | `routes-unwrap-at-send-result.test.ts` | line regex over `apps/server/api/src/routes/`: no `throw` (except `throw assertNever`) and no `catch` clause, and no import from `@vp/core/ports`, `@vp/core/repositories` or `@vp/adapters` (`health.ts` reports on the adapters themselves) | `throw new PermanentError(e.code, e.message);`, `} catch (err) {` |
-| `drain-before-close.test.ts` | text order: `shutdownOnce` in `@vp/composition` calls `plan.drain()` before it closes, `apps/server/api/src/serve.ts` and `apps/server/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
+| `drain-before-close.test.ts` | text order: `shutdownOnce` in `@kit/composition` calls `plan.drain()` before it closes, `apps/server/api/src/serve.ts` and `apps/server/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
 | `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/server/api/src/services/` or `apps/server/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
+| `in-memory-clock.test.ts` | no file under `packages/server/adapters/in-memory/repositories/` but `clock.ts` calls or references `Date.now`; a repository double takes a `Clock` (default `realClock`) and a spec fixes it through `new InMemoryRepositories({ now })` (AST) | a planted double that compares a stored date with `Date.now()` and one that takes a `now` default, beside one that reads its injected clock |
 | `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module through its static, non-type imports (regex graph walk, `@vp/*` resolved through manifest `exports`), and the `@vp/adapters` root barrel does not re-export them | a planted boot path that reaches the doubles through a barrel |
 | `apps/server/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route an `onRoute` hook collects (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
 | `apps/server/api/src/composition/__tests__/openapi-document.test.ts` | renders the OpenAPI document the in-process app serves and compares it byte for byte with the committed `packages/universal/api-contracts/openapi.yaml`, so an endpoint changed without `pnpm gen:contracts` fails | none - reads the repo |
@@ -511,8 +574,7 @@ The contract-drift assertion stays in `apps/server/api` because it has to boot t
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/server/api` can answer.
 
-**No exception lists.** Every assertion here is flat: `test-correspondence` fails on any source with runtime
-code and no name-matching spec, in every tier, and `zero-matches` fails if an exception list or `shrinkOnly`
+**No exception lists.** Every assertion here is flat: `zero-matches` fails if an exception list or `shrinkOnly`
 comes back. `stylesheets.test.ts` holds the count of stylesheets outside the design system at zero.
 
 Four further mechanisms sit outside the suite:

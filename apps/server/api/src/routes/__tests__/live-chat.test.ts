@@ -1,6 +1,6 @@
+import { expectOk } from '@kit/testing/result';
 import type { LiveChatServerFrame } from '@vp/api-contracts';
-import { mintToken } from '@vp/dev-token';
-import { expectOk } from '@vp/testing/result';
+import { mintToken } from '@vp/dev-identity';
 import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
 import { dial } from './socket-client';
 
@@ -36,6 +36,7 @@ describe('live chat socket', () => {
         video: {
           id: '00000000-0000-7000-8000-00000000f201',
           ownerId: OWNER_ID,
+          channelId: channel.id,
           visibility: 'public',
           sourceKey: 'live/',
         },

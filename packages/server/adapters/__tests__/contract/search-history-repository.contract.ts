@@ -1,6 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import type { SearchHistoryRepositoryPort } from '@vp/core/repositories';
+import * as schema from '@vp/db';
 import { SEARCH_HISTORY_LIMIT, type SearchHistoryEntry } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
 import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -110,11 +111,17 @@ export function describeSearchHistoryRepositoryContract(
       expect(kept[0]?.query).toBe('q0');
     });
 
-    it('walks on from a cursor, ties on the time broken by id', async () => {
+    it('walks on from a cursor, ties on the millisecond broken by id', async () => {
       expectOk(await history.record(entry('a', 5, OTHER_OWNER_ID, 1)));
       expectOk(await history.record(entry('b', 1, OTHER_OWNER_ID, 2)));
       expectOk(await history.record(entry('c', 1, OTHER_OWNER_ID, 3)));
       expectOk(await history.record(entry('d', 9, OTHER_OWNER_ID, 4)));
+      await subject.spreadAcrossMicroseconds({
+        stamp: schema.searchHistory.searchedAt,
+        key: schema.searchHistory.id,
+        ids: [rowId(2), rowId(3)],
+        at: new Date(BASE - 60_000),
+      });
 
       const first = expectOk(await history.list(OTHER_OWNER_ID, { cursor: null, limit: 2 }));
       const last = first[1];

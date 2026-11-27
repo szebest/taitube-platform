@@ -1,7 +1,7 @@
 # Frontend Structure
 
 How `apps/client/web` and `apps/client/studio` are laid out, what each folder may import and what a file is called.
-Both apps follow the same rules. The kits they share live in `packages/client/ui` and `packages/client/components`
+Both apps follow the same rules. The kits they share live in `packages/platform/client/ui` and `packages/platform/client/components`
 ([design-system.md](design-system.md)); the tiers and layers of the packages are [packages/AGENTS.md](../../packages/AGENTS.md).
 Ticket [131](../tickets/131-frontend-folder-structure-names-and-boundaries.md) introduced the shape.
 
@@ -33,8 +33,8 @@ need goes to a `packages/client/` package, never a copy.
 
 | | Web | Studio |
 |---|---|---|
-| Features | `account` `browse` `channel` `clips` `embed` `library` `live` `notifications` `offline` `pwa` `recommendations` `search` `shell` `shorts` `watch` | `account` `admin` `analytics` `captions` `channel` `comments` `live` `shell` `upload` `videos` |
-| Kit areas | `channel` `discovery` `discussion` `feed` `live` `player` `settings` `shell` `shorts` `states` `video` `watch` | `analytics` `dialogs` `live` `table` `video` `workspace` |
+| Features | `account` `browse` `channel` `clips` `embed` `library` `live` `notifications` `offline` `pwa` `recommendations` `search` `shell` `shorts` `watch` | `account` `admin` `analytics` `captions` `channel` `comments` `live` `posts` `shell` `team` `upload` `videos` |
+| Kit areas | `channel` `discovery` `discussion` `feed` `live` `player` `settings` `shell` `shorts` `states` `video` `watch` | `analytics` `dialogs` `live` `posts` `table` `team` `video` `workspace` |
 
 The player is not a feature: the skin is `components/player/`, the Video.js engine `integrations/video-js/`, the port
 `lib/player/`.
@@ -68,8 +68,7 @@ lib -> lib
 | A route reaches a feature through its `index.ts` | oxlint `no-restricted-imports` on `apps/client/*/src/routes/**`, specs excepted |
 | No cycles | oxlint `import/no-cycle` on `apps/client/*/src/**` |
 | Folder names, stories and specs placement, stylesheets | `tests/architecture/frontend-folder-shape.test.ts` |
-| Component folders hold their story, spec and `index.ts` | `tests/architecture/component-folders.test.ts` |
-| One spec per source file | `tests/architecture/test-correspondence.test.ts` |
+| Component folders hold their story and `index.ts` | `tests/architecture/component-folders.test.ts` |
 | No file byte-identical between the apps | `tests/architecture/client-app-duplicates.test.ts` |
 | A public face with nothing unused | `pnpm knip` |
 
@@ -77,7 +76,7 @@ lib -> lib
 
 ## 3. A component folder
 
-The shape of a `@vp/ui` primitive, of a `@vp/components` component, of an app's kit and of a feature's components:
+The shape of a `@kit/ui` primitive, of a `@kit/components` component, of an app's kit and of a feature's components:
 
 ```
 video-card/
@@ -101,7 +100,7 @@ video-card/
   `hooks/__tests__/use-x.test.ts`. A route spec stays in `routes/__tests__/`.
 - A feature-private component folder is imported by file path; `index.ts` is required at a feature root and at a kit or
   package component root.
-- Styling is Tailwind and the tokens of `@vp/ui`, plus a `<name>.variants.ts` when classes follow a prop. No `.scss`,
+- Styling is Tailwind and the tokens of `@kit/ui`, plus a `<name>.variants.ts` when classes follow a prop. No `.scss`,
   no CSS module, no Bootstrap; the one stylesheet an app may own is `styles/app.css`.
 
 ---
@@ -127,7 +126,7 @@ video-card/
 - **A feature**: `features/<domain>/` with an `index.ts` that exports what routes need (page-level components, the
   loader's query options, a hook a route calls) and nothing else. Reach another domain through a route or a lower layer.
 - **A component**: `pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound]` writes the
-  folder above with its spec and story.
+  folder above with a story and a starter spec (keep it only if it asserts behaviour).
 - **Something two features use**: move it to the app's `components/`, `hooks/`, `utils/` or `lib/`; something both apps
   use goes to a `packages/client/` package.
 - **A move of folders** ships alone, in its own PR or slice ([git-workflow.md](git-workflow.md) section 2).

@@ -1,11 +1,12 @@
+import { type Result, fromPromise, map, ok } from '@kit/result';
 import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, fromPromise, map, ok } from '@vp/result';
 import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { toVideoRecord } from '../mappers/video.mapper';
+import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -86,25 +87,26 @@ export class PostgresWatchHistoryRepository implements WatchHistoryRepositoryPor
           })
           .from(wh)
           .innerJoin(v, eq(v.id, wh.videoId))
-          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .leftJoin(ch, eq(ch.id, v.channelId))
           .where(
             drizzleWhere(
               eq(wh.userId, viewer.id),
               watchableVideoScope(viewer),
               keysetBefore(
-                wh.watchedAt,
+                msTimestamp(wh.watchedAt),
                 wh.id,
                 cursor && { sort: cursor.watchedAt, tie: cursor.id }
               )
             )
           )
-          .orderBy(desc(wh.watchedAt), desc(wh.id))
+          .orderBy(desc(msTimestamp(wh.watchedAt)), desc(wh.id))
           .limit(limit + 1),
       databaseUnavailable.during('listWatchHistory')
     );
     return map(rows, (found) =>
-      found.map(({ channelId, handle, displayName, avatarUrl, ...entry }) => ({
+      found.map(({ channelId, handle, displayName, avatarUrl, video, ...entry }) => ({
         ...entry,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

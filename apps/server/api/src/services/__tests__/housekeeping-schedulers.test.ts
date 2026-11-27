@@ -1,8 +1,8 @@
+import { type Result, err } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@vp/core/ports';
 import { ErrorCodes, type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, err } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { registerHousekeepingSchedulers } from '../housekeeping-schedulers';
 
 class UnreachableQueue extends InMemoryJobQueue {
@@ -27,9 +27,19 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
     expect(registered.map((scheduler) => scheduler.id).sort()).toEqual([
       'expire-raw',
       'flush-video-views',
+      'prune-revisions',
+      'publish-due-posts',
+      'purge-channel-audit',
+      'purge-channel-images',
+      'purge-comment-moderation',
       'purge-deleted',
+      'purge-exports',
+      'purge-generations',
+      'purge-handle-history',
+      'purge-screening-evidence',
       'purge-search-history',
       'reconcile-captions',
+      'reconcile-live',
       'reconcile-processing',
       'reconcile-reaction-counters',
       'reconcile-uploads',

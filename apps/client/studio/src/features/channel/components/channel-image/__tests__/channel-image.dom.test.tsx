@@ -2,60 +2,38 @@ import { render, screen } from '@testing-library/react';
 import { AppProviders } from '#app/__tests__/providers';
 import { ChannelImage } from '../channel-image';
 
-const FILE = new File(['a'], 'a.png', { type: 'image/png' });
-
 type RootProps = React.ComponentProps<typeof ChannelImage.Root>;
 
 const renderImage = (props: Partial<RootProps> = {}) =>
   render(
-    <ChannelImage.Root kind="avatar" file={undefined} currentUrl={null} removed={false} {...props}>
+    <ChannelImage.Root kind="avatar" currentUrl={null} {...props}>
       <ChannelImage.Shown />
-      <ChannelImage.Remove />
+      <ChannelImage.Remove onClick={() => {}} loading={false} />
     </ChannelImage.Root>,
     { wrapper: AppProviders }
   );
 
 describe('apps/client/studio: ChannelImage', () => {
-  beforeEach(() => {
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local');
-    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-  });
-
   it.each([
     {
       name: 'the saved image',
-      props: { currentUrl: 'https://cdn.test/a.png' },
+      currentUrl: 'https://cdn.test/a.png',
       src: 'https://cdn.test/a.png',
     },
-    {
-      name: 'the chosen file over the saved image',
-      props: { file: FILE, currentUrl: 'https://cdn.test/a.png' },
-      src: 'blob:local',
-    },
-    {
-      name: 'nothing for a removed image',
-      props: { currentUrl: 'https://cdn.test/a.png', removed: true },
-      src: undefined,
-    },
-    { name: 'nothing when there is none', props: {}, src: undefined },
-  ])('shows $name', ({ props, src }) => {
-    renderImage(props);
+    { name: 'nothing when there is none', currentUrl: null, src: undefined },
+  ])('shows $name', ({ currentUrl, src }) => {
+    renderImage({ currentUrl });
 
     expect(screen.queryByRole('img')?.getAttribute('src')).toBe(src);
   });
 
   it.each([
-    { name: 'a saved image', props: { currentUrl: 'https://cdn.test/a.png' }, offered: true },
-    { name: 'a chosen file', props: { file: FILE }, offered: true },
-    {
-      name: 'a removed image',
-      props: { currentUrl: 'https://cdn.test/a.png', removed: true },
-      offered: false,
-    },
-    { name: 'nothing', props: {}, offered: false },
-  ])('offers removal for $name: $offered', ({ props, offered }) => {
-    renderImage(props);
+    { kind: 'avatar', currentUrl: 'https://cdn.test/a.png', offered: 'Remove picture' },
+    { kind: 'banner', currentUrl: 'https://cdn.test/b.png', offered: 'Remove banner' },
+    { kind: 'avatar', currentUrl: null, offered: undefined },
+  ] as const)('offers $offered for a $kind of $currentUrl', ({ kind, currentUrl, offered }) => {
+    renderImage({ kind, currentUrl });
 
-    expect(screen.queryByRole('button', { name: 'Remove picture' }) !== null).toBe(offered);
+    expect(screen.queryByRole('button')?.textContent).toBe(offered);
   });
 });

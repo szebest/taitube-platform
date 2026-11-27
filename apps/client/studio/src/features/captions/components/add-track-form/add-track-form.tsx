@@ -1,11 +1,11 @@
+import { Field, Input, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
-import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { Field, Input, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { uploadTrackMutationOptions } from '#app/features/captions/api/caption-mutations';
 import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
 import { fileIssueOf } from '#app/features/captions/utils/caption-failures';
+import { useT } from '#app/lib/messages';
 import { VttPicker } from '../vtt-picker/vtt-picker';
 
 /** A track in a language the video has none in yet: its tag, then a `.vtt` file. */

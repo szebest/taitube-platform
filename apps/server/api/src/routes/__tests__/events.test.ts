@@ -1,8 +1,8 @@
 import * as http from 'node:http';
+import { expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
 import { Services } from '../../composition/services.module';
@@ -10,6 +10,7 @@ import { Services } from '../../composition/services.module';
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000010';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-000000000020';
+const GUARDED_VIDEO = '018f0000-0000-7000-8000-000000000030';
 const ABSENT_VIDEO = '018f0000-0000-7000-8000-0000000000ff';
 
 interface StreamHead {
@@ -48,6 +49,7 @@ describe('SSE event routes', () => {
     for (const [id, visibility] of [
       [PUBLIC_VIDEO, 'public'],
       [PRIVATE_VIDEO, 'private'],
+      [GUARDED_VIDEO, 'unlisted'],
     ] as const) {
       await seedVideo(testApp.repositories, {
         id,
@@ -57,6 +59,7 @@ describe('SSE event routes', () => {
         status: 'PROCESSING',
       });
     }
+    expectOk(await testApp.repositories.videoPasswords.setHash(GUARDED_VIDEO, 'a-hash'));
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });
 
@@ -78,6 +81,13 @@ describe('SSE event routes', () => {
       headers: { authorization: `Bearer ${strangerToken}` },
       status: 404,
       code: ErrorCodes.VIDEO_NOT_FOUND,
+    },
+    {
+      refusal: 'a password-protected video without its unlock cookie',
+      url: `/v1/videos/${GUARDED_VIDEO}/events`,
+      headers: {},
+      status: 403,
+      code: ErrorCodes.VIDEO_PASSWORD_REQUIRED,
     },
     {
       refusal: 'an absent video',
@@ -173,7 +183,13 @@ describe('SSE event routes: a broadcast', () => {
     expectOk(
       await repositories.liveStreams.goLive({
         streamId: STREAM_ID,
-        video: { id: VIDEO_ID, ownerId: CREATOR, visibility: 'public', sourceKey: 'live/' },
+        video: {
+          id: VIDEO_ID,
+          ownerId: CREATOR,
+          channelId: channel.id,
+          visibility: 'public',
+          sourceKey: 'live/',
+        },
         startedAt: new Date(),
         outbox: [],
       })

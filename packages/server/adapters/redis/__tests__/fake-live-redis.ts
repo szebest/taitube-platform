@@ -26,6 +26,12 @@ export class FakeLiveRedis extends FakeRedis {
     return this.ttls.get(key) ?? -1;
   }
 
+  /** The ttl as set, in milliseconds. */
+  async pttl(key: string): Promise<number> {
+    const seconds = await this.ttl(key);
+    return seconds < 0 ? seconds : seconds * 1000;
+  }
+
   async zadd(key: string, ...scoreMembers: Array<string | number>): Promise<number> {
     const set = new Map(this.sortedSets.get(key));
     for (let i = 0; i < scoreMembers.length; i += 2) {

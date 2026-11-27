@@ -1,7 +1,7 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { DAY_MS, queueOutboxEntry } from '../stages/housekeeping/__tests__/housekeeping-harness';
 
@@ -20,6 +20,7 @@ describe('outbox writes', () => {
     await repositories.videos.create({
       id: videoId,
       ownerId,
+      channelId: '00000000-0000-7000-8000-00000000c4a1',
       sourceKey: `raw/${videoId}/source.mp4`,
       status: 'PROCESSING',
     });
@@ -74,12 +75,13 @@ describe('outbox writes', () => {
       status: 'PARKED',
     });
 
-    await repositories.dlq.updateStatus(
-      dlqId,
-      'REPLAYED',
-      { replayedAt: new Date() },
-      queueOutboxEntry('probe', { test: true }, 'failed-job-1--replay--1', 'dlq_replay')
-    );
+    await repositories.dlq.transition({
+      id: dlqId,
+      from: ['PARKED'],
+      to: 'REPLAYED',
+      replayedAt: new Date(),
+      outbox: queueOutboxEntry('probe', { test: true }, 'failed-job-1--replay--1', 'dlq_replay'),
+    });
 
     expect(expectOk(await repositories.dlq.findById(dlqId))?.status).toBe('REPLAYED');
     expect((await pending()).map((item) => item.kind)).toContain('dlq_replay');

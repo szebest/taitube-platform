@@ -1,8 +1,9 @@
+import { lazyComponent } from '@kit/ui';
 import { createRootRouteWithContext, createRoute, Link, Outlet } from '@tanstack/react-router';
 import { type AppRouterContext, type AppRouterOptions, createAppRouter } from '@vp/queries';
-import { lazyComponent } from '@vp/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
+import { WEB_MESSAGES, type WebCatalogue } from '#app/lib/messages';
 import { createUrlModals } from '../create-url-modals';
 
 export const modals = createUrlModals({
@@ -78,7 +79,7 @@ function ShareBody() {
   );
 }
 
-const rootRoute = createRootRouteWithContext<AppRouterContext>()({
+const rootRoute = createRootRouteWithContext<AppRouterContext<WebCatalogue>>()({
   component: () => (
     <main>
       <Outlet />
@@ -99,10 +100,11 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: '/other', component: () => <h1>Other</h1> }),
 ]);
 
-export function getSpecRouter(options: AppRouterOptions = {}) {
+export function getSpecRouter(options: AppRouterOptions<WebCatalogue> = {}) {
   return createAppRouter(
     {
       routeTree,
+      messages: WEB_MESSAGES,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => <p>Pending</p>,
     },

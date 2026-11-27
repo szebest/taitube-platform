@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
+import { Route as AtChar123handleChar125RouteImport } from './routes/@{$handle}';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as OfflineRouteImport } from './routes/offline';
@@ -27,8 +28,11 @@ import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
 import { Route as LiveIndexRouteImport } from './routes/live.index';
 import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
+import { Route as PartiesRoomIdRouteImport } from './routes/parties.$roomId';
+import { Route as PostIdRouteImport } from './routes/post.$id';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
 import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
+import { Route as SettingsAccountsRouteImport } from './routes/settings/accounts';
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications';
 import { Route as SettingsPlaybackRouteImport } from './routes/settings/playback';
@@ -44,6 +48,7 @@ import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/
 import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
 import { Route as SettingsAppearanceAdvancedRouteImport } from './routes/settings/appearance/advanced';
 import { Route as UploadEditVideoIdRouteImport } from './routes/upload/edit.$videoId';
+import { Route as AuthedFeedYouModerationRouteImport } from './routes/_authed/feed.you_.moderation';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const AtChar123handleChar125Route = AtChar123handleChar125RouteImport.update({
+  id: '/@{$handle}',
+  path: '/@{$handle}',
   getParentRoute: () => rootRouteImport,
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
@@ -134,6 +144,16 @@ const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
   path: '/live/$streamId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const PartiesRoomIdRoute = PartiesRoomIdRouteImport.update({
+  id: '/parties/$roomId',
+  path: '/parties/$roomId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PostIdRoute = PostIdRouteImport.update({
+  id: '/post/$id',
+  path: '/post/$id',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -142,6 +162,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
 const SettingsAccessibilityRoute = SettingsAccessibilityRouteImport.update({
   id: '/accessibility',
   path: '/accessibility',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsAccountsRoute = SettingsAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
   getParentRoute: () => SettingsRoute,
 } as any);
 const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
@@ -222,10 +247,16 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
   path: '/upload/edit/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const AuthedFeedYouModerationRoute = AuthedFeedYouModerationRouteImport.update({
+  id: '/feed/you_/moderation',
+  path: '/feed/you/moderation',
+  getParentRoute: () => AuthedRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/playlist': typeof PlaylistRoute;
@@ -240,7 +271,10 @@ export interface FileRoutesByFullPath {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -258,10 +292,12 @@ export interface FileRoutesByFullPath {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
+  '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/playlist': typeof PlaylistRoute;
@@ -275,7 +311,10 @@ export interface FileRoutesByTo {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -293,11 +332,13 @@ export interface FileRoutesByTo {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance': typeof SettingsAppearanceIndexRoute;
+  '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/@{$handle}': typeof AtChar123handleChar125Route;
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
@@ -313,7 +354,10 @@ export interface FileRoutesById {
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/live/$streamId': typeof LiveStreamIdRoute;
+  '/parties/$roomId': typeof PartiesRoomIdRoute;
+  '/post/$id': typeof PostIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
@@ -331,12 +375,14 @@ export interface FileRoutesById {
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
+  '/_authed/feed/you_/moderation': typeof AuthedFeedYouModerationRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/login'
     | '/offline'
     | '/playlist'
@@ -351,7 +397,10 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -368,11 +417,13 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions/'
-    | '/settings/appearance/';
+    | '/settings/appearance/'
+    | '/feed/you/moderation';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/login'
     | '/offline'
     | '/playlist'
@@ -386,7 +437,10 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -403,11 +457,13 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions'
-    | '/settings/appearance';
+    | '/settings/appearance'
+    | '/feed/you/moderation';
   id:
     | '__root__'
     | '/'
     | '/$'
+    | '/@{$handle}'
     | '/_authed'
     | '/login'
     | '/offline'
@@ -423,7 +479,10 @@ export interface FileRouteTypes {
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/live/$streamId'
+    | '/parties/$roomId'
+    | '/post/$id'
     | '/settings/accessibility'
+    | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
     | '/settings/playback'
@@ -440,12 +499,14 @@ export interface FileRouteTypes {
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/_authed/subscriptions/'
-    | '/settings/appearance/';
+    | '/settings/appearance/'
+    | '/_authed/feed/you_/moderation';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
+  AtChar123handleChar125Route: typeof AtChar123handleChar125Route;
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
   OfflineRoute: typeof OfflineRoute;
@@ -460,6 +521,8 @@ export interface RootRouteChildren {
   FeedTrendingRoute: typeof FeedTrendingRoute;
   FeedsVideosDotxmlRoute: typeof FeedsVideosDotxmlRoute;
   LiveStreamIdRoute: typeof LiveStreamIdRoute;
+  PartiesRoomIdRoute: typeof PartiesRoomIdRoute;
+  PostIdRoute: typeof PostIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   LiveIndexRoute: typeof LiveIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
@@ -480,6 +543,13 @@ declare module '@tanstack/react-router' {
       path: '/$';
       fullPath: '/$';
       preLoaderRoute: typeof SplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/@{$handle}': {
+      id: '/@{$handle}';
+      path: '/@{$handle}';
+      fullPath: '/@{$handle}';
+      preLoaderRoute: typeof AtChar123handleChar125RouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/_authed': {
@@ -594,6 +664,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveStreamIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/parties/$roomId': {
+      id: '/parties/$roomId';
+      path: '/parties/$roomId';
+      fullPath: '/parties/$roomId';
+      preLoaderRoute: typeof PartiesRoomIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/post/$id': {
+      id: '/post/$id';
+      path: '/post/$id';
+      fullPath: '/post/$id';
+      preLoaderRoute: typeof PostIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/settings/': {
       id: '/settings/';
       path: '/';
@@ -606,6 +690,13 @@ declare module '@tanstack/react-router' {
       path: '/accessibility';
       fullPath: '/settings/accessibility';
       preLoaderRoute: typeof SettingsAccessibilityRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/accounts': {
+      id: '/settings/accounts';
+      path: '/accounts';
+      fullPath: '/settings/accounts';
+      preLoaderRoute: typeof SettingsAccountsRouteImport;
       parentRoute: typeof SettingsRoute;
     };
     '/settings/language': {
@@ -713,6 +804,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadEditVideoIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_authed/feed/you_/moderation': {
+      id: '/_authed/feed/you_/moderation';
+      path: '/feed/you/moderation';
+      fullPath: '/feed/you/moderation';
+      preLoaderRoute: typeof AuthedFeedYouModerationRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
   }
 }
 
@@ -723,6 +821,7 @@ interface AuthedRouteChildren {
   AuthedFeedYouRoute: typeof AuthedFeedYouRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
+  AuthedFeedYouModerationRoute: typeof AuthedFeedYouModerationRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -732,6 +831,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedFeedYouRoute: AuthedFeedYouRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
+  AuthedFeedYouModerationRoute: AuthedFeedYouModerationRoute,
 };
 
 const AuthedRouteWithChildren =
@@ -739,6 +839,7 @@ const AuthedRouteWithChildren =
 
 interface SettingsRouteChildren {
   SettingsAccessibilityRoute: typeof SettingsAccessibilityRoute;
+  SettingsAccountsRoute: typeof SettingsAccountsRoute;
   SettingsLanguageRoute: typeof SettingsLanguageRoute;
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute;
   SettingsPlaybackRoute: typeof SettingsPlaybackRoute;
@@ -750,6 +851,7 @@ interface SettingsRouteChildren {
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAccessibilityRoute: SettingsAccessibilityRoute,
+  SettingsAccountsRoute: SettingsAccountsRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
   SettingsPlaybackRoute: SettingsPlaybackRoute,
@@ -777,6 +879,7 @@ const ShortsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  AtChar123handleChar125Route: AtChar123handleChar125Route,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
   OfflineRoute: OfflineRoute,
@@ -791,6 +894,8 @@ const rootRouteChildren: RootRouteChildren = {
   FeedTrendingRoute: FeedTrendingRoute,
   FeedsVideosDotxmlRoute: FeedsVideosDotxmlRoute,
   LiveStreamIdRoute: LiveStreamIdRoute,
+  PartiesRoomIdRoute: PartiesRoomIdRoute,
+  PostIdRoute: PostIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   UploadIndexRoute: UploadIndexRoute,

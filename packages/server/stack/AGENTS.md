@@ -28,7 +28,7 @@ every app (the profiles of services built from the repo's `Dockerfile`), a profi
 `<profile>:<name>` is `<profile>-<name>` and `<profile>-<name>-*` (`worker:transcode` is the three
 renditions), anything else one service by name.
 
-- **Tier `server`**, **layer 2**: its one `@vp/*` dependency is `@vp/result` (layer 1).
+- **Tier `server`**, **layer 2**: its one `@vp/*` dependency is `@kit/result` (layer 1).
 
 ---
 
@@ -38,7 +38,7 @@ renditions), anything else one service by name.
    profile if it is not infrastructure; nothing here changes.
 2. **Health, not sleeps.** A tier is done when `up --wait` sees every health check pass and every one-shot
    has exited 0.
-3. **1:1 tests (Rule 12):** every source file has a name-matching test file in `src/__tests__/`.
+3. **Tests (Rule 12):** specs where behaviour can break, in `src/__tests__/`; no spec per file is required.
 
 ---
 

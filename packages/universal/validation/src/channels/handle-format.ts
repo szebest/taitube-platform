@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok } from '@kit/result';
 import { type InvalidHandleFormat, invalidHandleFormat } from './failures';
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;

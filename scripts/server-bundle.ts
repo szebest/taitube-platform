@@ -1,10 +1,13 @@
 import type { PackUserConfig } from 'vite-plus/pack';
+import { load, type Pkg } from './workspace-packages';
 
 /**
- * The `vp pack` config of a server app: one ESM file per entry in `dist/bundle`, the `@vp/*` packages
+ * The `vp pack` config of a server app: one ESM file per entry in `dist/bundle`, every workspace package
  * inlined and every npm dependency left for the image's `node_modules`.
  */
-export function serverBundle(entry: string[]): PackUserConfig {
+export function serverBundle(entry: string[], packages: Pkg[] = load()): PackUserConfig {
+  const names = packages.map(({ name }) => RegExp.escape(name));
+
   return {
     entry,
     outDir: 'dist/bundle',
@@ -14,7 +17,7 @@ export function serverBundle(entry: string[]): PackUserConfig {
     outExtensions: () => ({ js: '.js' }),
     hash: true,
     dts: false,
-    deps: { neverBundle: true, alwaysBundle: [/^@vp\//] },
+    deps: { neverBundle: true, alwaysBundle: [new RegExp(`^(${names.join('|')})(/|$)`)] },
     outputOptions: { keepNames: true, chunkFileNames: '[name]-[hash].js' },
     logLevel: 'error',
   };

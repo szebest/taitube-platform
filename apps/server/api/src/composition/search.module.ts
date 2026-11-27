@@ -1,6 +1,6 @@
+import type { Container } from '@kit/composition';
+import { Singleflight } from '@kit/concurrency';
 import { Adapters } from '@vp/adapters/composition';
-import type { Container } from '@vp/composition';
-import { Singleflight } from '@vp/concurrency';
 import { SearchHistoryService, SearchService } from '../services/index';
 import { Services } from './service-tokens';
 
@@ -24,6 +24,7 @@ export function registerSearchServices(c: Container): Container {
           singleflight: new Singleflight(),
           paginator: c.get(Services.Paginator),
           viewerProgress: c.get(Services.ViewerProgress),
+          experiments: c.get(Services.ExperimentOverlay),
           history: c.get(Adapters.Repositories).searchHistory,
           pause: c.get(Services.HistoryPause),
           channels: c.get(Adapters.Repositories).channels,

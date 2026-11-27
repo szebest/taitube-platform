@@ -1,4 +1,4 @@
-import type { AppearancePreference } from '@vp/ui';
+import type { AppearancePreference } from '@kit/ui';
 
 export type AppearanceMode = AppearancePreference['mode'];
 

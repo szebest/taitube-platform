@@ -1,0 +1,9 @@
+import type { AnyFailure } from '@kit/errors';
+import { type Result, isErr } from '@kit/result';
+
+export function validateWith<V>(rule: (value: V) => Result<unknown, AnyFailure>) {
+  return ({ value }: { value: V }): string | undefined => {
+    const checked = rule(value);
+    return isErr(checked) ? checked.error.message : undefined;
+  };
+}

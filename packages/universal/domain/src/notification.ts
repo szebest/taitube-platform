@@ -8,6 +8,11 @@ export const NOTIFICATION_KINDS = [
   'comment',
   'processing',
   'heart',
+  'party_invite',
+  'party_starting',
+  'team_invite',
+  'moderation',
+  'post',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -19,7 +24,7 @@ export type NotificationFilter = (typeof NOTIFICATION_FILTERS)[number];
 
 const FILTER_KINDS = {
   all: NOTIFICATION_KINDS,
-  subscriptions: ['upload', 'live'],
+  subscriptions: ['upload', 'live', 'post'],
   mentions: ['reply', 'mention'],
 } as const satisfies Record<NotificationFilter, readonly NotificationKind[]>;
 
@@ -34,16 +39,16 @@ export const NOTIFICATION_EXCERPT_LENGTH = 140;
 
 const BLOCKED_BY_LEVEL: Record<NotificationLevel, readonly NotificationKind[]> = {
   all: [],
-  highlights: ['live'],
+  highlights: ['live', 'post'],
   none: NOTIFICATION_KINDS,
 };
 
-/** What a subscriber's level lets through: `highlights` is uploads only, no live. */
+/** What a subscriber's level lets through: `highlights` is uploads only, no live and no posts. */
 export function levelAllows(level: NotificationLevel, kind: NotificationKind): boolean {
   return !BLOCKED_BY_LEVEL[level].includes(kind);
 }
 
-/** The account switch that gates a kind, in `preferences.notifications`. */
+/** The account switch that gates a kind, in `preferences.notifications`; `null` is always delivered. */
 export const KIND_SWITCH = {
   upload: 'subscriptionUploads',
   live: 'subscriptionUploads',
@@ -52,7 +57,12 @@ export const KIND_SWITCH = {
   comment: 'repliesAndMentions',
   processing: 'processingFinished',
   heart: 'repliesAndMentions',
-} as const satisfies Record<NotificationKind, string>;
+  party_invite: 'watchParties',
+  party_starting: 'watchParties',
+  team_invite: null,
+  moderation: null,
+  post: 'subscriptionUploads',
+} as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
   ownerId: string;
@@ -71,19 +81,60 @@ export function mayHearAbout(video: NotifiableVideo, userId: string): boolean {
   return video.visibility === 'public' && video.status === 'READY';
 }
 
+/** The ids of notifications grouped by the user they belong to, users in id order. */
+export function notificationIdsByUser(
+  rows: readonly { id: string; userId: string }[]
+): [string, string[]][] {
+  const byUser = new Map<string, string[]>();
+  for (const { id, userId } of rows) byUser.set(userId, [...(byUser.get(userId) ?? []), id]);
+  return [...byUser].sort(([a], [b]) => a.localeCompare(b));
+}
+
 export interface NotificationActor {
   handle: string;
   displayName: string;
   avatarUrl: string | null;
 }
 
-/** Written when the notification is created, so listing and pushing it need no join. */
-export interface NotificationPayload {
+/** The invite a `party_invite` carries, frozen when it is sent: the row opens the room with `inviteId`. */
+interface NotificationParty {
+  roomId: string;
+  name: string;
+  videoTitle: string | null;
+  scheduledFor: string | null;
+  inviteId: string;
+  expiresAt: string;
+  watching: { names: string[]; count: number };
+}
+
+interface NotificationFields {
   count: number;
   actor: NotificationActor | null;
   videoTitle: string | null;
   excerpt: string | null;
-  outcome: 'ready' | 'failed' | null;
+  outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
+  /** Set on `team_invite`: the invite the notification opens. */
+  inviteId?: string;
+  /** Set on `post`: the newest post of the group; on `reply`, `mention` and `comment`: the post the comment is under. */
+  postId?: string;
+  /** Set on `reply`, `mention` and `comment` under a viewer thread: with `videoId`, where it opens. */
+  threadId?: string;
+  /** Set on `moderation`: what was done, why, and when a ban ends. */
+  moderation?: {
+    action: 'hold' | 'hide' | 'remove' | 'ban';
+    reason: string | null;
+    expiresAt: string | null;
+  };
+}
+
+/** Written when the notification is created, so listing and pushing it need no join. */
+export interface NotificationPayload extends NotificationFields {
+  /** Absent on a row written before watch parties; `null` on every kind but the party ones. */
+  party?: NotificationParty | null;
+}
+
+interface NotificationViewPayload extends NotificationFields {
+  party: NotificationParty | null;
 }
 
 export interface Notification {
@@ -93,6 +144,7 @@ export interface Notification {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
+  watchPartyId: string | null;
   groupKey: string | null;
   payload: NotificationPayload;
   readAt: Date | null;
@@ -105,8 +157,29 @@ export interface NewNotificationInput {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
+  /** The room a party notification points at; its row goes with the room. */
+  watchPartyId?: string | null;
   groupKey: string | null;
   payload: Omit<NotificationPayload, 'count'>;
+}
+
+/** What tells one event of a group from another: the video and comment, and for an invite the invite, for a post the post. */
+export function sameNotificationSubject(
+  held: {
+    videoId: string | null;
+    commentId: string | null;
+    payload: Pick<NotificationPayload, 'party' | 'postId'>;
+  },
+  input: Pick<NewNotificationInput, 'videoId' | 'commentId'> & {
+    payload: Pick<NotificationPayload, 'party' | 'postId'>;
+  }
+): boolean {
+  return (
+    held.videoId === input.videoId &&
+    held.commentId === input.commentId &&
+    (held.payload.party?.inviteId ?? null) === (input.payload.party?.inviteId ?? null) &&
+    (held.payload.postId ?? null) === (input.payload.postId ?? null)
+  );
 }
 
 /**
@@ -119,13 +192,14 @@ export function foldNotification(
   input: NewNotificationInput,
   now: Date
 ): Notification | null {
-  if (existing.videoId === input.videoId && existing.commentId === input.commentId) return null;
+  if (sameNotificationSubject(existing, input)) return null;
 
   return {
     ...existing,
     actorChannelId: input.actorChannelId,
     videoId: input.videoId,
     commentId: input.commentId,
+    watchPartyId: input.watchPartyId ?? null,
     payload: { ...input.payload, count: existing.payload.count + 1 },
     createdAt: now,
   };
@@ -138,7 +212,7 @@ export interface NotificationView {
   actorChannelId: string | null;
   videoId: string | null;
   commentId: string | null;
-  payload: NotificationPayload;
+  payload: NotificationViewPayload;
   read: boolean;
   createdAt: string;
 }
@@ -151,7 +225,7 @@ export function toNotificationView(notification: Notification): NotificationView
     actorChannelId,
     videoId,
     commentId,
-    payload,
+    payload: { ...payload, party: payload.party ?? null },
     read: readAt !== null,
     createdAt: createdAt.toISOString(),
   };

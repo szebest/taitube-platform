@@ -1,11 +1,11 @@
+import { LogContext, createLogger } from '@kit/logger';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { LogContext, createLogger } from '@vp/logger';
-import { expectOk } from '@vp/testing/result';
 import { composeWorker } from '../runner';
 import { inMemoryQueues } from '../stages/housekeeping/__tests__/housekeeping-harness';
 import { STAGE_SETTINGS } from './stage-settings';
@@ -25,6 +25,7 @@ describe('housekeeping worker runner', () => {
       logContext: new LogContext(),
       media: STAGE_SETTINGS.media,
       speech: STAGE_SETTINGS.speech,
+      fingerprint: STAGE_SETTINGS.fingerprint,
       workerId: STAGE_SETTINGS.workerId,
     });
 

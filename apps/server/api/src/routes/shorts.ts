@@ -1,10 +1,11 @@
+import { isErr } from '@kit/result';
 import { getShorts } from '@vp/api-contracts';
-import { isErr } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
+import { viewerSessionOf } from './video-access-request';
 
 export async function shortsRoutes(app: FastifyInstance): Promise<void> {
   const { feedService } = app.services;
@@ -23,11 +24,11 @@ export async function shortsRoutes(app: FastifyInstance): Promise<void> {
         },
       },
       async (request, reply) => {
-        const page = await feedService.getShorts(
-          request.query,
-          request.headers['if-none-match'],
-          request.user
-        );
+        const page = await feedService.getShorts(request.query, {
+          ifNoneMatch: request.headers['if-none-match'],
+          viewer: request.user ?? null,
+          sessionKey: viewerSessionOf(request),
+        });
         if (isErr(page)) return sendResult(reply, request, page);
 
         reply.headers(page.value.headers);

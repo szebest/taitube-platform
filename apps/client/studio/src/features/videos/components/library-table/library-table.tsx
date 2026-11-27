@@ -1,3 +1,5 @@
+import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
+import { KEYSET_PAGE_SIZE } from '@kit/query';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
@@ -8,13 +10,12 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
+import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
 import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
 import { libraryQueryOptions } from '#app/features/videos/api/library-queries';
+import { useT } from '#app/lib/messages';
 import { LibraryBatchActions } from '../library-batch-actions/library-batch-actions';
 import {
   createLibraryColumns,
@@ -26,6 +27,7 @@ import { LibraryTitleFilter } from '../library-title-filter/library-title-filter
 const LIBRARY_ID = '/_authed/videos/';
 const LIBRARY_PATH = '/videos/';
 const PAGE_SIZES = [KEYSET_PAGE_SIZE];
+const TABLE_LAYOUT = 'table-fixed min-w-[56rem]';
 
 interface LibraryTableProps {
   onInspect: (videoId: string) => void;
@@ -68,7 +70,7 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
   const selectedVideos = view.items.filter((video) => rowSelection[video.id]);
 
   const keepFailedSelected = ({ failed }: BatchOutcome) => {
-    setSelected({ viewKey, rows: Object.fromEntries(failed.map((id) => [id, true])) });
+    setSelected({ viewKey, rows: Object.fromEntries(failed.map(({ id }) => [id, true])) });
   };
 
   const changeSelection: OnChangeFn<RowSelectionState> = (updater) => {
@@ -108,6 +110,7 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
       table={table}
       state={view.items.length === 0 ? 'empty' : 'ready'}
       fetching={isFetching}
+      tableClassName={TABLE_LAYOUT}
     >
       <DataTable.Caption>{tOr('studio.libraryTitle', {}, '')}</DataTable.Caption>
       <DataTable.Toolbar>

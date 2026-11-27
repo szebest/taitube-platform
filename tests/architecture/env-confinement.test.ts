@@ -31,7 +31,7 @@ describe('architecture: process.env is read only where a process starts', () => 
   it.each([
     'apps/server/api/src/main.ts',
     'tests/e2e/run-e2e.ts',
-    'packages/server/config/src/load-env.ts',
+    'tests/integration/use-real-services.ts',
   ])('allows %s, which is listed in entrypoints.ts', (file) => {
     expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
   });

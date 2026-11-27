@@ -1,5 +1,5 @@
+import type { Failure } from '@kit/errors';
 import { ErrorCodes } from './error-codes';
-import type { Failure } from './failure';
 
 /** The receiver may recover: it did not answer in time, was unreachable, or answered 5xx or 429. */
 export type WebhookDeliveryFailed = Failure<

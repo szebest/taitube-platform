@@ -1,10 +1,10 @@
 import { videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { ReactElement } from 'react';
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProviders, withToasts } from '#app/__tests__/providers';
 import { VideoGrid, VideoGridSkeleton } from '../video-grid';
 
-const renderGrid = (grid: ReactElement) => renderPage(grid, AppProviders);
+const renderGrid = (grid: ReactElement) => renderPage(grid, withToasts(AppProviders));
 
 const manyVideos = (count: number) =>
   Array.from({ length: count }, (_, index) =>

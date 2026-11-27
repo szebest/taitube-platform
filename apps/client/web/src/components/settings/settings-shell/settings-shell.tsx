@@ -1,4 +1,4 @@
-import { cn, Icon, Slot } from '@vp/ui';
+import { cn, Icon, Slot } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 /** The settings area: a section navigation beside a content pane from medium up, the pane alone below. */

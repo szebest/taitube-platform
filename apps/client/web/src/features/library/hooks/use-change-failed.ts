@@ -1,5 +1,5 @@
-import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
+import { useT } from '#app/lib/messages';
 
 /** The toast a list change shows when the server refused it, after the list has rolled back. */
 export function useChangeFailed(): (error: unknown) => void {

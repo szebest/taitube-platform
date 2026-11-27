@@ -1,4 +1,5 @@
-import { ErrorCodes, type Failure } from '@vp/errors';
+import { type Failure } from '@kit/errors';
+import { ErrorCodes } from '@vp/errors';
 
 /**
  * Why a stream could not be opened. Both are capacity, not a caller mistake, so they keep the

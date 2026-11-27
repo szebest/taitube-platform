@@ -1,7 +1,7 @@
+import { Container } from '@kit/composition';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { expectErr, expectOk } from '@vp/testing/result';
 import { registerServices, Services } from '../services.module';
 
 const VIEWER = { id: '00000000-0000-7000-8000-00000000f501', role: 'USER' } as const;
@@ -19,6 +19,22 @@ describe('apps/server/api/composition: integration module', () => {
     expect(expectOk(await c.get(Adapters.Repositories).webhooks.listByOwner(VIEWER.id))).toEqual([
       expect.objectContaining({ id: created.id, secret: created.secret }),
     ]);
+    expectOk(await c.dispose());
+  });
+
+  it('queues a channel export through the repositories the rest of the API shares', async () => {
+    const c = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
+    const { user, acting } = expectOk(await c.get(Services.RequestIdentity).resolve(VIEWER));
+
+    const created = expectOk(
+      await c
+        .get(Services.ChannelExportService)
+        .create(user, expectOk(acting), { kind: 'videos', format: 'csv', params: {} })
+    );
+
+    expect(
+      expectOk(await c.get(Adapters.Repositories).dataExports.findById(created.id))
+    ).toMatchObject({ status: 'queued', requestedBy: VIEWER.id });
     expectOk(await c.dispose());
   });
 

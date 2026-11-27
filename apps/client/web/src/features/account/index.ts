@@ -1,10 +1,19 @@
+export {
+  AccountAccentRow,
+  AccountOrderRow,
+  OwnedChannelsRow,
+} from './components/accounts-rows/accounts-rows';
 export { AccessibilitySettings } from './components/accessibility-settings/accessibility-settings';
 export { AdvancedSettings } from './components/advanced-settings/advanced-settings';
 export { AppearanceSettings } from './components/appearance-settings/appearance-settings';
 export { AutoplayNextRow } from './components/autoplay-next-row/autoplay-next-row';
+export { ChannelPermissions } from './components/channel-permissions/channel-permissions';
 export { ClearHistoryRow } from './components/clear-history-row/clear-history-row';
+export { LazyIdentitySwitcherSheet } from './components/identity-switcher-sheet/identity-switcher-sheet.lazy';
 export { HiddenRecommendationsRow } from './components/hidden-recommendations-row/hidden-recommendations-row';
 export { LanguageRow } from './components/language-row/language-row';
+export { LazySignInDialog } from './components/sign-in-dialog/sign-in-dialog.lazy';
+export { ReplayIntent } from './components/replay-intent/replay-intent';
 export { LoginPage } from './components/login-page/login-page';
 export {
   ProcessingFinishedRow,
@@ -13,11 +22,14 @@ export {
 } from './components/notification-rows/notification-rows';
 export { LazyPersonaSwitcher } from './components/persona-switcher/persona-switcher.lazy';
 export {
+  HoverPlayRow,
   HoverPreviewRow,
   QualityRow,
   SpeedRow,
   StatsOverlayRow,
 } from './components/playback-rows/playback-rows';
+export { createMergeState } from './api/identity-reset';
+export { MergeStateContext } from './components/preferences-sync/merge-state.context';
 export { PreferencesSync } from './components/preferences-sync/preferences-sync';
 export {
   PauseHistoryRow,
@@ -26,5 +38,6 @@ export {
 } from './components/privacy-rows/privacy-rows';
 export { SettingsLayout } from './components/settings-layout/settings-layout';
 export { SettingsOverview } from './components/settings-overview/settings-overview';
+export { SignInHistoryRow } from './components/sign-in-history-row/sign-in-history-row';
 export { SettingsSectionPage } from './components/settings-section-page/settings-section-page';
 export { AccountMenu } from './components/account-menu/account-menu';

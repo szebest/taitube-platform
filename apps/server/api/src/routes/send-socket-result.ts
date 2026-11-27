@@ -1,6 +1,6 @@
+import type { AnyFailure } from '@kit/errors';
+import type { Result } from '@kit/result';
 import { problemFor } from '@vp/api-contracts';
-import type { AnyFailure } from '@vp/errors';
-import type { Result } from '@vp/result';
 import type { WebSocket } from 'ws';
 
 /**

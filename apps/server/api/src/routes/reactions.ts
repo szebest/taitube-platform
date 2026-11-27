@@ -2,6 +2,7 @@ import { getMyReaction, setReaction } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
+import { presentBanned } from './comments.presenter';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -25,7 +26,8 @@ export async function reactionsRoutes(app: FastifyInstance): Promise<void> {
         return sendResult(
           reply,
           request,
-          await reactionService.setReaction(user, id, request.body.type)
+          await reactionService.setReaction(user, id, request.body.type),
+          { on: { COMMENTS_BANNED: (failure) => presentBanned(failure, request.url) } }
         );
       }
     );

@@ -22,14 +22,24 @@ export interface PlayerCaptionStyle {
 /** What a skin reads from the engine, whichever engine plays the video. */
 export interface PlayerState {
   paused: boolean;
+  /** Waiting for data it does not have yet: a stall, or the first segment after a seek. */
+  buffering: boolean;
+  /** The media played to its end. */
+  ended: boolean;
   currentTime: number;
   duration: number;
+  /** Where the buffered range around the playhead ends, in seconds. */
+  bufferedEnd: number;
   /** The gain the media element applies, from 0 to 1. */
   volume: number;
   muted: boolean;
   playbackRate: number;
   fullscreen: boolean;
   canFullscreen: boolean;
+  /** The picture is in the browser's own floating window. */
+  pictureInPicture: boolean;
+  /** The browser has the API and the video has pictures to float; false everywhere else, so no control is drawn. */
+  canPictureInPicture: boolean;
   controlsVisible: boolean;
   renditions: readonly PlayerRendition[];
   /** The id of the rendition the viewer picked, or the engine's `AUTO_QUALITY` while adaptive bitrate picks. */
@@ -55,6 +65,8 @@ export interface PlayerCommands {
   selectVideoRendition(id: string): void;
   requestFullscreen(): void;
   exitFullscreen(): void;
+  requestPictureInPicture(): void;
+  exitPictureInPicture(): void;
   /** Keeps the controls shown, idle or not, until the returned release runs. */
   requestControlsLock(): () => void;
   /** `null` turns captions off. */

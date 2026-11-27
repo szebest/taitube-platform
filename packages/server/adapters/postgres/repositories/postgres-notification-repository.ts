@@ -1,3 +1,5 @@
+import { MS_PER_DAY } from '@kit/primitives';
+import { fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   ListNotificationsOptions,
   MarkedRead,
@@ -12,15 +14,14 @@ import {
   type Notification,
   type NotificationReadScope,
   notificationCreated,
+  notificationIdsByUser,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
-import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, ok, type Result } from '@vp/result';
 import { and, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, keysetBefore } from '../scopes/index';
+import { drizzleWhere, keysetBefore, msTimestamp } from '../scopes/index';
 import { appendUserEvent, lockUserEvents } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
@@ -57,6 +58,12 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
                   eq(n.groupKey, input.groupKey),
                   input.videoId ? eq(n.videoId, input.videoId) : isNull(n.videoId),
                   input.commentId ? eq(n.commentId, input.commentId) : isNull(n.commentId),
+                  input.payload.party
+                    ? sql`${n.payload} -> 'party' ->> 'inviteId' = ${input.payload.party.inviteId}`
+                    : undefined,
+                  input.payload.postId
+                    ? sql`${n.payload} ->> 'postId' = ${input.payload.postId}`
+                    : undefined,
                   gt(n.createdAt, windowStart)
                 )
               )
@@ -113,10 +120,14 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
             drizzleWhere(
               eq(n.userId, userId),
               filter === 'all' ? undefined : inArray(n.kind, [...kindsOfFilter(filter)]),
-              keysetBefore(n.createdAt, n.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
+              keysetBefore(
+                msTimestamp(n.createdAt),
+                n.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-          .orderBy(desc(n.createdAt), desc(n.id))
+          .orderBy(desc(msTimestamp(n.createdAt)), desc(n.id))
           .limit(limit + 1),
       databaseUnavailable.during('listNotifications')
     );
@@ -175,6 +186,32 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
     );
   }
 
+  async withdrawUnread(
+    commentIds: readonly string[]
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    if (commentIds.length === 0) return ok(0);
+
+    return fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const deleted = await tx
+            .delete(n)
+            .where(and(isNull(n.readAt), inArray(n.commentId, [...commentIds])))
+            .returning({ id: n.id, userId: n.userId });
+
+          for (const [userId, ids] of notificationIdsByUser(deleted)) {
+            await lockUserEvents(tx, userId);
+            await appendUserEvent(tx, {
+              userId,
+              ...notificationRead({ scope: 'ids', ids }, await unreadCountOf(tx, userId)),
+            });
+          }
+          return deleted.length;
+        }),
+      databaseUnavailable.during('withdrawNotifications')
+    );
+  }
+
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
     const cutoff = new Date(Date.now() - retentionDays * MS_PER_DAY);
     const rows = await fromPromise(
@@ -198,6 +235,7 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
         actorChannelId: input.actorChannelId,
         videoId: input.videoId,
         commentId: input.commentId,
+        watchPartyId: input.watchPartyId ?? null,
         groupKey: input.groupKey,
         payload: { ...input.payload, count: 1 },
         createdAt: now,
@@ -222,6 +260,7 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
         actorChannelId: folded.actorChannelId,
         videoId: folded.videoId,
         commentId: folded.commentId,
+        watchPartyId: folded.watchPartyId,
         payload: folded.payload,
         createdAt: folded.createdAt,
       })

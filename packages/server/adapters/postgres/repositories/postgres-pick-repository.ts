@@ -1,9 +1,10 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type { PickRange, PickRepositoryPort, PickWriteFailure } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { EditorPick, EditorPickEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable, pickWindowOverlap } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
 import { and, asc, eq, getTableColumns, gt, lt, ne } from 'drizzle-orm';
+import { toVideoRecord } from '../mappers/video.mapper';
 import { isExclusionViolation } from '../pg-errors';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -102,7 +103,7 @@ export class PostgresPickRepository implements PickRepositoryPort {
         .select({ pick: getTableColumns(p), video: getTableColumns(v), ...channelCardColumns })
         .from(p)
         .innerJoin(v, eq(v.id, p.videoId))
-        .leftJoin(ch, eq(ch.userId, v.ownerId))
+        .leftJoin(ch, eq(ch.id, v.channelId))
         .where(where)
         .orderBy(asc(p.startsAt));
       return limit === undefined ? query : query.limit(limit);
@@ -110,7 +111,7 @@ export class PostgresPickRepository implements PickRepositoryPort {
     return map(rows, (found) =>
       found.map(({ pick, video, channelId, handle, displayName, avatarUrl }) => ({
         pick,
-        video,
+        video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
     );

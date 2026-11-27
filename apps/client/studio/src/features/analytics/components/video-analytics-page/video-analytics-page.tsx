@@ -1,8 +1,11 @@
+import { PageHeader } from '@kit/components';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { PageHeader } from '@vp/components';
-import { useT } from '@vp/intl-react';
+import { useT } from '#app/lib/messages';
 import { AnalyticsOverview } from '../analytics-overview/analytics-overview';
 import { AnalyticsRangeSwitch } from '../analytics-range-switch/analytics-range-switch';
+import { BenchmarkChart } from '../benchmark-chart/benchmark-chart';
+import { DeviceSplit } from '../device-split/device-split';
+import { DropOffBadges } from '../drop-off-badges/drop-off-badges';
 import { RetentionHeatmap } from '../retention-heatmap/retention-heatmap';
 
 const VIDEO_ANALYTICS_ID = '/_authed/videos/$videoId/analytics';
@@ -28,6 +31,11 @@ export function VideoAnalyticsPage() {
         </PageHeader.Actions>
       </PageHeader.Root>
       <AnalyticsOverview scope={{ kind: 'video', videoId }} range={range} />
+      <div className="grid gap-section medium:grid-cols-2">
+        <DeviceSplit videoId={videoId} range={range} />
+        <BenchmarkChart videoId={videoId} />
+      </div>
+      <DropOffBadges videoId={videoId} />
       <RetentionHeatmap videoId={videoId} />
     </div>
   );

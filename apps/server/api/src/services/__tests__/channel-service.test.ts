@@ -1,14 +1,12 @@
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { expectErr, expectOk } from '@kit/testing/result';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
-import { ChannelImageService } from '../channel-image-service';
-import { ChannelService } from '../channel-service';
-import {
-  channelImageServiceDeps,
-  channelServiceDeps,
-  TEST_CDN,
-  TEST_PUBLIC_BUCKET,
-} from './service-deps';
+import type { UserContext } from '@vp/permissions';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
+import { ChannelService, type UpdateChannelCommand } from '../channel-service';
+import { channelServiceDeps, ownerActing } from './service-deps';
+
+const LOCALES = ['en'];
 
 describe('ChannelService', () => {
   let repositories: InMemoryRepositories;
@@ -16,7 +14,11 @@ describe('ChannelService', () => {
 
   const USER_ID = '018f0000-0000-7000-8000-000000000001';
   const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';
+  const ABSENT_CHANNEL_ID = '018f0000-0000-7000-8000-0000000000ff';
   const CHANNELLESS_USER_ID = '018f0000-0000-7000-8000-000000000003';
+  const USER: UserContext = { id: USER_ID, role: 'CREATOR' };
+  const ACTING = ownerActing(USER_ID, CHANNEL_ID);
+  const update = (input: UpdateChannelCommand) => channelService.updateChannel(USER, ACTING, input);
 
   async function seedChannellessUser(): Promise<void> {
     expectOk(
@@ -73,7 +75,7 @@ describe('ChannelService', () => {
         expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
       ).toMatchObject({ autoCaptionsDefault: false });
 
-      expectOk(await repositories.captions.setChannelDefault(USER_ID, true));
+      expectOk(await repositories.captions.setChannelDefault(CHANNEL_ID, true));
 
       expect(
         expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
@@ -103,40 +105,33 @@ describe('ChannelService', () => {
   });
 
   describe('updateChannel', () => {
-    it('stores the public address of an uploaded banner in place of its key', async () => {
-      const storage = new InMemoryStorageClient();
-      const images = new ChannelImageService(channelImageServiceDeps(repositories, { storage }));
-      const withImages = new ChannelService(channelServiceDeps(repositories, { images }));
-      const key = `channels/${CHANNEL_ID}/banner/b1.jpg`;
-      await storage.uploadObject({
-        bucket: TEST_PUBLIC_BUCKET,
-        key,
-        body: Buffer.from('x'),
-        contentType: 'image/jpeg',
-      });
+    it.each([
+      {
+        name: 'an external picture address',
+        change: { avatarUrl: 'https://img.example.com/a.png' },
+      },
+      {
+        name: 'an external banner address',
+        change: { bannerUrl: 'https://img.example.com/b.png' },
+      },
+    ])('stores $name as sent', async ({ change }) => {
+      const updated = expectOk(await update(change));
 
-      const updated = expectOk(await withImages.updateChannel(USER_ID, { bannerKey: key }));
-
-      expect(updated.bannerUrl).toBe(`${TEST_CDN}/${key}`);
+      expect(updated).toMatchObject(change);
     });
 
-    it('refuses a banner key that names nothing and keeps the banner it has', async () => {
-      const failure = expectErr(
-        await channelService.updateChannel(USER_ID, {
-          bannerKey: `channels/${CHANNEL_ID}/banner/none.jpg`,
-        })
-      );
+    it('clears the banner when its address is null and leaves the picture alone', async () => {
+      expectOk(await update({ avatarUrl: 'https://img.example.com/a.png' }));
 
-      expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);
-      expect(
-        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
-          .bannerUrl
-      ).toBe('https://cdn.example.com/banner.png');
+      const updated = expectOk(await update({ bannerUrl: null }));
+
+      expect(updated.bannerUrl).toBeNull();
+      expect(updated.avatarUrl).toBe('https://img.example.com/a.png');
     });
 
     it('updates channel metadata successfully', async () => {
       const updated = expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           displayName: 'Updated Name',
           handle: 'new_handle',
           bio: 'Updated bio',
@@ -152,43 +147,43 @@ describe('ChannelService', () => {
       { name: 'a malformed handle', handle: 'ab', code: ErrorCodes.INVALID_HANDLE_FORMAT },
       { name: 'a reserved handle', handle: 'admin', code: ErrorCodes.HANDLE_ALREADY_TAKEN },
     ])('rejects $name with $code', async ({ handle, code }) => {
-      const failure = expectErr(await channelService.updateChannel(USER_ID, { handle }));
+      const failure = expectErr(await update({ handle }));
 
       expect(failure.code).toBe(code);
     });
 
     it('stores trimmed links in the order given, and an empty list clears them', async () => {
       const stored = expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           links: [
             { label: ' Shop ', url: 'https://shop.example.com' },
             { label: 'Blog', url: 'https://blog.example.com' },
           ],
         })
       );
-      const cleared = expectOk(await channelService.updateChannel(USER_ID, { links: [] }));
+      const cleared = expectOk(await update({ links: [] }));
 
       expect(stored.links).toEqual([
-        { label: 'Shop', url: 'https://shop.example.com' },
-        { label: 'Blog', url: 'https://blog.example.com' },
+        { label: 'Shop', url: 'https://shop.example.com', platform: 'website' },
+        { label: 'Blog', url: 'https://blog.example.com', platform: 'website' },
       ]);
       expect(cleared.links).toEqual([]);
     });
 
     it.each([
       {
-        name: 'a sixth link',
-        links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+        name: 'a ninth link',
+        links: Array.from({ length: 9 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
       },
       { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
     ])('refuses $name and leaves the stored links alone', async ({ links }) => {
       expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           links: [{ label: 'Kept', url: 'https://kept.example.com' }],
         })
       );
 
-      const failure = expectErr(await channelService.updateChannel(USER_ID, { links }));
+      const failure = expectErr(await update({ links }));
 
       expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'links' });
       expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.links).toEqual([
@@ -197,20 +192,16 @@ describe('ChannelService', () => {
     });
 
     it('stores a brand colour lower-cased and clears it with null', async () => {
-      const stored = expectOk(
-        await channelService.updateChannel(USER_ID, { brandColor: '#FFFF00' })
-      );
-      const cleared = expectOk(await channelService.updateChannel(USER_ID, { brandColor: null }));
+      const stored = expectOk(await update({ brandColor: '#FFFF00' }));
+      const cleared = expectOk(await update({ brandColor: null }));
 
       expect([stored.brandColor, cleared.brandColor]).toEqual(['#ffff00', null]);
     });
 
     it('refuses a malformed brand colour and leaves the stored one alone', async () => {
-      expectOk(await channelService.updateChannel(USER_ID, { brandColor: '#3366cc' }));
+      expectOk(await update({ brandColor: '#3366cc' }));
 
-      const failure = expectErr(
-        await channelService.updateChannel(USER_ID, { brandColor: 'blue' })
-      );
+      const failure = expectErr(await update({ brandColor: 'blue' }));
 
       expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'brandColor' });
       expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.brandColor).toBe(
@@ -222,7 +213,11 @@ describe('ChannelService', () => {
       await seedChannellessUser();
 
       const failure = expectErr(
-        await channelService.updateChannel(CHANNELLESS_USER_ID, { displayName: 'Ghost' })
+        await channelService.updateChannel(
+          { id: CHANNELLESS_USER_ID, role: 'USER' },
+          ownerActing(CHANNELLESS_USER_ID, ABSENT_CHANNEL_ID),
+          { displayName: 'Ghost' }
+        )
       );
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
@@ -234,7 +229,7 @@ describe('ChannelService', () => {
       { name: 'handle', idOrHandle: '@creator' },
       { name: 'UUID', idOrHandle: CHANNEL_ID },
     ])('finds a public channel by $name', async ({ idOrHandle }) => {
-      const channel = expectOk(await channelService.getPublicChannel(idOrHandle));
+      const channel = expectOk(await channelService.getPublicChannel(idOrHandle, LOCALES));
 
       expect(channel.id).toBe(CHANNEL_ID);
       expect(channel.handle).toBe('creator');
@@ -249,6 +244,7 @@ describe('ChannelService', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-0000000000b1',
         ownerId: USER_ID,
+        channelId: await seedPrimaryChannel(repositories, USER_ID),
         sourceKey: 'raw/b1/source.mp4',
         visibility: 'public',
         status: 'READY',
@@ -257,23 +253,24 @@ describe('ChannelService', () => {
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-0000000000b2',
         ownerId: USER_ID,
+        channelId: await seedPrimaryChannel(repositories, USER_ID),
         sourceKey: 'raw/b2/source.mp4',
         visibility: 'private',
         status: 'READY',
         viewsCount: 90,
       });
 
-      const channel = expectOk(await channelService.getPublicChannel('@creator'));
+      const channel = expectOk(await channelService.getPublicChannel('@creator', LOCALES));
 
       expect(channel).toMatchObject({
-        links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        links: [{ label: 'Shop', url: 'https://shop.example.com', platform: 'website' }],
         videoCount: 1,
         totalViews: 12,
       });
     });
 
     it('reports CHANNEL_NOT_FOUND for a non-existent channel', async () => {
-      const failure = expectErr(await channelService.getPublicChannel('nonexistent'));
+      const failure = expectErr(await channelService.getPublicChannel('nonexistent', LOCALES));
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });

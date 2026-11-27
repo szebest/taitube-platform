@@ -1,6 +1,7 @@
+import { assertNever } from '@kit/result';
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
-import { assertNever } from '@vp/result';
+import { VIDEO_LIFECYCLE_EDGES, type VideoStatus } from '@vp/domain';
 import { creatorCommentKeys } from './comment-queries';
 import { notificationKeys, setUnreadCount } from './notification-queries';
 import { videoKeys } from './video-queries';
@@ -9,7 +10,10 @@ type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload
 
 const PREFERENCES_KEY = ['preferences'] as const;
 const LIVE_KEY = ['live'] as const;
+const PARTY_CONTROLS_KEY = ['watch-party-controls'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
+
+const TRANSCODING: readonly VideoStatus[] = VIDEO_LIFECYCLE_EDGES.package.from;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -33,13 +37,17 @@ function applyVideoProcessing(
       void queryClient.invalidateQueries({ queryKey: videoKeys.mine() });
       return;
     case 'progress':
-      patchVideo(queryClient, videoId, (video) => ({
-        ...video,
-        progress: {
-          overall: change.overall,
-          byRendition: { ...video.progress.byRendition, [change.rendition]: change.percent },
-        },
-      }));
+      patchVideo(queryClient, videoId, (video) =>
+        TRANSCODING.includes(video.status)
+          ? {
+              ...video,
+              progress: {
+                overall: change.overall,
+                byRendition: { ...video.progress.byRendition, [change.rendition]: change.percent },
+              },
+            }
+          : video
+      );
       return;
     default:
       assertNever(change, 'VideoProcessingChange');
@@ -65,7 +73,7 @@ function applyNotificationChange(
 }
 
 function applyCommentCreated(
-  _payload: UserEventPayloads['comment.created'],
+  _payload: UserEventPayloads['comment.created' | 'comment.held'],
   queryClient: QueryClient
 ) {
   void queryClient.invalidateQueries({ queryKey: creatorCommentKeys.all });
@@ -90,11 +98,47 @@ function applyLiveStarted(
   }
 }
 
+function applyPartyControlsUpdated(
+  _payload: UserEventPayloads['party.controls.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: PARTY_CONTROLS_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
  */
-export const userEventHandlers: UserEventHandlers = {
+/** The new image changes what a channel resource's `avatar` and `banner` address, so a cached one is stale. */
+function applyChannelImageReady(
+  { channelId }: UserEventPayloads['channel.image.ready'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: [...CHANNEL_DETAIL_KEY, channelId] });
+}
+
+/** A failed upload changes nothing a query holds; the studio's own upload state reads the event. */
+function ignoreChannelImageFailed() {}
+
+function applyVideoStatsUpdated(
+  { videoId }: UserEventPayloads['video.stats.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.creatorStats(videoId) });
+  void queryClient.invalidateQueries({ queryKey: videoKeys.retention(videoId) });
+}
+
+function ignoreExportChange() {}
+
+/** The Edit video tab's generations and the video itself, which a swap points at new renditions. */
+function applyGenerationUpdated(
+  { videoId }: UserEventPayloads['video.generation.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.detail(videoId) });
+}
+
+const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,
@@ -102,7 +146,15 @@ export const userEventHandlers: UserEventHandlers = {
   'notification.created': applyNotificationChange,
   'notification.read': applyNotificationChange,
   'comment.created': applyCommentCreated,
+  'comment.held': applyCommentCreated,
   'live.started': applyLiveStarted,
+  'channel.image.ready': applyChannelImageReady,
+  'channel.image.failed': ignoreChannelImageFailed,
+  'party.controls.updated': applyPartyControlsUpdated,
+  'video.stats.updated': applyVideoStatsUpdated,
+  'export.ready': ignoreExportChange,
+  'export.failed': ignoreExportChange,
+  'video.generation.updated': applyGenerationUpdated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

@@ -1,3 +1,6 @@
+import { EmptyState, SectionError } from '@kit/components';
+import { Format } from '@kit/intl-react';
+import { DropdownMenu, Icon, IconButton } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import {
@@ -6,13 +9,10 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import { EmptyState, SectionError } from '@vp/components';
-import { publishedAt } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
+import { publishedAt } from '@vp/intl-formats';
 import { canDeleteVideo, canModerateVideo, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-import { DropdownMenu, Icon, IconButton } from '@vp/ui';
 import { useState } from 'react';
 import {
   DataTable,
@@ -22,6 +22,7 @@ import {
 import { LoadMore } from '#app/components/table/load-more';
 import { type AdminVideo, adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
 import { sortingOf, sortOf } from '#app/features/admin/api/moderation-search';
+import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ModerationFilters } from '../moderation-filters/moderation-filters';
 import {

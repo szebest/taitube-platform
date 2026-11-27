@@ -1,10 +1,11 @@
+import { Paginator } from '@kit/pagination';
+import type { Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
-import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import type { Result } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import type { Mock } from 'vite-plus/test';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { RecommendationFeedbackService } from '../recommendation-feedback-service';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
@@ -48,6 +49,7 @@ describe('apps/server/api/services: RecommendationFeedbackService', () => {
       await repositories.videos.create({
         id,
         ownerId: OWNER,
+        channelId: await seedPrimaryChannel(repositories, OWNER),
         title: id,
         visibility,
         status: 'READY',

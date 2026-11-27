@@ -1,5 +1,5 @@
 import { Link, Outlet } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
+import { useT } from '#app/lib/messages';
 
 const TAB =
   'rounded-control px-inset-control py-inline text-label text-fg-muted no-underline hover:bg-tint focus-ring';
@@ -20,6 +20,9 @@ export function AdminLayout() {
         </Link>
         <Link to="/admin/moderation" className={TAB} activeProps={ACTIVE_TAB}>
           {tOr('studio.adminTabModeration', {}, '')}
+        </Link>
+        <Link to="/admin/screening" className={TAB} activeProps={ACTIVE_TAB}>
+          {tOr('studio.adminTabScreening', {}, '')}
         </Link>
         <Link to="/admin/queues" className={TAB} activeProps={ACTIVE_TAB}>
           {tOr('studio.adminTabQueues', {}, '')}

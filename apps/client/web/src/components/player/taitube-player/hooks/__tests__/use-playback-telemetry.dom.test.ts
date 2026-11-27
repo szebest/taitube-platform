@@ -1,8 +1,8 @@
+import { sendJsonBeacon } from '@kit/web-telemetry';
 import { renderHook } from '@testing-library/react';
-import { sendJsonBeacon } from '@vp/web-telemetry';
 import { usePlaybackTelemetry } from '../use-playback-telemetry';
 
-vi.mock(import('@vp/web-telemetry'), async (importOriginal) => ({
+vi.mock(import('@kit/web-telemetry'), async (importOriginal) => ({
   ...(await importOriginal()),
   sendJsonBeacon: vi.fn(),
 }));
@@ -17,7 +17,18 @@ function setVisibility(state: DocumentVisibilityState) {
   document.dispatchEvent(new Event('visibilitychange'));
 }
 
+function reportPointer(coarse: boolean, screen: { width: number; height: number }) {
+  vi.spyOn(window, 'matchMedia').mockImplementation(
+    (query) => ({ matches: coarse && query === '(pointer: coarse)' }) as MediaQueryList
+  );
+  vi.spyOn(window, 'screen', 'get').mockReturnValue(screen as Screen);
+}
+
 describe('apps/client/web: usePlaybackTelemetry', () => {
+  beforeEach(() => {
+    reportPointer(false, { width: 1920, height: 1080 });
+  });
+
   afterEach(() => {
     setVisibility('visible');
   });
@@ -37,6 +48,18 @@ describe('apps/client/web: usePlaybackTelemetry', () => {
         }),
       },
     ]);
+  });
+
+  it.each([
+    ['a phone', true, { width: 390, height: 844 }, 'mobile'],
+    ['a tablet', true, { width: 820, height: 1180 }, 'tablet'],
+    ['a desktop', false, { width: 1920, height: 1080 }, 'desktop'],
+  ])('tells the endpoint it is %s', (_name, coarse, screen, device) => {
+    reportPointer(coarse, screen);
+
+    renderHook(() => usePlaybackTelemetry(VIDEO_ID)).result.current.onPlay(PROGRESS);
+
+    expect(sent()[0]?.event).toMatchObject({ device });
   });
 
   it('starts a new session for the next video load', () => {
@@ -63,5 +86,26 @@ describe('apps/client/web: usePlaybackTelemetry', () => {
     unmount();
     expect(sent()).toHaveLength(2);
     vi.useRealTimers();
+  });
+
+  it("tells every event the read's share link and test variant, as they arrive, in the same session", () => {
+    const attribution = {
+      shareLinkId: '0190c3a0-5e1d-7000-8000-0000000000e1',
+      experiment: { experimentId: '0190c3a0-5e1d-7000-8000-0000000000e2', variantId: 'b' as const },
+    };
+    const { result, rerender } = renderHook(({ shown }) => usePlaybackTelemetry(VIDEO_ID, shown), {
+      initialProps: { shown: {} },
+    });
+
+    rerender({ shown: attribution });
+    result.current.onPlay(PROGRESS);
+    result.current.onEnded({ duration: PROGRESS.duration });
+
+    const events = sent().map(({ event }) => event);
+    expect(events).toEqual([
+      expect.objectContaining({ eventType: 'playback_start', ...attribution }),
+      expect.objectContaining({ eventType: 'playback_ended', ...attribution }),
+    ]);
+    expect(new Set(events.map((event) => Reflect.get(event, 'sessionUuid'))).size).toBe(1);
   });
 });

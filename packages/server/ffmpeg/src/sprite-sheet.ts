@@ -1,4 +1,4 @@
-import { MS_PER_SECOND, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@vp/domain/time';
+import { MS_PER_SECOND, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@kit/primitives';
 
 /** The sprite sheet's geometry; the WebVTT cues and the tiling filter both read it. */
 export interface SpriteLayout {

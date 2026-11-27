@@ -1,43 +1,65 @@
-import type { CommentReplyCursor, CommentThreadCursor, CommentWindow } from '@vp/core/repositories';
+import { assertNever } from '@kit/result';
+import type {
+  CommentReplyCursor,
+  CommentThreadCursor,
+  CommentViewer,
+  CommentWindow,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
-import { assertNever } from '@vp/result';
-import { type SQL, asc, desc, getTableColumns, sql } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { type SQL, type SQLWrapper, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { aliasedTable, msTimestamp, ownOrPublicScope } from '../scopes/index';
+import { sameTarget, targetOf } from './comment-targets';
+import type { PostgresDatabase } from './types';
 
-const { videoComments: c, channels: ch } = schema;
+const { comments: c, channels: ch } = schema;
 
 type CommentRow = typeof c.$inferSelect;
 
-const replyCount = sql<number>`(
-  select count(*)::int from ${c} as reply
-  where reply.video_id = ${c.videoId} and reply.parent_id = ${c.id} and reply.deleted_at is null
+const reply = aliasedTable(c, 'reply');
+
+const replyCountOf = (scope: SQL | undefined) => sql<number>`(
+  select count(*)::int from ${reply.from}
+  where ${sameTarget(reply.table, c)} and ${reply.table.parentId} = ${c.id}
+    and ${reply.table.deletedAt} is null${scope ? sql` and ${scope}` : sql``}
 )`;
 
-/** Selected over `video_comments LEFT JOIN channels ON channels.user_id = author_id`. */
-export const commentThreadColumns = {
+const channelColumns = {
   ...getTableColumns(c),
-  channelId: ch.id,
   handle: ch.handle,
   displayName: ch.displayName,
   avatarUrl: ch.avatarUrl,
-  replyCount,
 };
 
+/**
+ * Selected over `comments LEFT JOIN channels ON channels.id = author_channel_id`. The reply
+ * count is what the viewer may see of the replies, so it matches the thread they open.
+ */
+const publicThreadColumns = (viewer: CommentViewer) => ({
+  ...channelColumns,
+  replyCount: replyCountOf(ownOrPublicScope(viewer, reply.table)),
+});
+
+/** For the creator and their moderators, who see every reply. */
+export const moderatedThreadColumns = { ...channelColumns, replyCount: replyCountOf(undefined) };
+
 type ThreadRow = CommentRow & {
-  channelId: string | null;
   handle: string | null;
   displayName: string | null;
   avatarUrl: string | null;
   replyCount: number;
 };
 
-export function toComment({ deletedAt: _deletedAt, ...comment }: CommentRow): Comment {
-  return comment;
+export function toComment({
+  deletedAt: _deletedAt,
+  targetType,
+  targetId,
+  ...comment
+}: CommentRow): Comment {
+  return { ...comment, target: targetOf({ targetType, targetId }) };
 }
 
 export function toCommentThread({
-  channelId,
   handle,
   displayName,
   avatarUrl,
@@ -45,12 +67,18 @@ export function toCommentThread({
   ...row
 }: ThreadRow): CommentThread {
   const comment = toComment(row);
-  const author = { userId: comment.authorId, channelId, handle, displayName, avatarUrl };
+  const author = {
+    userId: comment.authorId,
+    channelId: comment.authorChannelId,
+    handle,
+    displayName,
+    avatarUrl,
+  };
   return { ...comment, author, replyCount };
 }
 
 interface SortKey<Cursor> {
-  column: AnyPgColumn;
+  column: SQLWrapper;
   at: (cursor: Cursor) => SQL;
 }
 
@@ -63,12 +91,12 @@ const LIKES: SortKey<CommentThreadCursor> = {
   at: (k) => sql`${k.likeCount}::integer`,
 };
 const CREATED: SortKey<CommentReplyCursor> = {
-  column: c.createdAt,
+  column: msTimestamp(c.createdAt),
   at: (k) => sql`${k.createdAt.toISOString()}::timestamptz`,
 };
 const ID: SortKey<CommentReplyCursor> = { column: c.id, at: (k) => sql`${k.id}::uuid` };
 
-/** Every key descends, so one row comparison resumes the walk down the matching index. */
+/** Every key descends, so one row comparison resumes the walk. */
 const THREAD_KEYS: Readonly<Record<CommentSort, readonly SortKey<CommentThreadCursor>[]>> = {
   top: [PINNED, LIKES, CREATED, ID],
   newest: [PINNED, CREATED, ID],
@@ -127,4 +155,21 @@ export function commentWindowBounds(window: CommentWindow): {
     default:
       return assertNever(window, 'CommentWindow');
   }
+}
+
+export function selectThreads(db: PostgresDatabase, viewer: CommentViewer) {
+  return db
+    .select(publicThreadColumns(viewer))
+    .from(c)
+    .leftJoin(ch, eq(ch.id, c.authorChannelId))
+    .$dynamic();
+}
+
+export async function threadById(
+  db: PostgresDatabase,
+  id: string,
+  viewer: CommentViewer
+): Promise<CommentThread | null> {
+  const [row] = await selectThreads(db, viewer).where(eq(c.id, id));
+  return row ? toCommentThread(row) : null;
 }

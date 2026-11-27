@@ -59,7 +59,7 @@ one is in [architecture.md section 3](../architecture.md#3-shared-option-unions)
 - Role names (`fg-muted`, `accent-ink`), radius roles (`thumb`, `control`) and spacing or sizing roles
   (`gap-stack`, `control-md`) are written in code font; a
   component names the role and never a hex value, a ramp step or a palette class.
-- "Enforced" means the contrast gate in `@vp/design-tokens` fails the build on a miss; "advisory" means a
+- "Enforced" means the contrast gate in `@kit/design-tokens` fails the build on a miss; "advisory" means a
   recommendation with no gate.
 - Ratios are WCAG 2.x relative luminance, computed from the resolved hex values, with translucent roles
   composited over the ground they sit on.

@@ -1,21 +1,21 @@
-import type { CommentThread } from '@vp/domain';
+import type { Result } from '@kit/result';
+import type { CommentTarget, CommentThread } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import type { Result } from '@vp/result';
 
-/** The first page of a video's top comments, over-fetched by one row, and its comment count. */
+/** The first page of a target's top comments, over-fetched by one row, and its comment count. */
 export interface HotComments {
   threads: CommentThread[];
   total: number;
 }
 
 /**
- * A read-through cache for the watch page. A miss or a dead cache falls through to the fetcher,
+ * A read-through cache for the first page under a video or a post. A miss or a dead cache falls through to the fetcher,
  * so the only failure a read reports is the fetcher's own.
  */
 export interface CommentCachePort {
   getHot<E>(
-    videoId: string,
+    target: CommentTarget,
     fetcher: () => Promise<Result<HotComments, E>>
   ): Promise<Result<HotComments, E>>;
-  invalidate(videoId: string): Promise<Result<void, CacheUnavailable>>;
+  invalidate(target: CommentTarget): Promise<Result<void, CacheUnavailable>>;
 }

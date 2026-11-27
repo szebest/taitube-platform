@@ -1,7 +1,8 @@
+import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { ChannelService } from '../channel-service';
 import { channelServiceDeps } from './service-deps';
 
@@ -21,10 +22,11 @@ describe('ChannelService.listVideos', () => {
   let repositories: InMemoryRepositories;
   let channelService: ChannelService;
 
-  const seedVideo = (id: string, overrides: Partial<NewVideoInput> = {}) =>
+  const seedVideo = async (id: string, overrides: Partial<NewVideoInput> = {}) =>
     repositories.videos.create({
       id,
       ownerId: USER_ID,
+      channelId: await seedPrimaryChannel(repositories, overrides.ownerId ?? USER_ID),
       visibility: 'public',
       status: 'READY',
       sourceKey: `raw/${id}.mp4`,

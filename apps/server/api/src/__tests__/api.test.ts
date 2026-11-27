@@ -1,11 +1,11 @@
-import { mintToken } from '@vp/dev-token';
+import { ok } from '@kit/result';
+import { mintToken } from '@vp/dev-identity';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ok } from '@vp/result';
-import { SEEDED } from '@vp/testing';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';
-import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
+import { TOKENS, bearer, buildTestApp, seedPrimaryChannel, seedVideo } from './test-app';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
@@ -21,6 +21,7 @@ describe('HTTP and auth foundations', () => {
     await repositories.videos.create({
       id: SEED_VIDEO_ID,
       ownerId: SEEDED.userId,
+      channelId: await seedPrimaryChannel(repositories, SEEDED.userId),
       title: 'Test Sintel Trailer',
       description: 'Sintel trailer test video',
       visibility: 'public',

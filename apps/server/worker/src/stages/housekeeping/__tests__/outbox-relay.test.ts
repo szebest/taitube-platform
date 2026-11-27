@@ -1,3 +1,5 @@
+import { err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
@@ -8,9 +10,7 @@ import { videoStatusChanged } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
-import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { manualInterval } from '../../../__tests__/manual-interval';
 import { OutboxRelay } from '../outbox-relay';
@@ -51,7 +51,7 @@ describe('housekeeping: outbox relay', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     getQueue = inMemoryQueues();
-    metrics = createMetricsRegistry();
+    metrics = createPipelineMetrics();
     cache = new InMemoryCacheClient();
   });
 
@@ -83,7 +83,9 @@ describe('housekeeping: outbox relay', () => {
   });
 
   it('records an attempt and keeps the entry pending when the queue is unavailable', async () => {
-    await repositories.outbox.enqueue(queueOutboxEntry('non_existent_queue'));
+    const { id } = expectOk(
+      await repositories.outbox.enqueue(queueOutboxEntry('non_existent_queue'))
+    );
     const unavailable = new InMemoryJobQueue('non_existent_queue');
     vi.spyOn(unavailable, 'add').mockResolvedValue(err(queueUnavailable('add')));
 
@@ -92,7 +94,10 @@ describe('housekeeping: outbox relay', () => {
       successCount: 0,
       failureCount: 1,
     });
-    expect(expectOk(await repositories.outbox.claimBatch(10))[0]?.attempts).toBe(1);
+    expect(expectOk(await repositories.outbox.findById(id))).toMatchObject({
+      attempts: 1,
+      status: 'PENDING',
+    });
   });
 
   it('publishes the probe committed with a transition even when the direct enqueue never ran', async () => {
@@ -100,6 +105,7 @@ describe('housekeeping: outbox relay', () => {
       await repositories.videos.create({
         id: uuidv7(),
         ownerId: uuidv7(),
+        channelId: '00000000-0000-7000-8000-00000000c4a1',
         sourceKey: 'raw/source.mp4',
         status: 'UPLOADING',
       })

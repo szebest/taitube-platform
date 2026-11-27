@@ -7,7 +7,7 @@ describe('db: comment reports schema', () => {
     {
       scenario: 'drops the reports of a removed comment',
       column: 'comment_id',
-      table: 'video_comments',
+      table: 'comments',
     },
     { scenario: 'drops the reports of a deleted reporter', column: 'reporter_id', table: 'users' },
   ])('$scenario', ({ column, table }) => {

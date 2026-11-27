@@ -2,11 +2,10 @@ import {
   ACCENT_PATTERN,
   MAX_APPEARANCE_OVERRIDES,
   PREFERENCE_ID_PATTERN,
-  type Setting,
-  type TextKind,
   TOKEN_GROUP_PATTERN,
-} from '@vp/domain/settings';
-import { assertNever, isOk, tryCatch } from '@vp/result';
+} from '@kit/appearance';
+import { assertNever, isOk, tryCatch } from '@kit/result';
+import { type Setting, type TextKind } from '@vp/domain/settings';
 
 function isLanguageTag(tag: string): boolean {
   return isOk(

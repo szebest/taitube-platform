@@ -1,6 +1,6 @@
+import { type Result, err, ok } from '@kit/result';
 import { type FlowJobNode, FlowProducerPort, type QueueJob } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
 import type { InMemoryJobQueue } from './in-memory-job-queue';
 
 /** `undefined` for a queue this producer cannot run: a flow naming one is refused, not parked. */

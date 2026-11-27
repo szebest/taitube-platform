@@ -1,7 +1,7 @@
+import { DropdownMenu, Icon } from '@kit/ui';
 import type { WatchHistoryItemView } from '@vp/api-contracts';
-import { useT } from '@vp/intl-react';
-import { DropdownMenu, Icon } from '@vp/ui';
 import { useRemoveFromHistory } from '#app/features/library/hooks/use-remove-from-history';
+import { useT } from '#app/lib/messages';
 import { LibraryVideoRow } from '../library-video-row/library-video-row';
 
 export interface HistoryVideoRowProps {

@@ -1,9 +1,10 @@
+import { Format } from '@kit/intl-react';
+import { Skeleton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
-import { Format, useT } from '@vp/intl-react';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
-import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
+import { useT } from '#app/lib/messages';
 import { LazyRetentionPlot } from '../retention-plot/retention-plot.lazy';
 
 export interface RetentionHeatmapProps {

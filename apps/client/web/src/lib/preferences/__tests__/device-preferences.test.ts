@@ -1,18 +1,8 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/__tests__/device-preferences-fixtures';
-import {
-  type DevicePreferences,
-  requestDevicePreferences,
-  saveDevicePreferences,
-} from '../device-preferences';
+import { type DevicePreferences, requestDevicePreferences } from '../device-preferences';
 
 const cookieOf = (value: unknown) => `vp.device=${encodeURIComponent(JSON.stringify(value))}`;
-
-const SAVED: DevicePreferences = {
-  ...DEFAULT_DEVICE_PREFERENCES,
-  playback: { ...DEFAULT_DEVICE_PREFERENCES.playback, speed: 1.5, autoplayNext: false },
-  locale: 'sv-FI',
-};
 
 async function preferencesFor(cookie: string): Promise<DevicePreferences> {
   const answer = requestHandler(async () => Response.json(requestDevicePreferences()));
@@ -20,9 +10,18 @@ async function preferencesFor(cookie: string): Promise<DevicePreferences> {
   return response.json();
 }
 
-describe('apps/client/web: device preferences', () => {
+describe('apps/client/web: device preferences on the server', () => {
   it.each([
-    { label: 'what the cookie holds', cookie: cookieOf(SAVED), expected: SAVED },
+    {
+      label: 'the locale the cookie holds, and the defaults for every playback field',
+      cookie: cookieOf({ schema: 2, locale: 'sv-FI' }),
+      expected: { ...DEFAULT_DEVICE_PREFERENCES, locale: 'sv-FI' },
+    },
+    {
+      label: 'the locale of a version 1 cookie, and none of the playback it held',
+      cookie: cookieOf({ schema: 1, playback: { speed: 1.5 }, locale: 'sv-FI' }),
+      expected: { ...DEFAULT_DEVICE_PREFERENCES, locale: 'sv-FI' },
+    },
     { label: 'the defaults with no cookie', cookie: '', expected: DEFAULT_DEVICE_PREFERENCES },
     {
       label: 'the defaults for text that is not JSON',
@@ -30,25 +29,16 @@ describe('apps/client/web: device preferences', () => {
       expected: DEFAULT_DEVICE_PREFERENCES,
     },
     {
-      label: 'the defaults for a field that is not a choice',
-      cookie: cookieOf({ ...SAVED, playback: { ...SAVED.playback, speed: 9 } }),
-      expected: { ...SAVED, playback: { ...SAVED.playback, speed: 1 } },
+      label: 'no locale when it is not a language tag, and the rest of the cookie kept',
+      cookie: cookieOf({ schema: 2, locale: 7 }),
+      expected: { ...DEFAULT_DEVICE_PREFERENCES, locale: null },
     },
     {
-      label: 'no locale when it is not a language tag',
-      cookie: cookieOf({ ...SAVED, locale: 7 }),
-      expected: { ...SAVED, locale: null },
+      label: 'the locale of a cookie from a newer version, which this code does not rewrite',
+      cookie: cookieOf({ schema: 9, locale: 'sv-FI', ahead: true }),
+      expected: { ...DEFAULT_DEVICE_PREFERENCES, locale: 'sv-FI' },
     },
   ])('reads $label', async ({ cookie, expected }) => {
     expect(await preferencesFor(cookie)).toEqual(expected);
-  });
-
-  it('keeps the preferences in a cookie for a year, so the next server render has them', () => {
-    const document = { cookie: '' };
-    vi.stubGlobal('document', document);
-
-    saveDevicePreferences(SAVED);
-
-    expect(document.cookie).toBe(`${cookieOf(SAVED)}; Max-Age=31536000; Path=/; SameSite=Lax`);
   });
 });

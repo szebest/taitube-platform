@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { IntlProvider } from '@vp/intl-react';
+import { IntlProvider } from '@vp/queries/intl';
 import {
   TaitubePlayer,
   type TaitubePlayerWithTelemetryProps,
 } from '#app/components/player/taitube-player/taitube-player';
+import { WEB_MESSAGES } from '#app/lib/messages';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -11,7 +12,7 @@ afterEach(() => {
 
 function renderPlayer(props: Partial<TaitubePlayerWithTelemetryProps> = {}) {
   const rendered = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <TaitubePlayer
         videoId="0f8fad5b-d9cb-469f-a165-70867728950e"
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"

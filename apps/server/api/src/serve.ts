@@ -3,11 +3,12 @@ import {
   type ShutdownOutcome,
   exitOnSignals,
   shutdownOnce,
-} from '@vp/composition';
+} from '@kit/composition';
+import { asThrowable } from '@kit/errors';
+import type { Tracing } from '@kit/observability';
+import { assertNever, fromPromise, ignore, isErr } from '@kit/result';
 import type { AppConfig } from '@vp/env-schema';
-import { asThrowable } from '@vp/errors';
-import type { Tracing } from '@vp/observability';
-import { assertNever, fromPromise, ignore, isErr } from '@vp/result';
+import { errorCodeRegistry } from '@vp/errors';
 import type { ComposedApp } from './app';
 import { Services } from './composition/services.module';
 
@@ -36,15 +37,19 @@ export async function serve(
   config: AppConfig,
   { tracing, timings = API_SHUTDOWN, signals }: ServeOptions
 ): Promise<ApiProcess> {
-  const lifecycle: { phase: 'starting' | 'listening' | 'stopping' } = { phase: 'starting' };
+  const lifecycle: { phase: 'starting' | 'listening' | 'stopping'; drainDelayMs: number } = {
+    phase: 'starting',
+    drainDelayMs: 0,
+  };
   const logger = container.get(Services.Logger);
   const shutdown = shutdownOnce({
     graceMs: timings.graceMs,
     get drainDelayMs() {
-      return lifecycle.phase === 'listening' ? timings.drainDelayMs : 0;
+      return lifecycle.drainDelayMs;
     },
     drain: () => {
-      if (lifecycle.phase === 'starting') lifecycle.phase = 'stopping';
+      lifecycle.drainDelayMs = lifecycle.phase === 'listening' ? timings.drainDelayMs : 0;
+      lifecycle.phase = 'stopping';
       app.services.readiness.beginDrain();
     },
     close: async () => {
@@ -63,9 +68,10 @@ export async function serve(
   });
   if (signals) exitOnSignals(signals, shutdown);
 
+  const isStopping = () => lifecycle.phase === 'stopping';
   const metricsPort = () => container.get(Services.MetricsServer).port;
   const started = await container.start();
-  if (lifecycle.phase === 'stopping') return { address: '', metricsPort: metricsPort(), shutdown };
+  if (isStopping()) return { address: '', metricsPort: metricsPort(), shutdown };
   if (isErr(started)) {
     switch (started.error.type) {
       case 'interrupted':
@@ -73,13 +79,14 @@ export async function serve(
       case 'failed':
         logger.error({ token: started.error.token, err: started.error.cause }, 'startup failed');
         await app.close();
-        throw asThrowable(started.error.cause);
+        throw asThrowable(errorCodeRegistry, started.error.cause);
       default:
         return assertNever(started.error, 'StartupFailed');
     }
   }
 
   const address = await app.listen({ port: config.http.port, host: '0.0.0.0' });
+  if (isStopping()) return { address, metricsPort: metricsPort(), shutdown };
   lifecycle.phase = 'listening';
   logger.info({ address, metricsPort: metricsPort() }, 'API listening');
 

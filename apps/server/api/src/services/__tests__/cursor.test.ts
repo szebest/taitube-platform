@@ -1,8 +1,8 @@
+import { type InvalidCursor, Paginator } from '@kit/pagination';
+import { ok, type Result } from '@kit/result';
+import { expectErr, expectOk } from '@kit/testing/result';
 import { publicFeedRanking } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { type InvalidCursor, Paginator } from '@vp/pagination';
-import { ok, type Result } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
 import {
   commentThreadCursorPayload,
   createdAtCursorPayload,

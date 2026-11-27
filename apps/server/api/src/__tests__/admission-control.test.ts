@@ -1,8 +1,8 @@
+import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { StorageClient } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, buildTestApp } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';
@@ -77,24 +77,10 @@ describe('upload admission control and tier priorities', () => {
     expect(v2.completeRes.json().admission).toBe('admitted');
     expect(v3.completeRes.json().admission).toBe('admitted');
 
-    await repositories.videos.transition({
-      videoId: v1.videoId,
-      from: 'UPLOADED',
-      to: 'PROBING',
-      eventType: 'probe.started',
-    });
-    await repositories.videos.transition({
-      videoId: v2.videoId,
-      from: 'UPLOADED',
-      to: 'PROCESSING',
-      eventType: 'transcode.started',
-    });
-    await repositories.videos.transition({
-      videoId: v3.videoId,
-      from: 'UPLOADED',
-      to: 'PROBING',
-      eventType: 'probe.started',
-    });
+    for (const videoId of [v1.videoId, v2.videoId, v3.videoId]) {
+      await repositories.videos.transition({ videoId, edge: 'startProbe' });
+    }
+    await repositories.videos.transition({ videoId: v2.videoId, edge: 'completeProbe' });
 
     const inflight = expectOk(await repositories.videos.countInFlightByOwner(SEEDED.otherUserId));
     expect(inflight).toBe(3);

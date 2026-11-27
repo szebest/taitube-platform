@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createLogger } from '@kit/logger';
+import { ok } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
 import {
   InMemoryCacheClient,
+  InMemoryFrameClassifier,
   InMemoryFlowProducer,
   InMemoryJobQueue,
   InMemoryLiveGateway,
@@ -15,11 +19,9 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { fingerprintTools } from '@vp/fingerprint';
 import { QUEUES } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
-import { ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';
 import { STAGE_REGISTRY, type StageDefinition } from '../registry';
@@ -62,9 +64,11 @@ function deps(): StageDeps {
     webhookDispatcher: new InMemoryWebhookDispatcher(),
     liveGateway: new InMemoryLiveGateway(),
     logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),
-    metrics: createMetricsRegistry(),
+    metrics: createPipelineMetrics(),
     media: mediaTools,
     speech: speechTools,
+    fingerprint: fingerprintTools,
+    frameClassifier: () => new InMemoryFrameClassifier({ inputSize: 8 }),
     workerId: 'registry-test',
     now: Date.now,
     every: everyInterval,
@@ -103,6 +107,35 @@ describe('apps/server/worker: stage registry', () => {
     expect(expectOk(cached)).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 
+  it.each([
+    {
+      scenario: 'a channel image job',
+      data: {
+        type: 'channel-image',
+        uploadId: '018f0000-0000-7000-8000-000000000010',
+        channelId: '018f0000-0000-7000-8000-000000000011',
+        kind: 'avatar',
+        traceparent: '00-01',
+      },
+    },
+    {
+      scenario: 'a video thumbnail job without the type tag',
+      data: {
+        videoId: '018f0000-0000-7000-8000-000000000001',
+        generation: 1,
+        traceparent: '00-01',
+        sourceKey: 'raw/missing.mp4',
+        durationMs: 1000,
+      },
+    },
+  ])('reads $scenario on the thumbnail queue', async ({ data }) => {
+    const processor = STAGE_REGISTRY.thumbnail.createProcessor(deps());
+
+    const outcome = await processor({ id: 'thumbnail-job', name: 'thumbnail', data });
+
+    expect(outcome.ok || outcome.error.code !== 'VALIDATION_FAILED').toBe(true);
+  });
+
   it.each(STAGES)(
     'lets %s give up before the kubelet kills it, and not a moment sooner',
     (stage) => {
@@ -122,7 +155,7 @@ describe('apps/server/worker: stage registry', () => {
     {
       name: 'notify-comment',
       data: {
-        videoId: '018f0000-0000-7000-8000-000000000001',
+        target: { type: 'video', id: '018f0000-0000-7000-8000-000000000001' },
         commentId: '018f0000-0000-7000-8000-000000000002',
       },
     },
@@ -133,10 +166,13 @@ describe('apps/server/worker: stage registry', () => {
         commentId: '018f0000-0000-7000-8000-000000000002',
       },
     },
+    { name: 'notify-team-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
     {
       name: 'notify-processing',
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
     },
+    { name: 'notify-party-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
+    { name: 'notify-post-subscribers', data: { postId: '018f0001-0000-7000-8000-000000000001' } },
     { name: 'announce-live', data: { liveStreamId: '018f0000-0000-7000-8000-000000000003' } },
   ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {
     const processor = STAGE_REGISTRY.notify.createProcessor(deps());

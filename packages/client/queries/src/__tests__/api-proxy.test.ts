@@ -1,47 +1,5 @@
-import { requestHandler } from '@tanstack/react-start/server';
-import { apiServer } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
-import { proxyToApi } from '../api-proxy';
-import type { RefreshSession } from '../session-config';
-
-const API = 'http://api.internal:3000';
-const APP = 'http://localhost:5173';
-const BODY_LIMIT_BYTES = 1_048_576;
-
-type Sent = { url: string; method: string; headers: Headers; body: string };
-
-/** The API behind the proxy: records what reached it and answers each call with the next reply. */
-function api(...replies: (() => Response)[]): Sent[] {
-  const sent: Sent[] = [];
-  apiServer.use(
-    http.all(`${API}/*`, async ({ request }) => {
-      sent.push({
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        body: await request.text(),
-      });
-      return (replies[sent.length - 1] ?? (() => HttpResponse.json({ ok: true })))();
-    })
-  );
-  return sent;
-}
-
-const refused = () => HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
-
-type Call = {
-  init?: RequestInit;
-  clientAddress?: string;
-  refresh?: RefreshSession;
-  onRequest?: (request: Request) => void;
-};
-
-/** A browser's call to the app's `/api`, answered the way the app's server answers it. */
-function callProxy(path: string, { init = {}, clientAddress, refresh, onRequest }: Call = {}) {
-  const request = Object.assign(new Request(`${APP}${path}`, init), { ip: clientAddress });
-  onRequest?.(request);
-  return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }))(request, {});
-}
+import { HttpResponse } from 'msw/http';
+import { API, api, APP, BODY_LIMIT_BYTES, callProxy, VIDEO } from './api-proxy-fixtures';
 
 describe('@vp/queries: the same-origin API proxy', () => {
   it('forwards the method, the path under /api, the query and the body, and relays the answer', async () => {
@@ -88,6 +46,57 @@ describe('@vp/queries: the same-origin API proxy', () => {
   });
 
   it.each([
+    { slot: 0, authorization: 'Bearer zero' },
+    { slot: 1, authorization: 'Bearer one' },
+    { slot: 2, authorization: null },
+  ])("sends slot $slot's token alone as the bearer", async ({ slot, authorization }) => {
+    const sent = api();
+
+    await callProxy('/api/v1/me/account', {
+      init: { headers: { cookie: 'vp.session.0=zero; vp.session.1=one' } },
+      slot,
+    });
+
+    expect(sent[0]?.headers.get('authorization')).toBe(authorization);
+  });
+
+  it('refuses a write that names no slot, which a cross-site form cannot', async () => {
+    const sent = api();
+
+    const answer = await callProxy('/api/v1/videos/v1/reactions', {
+      init: { method: 'POST', headers: { cookie: 'vp.session.0=zero' } },
+      slot: null,
+    });
+
+    expect(answer.status).toBe(403);
+    expect(await answer.json()).toMatchObject({ code: 'FORBIDDEN', status: 403 });
+    expect(sent).toEqual([]);
+  });
+
+  it.each([
+    { header: 'x-channel-id', value: '00000000-0000-7000-8000-0000000000c1' },
+    { header: 'x-viewer-session', value: '0190c3a0-5e1d-7000-8000-0000000000f1' },
+  ])('forwards $header, for the API to decide by', async ({ header, value }) => {
+    const sent = api();
+
+    await callProxy('/api/v1/videos', { init: { headers: { [header]: value } } });
+
+    expect(sent[0]?.headers.get(header)).toBe(value);
+  });
+
+  it("tells the API the browser's video unlocks, and no other cookie", async () => {
+    const sent = api();
+
+    await callProxy(`/api/v1/videos/${VIDEO}`, {
+      init: {
+        headers: { cookie: `vp.session=t0ken; vp.video-access.${VIDEO}=signed; vp.theme=dark` },
+      },
+    });
+
+    expect(sent[0]?.headers.get('cookie')).toBe(`vp.video-access.${VIDEO}=signed`);
+  });
+
+  it.each([
     { hops: 'no proxy before it', upstream: undefined, expected: '203.0.113.7' },
     {
       hops: 'an ingress before it',
@@ -108,6 +117,31 @@ describe('@vp/queries: the same-origin API proxy', () => {
     }
   );
 
+  it.each([
+    { apiVary: 'Authorization', vary: 'Authorization, x-account-slot, x-channel-id' },
+    { apiVary: null, vary: 'x-account-slot, x-channel-id' },
+    { apiVary: '*', vary: '*' },
+  ])(
+    'varies an answer whose API Vary is $apiVary on the slot and channel the browser named',
+    async ({ apiVary, vary }) => {
+      api(() =>
+        HttpResponse.json(
+          {},
+          {
+            headers: {
+              'cache-control': 'private, max-age=30',
+              ...(apiVary ? { vary: apiVary } : {}),
+            },
+          }
+        )
+      );
+
+      const answer = await callProxy('/api/v1/feed');
+
+      expect(answer.headers.get('vary')).toBe(vary);
+    }
+  );
+
   it('keeps the cookies the API sets off this origin', async () => {
     api(() => HttpResponse.json({}, { headers: { 'set-cookie': 'api=1; Path=/' } }));
 
@@ -116,48 +150,39 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(answer.headers.get('set-cookie')).toBeNull();
   });
 
-  it('refreshes a token the API refused once, and retries the call with the fresh one', async () => {
-    const sent = api(refused, () => HttpResponse.json({ id: 'v1' }));
-    const refresh = vi.fn(async () => 'fresh');
+  it.each([
+    {
+      where: 'locally',
+      app: APP,
+      unlock: `vp.video-access.${VIDEO}=signed; Max-Age=43200; Path=/; HttpOnly; SameSite=Lax`,
+    },
+    {
+      where: 'on a real host',
+      app: 'https://taitube.example',
+      unlock: `vp.video-access.${VIDEO}=signed; Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Lax`,
+    },
+  ])(
+    "sets the API's video unlock on this origin $where, for the time it was given, and nothing else",
+    async ({ app, unlock }) => {
+      api(() => {
+        const headers = new Headers();
+        headers.append(
+          'set-cookie',
+          `vp.video-access.${VIDEO}=signed; Max-Age=43200; Domain=api.internal; Path=/v1; HttpOnly; SameSite=Strict`
+        );
+        headers.append('set-cookie', 'api=1; Path=/');
+        return new HttpResponse(null, { status: 204, headers });
+      });
 
-    const answer = await callProxy('/api/v1/videos', {
-      init: { method: 'DELETE', headers: { cookie: 'vp.session=stale' } },
-      refresh,
-    });
+      const answer = await callProxy(`/api/v1/videos/${VIDEO}/unlock`, {
+        app,
+        init: { method: 'POST', body: '{"password":"hunter22"}' },
+      });
 
-    expect(sent.map(({ method, headers }) => [method, headers.get('authorization')])).toEqual([
-      ['DELETE', 'Bearer stale'],
-      ['DELETE', 'Bearer fresh'],
-    ]);
-    expect(refresh).toHaveBeenCalledExactlyOnceWith('stale');
-    expect(answer.status).toBe(200);
-    expect(answer.headers.getSetCookie()).toEqual([expect.stringMatching(/^vp\.session=fresh;/)]);
-  });
-
-  it('clears a session the API refused when there is no refresh to be had, and passes the 401 on', async () => {
-    const sent = api(refused);
-
-    const answer = await callProxy('/api/v1/me/account', {
-      init: { headers: { cookie: 'vp.session=stale' } },
-    });
-
-    expect(sent).toHaveLength(1);
-    expect(answer.status).toBe(401);
-    expect(answer.headers.getSetCookie()).toEqual([
-      expect.stringMatching(/^vp\.session=; Max-Age=0;/),
-    ]);
-  });
-
-  it("passes a guest's 401 on and leaves the cookies alone", async () => {
-    api(refused);
-    const refresh = vi.fn(async () => 'fresh');
-
-    const answer = await callProxy('/api/v1/me/account', { refresh });
-
-    expect(answer.status).toBe(401);
-    expect(answer.headers.getSetCookie()).toEqual([]);
-    expect(refresh).not.toHaveBeenCalled();
-  });
+      expect(answer.status).toBe(204);
+      expect(answer.headers.getSetCookie()).toEqual([unlock]);
+    }
+  );
 
   it.each([
     {

@@ -1,10 +1,10 @@
+import { Shelf } from '@kit/components';
 import { useQuery } from '@tanstack/react-query';
-import { Shelf } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { useAccount, useApi } from '@vp/queries';
+import { useAccount, useApi, useAppLink } from '@vp/queries';
 import { FeedVideoCard } from '#app/components/video/feed-video-card';
 import { uploadsShelfQueryOptions } from '#app/features/library/api/library-queries';
 import { STUDIO_URL } from '#app/lib/config';
+import { useT } from '#app/lib/messages';
 import { YouShelf } from '../you-shelf/you-shelf';
 
 const NO_CHANNEL = '';
@@ -13,6 +13,7 @@ const NO_CHANNEL = '';
 export function UploadsShelf() {
   const api = useApi();
   const account = useAccount();
+  const appLink = useAppLink();
   const { tOr } = useT();
   const { data } = useQuery({
     ...uploadsShelfQueryOptions(api, account?.channel.id ?? NO_CHANNEL),
@@ -22,10 +23,10 @@ export function UploadsShelf() {
   return (
     <YouShelf
       shelf="videos"
-      link={(label) => <a href={STUDIO_URL}>{label}</a>}
+      link={(label) => <a href={appLink(STUDIO_URL)}>{label}</a>}
       action={{
         label: tOr('library.upload', {}, ''),
-        link: (label) => <a href={STUDIO_URL}>{label}</a>,
+        link: (label) => <a href={appLink(STUDIO_URL)}>{label}</a>,
       }}
     >
       {(data?.items ?? []).map((video) => (

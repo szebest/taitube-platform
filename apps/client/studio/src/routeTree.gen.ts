@@ -16,16 +16,25 @@ import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
 import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
 import { Route as AuthedCommentsRouteImport } from './routes/_authed/comments';
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
+import { Route as AuthedDevelopersRouteImport } from './routes/_authed/developers';
+import { Route as AuthedInvitesRouteImport } from './routes/_authed/invites';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
+import { Route as AuthedPostsRouteImport } from './routes/_authed/posts';
+import { Route as AuthedTeamRouteImport } from './routes/_authed/team';
+import { Route as ForHandleRouteImport } from './routes/for.$handle';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
+import { Route as AuthedAdminScreeningRouteImport } from './routes/_authed/admin/screening';
+import { Route as AuthedCommentsQueueRouteImport } from './routes/_authed/comments_.queue';
+import { Route as AuthedCommentsSettingsRouteImport } from './routes/_authed/comments_.settings';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as LiveOverlayTokenRouteImport } from './routes/live.overlay.$token';
 import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
+import { Route as AuthedVideosVideoIdIndexRouteImport } from './routes/_authed/videos/$videoId.index';
 import { Route as AuthedVideosVideoIdAnalyticsRouteImport } from './routes/_authed/videos/$videoId.analytics';
 import { Route as AuthedVideosVideoIdEditRouteImport } from './routes/_authed/videos/$videoId.edit';
 
@@ -63,10 +72,35 @@ const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
   path: '/customization',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedDevelopersRoute = AuthedDevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedInvitesRoute = AuthedInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedLiveRoute = AuthedLiveRouteImport.update({
   id: '/live',
   path: '/live',
   getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedPostsRoute = AuthedPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedTeamRoute = AuthedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const ForHandleRoute = ForHandleRouteImport.update({
+  id: '/for/$handle',
+  path: '/for/$handle',
+  getParentRoute: () => rootRouteImport,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
   id: '/',
@@ -93,6 +127,21 @@ const AuthedAdminQueuesRoute = AuthedAdminQueuesRouteImport.update({
   path: '/queues',
   getParentRoute: () => AuthedAdminRoute,
 } as any);
+const AuthedAdminScreeningRoute = AuthedAdminScreeningRouteImport.update({
+  id: '/screening',
+  path: '/screening',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
+const AuthedCommentsQueueRoute = AuthedCommentsQueueRouteImport.update({
+  id: '/comments_/queue',
+  path: '/comments/queue',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedCommentsSettingsRoute = AuthedCommentsSettingsRouteImport.update({
+  id: '/comments_/settings',
+  path: '/comments/settings',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -113,6 +162,12 @@ const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
   path: '/upload/edit/$videoId',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedVideosVideoIdIndexRoute =
+  AuthedVideosVideoIdIndexRouteImport.update({
+    id: '/videos/$videoId/',
+    path: '/videos/$videoId/',
+    getParentRoute: () => AuthedRoute,
+  } as any);
 const AuthedVideosVideoIdAnalyticsRoute =
   AuthedVideosVideoIdAnalyticsRouteImport.update({
     id: '/videos/$videoId/analytics',
@@ -132,11 +187,19 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/developers': typeof AuthedDevelopersRoute;
+  '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
+  '/posts': typeof AuthedPostsRoute;
+  '/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
+  '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
@@ -144,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
   '/videos/$videoId/edit': typeof AuthedVideosVideoIdEditRoute;
+  '/videos/$videoId/': typeof AuthedVideosVideoIdIndexRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
@@ -151,11 +215,19 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/developers': typeof AuthedDevelopersRoute;
+  '/invites': typeof AuthedInvitesRoute;
   '/live': typeof AuthedLiveRoute;
+  '/posts': typeof AuthedPostsRoute;
+  '/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/comments/queue': typeof AuthedCommentsQueueRoute;
+  '/comments/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
@@ -163,6 +235,7 @@ export interface FileRoutesByTo {
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
   '/videos/$videoId/edit': typeof AuthedVideosVideoIdEditRoute;
+  '/videos/$videoId': typeof AuthedVideosVideoIdIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -173,11 +246,19 @@ export interface FileRoutesById {
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
   '/_authed/comments': typeof AuthedCommentsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
+  '/_authed/developers': typeof AuthedDevelopersRoute;
+  '/_authed/invites': typeof AuthedInvitesRoute;
   '/_authed/live': typeof AuthedLiveRoute;
+  '/_authed/posts': typeof AuthedPostsRoute;
+  '/_authed/team': typeof AuthedTeamRoute;
+  '/for/$handle': typeof ForHandleRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/_authed/admin/screening': typeof AuthedAdminScreeningRoute;
+  '/_authed/comments_/queue': typeof AuthedCommentsQueueRoute;
+  '/_authed/comments_/settings': typeof AuthedCommentsSettingsRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
@@ -185,6 +266,7 @@ export interface FileRoutesById {
   '/_authed/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/_authed/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
   '/_authed/videos/$videoId/edit': typeof AuthedVideosVideoIdEditRoute;
+  '/_authed/videos/$videoId/': typeof AuthedVideosVideoIdIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -195,18 +277,27 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/comments'
     | '/customization'
+    | '/developers'
+    | '/invites'
     | '/live'
+    | '/posts'
+    | '/team'
+    | '/for/$handle'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/admin/screening'
+    | '/comments/queue'
+    | '/comments/settings'
     | '/live/overlay/$token'
     | '/admin/'
     | '/upload/'
     | '/videos/'
     | '/upload/edit/$videoId'
     | '/videos/$videoId/analytics'
-    | '/videos/$videoId/edit';
+    | '/videos/$videoId/edit'
+    | '/videos/$videoId/';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
@@ -214,18 +305,27 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/comments'
     | '/customization'
+    | '/developers'
+    | '/invites'
     | '/live'
+    | '/posts'
+    | '/team'
+    | '/for/$handle'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/admin/screening'
+    | '/comments/queue'
+    | '/comments/settings'
     | '/live/overlay/$token'
     | '/admin'
     | '/upload'
     | '/videos'
     | '/upload/edit/$videoId'
     | '/videos/$videoId/analytics'
-    | '/videos/$videoId/edit';
+    | '/videos/$videoId/edit'
+    | '/videos/$videoId';
   id:
     | '__root__'
     | '/'
@@ -235,24 +335,34 @@ export interface FileRouteTypes {
     | '/_authed/analytics'
     | '/_authed/comments'
     | '/_authed/customization'
+    | '/_authed/developers'
+    | '/_authed/invites'
     | '/_authed/live'
+    | '/_authed/posts'
+    | '/_authed/team'
+    | '/for/$handle'
     | '/_authed/admin/categories'
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
+    | '/_authed/admin/screening'
+    | '/_authed/comments_/queue'
+    | '/_authed/comments_/settings'
     | '/live/overlay/$token'
     | '/_authed/admin/'
     | '/_authed/upload/'
     | '/_authed/videos/'
     | '/_authed/upload/edit/$videoId'
     | '/_authed/videos/$videoId/analytics'
-    | '/_authed/videos/$videoId/edit';
+    | '/_authed/videos/$videoId/edit'
+    | '/_authed/videos/$videoId/';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
+  ForHandleRoute: typeof ForHandleRoute;
   LiveOverlayTokenRoute: typeof LiveOverlayTokenRoute;
 }
 
@@ -307,12 +417,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCustomizationRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/developers': {
+      id: '/_authed/developers';
+      path: '/developers';
+      fullPath: '/developers';
+      preLoaderRoute: typeof AuthedDevelopersRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/invites': {
+      id: '/_authed/invites';
+      path: '/invites';
+      fullPath: '/invites';
+      preLoaderRoute: typeof AuthedInvitesRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/live': {
       id: '/_authed/live';
       path: '/live';
       fullPath: '/live';
       preLoaderRoute: typeof AuthedLiveRouteImport;
       parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/posts': {
+      id: '/_authed/posts';
+      path: '/posts';
+      fullPath: '/posts';
+      preLoaderRoute: typeof AuthedPostsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/team': {
+      id: '/_authed/team';
+      path: '/team';
+      fullPath: '/team';
+      preLoaderRoute: typeof AuthedTeamRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/for/$handle': {
+      id: '/for/$handle';
+      path: '/for/$handle';
+      fullPath: '/for/$handle';
+      preLoaderRoute: typeof ForHandleRouteImport;
+      parentRoute: typeof rootRouteImport;
     };
     '/_authed/admin/': {
       id: '/_authed/admin/';
@@ -349,6 +494,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminQueuesRouteImport;
       parentRoute: typeof AuthedAdminRoute;
     };
+    '/_authed/admin/screening': {
+      id: '/_authed/admin/screening';
+      path: '/screening';
+      fullPath: '/admin/screening';
+      preLoaderRoute: typeof AuthedAdminScreeningRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
+    '/_authed/comments_/queue': {
+      id: '/_authed/comments_/queue';
+      path: '/comments/queue';
+      fullPath: '/comments/queue';
+      preLoaderRoute: typeof AuthedCommentsQueueRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/comments_/settings': {
+      id: '/_authed/comments_/settings';
+      path: '/comments/settings';
+      fullPath: '/comments/settings';
+      preLoaderRoute: typeof AuthedCommentsSettingsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/upload/': {
       id: '/_authed/upload/';
       path: '/upload';
@@ -377,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedUploadEditVideoIdRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/videos/$videoId/': {
+      id: '/_authed/videos/$videoId/';
+      path: '/videos/$videoId';
+      fullPath: '/videos/$videoId/';
+      preLoaderRoute: typeof AuthedVideosVideoIdIndexRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/videos/$videoId/analytics': {
       id: '/_authed/videos/$videoId/analytics';
       path: '/videos/$videoId/analytics';
@@ -399,6 +572,7 @@ interface AuthedAdminRouteChildren {
   AuthedAdminCurationRoute: typeof AuthedAdminCurationRoute;
   AuthedAdminModerationRoute: typeof AuthedAdminModerationRoute;
   AuthedAdminQueuesRoute: typeof AuthedAdminQueuesRoute;
+  AuthedAdminScreeningRoute: typeof AuthedAdminScreeningRoute;
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute;
 }
 
@@ -407,6 +581,7 @@ const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminCurationRoute: AuthedAdminCurationRoute,
   AuthedAdminModerationRoute: AuthedAdminModerationRoute,
   AuthedAdminQueuesRoute: AuthedAdminQueuesRoute,
+  AuthedAdminScreeningRoute: AuthedAdminScreeningRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
 };
 
@@ -419,12 +594,19 @@ interface AuthedRouteChildren {
   AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
   AuthedCommentsRoute: typeof AuthedCommentsRoute;
   AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
+  AuthedDevelopersRoute: typeof AuthedDevelopersRoute;
+  AuthedInvitesRoute: typeof AuthedInvitesRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
+  AuthedPostsRoute: typeof AuthedPostsRoute;
+  AuthedTeamRoute: typeof AuthedTeamRoute;
+  AuthedCommentsQueueRoute: typeof AuthedCommentsQueueRoute;
+  AuthedCommentsSettingsRoute: typeof AuthedCommentsSettingsRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
   AuthedVideosVideoIdAnalyticsRoute: typeof AuthedVideosVideoIdAnalyticsRoute;
   AuthedVideosVideoIdEditRoute: typeof AuthedVideosVideoIdEditRoute;
+  AuthedVideosVideoIdIndexRoute: typeof AuthedVideosVideoIdIndexRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -432,12 +614,19 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAnalyticsRoute: AuthedAnalyticsRoute,
   AuthedCommentsRoute: AuthedCommentsRoute,
   AuthedCustomizationRoute: AuthedCustomizationRoute,
+  AuthedDevelopersRoute: AuthedDevelopersRoute,
+  AuthedInvitesRoute: AuthedInvitesRoute,
   AuthedLiveRoute: AuthedLiveRoute,
+  AuthedPostsRoute: AuthedPostsRoute,
+  AuthedTeamRoute: AuthedTeamRoute,
+  AuthedCommentsQueueRoute: AuthedCommentsQueueRoute,
+  AuthedCommentsSettingsRoute: AuthedCommentsSettingsRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
   AuthedVideosVideoIdAnalyticsRoute: AuthedVideosVideoIdAnalyticsRoute,
   AuthedVideosVideoIdEditRoute: AuthedVideosVideoIdEditRoute,
+  AuthedVideosVideoIdIndexRoute: AuthedVideosVideoIdIndexRoute,
 };
 
 const AuthedRouteWithChildren =
@@ -447,6 +636,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ForHandleRoute: ForHandleRoute,
   LiveOverlayTokenRoute: LiveOverlayTokenRoute,
 };
 export const routeTree = rootRouteImport

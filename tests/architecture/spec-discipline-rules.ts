@@ -1,4 +1,10 @@
 import ts from 'typescript';
+import {
+  APP_BROWSER_SPECS,
+  isBarePlaywrightTest,
+  isPageSleep,
+  unhydratedContexts,
+} from './browser-spec-rules';
 
 const TEST_CALLS = new Set(['it', 'test', 'describe', 'suite']);
 const EXCLUSIVE_MODIFIERS = new Set(['skip', 'only', 'todo', 'skipIf', 'runIf']);
@@ -16,6 +22,8 @@ interface ParsedSpec {
 interface Rule {
   name: string;
   offenders: (spec: ParsedSpec) => ts.Node[];
+  /** The files it reads, when not every spec: the browser specs that drive the apps. */
+  scope?: RegExp;
 }
 
 function nodesByKind(file: ts.SourceFile): Map<ts.SyntaxKind, ts.Node[]> {
@@ -212,6 +220,18 @@ const RULES: Rule[] = [
     offenders: matching([ImportDeclaration], isRuntimeVitestImport),
   },
   { name: 'waits on a timer', offenders: matching([NewExpression], isTimerWait) },
+  { name: 'waits on a timer', offenders: matching([CallExpression], isPageSleep) },
+  {
+    name: "uses @playwright/test's own test, whose pages skip the hydration wait",
+    offenders: matching([ImportDeclaration], isBarePlaywrightTest),
+    scope: APP_BROWSER_SPECS,
+  },
+  {
+    name: 'opens a browser context whose pages skip the hydration wait',
+    offenders: (spec) =>
+      unhydratedContexts(ofKind(spec, [ts.SyntaxKind.CallExpression]).filter(ts.isCallExpression)),
+    scope: APP_BROWSER_SPECS,
+  },
   {
     name: 'imports a timer to wait on',
     offenders: matching([ImportDeclaration, CallExpression], isTimerImport),
@@ -238,7 +258,7 @@ export function violations(path: string, source: string): string[] {
   const kind = path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, false, kind);
   const spec = { file, byKind: nodesByKind(file) };
-  return RULES.flatMap((rule) =>
+  return RULES.filter(({ scope }) => scope === undefined || scope.test(path)).flatMap((rule) =>
     rule.offenders(spec).map((node) => {
       const { line } = file.getLineAndCharacterOfPosition(node.getStart(file));
       return `${path}:${line + 1}: ${rule.name}`;

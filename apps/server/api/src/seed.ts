@@ -1,10 +1,10 @@
-import { loadEnvOrExit } from '@vp/config';
+import { loadEnvOrExit } from '@kit/config';
+import { createLogger } from '@kit/logger';
 import { seedDatabase } from '@vp/db/seed';
-import { toAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
+import { AppEnvSchema, DEFAULT_LOG_LEVEL, toAppConfig } from '@vp/env-schema';
 import { seedDevelopment } from './seed-development';
 
-const env = loadEnvOrExit('vp-seed', process);
+const env = loadEnvOrExit(AppEnvSchema, DEFAULT_LOG_LEVEL, 'vp-seed', process);
 if (env) {
   const config = toAppConfig(env);
   const log = createLogger({ service: 'vp-seed', level: config.logLevel, format: 'json' });

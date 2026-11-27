@@ -1,8 +1,13 @@
+import { type Result, err, isErr, map } from '@kit/result';
 import { type UploadOpenFailure, decideUploadOpen, uploadNotOpen } from '@vp/domain-rules';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map } from '@vp/result';
-import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
+import {
+  type LoadOwnedUploadFailure,
+  type UploadContext,
+  closeUpload,
+  loadOwnedUpload,
+} from './upload-context';
 
 export type AbortUploadFailure =
   | LoadOwnedUploadFailure
@@ -42,17 +47,13 @@ export async function abortUpload(
     if (isErr(removed)) return removed;
   }
 
-  const aborted = await ctx.uploads.updateStatus(uploadId, 'ABORTED');
+  const aborted = await closeUpload(ctx, uploadId, 'ABORTED');
   if (isErr(aborted)) return aborted;
-
-  if (video.status !== 'UPLOADING') return map(aborted, () => undefined);
 
   return map(
     await ctx.videos.transition({
       videoId: video.id,
-      from: 'UPLOADING',
-      to: 'ABANDONED',
-      eventType: 'upload.aborted',
+      edge: 'abort',
       eventPayload: { uploadId, strategy: upload.strategy },
     }),
     () => undefined

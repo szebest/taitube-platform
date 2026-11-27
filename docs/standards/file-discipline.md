@@ -85,10 +85,10 @@ packages/server/adapters/
 Following deep module design principles (`codebase-design`):
 - **Deep Modules (Services):** Substantial functionality hidden behind a clean, simple, stable interface. Examples: `UploadService`, `VideoService`, `CategoryService`.
 - **Thin Adapters (Routes):** Route handlers in `apps/server/api/src/routes/` are strictly transport adapters: they validate input with Zod, extract auth claims, delegate to domain services, and return HTTP status codes and headers.
-- **Service Composition:** A service's collaborators are injected and required; stateless helpers shared between services (`http-cache.ts`, `@vp/concurrency`'s `Singleflight`) are imported, not injected.
+- **Service Composition:** A service's collaborators are injected and required; stateless helpers shared between services (`http-cache.ts`, `@kit/concurrency`'s `Singleflight`) are imported, not injected.
 
 ---
 
-## 4. Mandatory 1:1 Test File Correspondence
+## 4. Tests
 
-Every single source file, helper, utility, normalizer, rule, or adapter across the monorepo MUST map to at least one dedicated test file matching its name (e.g. `video.normalizer.ts` -> `video.normalizer.test.ts`). Grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation.
+No spec per source file is required. Tests follow behaviour, and the coverage floor is in [testing.md](testing.md).

@@ -1,5 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { Logger } from '@kit/logger';
+import { getHeaderMapping } from '@kit/object-storage';
+import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { THUMBNAIL_PROGRESS } from '@vp/domain';
@@ -13,11 +16,8 @@ import {
 } from '@vp/errors';
 import type { MediaTools, SpriteLayout } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
-import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import {
-  getHeaderMapping,
   posterKey as getPosterKey,
   spriteKey as getSpriteKey,
   spriteVttKey as getSpriteVttKey,
@@ -186,9 +186,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       return map(
         await repositories.videos.transition({
           videoId,
-          from: 'PROCESSING',
-          to: 'PROCESSING',
-          eventType: 'thumbnail.completed',
+          edge: 'completeThumbnail',
           eventPayload: { ...keys },
           patch: { posterKey: keys.posterKey, spriteKey: keys.spriteKey },
         }),

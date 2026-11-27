@@ -1,28 +1,32 @@
+import { type Result, fromPromise, map } from '@kit/result';
 import type {
   CommentReportQueueCursor,
   CommentReportRepositoryPort,
   ListCommentReportsOptions,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type {
-  CommentReport,
-  CommentReportQueueItem,
-  CommentReportResolution,
-  NewCommentReportInput,
+import {
+  type CommentReport,
+  type CommentReportQueueItem,
+  type CommentReportResolution,
+  type NewCommentReportInput,
+  commentVideoId,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
 import { type SQL, and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { msTimestamp } from '../scopes/index';
+import { targetOf } from './comment-targets';
 import type { PostgresDatabase } from './types';
 
-const { commentReports: r, videoComments: c } = schema;
+const { commentReports: r, comments: c } = schema;
 
 const isOpen = sql<boolean>`(${r.resolvedAt} is null)`;
+const reportedAt = msTimestamp(r.createdAt);
 
 function queueCursorScope(cursor: CommentReportQueueCursor | null): SQL | undefined {
   if (!cursor) return undefined;
   const { open, createdAt, id } = cursor;
-  return sql`(${isOpen}, ${r.createdAt}, ${r.id}) < (${open}::boolean, ${createdAt.toISOString()}::timestamptz, ${id}::uuid)`;
+  return sql`(${isOpen}, ${reportedAt}, ${r.id}) < (${open}::boolean, ${createdAt.toISOString()}::timestamptz, ${id}::uuid)`;
 }
 
 export class PostgresCommentReportRepository implements CommentReportRepositoryPort {
@@ -62,7 +66,8 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
             report: r,
             comment: {
               id: c.id,
-              videoId: c.videoId,
+              targetType: c.targetType,
+              targetId: c.targetId,
               authorId: c.authorId,
               content: c.content,
               deletedAt: c.deletedAt,
@@ -71,14 +76,18 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
           .from(r)
           .innerJoin(c, eq(c.id, r.commentId))
           .where(queueCursorScope(cursor))
-          .orderBy(desc(isOpen), desc(r.createdAt), desc(r.id))
+          .orderBy(desc(isOpen), desc(reportedAt), desc(r.id))
           .limit(limit + 1),
       databaseUnavailable.during('listCommentReports')
     );
     return map(rows, (found) =>
-      found.map(({ report, comment: { deletedAt, ...comment } }) => ({
+      found.map(({ report, comment: { deletedAt, targetType, targetId, ...comment } }) => ({
         ...report,
-        comment: { ...comment, removed: deletedAt !== null },
+        comment: {
+          ...comment,
+          videoId: commentVideoId(targetOf({ targetType, targetId })),
+          removed: deletedAt !== null,
+        },
       }))
     );
   }

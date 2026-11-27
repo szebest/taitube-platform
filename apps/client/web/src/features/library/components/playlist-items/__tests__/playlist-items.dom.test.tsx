@@ -7,6 +7,7 @@ import {
   ITEMS,
   LIST,
   renderPlaylist,
+  renderSeries,
   rowOf,
   VIDEOS,
 } from '#app/features/library/__tests__/render-playlist';
@@ -34,5 +35,27 @@ describe('apps/client/web: the playlist items', () => {
     await renderPlaylist({ items: [], videoCount: 0 });
 
     expect(await screen.findByText('Nothing in this playlist yet')).toBeInTheDocument();
+  });
+
+  it('numbers the episodes of a series and shows how much of each the viewer has watched', async () => {
+    await renderSeries([100, 40, null], 2);
+
+    expect(await screen.findByText('Episode 1')).toBeInTheDocument();
+    expect(screen.getByText('Episode 3')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '100% watched' })).toHaveAttribute(
+      'aria-valuenow',
+      '100'
+    );
+    expect(screen.getByRole('progressbar', { name: '40% watched' })).toBeInTheDocument();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(2);
+  });
+
+  it('numbers and measures nothing in a plain playlist', async () => {
+    await renderPlaylist();
+
+    await screen.findByText('Tram ride');
+
+    expect(screen.queryByText(/^Episode/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 });

@@ -1,14 +1,13 @@
 import { Outlet, useMatches } from '@tanstack/react-router';
-import { StudioShell } from '#app/features/shell';
-import {
-  UploadDialog,
-  UploadDockProvider,
-  UploadToolbarButton,
-  UploadWidget,
-} from '#app/features/upload';
+import { OpenAsLinks, WhenSwitcherOpened } from '@vp/queries';
+import { ReviewQueueNavItem } from '#app/features/comments';
+import { LazyStudioIdentitySwitcherSheet, StudioShell } from '#app/features/shell';
+import { ActingNavItems, ActiveChannelProvider, LeaveTeam } from '#app/features/team';
+import { UploadDialog, UploadDockProvider, UploadWidget } from '#app/features/upload';
 import { VideoInspector } from '#app/features/videos';
+import { ActingUploadAction } from '../acting-upload-action/acting-upload-action';
 
-/** Every page inside the studio's shell, with the upload dock; a bare page has none of it. */
+/** Every page inside the studio's shell, on the acting channel and with the upload dock; a bare page has none of it. */
 export function StudioRoot() {
   const bare = useMatches({
     select: (matches) => matches.some(({ staticData }) => staticData.bare),
@@ -19,13 +18,26 @@ export function StudioRoot() {
   }
 
   return (
-    <UploadDockProvider>
-      <StudioShell
-        toolbarAction={<UploadToolbarButton />}
-        inspector={(videoId) => <VideoInspector videoId={videoId} />}
-      />
-      <UploadDialog />
-      <UploadWidget />
-    </UploadDockProvider>
+    <ActiveChannelProvider>
+      <UploadDockProvider>
+        <LeaveTeam.Root>
+          <OpenAsLinks>
+            <StudioShell
+              toolbarAction={<ActingUploadAction />}
+              navigation={({ newComments }) => (
+                <ActingNavItems newComments={newComments} reviewQueue={<ReviewQueueNavItem />} />
+              )}
+              inspector={(videoId) => <VideoInspector videoId={videoId} />}
+              accountItems={<LeaveTeam.MenuItem />}
+            />
+          </OpenAsLinks>
+        </LeaveTeam.Root>
+        <UploadDialog />
+        <UploadWidget />
+        <WhenSwitcherOpened>
+          <LazyStudioIdentitySwitcherSheet />
+        </WhenSwitcherOpened>
+      </UploadDockProvider>
+    </ActiveChannelProvider>
   );
 }

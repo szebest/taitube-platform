@@ -1,22 +1,32 @@
+import { parseParam } from '@kit/query';
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { ensureFound, parseParam, videoQueryOptions, prefetched } from '@vp/queries';
+import { ensureFound, videoQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { LazyCaptionsSection } from '#app/features/captions';
-import { categoriesQueryOptions, EditVideoPage } from '#app/features/videos';
+import {
+  categoriesQueryOptions,
+  EditVideoPage,
+  EditVideoPageSkeleton,
+  parseEditTab,
+} from '#app/features/videos';
 
 export const Route = createFileRoute('/_authed/videos/$videoId/edit')({
   params: {
     parse: ({ videoId }) => ({ videoId: parseParam(VideoIdParamSchema.shape.id, videoId) }),
     stringify: ({ videoId }) => ({ videoId }),
   },
-  validateSearch: z.object({}),
+  validateSearch: z.object({
+    tab: z.unknown().optional().transform(parseEditTab),
+  }),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     await Promise.all([
       ensureFound(queryClient, videoQueryOptions(api, videoId)),
       prefetched(queryClient.query(categoriesQueryOptions(api))),
+      LazyCaptionsSection.preload(),
     ]);
   },
+  pendingComponent: EditVideoPageSkeleton,
   component: EditRoute,
 });
 

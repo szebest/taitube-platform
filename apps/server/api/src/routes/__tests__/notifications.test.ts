@@ -1,8 +1,8 @@
-import { mintToken } from '@vp/dev-token';
+import { expectOk } from '@kit/testing/result';
+import { mintToken } from '@vp/dev-identity';
 import type { NewNotificationInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import { bearer, buildTestApp, type TestApp } from '../../__tests__/test-app';
 
 const SESSION = {

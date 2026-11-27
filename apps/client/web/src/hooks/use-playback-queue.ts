@@ -21,6 +21,7 @@ export function usePlaybackQueue() {
     reorder: (id: string, toIndex: number) => dispatch({ type: 'reorder', id, toIndex }),
     remove: (id: string) => dispatch({ type: 'remove', id }),
     append: (video: VideoSummary) => dispatch({ type: 'append', video }),
+    playNext: (video: VideoSummary) => dispatch({ type: 'playNext', video }),
     setModes: (modes: { shuffle: boolean; repeat: typeof session.repeat }) =>
       dispatch({ type: 'modes', ...modes }),
     setPaused: (paused: boolean) => dispatch({ type: 'paused', paused }),

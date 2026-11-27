@@ -10,6 +10,7 @@ Declarative Kubernetes manifests for deploying the `video-pipeline` platform, or
 infra/k8s/
 ├── base/                  # Base manifests (API, web, studio, workers, services, ingress, KEDA ScaledObjects)
 ├── helm-values/           # Addon configurations (KEDA, metrics-server)
+├── components/dev-mode/   # Dev auth and local credentials, shared by the local overlay and the preview environment
 └── overlays/
     ├── local/             # Local k3d cluster overlay with in-cluster dependencies
     └── cloud/             # Cloud production overlay (Neon, R2, SOPS encrypted secrets)
@@ -34,6 +35,12 @@ make k3d-deploy    # Applies local Kustomize overlay
 make smoke         # Verifies pipeline through cluster ingress
 make k3d-down      # Deletes local cluster
 ```
+
+### Any environment
+
+`make deploy-plan ENV=<name>` and `make deploy ENV=<name>` render and apply an environment from
+[`infra/environments`](../environments/README.md): local, preview, staging, production or compose-vm. See
+[docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
 
 ### Manifest Validation
 ```bash

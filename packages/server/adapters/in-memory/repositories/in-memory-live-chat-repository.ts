@@ -1,7 +1,7 @@
+import { isErr, map, ok, type Result } from '@kit/result';
 import type { LiveChatOffsetRange, LiveChatRepositoryPort } from '@vp/core/repositories';
 import type { LiveChatMessage, NewLiveChatMessage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 
 interface StoredMessage extends NewLiveChatMessage {
@@ -11,7 +11,7 @@ interface StoredMessage extends NewLiveChatMessage {
 export class InMemoryLiveChatRepository implements LiveChatRepositoryPort {
   private readonly rows = new Map<string, StoredMessage>();
 
-  constructor(private readonly channels: Pick<InMemoryChannelRepository, 'findByUserIds'>) {}
+  constructor(private readonly channels: Pick<InMemoryChannelRepository, 'findPrimaryByUserIds'>) {}
 
   async append(message: NewLiveChatMessage): Promise<Result<LiveChatMessage, DatabaseUnavailable>> {
     this.rows.set(message.id, { ...message, removedAt: null });
@@ -80,7 +80,9 @@ export class InMemoryLiveChatRepository implements LiveChatRepositoryPort {
   private async withAuthors(
     rows: readonly NewLiveChatMessage[]
   ): Promise<Result<LiveChatMessage[], DatabaseUnavailable>> {
-    const found = await this.channels.findByUserIds([...new Set(rows.map((row) => row.userId))]);
+    const found = await this.channels.findPrimaryByUserIds([
+      ...new Set(rows.map((row) => row.userId)),
+    ]);
     if (isErr(found)) return found;
     const byUser = new Map(found.value.map((channel) => [channel.userId, channel]));
 

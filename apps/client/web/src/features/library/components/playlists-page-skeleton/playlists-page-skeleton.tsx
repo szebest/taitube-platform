@@ -1,4 +1,4 @@
-import { PageHeaderSkeleton, VideoCardSkeleton } from '@vp/components';
+import { PageHeaderSkeleton, VideoCardSkeleton } from '@kit/components';
 
 export function PlaylistsPageSkeleton() {
   return (

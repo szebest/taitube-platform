@@ -23,7 +23,7 @@ An inline, persistent message that sits in the page flow beside the content it c
 
 ```ts
 // types.ts
-import type { ToneOption } from '@vp/design-tokens';
+import type { ToneOption } from '@kit/design-tokens';
 import type { FillOption } from '../../types';
 
 export type CalloutFill = Extract<FillOption, 'soft' | 'outline'>;

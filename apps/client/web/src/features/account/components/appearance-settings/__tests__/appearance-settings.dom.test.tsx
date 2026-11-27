@@ -1,11 +1,12 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
 const renderAppearance = () => renderRoute(getRouter, '/settings/appearance');
 
 describe('apps/client/web: the appearance settings', () => {
-  it('lists theme, mode, accent, build your own and density, and ends on the way to the advanced page', async () => {
+  it('lists theme, mode, accent, build your own, roundness and density, and ends on the way to the advanced page', async () => {
     await renderAppearance();
 
     const rows = await screen.findAllByRole('group');
@@ -15,6 +16,7 @@ describe('apps/client/web: the appearance settings', () => {
       'mode',
       'accent',
       'buildTheme',
+      'roundness',
       'density',
     ]);
     expect(screen.getByRole('link', { name: 'Fine-tune the look' })).toHaveAttribute(

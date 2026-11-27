@@ -1,8 +1,8 @@
+import { PermanentError, TransientError } from '@kit/errors';
+import { describeJobQueueContract } from '@kit/ports/contract';
+import { expectOk } from '@kit/testing/result';
 import { JOB_PRIORITY } from '@vp/domain';
-import { PermanentError, TransientError } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
 import { inMemoryJobQueueSubject } from '../../__tests__/contract/in-memory-port-subjects';
-import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { InMemoryJobQueue } from '../in-memory-job-queue';
 
 describeJobQueueContract(inMemoryJobQueueSubject);
@@ -51,6 +51,17 @@ describe('InMemoryJobQueue', () => {
     expect(await failed.promise).toBe('job-a');
     expect(attempts).toBe(runs);
     expect(expectOk(await queue.getJobState('job-a'))).toBe('failed');
+  });
+
+  it('hands a job failed from outside to the failure handler with no attempt left', async () => {
+    const queue = new InMemoryJobQueue('package');
+    const failed = Promise.withResolvers<number | undefined>();
+    queue.onFailed((job) => failed.resolve(job.attemptsMade));
+    expectOk(await queue.add('package', {}, { jobId: 'parent', attempts: 5 }));
+
+    await queue.failJob('parent', new TransientError('X', 'child failed'));
+
+    expect(await failed.promise).toBe(5);
   });
 
   it('reports a stall to the handler BullMQ would call', () => {

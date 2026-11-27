@@ -1,5 +1,8 @@
+import { PermanentError } from '@kit/errors';
+import type { Logger } from '@kit/logger';
 import {
   InMemoryCacheClient,
+  InMemoryFrameClassifier,
   InMemoryLiveGateway,
   InMemoryMultipartStorage,
   InMemoryViewBuffer,
@@ -9,11 +12,11 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import * as ffmpeg from '@vp/ffmpeg';
-import type { Logger } from '@vp/logger';
-import { createMetricsRegistry } from '@vp/observability';
+import { fingerprintTools } from '@vp/fingerprint';
+import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { speechTools } from '@vp/whisper';
 import { everyInterval } from '../heartbeat';
 import type { StageDefinition } from '../registry';
@@ -36,6 +39,9 @@ const mediaTools: MediaTools = {
   concat: (...args) => ffmpeg.runFfmpegConcat(...args),
   audio: (...args) => ffmpeg.runFfmpegAudio(...args),
   live: (...args) => ffmpeg.runFfmpegLive(...args),
+  probeChannelImage: (...args) => ffmpeg.probeChannelImage(...args),
+  channelImage: (...args) => ffmpeg.runFfmpegChannelImage(...args),
+  applyEdits: (...args) => ffmpeg.runFfmpegApplyEdits(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */
@@ -57,6 +63,9 @@ export const STAGE_SETTINGS = {
   },
   ffmpegPath: config.worker.ffmpegPath,
   ffprobePath: config.worker.ffprobePath,
+  fpcalcPath: config.worker.fpcalcPath,
+  screening: config.screening,
+  screeningThresholdVersion: config.screening.thresholds.version,
   maxDurationSeconds: config.limits.maxDurationSeconds,
   retentionDays: 7,
   maxInflightPerUser: 3,
@@ -65,10 +74,12 @@ export const STAGE_SETTINGS = {
   views: config.views,
   captions: config.captions,
   workerId: 'worker-spec',
-  metrics: createMetricsRegistry(),
+  metrics: createPipelineMetrics(),
   media: mediaTools,
   speech: speechTools,
+  fingerprint: fingerprintTools,
   now: Date.now,
+  every: everyInterval,
   progressReporter: () => ({ report: async () => undefined }),
 };
 
@@ -143,6 +154,9 @@ export function registryDeps(
     metrics: STAGE_SETTINGS.metrics,
     media,
     speech: STAGE_SETTINGS.speech,
+    fingerprint: STAGE_SETTINGS.fingerprint,
+    frameClassifier: () =>
+      new InMemoryFrameClassifier({ inputSize: config.screening.model.inputSize }),
     workerId: STAGE_SETTINGS.workerId,
     now: Date.now,
     every: everyInterval,

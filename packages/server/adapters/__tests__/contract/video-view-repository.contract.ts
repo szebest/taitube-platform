@@ -1,10 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { expectOk } from '@kit/testing/result';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { RetentionCount, ViewCount } from '@vp/domain';
-import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { describeVideoViewAccessStatsContract } from './video-view-access-stats.contract';
+import { describeVideoViewDeviceContract } from './video-view-device.contract';
+import { describeVideoViewFirstWeekContract } from './video-view-first-week.contract';
 import { describeVideoViewHourlyContract } from './video-view-hourly.contract';
+import { viewBatch } from './view-batch';
 
 const DAY = '2026-03-10';
 const NEXT_DAY = '2026-03-11';
@@ -42,14 +46,10 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     const apply = async (...counts: ViewCount[]) =>
-      expectOk(
-        await views.applyBatch({ batchId: randomUUID(), counts, retention: [], hourly: [] })
-      );
+      expectOk(await views.applyBatch(viewBatch({ counts })));
 
     const applySteps = async (...retention: RetentionCount[]) =>
-      expectOk(
-        await views.applyBatch({ batchId: randomUUID(), counts: [], retention, hourly: [] })
-      );
+      expectOk(await views.applyBatch(viewBatch({ retention })));
 
     const viewsCountOf = async (videoId: string) =>
       expectOk(await subject.repositories.videos.findById(videoId))?.viewsCount;
@@ -71,12 +71,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('applies a batch id once, so a flush retried after a crash counts nothing twice', async () => {
-      const batch = {
-        batchId: randomUUID(),
-        counts: [count(VIDEO_IDS.a, DAY, 4)],
-        retention: [],
-        hourly: [],
-      };
+      const batch = viewBatch({ counts: [count(VIDEO_IDS.a, DAY, 4)] });
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -106,7 +101,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('records an empty batch as applied', async () => {
-      const batch = { batchId: randomUUID(), counts: [], retention: [], hourly: [] };
+      const batch = viewBatch();
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'applied', views: 0 });
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -120,12 +115,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('forgets the batches applied before a cutoff, and only those', async () => {
-      const batch = {
-        batchId: randomUUID(),
-        counts: [count(VIDEO_IDS.a, DAY, 1)],
-        retention: [],
-        hourly: [],
-      };
+      const batch = viewBatch({ counts: [count(VIDEO_IDS.a, DAY, 1)] });
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.forgetBatchesBefore(new Date(0)))).toBe(0);
@@ -153,7 +143,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         count(VIDEO_IDS.c, DAY, 50)
       );
 
-      expect(expectOk(await views.channelTimeline(OWNER_ID, WEEK))).toEqual([
+      expect(expectOk(await views.channelTimeline(OWNER_CHANNEL_ID, WEEK))).toEqual([
         { viewDate: DAY, views: 5, watchSeconds: 50 },
         { viewDate: NEXT_DAY, views: 1, watchSeconds: 10 },
       ]);
@@ -167,7 +157,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         count(VIDEO_IDS.d, DAY, 9)
       );
 
-      expect(expectOk(await views.channelTotals(OWNER_ID))).toEqual({
+      expect(expectOk(await views.channelTotals(OWNER_CHANNEL_ID))).toEqual({
         totalViews: 10,
         videoCount: 2,
       });
@@ -181,11 +171,11 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
       await apply(count(VIDEO_IDS.a, '2026-03-01', 100), count(VIDEO_IDS.a, DAY, 1));
       await apply(count(VIDEO_IDS.b, DAY, 5), count(VIDEO_IDS.c, DAY, 50));
 
-      expect(expectOk(await views.topVideos(OWNER_ID, WEEK, 5))).toEqual([
+      expect(expectOk(await views.topVideos(OWNER_CHANNEL_ID, WEEK, 5))).toEqual([
         { videoId: VIDEO_IDS.b, title: 'Beta', views: 5, totalViews: 5 },
         { videoId: VIDEO_IDS.a, title: 'Alpha', views: 1, totalViews: 101 },
       ]);
-      expect(expectOk(await views.topVideos(OWNER_ID, WEEK, 1))).toHaveLength(1);
+      expect(expectOk(await views.topVideos(OWNER_CHANNEL_ID, WEEK, 1))).toHaveLength(1);
     });
 
     describe('retention', () => {
@@ -219,12 +209,10 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
       });
 
       it('applies the views and the steps of a batch once, however often its id is replayed', async () => {
-        const batch = {
-          batchId: randomUUID(),
+        const batch = viewBatch({
           counts: [count(VIDEO_IDS.a, DAY, 2)],
           retention: [{ videoId: VIDEO_IDS.a, percent: 0, viewers: 2 }],
-          hourly: [],
-        };
+        });
 
         expectOk(await views.applyBatch(batch));
         expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -245,4 +233,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
   });
 
   describeVideoViewHourlyContract(makeSubject);
+  describeVideoViewDeviceContract(makeSubject);
+  describeVideoViewAccessStatsContract(makeSubject);
+  describeVideoViewFirstWeekContract(makeSubject);
 }

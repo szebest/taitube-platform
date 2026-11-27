@@ -30,6 +30,19 @@ describe('apps/client/studio: UploadWidget', () => {
     await screen.findByRole('progressbar', { name: 'Overall of Harbour' });
   });
 
+  it('keeps clear of the home indicator of a phone', async () => {
+    const { finishTransfer } = serveUpload();
+    const { user } = await renderStudio();
+
+    await uploadClip(user, 'Harbour');
+
+    expect(await widget()).toHaveClass(
+      'pb-[max(var(--gutter-compact),env(safe-area-inset-bottom))]'
+    );
+    finishTransfer();
+    await screen.findByRole('progressbar', { name: 'Overall of Harbour' });
+  });
+
   it('keeps showing it while the creator moves to another studio page', async () => {
     const { finishTransfer } = serveUpload();
     apiServer.use(...serveCaptions().handlers);

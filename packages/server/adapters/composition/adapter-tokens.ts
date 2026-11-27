@@ -1,5 +1,5 @@
 import type { BaseAdapter } from '@bull-board/api/baseAdapter';
-import { token } from '@vp/composition';
+import { token } from '@kit/di';
 import type {
   AuthorizationPort,
   CacheClient,
@@ -7,11 +7,16 @@ import type {
   CommentCachePort,
   DatabaseClient,
   FlowProducerPort,
+  FrameClassifier,
   JobQueue,
+  CommentSlowModePort,
+  PostOpenSketchPort,
   LiveChatGatePort,
   LiveGatewayPort,
   LivePresencePort,
   MultipartStorage,
+  PartyGuestSessionsPort,
+  PasswordHasherPort,
   PlayheadCachePort,
   ReactionCachePort,
   SearchSuggestionIndexPort,
@@ -19,11 +24,13 @@ import type {
   SubscriptionCachePort,
   TokenVerifier,
   ViewBufferPort,
+  WatchPartyGatePort,
+  WatchPartyPresencePort,
   WebhookDispatcher,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
-import type { PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import type { QueueRegistry } from './queue-registry';
 
 export const Adapters = {
@@ -45,11 +52,18 @@ export const Adapters = {
   CommentCache: token<CommentCachePort>('CommentCache'),
   PlayheadCache: token<PlayheadCachePort>('PlayheadCache'),
   SearchSuggestions: token<SearchSuggestionIndexPort>('SearchSuggestions'),
+  FrameClassifier: token<FrameClassifier>('FrameClassifier'),
   Authorization: token<AuthorizationPort>('Authorization'),
   WebhookDispatcher: token<WebhookDispatcher>('WebhookDispatcher'),
   LiveGateway: token<LiveGatewayPort>('LiveGateway'),
+  CommentSlowMode: token<CommentSlowModePort>('CommentSlowMode'),
+  PostOpenSketch: token<PostOpenSketchPort>('PostOpenSketch'),
   LiveChatGate: token<LiveChatGatePort>('LiveChatGate'),
   LivePresence: token<LivePresencePort>('LivePresence'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
+  WatchPartyGate: token<WatchPartyGatePort>('WatchPartyGate'),
+  WatchPartyPresence: token<WatchPartyPresencePort>('WatchPartyPresence'),
+  PartyGuestSessions: token<PartyGuestSessionsPort>('PartyGuestSessions'),
+  PasswordHasher: token<PasswordHasherPort>('PasswordHasher'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;

@@ -1,8 +1,8 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { screen, within } from '@testing-library/react';
 import { createClip } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, CLIP_ID, clip, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
-import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { renderWatch } from '#app/__tests__/render-watch';
 import { LazyClipDialog } from '../clip-dialog.lazy';

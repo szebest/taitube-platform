@@ -1,14 +1,14 @@
-import { render } from '@testing-library/react';
 import {
   contrastRatio,
   NON_TEXT_FLOOR,
   parseTheme,
   type ResolvedTheme,
   resolveTheme,
-} from '@vp/design-tokens';
-import { expectOk } from '@vp/testing/result';
-import { appearance } from '@vp/ui/appearance/registry';
-import { ramps } from '@vp/ui/tokens/ref';
+} from '@kit/design-tokens';
+import { expectOk } from '@kit/testing/result';
+import { appearance } from '@kit/ui/appearance/registry';
+import { ramps } from '@kit/ui/tokens/ref';
+import { render } from '@testing-library/react';
 import { AppProviders } from '#app/__tests__/providers';
 import { RETENTION_FILL, RetentionPlot } from '../retention-plot';
 

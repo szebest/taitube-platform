@@ -1,3 +1,4 @@
+import { expectOk } from '@kit/testing/result';
 import type {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -5,8 +6,7 @@ import type {
 } from '@vp/adapters/in-memory';
 import { SEARCH_RATE_LIMITS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
-import { expectOk } from '@vp/testing/result';
+import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, seedVideo } from '../../__tests__/test-app';
 
@@ -110,6 +110,15 @@ describe('search routes', () => {
       expect(res.json()).toMatchObject({ total: 3, fuzzyFallback: false, nextCursor: null });
       expect(res.json().tookMs).toBeGreaterThanOrEqual(0);
     });
+
+    it.each(['all', 'video', 'channel', 'playlist'])(
+      'counts every kind on the first page whichever type=%s is asked for',
+      async (type) => {
+        const res = await get(`/v1/search?q=javascript&type=${type}`);
+
+        expect(res.json().counts).toEqual({ video: 1, channel: 1, playlist: 1 });
+      }
+    );
 
     it.each(['fireship', '@fireship', 'FIRESHIP'])(
       'pins the channel whose handle is %j to the top',

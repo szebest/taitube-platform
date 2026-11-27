@@ -25,6 +25,10 @@ export const stagePolicies = {
     attempts: 4,
     backoff: { type: 'exponential', delay: 5000, jitter: 0.5 },
   },
+  screen: {
+    attempts: 4,
+    backoff: { type: 'exponential', delay: 10000, jitter: 0.5 },
+  },
   package: {
     attempts: 5,
     backoff: { type: 'exponential', delay: 5000, jitter: 0.5 },

@@ -1,4 +1,4 @@
-import { type AppearancePreference, DEFAULT_APPEARANCE } from '@vp/ui';
+import { type AppearancePreference, DEFAULT_APPEARANCE } from '@kit/ui';
 import { appearanceChange } from '../appearance-change';
 
 const appearance = (changes: Partial<AppearancePreference> = {}): AppearancePreference => ({

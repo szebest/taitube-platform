@@ -1,8 +1,9 @@
+import { Container } from '@kit/composition';
+import { expectOk } from '@kit/testing/result';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
+import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { Services, registerServices } from '../services.module';
 
 const CREATOR: UserContext = { id: '00000000-0000-7000-8000-00000000f101', role: 'CREATOR' };
@@ -13,10 +14,12 @@ describe('apps/server/api/composition: studio module', () => {
     const c = registerServices(
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))
     );
+    const channelId = await seedPrimaryChannel(c.get(Adapters.Repositories), CREATOR.id);
     expectOk(
       await c.get(Adapters.Repositories).videos.create({
         id: VIDEO_ID,
         ownerId: CREATOR.id,
+        channelId,
         status: 'READY',
         sourceKey: 'raw/studio.mp4',
         posterKey: `videos/${VIDEO_ID}/thumbs/poster.jpg`,
@@ -24,7 +27,13 @@ describe('apps/server/api/composition: studio module', () => {
     );
 
     const page = expectOk(
-      await c.get(Services.CreatorStudioService).library(CREATOR, { sort: 'newest' })
+      await c.get(Services.CreatorStudioService).library(
+        CREATOR,
+        { channelId, ownerId: CREATOR.id, role: 'owner' },
+        {
+          sort: 'newest',
+        }
+      )
     );
 
     expect(page.items.map((item) => [item.id, item.thumbnailUrl])).toEqual([

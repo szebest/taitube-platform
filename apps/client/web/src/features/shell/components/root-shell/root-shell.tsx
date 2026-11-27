@@ -1,11 +1,12 @@
+import { Logo, ThemeMenu } from '@kit/ui';
 import { Link, Outlet } from '@tanstack/react-router';
-import { useT } from '@vp/intl-react';
 import { useLayoutMaxWidth } from '@vp/queries';
-import { Logo, ThemeMenu } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
+import { AmbientLayer } from '#app/components/shell/ambient-layer';
 import { AppShell } from '#app/components/shell/app-shell';
 import { useImmersive } from '#app/features/shell/hooks/use-immersive';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/utils/sidebar-state';
+import { useT } from '#app/lib/messages';
 import { ShellRail } from '../shell-rail/shell-rail';
 import { ShellSearch } from '../shell-search/shell-search';
 import { ShellTabBar } from '../shell-tab-bar/shell-tab-bar';
@@ -50,10 +51,11 @@ export function RootShell({
         railState={state === 'expanded' ? 'open' : 'collapsed'}
         onRailStateChange={handleRailStateChange}
       >
+        <AmbientLayer />
         <AppShell.Header
           logo={
             <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="flex">
-              <Logo />
+              <Logo name="Taitube" className="[&>span]:hidden medium:[&>span]:block" />
             </Link>
           }
           search={<ShellSearch />}

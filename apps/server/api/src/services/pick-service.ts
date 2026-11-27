@@ -1,3 +1,4 @@
+import { andThenAsync, err, isErr, isOk, map, ok, type Result } from '@kit/result';
 import type {
   CreatePickBody,
   ListPicksQuery,
@@ -25,7 +26,6 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { andThenAsync, err, isErr, isOk, map, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { CurrentPickCache } from './current-pick-cache';
 import { toPickView } from './pick-views';
@@ -163,7 +163,7 @@ export class PickService {
     video: Video
   ): Promise<Result<PickView, DatabaseUnavailable>> {
     await this.deps.currentCache.drop();
-    const owner = await this.deps.channels.findByUserId(video.ownerId);
+    const owner = await this.deps.channels.findById(video.channelId);
     return map(owner, (channel) =>
       toPickView(
         { pick, video, channel: channel && toChannelCard(channel) },

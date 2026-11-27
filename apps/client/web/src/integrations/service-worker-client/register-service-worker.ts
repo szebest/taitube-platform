@@ -1,5 +1,5 @@
-import { fromPromise, ignore } from '@vp/result';
-import { onStaleDeploy } from '@vp/ui';
+import { fromPromise, ignore } from '@kit/result';
+import { onStaleDeploy } from '@kit/ui';
 import { Workbox } from 'workbox-window';
 import { reloadWhenIdle } from './reload-when-idle';
 

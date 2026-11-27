@@ -14,6 +14,7 @@ describe('apps/client/web: useAutoplayNext', () => {
     await user.click(screen.getByRole('button', { name: 'End video' }));
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${QUEUED[0]}`));
+    await vi.waitFor(() => expect(router.state.status).toBe('idle'));
     expect(router.state.location.searchStr).toBe(`?list=${LIST}&index=1`);
     expect(router.history.length).toBe(entries);
   });
