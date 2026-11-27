@@ -1,5 +1,5 @@
 import { VideoCard } from '@kit/components';
-import { Icon, IconButton, SortableList } from '@kit/ui';
+import { Icon, IconButton, SortableList, Tooltip } from '@kit/ui';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { PlaylistItemRow, PlaylistItemRowSkeleton, PlaylistSectionRow } from '..';
@@ -39,16 +39,18 @@ const Video = ({
 );
 
 const list: Decorator = (Story) => (
-  <SortableList.Root
-    items={['row']}
-    onReorder={noop}
-    aria-label="Videos"
-    className="max-w-[40rem] p-section"
-  >
-    <SortableList.Item id="row" aria-label="Lisbon trams">
-      <Story />
-    </SortableList.Item>
-  </SortableList.Root>
+  <Tooltip.Provider>
+    <SortableList.Root
+      items={['row']}
+      onReorder={noop}
+      aria-label="Videos"
+      className="max-w-[40rem] p-section"
+    >
+      <SortableList.Item id="row" aria-label="Lisbon trams">
+        <Story />
+      </SortableList.Item>
+    </SortableList.Root>
+  </Tooltip.Provider>
 );
 
 const meta = {
