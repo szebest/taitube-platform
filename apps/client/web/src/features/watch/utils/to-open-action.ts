@@ -5,6 +5,7 @@ import {
   type PlaybackSession,
   playbackReducer,
 } from '#app/lib/playback-session/playback-session';
+import { toSegments } from './to-segments';
 import { toSummary } from './to-summary';
 
 export interface OpenInPlaybackSession {
@@ -27,6 +28,7 @@ export function toOpenAction(
     playlist: playlist && {
       id: playlist.id,
       videos: playlist.items.map((item) => item.video),
+      segments: toSegments(playlist.items),
     },
     startTime,
     autoplay,

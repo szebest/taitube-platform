@@ -230,44 +230,32 @@ describe('apps/client/web: the Video.js engine', () => {
     });
 
     it.each([
-      { at: 20, where: 'at its end', looped: true },
-      { at: 25, where: 'past its end', looped: true },
-      { at: 5, where: 'before its start', looped: true },
-      { at: 9.8, where: 'a hair before its start', looped: false },
-      { at: 15, where: 'inside it', looped: false },
-    ])('goes back to the start $where: $looped', ({ at, looped }) => {
-      const { video } = renderEngine({ range });
+      { scenario: 'stops and reports the end', loop: undefined, told: 1, at: 10 },
+      { scenario: 'plays again and reports no end', loop: true, told: 0, at: 10 },
+    ])('$scenario at the end of the range when loop is $loop', ({ loop, told, at }) => {
+      vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+      const onEnded = vi.fn();
+      const onChannelEnded = vi.fn();
+      const { video } = renderEngine({ range, loop, onEnded }, onChannelEnded);
 
-      video.currentTime = at;
+      video.currentTime = 20;
       fireEvent(video, new Event('timeupdate'));
 
-      expect(video.currentTime).toBe(looped ? 10 : at);
-    });
-
-    it('plays the range again when the video ends inside it, and reports no end', () => {
-      const onEnded = vi.fn();
-      const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
-      const { video } = renderEngine({ range, onEnded });
-
-      fireEvent(video, new Event('ended'));
-
-      expect([video.currentTime, play.mock.calls.length, onEnded.mock.calls.length]).toEqual([
-        10, 1, 0,
-      ]);
+      expect([
+        onEnded.mock.calls.length,
+        onChannelEnded.mock.calls.length,
+        video.currentTime,
+      ]).toEqual([told, told, loop ? at : 20]);
     });
   });
 
-  it.each([
-    { scenario: 'ends', range: undefined, told: 1 },
-    { scenario: 'plays its range again', range: { startMs: 10_000, endMs: 20_000 }, told: 0 },
-  ])('tells the channel $told times when the video $scenario', ({ range, told }) => {
-    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  it('tells the channel once when a video without a range ends', () => {
     const onChannelEnded = vi.fn();
-    const { video } = renderEngine({ range }, onChannelEnded);
+    const { video } = renderEngine({}, onChannelEnded);
 
     fireEvent(video, new Event('ended'));
 
-    expect(onChannelEnded).toHaveBeenCalledTimes(told);
+    expect(onChannelEnded).toHaveBeenCalledTimes(1);
   });
 
   it('shows the poster over the video', async () => {

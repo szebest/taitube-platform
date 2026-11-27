@@ -1,4 +1,5 @@
 import type { VideoSummary } from '@vp/api-contracts';
+import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 
 export type QueueRepeat = 'off' | 'all' | 'one';
 
@@ -7,6 +8,8 @@ export interface PlaybackSession {
   playlistId: string | undefined;
   /** The ids the playlist held when it was loaded, so a later change to it is told from the viewer's own reorder. */
   source: readonly string[];
+  /** The stretch each video of the playlist plays, by video id; a video without one plays whole. */
+  segments: Readonly<Record<string, PlaybackRange>>;
   shuffle: boolean;
   repeat: QueueRepeat;
   /** The ids played so far, the current one last: what a shuffled queue skips and steps back through. */
@@ -26,6 +29,7 @@ export const EMPTY_SESSION: PlaybackSession = {
   videos: [],
   playlistId: undefined,
   source: [],
+  segments: {},
   shuffle: false,
   repeat: 'off',
   played: [],
@@ -38,7 +42,13 @@ export type PlaybackAction =
       type: 'open';
       video: VideoSummary;
       list: string | undefined;
-      playlist: { id: string; videos: readonly VideoSummary[] } | undefined;
+      playlist:
+        | {
+            id: string;
+            videos: readonly VideoSummary[];
+            segments: Readonly<Record<string, PlaybackRange>>;
+          }
+        | undefined;
       startTime: number | undefined;
       autoplay: boolean;
       shareToken: string | undefined;
@@ -112,6 +122,7 @@ function open(
     videos: state.videos,
     playlistId: state.playlistId,
     source: state.source,
+    segments: state.segments,
     played: state.played,
   };
 
@@ -120,13 +131,14 @@ function open(
       videos: playlist.videos,
       playlistId: playlist.id,
       source: playlist.videos.map(({ id }) => id),
+      segments: playlist.segments,
       played: [],
     };
   } else if (list === undefined && !state.videos.some(({ id }) => id === video.id)) {
     queue =
       state.playlistId === undefined
         ? { ...queue, videos: [video, ...state.videos] }
-        : { videos: [video], playlistId: undefined, source: [], played: [] };
+        : { videos: [video], playlistId: undefined, source: [], segments: {}, played: [] };
   }
 
   if (state.current?.video.id === video.id) {
