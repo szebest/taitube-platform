@@ -71,6 +71,15 @@ describe('apps/client/web: playback session segments', () => {
       segments: { [a.id]: aSegment },
     },
     {
+      scenario: 'the same videos with an edited segment take the new range',
+      state: playingPlaylist({ [a.id]: aSegment }),
+      action: open({
+        list: 'pl',
+        playlist: { id: 'pl', videos: [a, b], segments: { [a.id]: { startMs: 0, endMs: 60_000 } } },
+      }),
+      segments: { [a.id]: { startMs: 0, endMs: 60_000 } },
+    },
+    {
       scenario: 'a video opened inside the playlist keeps them',
       state: playingPlaylist({ [a.id]: aSegment }),
       action: open({ video: b }),

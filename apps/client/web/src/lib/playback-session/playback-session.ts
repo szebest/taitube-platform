@@ -134,6 +134,8 @@ function open(
       segments: playlist.segments,
       played: [],
     };
+  } else if (playlist !== undefined && playlist.id === state.playlistId) {
+    queue = { ...queue, segments: playlist.segments };
   } else if (list === undefined && !state.videos.some(({ id }) => id === video.id)) {
     queue =
       state.playlistId === undefined
