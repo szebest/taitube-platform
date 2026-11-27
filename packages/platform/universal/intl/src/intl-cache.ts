@@ -86,7 +86,7 @@ const isDurationFormat = (value: unknown): value is DurationFormatConstructor =>
   typeof value === 'function';
 
 function nativeDurationFormat(): DurationFormatConstructor | undefined {
-  // The ES2022 lib has no Intl.DurationFormat, and older engines ship none.
+  // This package's lib does not type Intl.DurationFormat, and the oldest browsers we support lack it.
   const native: unknown = Reflect.get(Intl, 'DurationFormat');
   return isDurationFormat(native) ? native : undefined;
 }

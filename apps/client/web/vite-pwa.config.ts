@@ -46,7 +46,7 @@ function buildRevision(): string {
 }
 
 /** The service worker (`src/sw.ts`, injected with the build's asset manifest) and the web manifest. */
-export async function pwaPlugins(): Promise<PluginOption[]> {
+export async function pwaPlugins(target: string[]): Promise<PluginOption[]> {
   return VitePWA({
     strategies: 'injectManifest',
     srcDir: 'src',
@@ -56,6 +56,7 @@ export async function pwaPlugins(): Promise<PluginOption[]> {
     manifest: await loadManifest(),
     manifestFilename: 'manifest.webmanifest',
     injectManifest: {
+      target,
       globPatterns: ['**/*.{js,css,woff2}', 'favicon.{svg,ico}'],
       additionalManifestEntries: [{ url: OFFLINE_PAGE_URL, revision: buildRevision() }],
     },

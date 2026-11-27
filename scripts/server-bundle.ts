@@ -6,7 +6,7 @@ import { load, type Pkg } from './workspace-packages';
  * inlined and every npm dependency left for the image's `node_modules`.
  */
 export function serverBundle(entry: string[], packages: Pkg[] = load()): PackUserConfig {
-  const names = packages.map(({ name }) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const names = packages.map(({ name }) => RegExp.escape(name));
 
   return {
     entry,

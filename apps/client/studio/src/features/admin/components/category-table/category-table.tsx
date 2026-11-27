@@ -181,7 +181,7 @@ export function CategoryTable() {
       {open?.kind === 'delete' && <CategoryDeleteDialog category={open.category} onClose={close} />}
       {open?.kind === 'reorder' && (
         <CategoryReorderDialog
-          categories={[...data].sort((a, b) => a.sortOrder - b.sortOrder)}
+          categories={data.toSorted((a, b) => a.sortOrder - b.sortOrder)}
           onClose={close}
         />
       )}

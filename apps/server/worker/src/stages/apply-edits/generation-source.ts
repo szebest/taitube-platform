@@ -122,7 +122,7 @@ export async function fetchGenerationSource(
   if (!edit.value || !ladder.success) {
     return missing(`The base generation ${baseGeneration} is gone`);
   }
-  const [top] = [...ladder.data].sort((a, b) => b.height - a.height);
+  const [top] = ladder.data.toSorted((a, b) => b.height - a.height);
   if (!top) return missing(`The base generation ${baseGeneration} has no rendition`);
   const fetched = await downloadRendition(deps, videoId, baseGeneration, top.name, dir);
   if (isErr(fetched)) return fetched;

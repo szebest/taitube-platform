@@ -27,7 +27,7 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
 
   const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:6', '#EXT-X-INDEPENDENT-SEGMENTS'];
 
-  const sorted = [...ladder].sort((a, b) => b.height - a.height);
+  const sorted = ladder.toSorted((a, b) => b.height - a.height);
 
   for (const r of sorted) {
     const bandwidth = r.maxrateKbps * 1000;

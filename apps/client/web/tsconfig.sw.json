@@ -1,7 +1,7 @@
 {
   "extends": "@kit/tsconfig/client.json",
   "compilerOptions": {
-    "lib": ["ES2023", "WebWorker"],
+    "lib": ["ES2024", "WebWorker"],
     "types": [],
     "noEmit": true,
     "declaration": false,

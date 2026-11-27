@@ -106,6 +106,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **Git Workflow & Pull Requests:** [docs/standards/git-workflow.md](docs/standards/git-workflow.md)
 - **Design System, adding a token set, theme, primitive, component or wrapper:** [docs/standards/design-system.md](docs/standards/design-system.md)
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
+- **Runtime baseline, the ECMAScript level per tier, the browser floor and its guard:** [docs/standards/runtime-baseline.md](docs/standards/runtime-baseline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Platform packages, `@kit/*` (adding or changing one; asking whether a package is platform):** [docs/standards/platform-packages.md](docs/standards/platform-packages.md)
 - **Frontend Structure, the folders, layers, component shape and names of both client apps:** [docs/standards/frontend-structure.md](docs/standards/frontend-structure.md)

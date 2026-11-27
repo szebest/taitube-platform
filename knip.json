@@ -14,6 +14,7 @@
         "scripts/**/*.ts",
         "tests/**/*.ts",
         "!scripts/__tests__/lint-fixtures/**",
+        "!scripts/__tests__/typecheck-fixtures/**",
         "!tests/react-compiler/vite.config.ts"
       ],
       "vitest": ["vitest.config.ts", "tests/vitest.config.ts", "tests/integration/vitest.config.ts"]

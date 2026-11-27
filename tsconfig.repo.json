@@ -1,10 +1,8 @@
 {
-  "extends": "./packages/platform/universal/tsconfig/base.json",
+  "extends": "./packages/platform/universal/tsconfig/server.json",
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["ES2023"],
     "incremental": false,
-    "types": ["node", "vitest/globals"],
     "paths": {
       "@vp/adapters": ["./packages/server/adapters"],
       "@vp/adapters/*": ["./packages/server/adapters/*"],
@@ -23,5 +21,11 @@
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["tests/load", "tests/playwright", "tests/fixtures/second-app"]
+  "exclude": [
+    "tests/load",
+    "tests/playwright",
+    "tests/fixtures/second-app",
+    "scripts/__tests__/lint-fixtures",
+    "scripts/__tests__/typecheck-fixtures"
+  ]
 }
