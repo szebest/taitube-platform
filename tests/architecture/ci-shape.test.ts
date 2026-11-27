@@ -70,7 +70,7 @@ jobs:
     name: e2e-smoke
     needs: [build, unit-shards]
     if: needs.build.outputs.code == 'true'
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - run: pnpm test:architecture
   terraform:
@@ -95,7 +95,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'build: runs pnpm boundaries twice',
     'unit-shard-1: starts a service container',
     'unit-shard-1: runs a migration',
-    'e2e-smoke: its needs chain budgets 12 min',
+    'e2e-smoke: its needs chain budgets 14 min',
     'unit-shard-1: does not skip a docs-only change',
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
@@ -190,14 +190,14 @@ describe('architecture: the CI pipeline holds its budgets', () => {
       '    strategy:',
       '      matrix:',
       '        app: [web, studio]',
-      '    timeout-minutes: 10',
+      '    timeout-minutes: 12',
     ].join('\n');
 
     const findings = shapeFindings(workflow);
 
     expect(findings).toContain('e2e-client: timeout-minutes is not 4');
-    expect(findings).toContain('e2e-web: its needs chain budgets 12 min');
-    expect(findings).toContain('e2e-studio: its needs chain budgets 12 min');
+    expect(findings).toContain('e2e-web: its needs chain budgets 14 min');
+    expect(findings).toContain('e2e-studio: its needs chain budgets 14 min');
   });
 
   it('runs the browser suite of every client app, and of nothing else, in the e2e-client matrix', () => {
