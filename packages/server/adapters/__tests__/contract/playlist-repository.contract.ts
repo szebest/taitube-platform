@@ -148,9 +148,15 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
       expect(expectOk(await playlists.remove(P.watchLater))).toBe(false);
       expect(expectOk(await playlists.remove(P.mix))).toBe(false);
       expect(expectOk(await playlists.findById(P.watchLater))).not.toBeNull();
-      expect(expectOk(await playlists.addItem(P.mix, { id: P.other, videoId: VIDEO_IDS.a, addedBy: OWNER_ID }, OWNER_ID))).toBe(
-        'playlist-missing'
-      );
+      expect(
+        expectOk(
+          await playlists.addItem(
+            P.mix,
+            { id: P.other, videoId: VIDEO_IDS.a, addedBy: OWNER_ID },
+            OWNER_ID
+          )
+        )
+      ).toBe('playlist-missing');
     });
 
     describePlaylistItemsContract(ctx);

@@ -86,15 +86,33 @@ describe('helpers/playlists: who may do what to a private playlist', () => {
 
   it.each([
     { scenario: 'a link', invitee: null, user: standardUser, accept: true, decline: false },
-    { scenario: 'a link, signed out', invitee: null, user: guestUser, accept: false, decline: false },
-    { scenario: 'their own invite', invitee: standardUser.id, user: standardUser, accept: true, decline: true },
-    { scenario: "someone else's invite", invitee: 'someone', user: standardUser, accept: false, decline: false },
+    {
+      scenario: 'a link, signed out',
+      invitee: null,
+      user: guestUser,
+      accept: false,
+      decline: false,
+    },
+    {
+      scenario: 'their own invite',
+      invitee: standardUser.id,
+      user: standardUser,
+      accept: true,
+      decline: true,
+    },
+    {
+      scenario: "someone else's invite",
+      invitee: 'someone',
+      user: standardUser,
+      accept: false,
+      decline: false,
+    },
   ])('takes $scenario: accept $accept, decline $decline', ({ invitee, user, accept, decline }) => {
     const invite = { inviteeUserId: invitee };
 
-    expect([canAcceptPlaylistInvite({ user, invite }), canDeclinePlaylistInvite({ user, invite })]).toEqual([
-      accept,
-      decline,
-    ]);
+    expect([
+      canAcceptPlaylistInvite({ user, invite }),
+      canDeclinePlaylistInvite({ user, invite }),
+    ]).toEqual([accept, decline]);
   });
 });

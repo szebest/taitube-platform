@@ -79,9 +79,9 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
         name: NOTIFY_PLAYLIST_INVITE,
         data: { inviteId: INVITE },
       });
-      expect(expectOk(await repos().playlistCollaborators.findInvite('p'.repeat(22)))).toMatchObject(
-        { id: INVITE, inviteeUserId: OTHER_OWNER_ID }
-      );
+      expect(
+        expectOk(await repos().playlistCollaborators.findInvite('p'.repeat(22)))
+      ).toMatchObject({ id: INVITE, inviteeUserId: OTHER_OWNER_ID });
     });
 
     it('replaces an earlier invite to the same person', async () => {
@@ -96,14 +96,17 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
     it('seats whoever takes a link, counts the use and logs it', async () => {
       expectOk(await repos().playlistCollaborators.createInvite(LINK_INVITE));
 
-      expect(expectOk(await seat(LINK_INVITE.token))).toEqual({ playlistId: P.mix, role: 'editor' });
+      expect(expectOk(await seat(LINK_INVITE.token))).toEqual({
+        playlistId: P.mix,
+        role: 'editor',
+      });
 
       expect(expectOk(await repos().playlistCollaborators.list(P.mix))).toEqual([
         expect.objectContaining({ userId: OTHER_OWNER_ID, role: 'editor', addedBy: OWNER_ID }),
       ]);
-      expect(expectOk(await repos().playlistCollaborators.findInvite(LINK_INVITE.token))).toMatchObject(
-        { useCount: 1 }
-      );
+      expect(
+        expectOk(await repos().playlistCollaborators.findInvite(LINK_INVITE.token))
+      ).toMatchObject({ useCount: 1 });
       expect(expectOk(await repos().playlistCollaborators.seats(P.mix, OTHER_OWNER_ID))).toEqual({
         seated: 1,
         isCollaborator: true,
@@ -139,7 +142,12 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
 
       expect(
         expectOk(
-          await repos().playlistCollaborators.changeRole(P.mix, OTHER_OWNER_ID, 'contributor', OWNER_ID)
+          await repos().playlistCollaborators.changeRole(
+            P.mix,
+            OTHER_OWNER_ID,
+            'contributor',
+            OWNER_ID
+          )
         )
       ).toBe(true);
       const told = expectOk(await repos().userEvents.listFrom(OTHER_OWNER_ID, 1, 50));
@@ -162,7 +170,9 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
       expectOk(await repos().playlistCollaborators.createInvite(LINK_INVITE));
       expectOk(await repos().playlistCollaborators.createInvite(invite()));
 
-      expect(expectOk(await repos().playlistCollaborators.revokeInvite(P.mix, LINK, NOW))).toBe(true);
+      expect(expectOk(await repos().playlistCollaborators.revokeInvite(P.mix, LINK, NOW))).toBe(
+        true
+      );
       expect(expectOk(await repos().playlistCollaborators.revokeInvite(P.mix, LINK, NOW))).toBe(
         false
       );
@@ -181,7 +191,9 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
         expectOk(await repos().playlists.update(P.mix, { title }, OWNER_ID));
       }
 
-      const first = expectOk(await repos().playlistActivity.list(P.mix, { cursor: null, limit: 1 }));
+      const first = expectOk(
+        await repos().playlistActivity.list(P.mix, { cursor: null, limit: 1 })
+      );
       const last = first[0];
       const rest = expectOk(
         await repos().playlistActivity.list(P.mix, {

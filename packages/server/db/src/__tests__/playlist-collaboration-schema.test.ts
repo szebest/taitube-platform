@@ -19,7 +19,12 @@ const silent = { info: () => undefined, warn: () => undefined };
 
 describe('db: playlist collaboration schema', () => {
   it.each([
-    { table: playlistCollaborators, column: 'playlist_id', target: 'playlists', onDelete: 'cascade' },
+    {
+      table: playlistCollaborators,
+      column: 'playlist_id',
+      target: 'playlists',
+      onDelete: 'cascade',
+    },
     { table: playlistCollaborators, column: 'user_id', target: 'users', onDelete: 'cascade' },
     { table: playlistInvites, column: 'playlist_id', target: 'playlists', onDelete: 'cascade' },
     { table: playlistInvites, column: 'invitee_user_id', target: 'users', onDelete: 'cascade' },
@@ -75,10 +80,18 @@ describe('db: 0048 playlist collaboration', () => {
   it.each([
     { scenario: 'a video item', fields: { video_id: videoId }, ok: true },
     { scenario: 'a section', fields: { kind: 'section', title: 'Part 1' }, ok: true },
-    { scenario: 'a section with a video', fields: { kind: 'section', title: 'x', video_id: videoId }, ok: false },
+    {
+      scenario: 'a section with a video',
+      fields: { kind: 'section', title: 'x', video_id: videoId },
+      ok: false,
+    },
     { scenario: 'a section without a title', fields: { kind: 'section' }, ok: false },
     { scenario: 'a video item without a video', fields: {}, ok: false },
-    { scenario: 'an 81-character section title', fields: { kind: 'section', title: 's'.repeat(81) }, ok: false },
+    {
+      scenario: 'an 81-character section title',
+      fields: { kind: 'section', title: 's'.repeat(81) },
+      ok: false,
+    },
     {
       scenario: 'a segment under a second',
       fields: { video_id: otherVideoId, start_ms: 500, end_ms: 1499 },

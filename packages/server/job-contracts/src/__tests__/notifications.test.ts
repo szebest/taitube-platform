@@ -122,7 +122,11 @@ describe('job-contracts: notification jobs', () => {
     },
     {
       scenario: 'an hour of changes to a playlist',
-      outbox: playlistUpdateOutbox({ playlistId: VIDEO_ID, actorUserId: EVENT_ID, hour: '2026-11-26T12' }),
+      outbox: playlistUpdateOutbox({
+        playlistId: VIDEO_ID,
+        actorUserId: EVENT_ID,
+        hour: '2026-11-26T12',
+      }),
       name: NOTIFY_PLAYLIST_UPDATE,
       jobId: `${VIDEO_ID}--notify-playlist-update--${EVENT_ID}--2026-11-26T12`,
     },

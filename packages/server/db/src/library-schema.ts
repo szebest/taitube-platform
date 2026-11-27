@@ -61,9 +61,15 @@ export const playlists = pgTable(
     index('playlists_owner_pinned_idx')
       .on(table.ownerId, table.pinnedAt)
       .where(sql`${table.pinnedAt} IS NOT NULL`),
-    check('playlists_visibility_check', sql`${table.visibility} IN (${listOf(PLAYLIST_VISIBILITIES)})`),
+    check(
+      'playlists_visibility_check',
+      sql`${table.visibility} IN (${listOf(PLAYLIST_VISIBILITIES)})`
+    ),
     check('playlists_kind_check', sql`${table.kind} IN (${listOf(PLAYLIST_KINDS)})`),
-    check('playlists_cover_mode_check', sql`${table.coverMode} IN (${listOf(PLAYLIST_COVER_MODES)})`),
+    check(
+      'playlists_cover_mode_check',
+      sql`${table.coverMode} IN (${listOf(PLAYLIST_COVER_MODES)})`
+    ),
   ]
 );
 
