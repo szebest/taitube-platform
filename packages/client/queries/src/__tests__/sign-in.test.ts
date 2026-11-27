@@ -2,9 +2,10 @@ import { getAccount, recordMySignIn } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, apiServer, mockEndpoint, problemReply, signInRecord } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { type Accounts, NO_ACCOUNTS, withExpired, withSignedIn } from '../accounts';
+import { NO_ACCOUNTS, withExpired, withSignedIn } from '../accounts';
 import { requestSession } from '../session-config';
 import { type SignInTarget, completeSignIn } from '../sign-in';
+import { accountsCookies } from './accounts-fixtures';
 import { inRequest } from './in-request';
 
 vi.mock(import('../session-config'), async (importOriginal) => {
@@ -41,10 +42,6 @@ function api({ userId = account().user.id, record = (): Response | undefined => 
   return recorded;
 }
 
-function accountsCookie(accounts: Accounts): string {
-  return `vp.accounts=${encodeURIComponent(JSON.stringify(accounts))}`;
-}
-
 const issue = vi.fn(async (grant: string) => `new-token-of-${grant}`);
 
 const BROWSER = 'Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0';
@@ -77,9 +74,26 @@ describe('@vp/queries: sign-in', () => {
         userAgent: BROWSER,
       },
     ]);
-    const listed = setCookies.find((set) => set.startsWith('vp.accounts=')) ?? '';
-    expect(decodeURIComponent(listed)).toContain('"slot":1');
+    const listed = setCookies.find((set) => set.startsWith('vp.accounts.1=')) ?? '';
+    expect(decodeURIComponent(listed)).toContain(`"userId":"${account().user.id}"`);
     expect(listed).not.toContain('HttpOnly');
+  });
+
+  it.each([
+    { scenario: 'the slot its nonce held', cookie: 'vp.session.0=first', slot: 3 },
+    {
+      scenario: 'the first free slot when its own was taken meanwhile',
+      cookie: 'vp.session.0=first; vp.session.3=someone',
+      slot: 1,
+    },
+  ])('adds into $scenario', async ({ cookie, slot }) => {
+    api();
+
+    const { value } = await inRequest(() => completeSignIn(issue, 'creator', ADD), {
+      cookie: `${cookie}; vp.add-nonce.3=n0nce`,
+    });
+
+    expect(value).toMatchObject({ kind: 'signed-in', slot });
   });
 
   it('never signs in with a token the request carries, only the one it was issued', async () => {
@@ -104,7 +118,7 @@ describe('@vp/queries: sign-in', () => {
 
     const { value, setCookies } = await signIn(
       ADD,
-      `vp.session.0=other; vp.session.3=mine; ${accountsCookie(held)}`
+      `vp.session.0=other; vp.session.3=mine; ${accountsCookies(held)}`
     );
 
     expect(value).toEqual({ kind: 'already-signed-in', slot: 3, accounts: 2 });
@@ -126,7 +140,7 @@ describe('@vp/queries: sign-in', () => {
 
     const { value, setCookies } = await signIn(
       ADD,
-      `vp.session.0=other; ${accountsCookie(expired)}`
+      `vp.session.0=other; ${accountsCookies(expired)}`
     );
 
     expect(value).toEqual({ kind: 'signed-in', slot: 2, accounts: 2 });
