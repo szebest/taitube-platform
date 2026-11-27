@@ -17,7 +17,12 @@ const PlaylistKindSchema = z
   .enum(PLAYLIST_KINDS)
   .describe('series: made only of the owner channel videos, with episodes and progress');
 
-const PlaylistItemSchema = z.object({
+const PlaylistItemAdderSchema = z.object({
+  userId: z.uuid(),
+  channel: ChannelCardSchema.nullable().describe("The adder's primary channel, as their avatar"),
+});
+
+export const PlaylistItemSchema = z.object({
   id: z.uuid().describe('The item id a reorder names'),
   videoId: z.uuid(),
   position: z
@@ -40,8 +45,29 @@ const PlaylistItemSchema = z.object({
     .describe(
       'Percent of the video this signed-in viewer has watched, in a series; null otherwise'
     ),
+  addedBy: PlaylistItemAdderSchema.nullable().describe(
+    'Who added it; null once their account is gone'
+  ),
+  note: z.string().nullable().describe('Up to 300 characters'),
+  startMs: z.number().int().nonnegative().nullable().describe('Where the item starts playing'),
+  endMs: z
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .describe('Where the item stops; null plays to the end. Clamped to the video as it is now'),
   video: VideoSummarySchema,
   channel: ChannelCardSchema.nullable(),
+});
+
+const PlaylistSectionSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  position: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe('Its place among the items and sections; never counted as a video'),
 });
 
 export const PlaylistSchema = z.object({
@@ -62,6 +88,9 @@ export const PlaylistSchema = z.object({
       'A series, for a signed-in viewer: the first episode after the last one watched that is below 92 percent, else the first unfinished one; null otherwise or when all are done'
     ),
   items: z.array(PlaylistItemSchema),
+  sections: z
+    .array(PlaylistSectionSchema)
+    .describe('Dividers between the items, in the same order'),
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 timestamp of the last change, items included'),
 });

@@ -1,4 +1,4 @@
-import { PLAYLIST_VISIBILITIES, WATCH_LATER_TITLE } from '../playlist';
+import { PLAYLIST_VISIBILITIES, WATCH_LATER_TITLE, clampSegment } from '../playlist';
 
 describe('@vp/domain: playlist', () => {
   it('offers the three visibilities a video has', () => {
@@ -7,5 +7,30 @@ describe('@vp/domain: playlist', () => {
 
   it('names the system playlist the way the watch page labels it', () => {
     expect(WATCH_LATER_TITLE).toBe('Watch Later');
+  });
+
+  it.each([
+    {
+      scenario: 'inside the video',
+      segment: { startMs: 1000, endMs: 5000 },
+      clamped: { startMs: 1000, endMs: 5000 },
+    },
+    {
+      scenario: 'open at both ends',
+      segment: { startMs: null, endMs: null },
+      clamped: { startMs: null, endMs: null },
+    },
+    {
+      scenario: 'ending past a shorter replacement',
+      segment: { startMs: 1000, endMs: 20_000 },
+      clamped: { startMs: 1000, endMs: null },
+    },
+    {
+      scenario: 'starting past it',
+      segment: { startMs: 12_000, endMs: 20_000 },
+      clamped: { startMs: null, endMs: null },
+    },
+  ])('clamps a segment $scenario to a 10 second video', ({ segment, clamped }) => {
+    expect(clampSegment(segment, 10_000)).toEqual(clamped);
   });
 });

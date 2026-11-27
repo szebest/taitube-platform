@@ -24,7 +24,13 @@ export type PlaylistCoverMode = (typeof PLAYLIST_COVER_MODES)[number];
 /** A segment is at least this long, so a range never collapses to a point. */
 export const PLAYLIST_SEGMENT_MIN_MS = 1000;
 
-export const PLAYLIST_ITEM_SORTS = ['manual', 'added', 'duration', 'channel', 'unwatched_first'] as const;
+export const PLAYLIST_ITEM_SORTS = [
+  'manual',
+  'added',
+  'duration',
+  'channel',
+  'unwatched_first',
+] as const;
 export type PlaylistItemSort = (typeof PLAYLIST_ITEM_SORTS)[number];
 
 export const PLAYLIST_TRANSFER_MAX_ITEMS = 100;
@@ -84,6 +90,16 @@ export interface StoredPlaylistItem extends PlaylistSegment {
   addedBy: string | null;
   note: string | null;
   position: number;
+}
+
+/**
+ * A segment as the video now stands: an end past a replaced, shorter video is dropped, and a start
+ * past it too, so the item plays from the beginning rather than not at all.
+ */
+export function clampSegment(segment: PlaylistSegment, durationMs: number): PlaylistSegment {
+  const endMs = segment.endMs !== null && segment.endMs < durationMs ? segment.endMs : null;
+  const startMs = segment.startMs !== null && segment.startMs < durationMs ? segment.startMs : null;
+  return { startMs, endMs };
 }
 
 export interface PlaylistItemPatch {

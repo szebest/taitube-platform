@@ -280,4 +280,17 @@ describe('@vp/queries: user event handlers', () => {
       false
     );
   });
+
+  it('refetches every cached read of the playlist the event names, no other', () => {
+    const queryClient = createQueryClient();
+    const playlist = ['library', 'playlist', VIDEO_ID];
+    const other = ['library', 'playlist', OTHER_VIDEO_ID];
+    queryClient.setQueryData(playlist, {});
+    queryClient.setQueryData(other, {});
+
+    applyUserEvent(queryClient, { type: 'playlist.updated', payload: { playlistId: VIDEO_ID } });
+
+    expect(queryClient.getQueryState(playlist)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(other)?.isInvalidated).toBe(false);
+  });
 });

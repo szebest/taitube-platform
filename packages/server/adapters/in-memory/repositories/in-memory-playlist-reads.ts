@@ -41,8 +41,7 @@ export class InMemoryPlaylistReads extends InMemoryPlaylistStore {
   }
 
   async findById(id: string): Promise<Result<Playlist | null, DatabaseUnavailable>> {
-    const playlist = this.playlists.get(id);
-    return ok(playlist ? { ...playlist } : null);
+    return ok(this.playlists.get(id) ?? null);
   }
 
   async findSeated(
@@ -179,5 +178,4 @@ export class InMemoryPlaylistReads extends InMemoryPlaylistStore {
         .map(toStored)
     );
   }
-
 }

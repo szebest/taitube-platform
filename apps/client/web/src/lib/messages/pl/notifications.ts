@@ -63,4 +63,6 @@ export const notifications = {
   }),
   levelLabel: dt('Powiadomienia z kanału {name}'),
   levelFailed: dt('Nie udało się zapisać powiadomień z tego kanału'),
+  playlistInvite: dt('{name} zaprasza Cię do współtworzenia playlisty {title}'),
+  playlistUpdate: dt('{name} zmienia Twoją playlistę {title}'),
 } as const;

@@ -5,6 +5,9 @@ import {
 } from '#app/features/notifications/__tests__/notification-fixtures';
 import { notificationTarget } from '../notification-target';
 
+const PLAYLIST_ID = '0190c3a0-5e1d-7000-8000-0000000000f1';
+const PLAYLIST = { id: PLAYLIST_ID, title: 'Road trip', invite: null };
+
 describe('apps/client/web: notificationTarget', () => {
   it.each([
     {
@@ -54,12 +57,26 @@ describe('apps/client/web: notificationTarget', () => {
       target: { to: '/feed/you/moderation', search: {} },
     },
     {
+      case: 'a playlist invite opens nothing until it is accepted',
+      overrides: { kind: 'playlist_invite' as const, videoId: null },
+      count: 1,
+      target: undefined,
+    },
+    {
+      case: 'a playlist update opens the playlist',
+      overrides: { kind: 'playlist_update' as const, videoId: null },
+      count: 1,
+      target: { to: '/playlist', search: { list: PLAYLIST_ID } },
+    },
+    {
       case: 'a notification with no video opens nothing',
       overrides: { kind: 'processing' as const, videoId: null },
       count: 1,
       target: undefined,
     },
   ])('$case', ({ overrides, count, target }) => {
-    expect(notificationTarget(notification(overrides, { count }))).toEqual(target);
+    expect(notificationTarget(notification(overrides, { count, playlist: PLAYLIST }))).toEqual(
+      target
+    );
   });
 });

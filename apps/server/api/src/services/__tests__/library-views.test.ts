@@ -59,10 +59,15 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
         videoId: 'v1',
         position: 0,
         addedAt: AT,
+        addedBy: { userId: 'u1', channel: null },
+        note: 'From the start',
+        startMs: 200,
+        endMs: 5_000,
         channel: VIDEO_CHANNEL,
         video: clip(posterKey),
       },
     ],
+    sections: [{ id: 's1', title: 'Part one', position: 1, addedBy: 'u1' }],
   };
 }
 
@@ -110,6 +115,18 @@ describe('apps/server/api/services: library views', () => {
       addedAt: AT.toISOString(),
       video: { id: 'v1', channel: VIDEO_CHANNEL },
     });
+  });
+
+  it('credits the adder, keeps the note, clamps the segment to the video and lists the sections', () => {
+    const view = toPlaylistView(detail(null, null), CDN, SPRITE);
+
+    expect(view.items[0]).toMatchObject({
+      addedBy: { userId: 'u1', channel: null },
+      note: 'From the start',
+      startMs: 200,
+      endMs: null,
+    });
+    expect(view.sections).toEqual([{ id: 's1', title: 'Part one', position: 1 }]);
   });
 
   it.each([

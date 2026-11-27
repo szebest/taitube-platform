@@ -4,6 +4,7 @@ import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositor
 import {
   type Playlist,
   type PlaylistKind,
+  type SeatedPlaylist,
   type PlaylistPatch,
   type PlaylistReorder,
   type PlaylistVisibility,
@@ -19,9 +20,9 @@ import {
   type SeriesVideoNotOwned,
   type UpdatePlaylistFailure,
   type VideoNotFound,
+  decidePlaylistAction,
   decidePlaylistCreate,
   decidePlaylistDelete,
-  decidePlaylistItemsChange,
   decidePlaylistReorder,
   decidePlaylistUpdate,
   decideSeriesMembership,
@@ -109,7 +110,7 @@ export class PlaylistService {
   ): Promise<
     Result<PlaylistView, UpdatePlaylistFailure | SeriesVideoNotOwned | DatabaseUnavailable>
   > {
-    const playlist = await this.deps.playlists.findById(playlistId);
+    const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
 
     const decided = decidePlaylistUpdate({ actor, playlist: playlist.value, playlistId, patch });
@@ -118,7 +119,7 @@ export class PlaylistService {
     const owned = await this.checkSeriesConversion(actor, playlist.value, decided.value);
     if (isErr(owned)) return owned;
 
-    const updated = await this.deps.playlists.update(playlistId, decided.value);
+    const updated = await this.deps.playlists.update(playlistId, decided.value, actor.id);
     if (isErr(updated)) return updated;
     return updated.value ? await this.detail(actor, playlistId) : err(playlistNotFound(playlistId));
   }
@@ -127,7 +128,7 @@ export class PlaylistService {
     actor: UserContext,
     playlistId: string
   ): Promise<Result<void, DeletePlaylistFailure | DatabaseUnavailable>> {
-    const playlist = await this.deps.playlists.findById(playlistId);
+    const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
 
     const decided = decidePlaylistDelete({ actor, playlist: playlist.value, playlistId });
@@ -143,7 +144,7 @@ export class PlaylistService {
     playlistId: string,
     videoId: string
   ): Promise<Result<PlaylistView, AddItemFailure>> {
-    const permitted = await this.itemsChange(actor, playlistId);
+    const permitted = await this.permitted(actor, playlistId, 'addItem');
     if (isErr(permitted)) return permitted;
 
     const video = await this.deps.videos.findById(videoId);
@@ -154,7 +155,11 @@ export class PlaylistService {
     const member = decideSeriesMembership(permitted.value, readable.value);
     if (isErr(member)) return member;
 
-    const added = await this.deps.playlists.addItem(playlistId, { id: uuidv7(), videoId });
+    const added = await this.deps.playlists.addItem(
+      playlistId,
+      { id: uuidv7(), videoId, addedBy: actor.id },
+      actor.id
+    );
     if (isErr(added)) return added;
     switch (added.value) {
       case 'added':
@@ -169,15 +174,30 @@ export class PlaylistService {
     }
   }
 
+  /** Removing an absent video changes nothing; a contributor removes only what they added. */
   async removeItem(
     actor: UserContext,
     playlistId: string,
     videoId: string
   ): Promise<Result<void, ItemsFailure>> {
-    const permitted = await this.itemsChange(actor, playlistId);
-    if (isErr(permitted)) return permitted;
+    const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
+    if (isErr(playlist)) return playlist;
+    const items = await this.deps.playlists.findItems(playlistId);
+    if (isErr(items)) return items;
 
-    const removed = await this.deps.playlists.removeItem(playlistId, videoId);
+    const item = items.value.find((held) => held.videoId === videoId);
+    const decided = decidePlaylistAction(
+      { actor, playlist: playlist.value, playlistId },
+      'removeItem',
+      item ?? { addedBy: actor.id }
+    );
+    if (isErr(decided) || !item) return map(decided, () => undefined);
+
+    const removed = await this.deps.playlists.removeItem(
+      playlistId,
+      { by: 'item', itemId: item.id },
+      actor.id
+    );
     return map(removed, () => undefined);
   }
 
@@ -186,7 +206,7 @@ export class PlaylistService {
     playlistId: string,
     change: PlaylistReorder
   ): Promise<Result<PlaylistView, ItemsFailure | ReorderPlaylistFailure>> {
-    const permitted = await this.itemsChange(actor, playlistId);
+    const permitted = await this.permitted(actor, playlistId, 'manageItems');
     if (isErr(permitted)) return permitted;
 
     const reordered = await this.deps.playlists.reorder(playlistId, actor, (slots) =>
@@ -198,13 +218,14 @@ export class PlaylistService {
       : err(playlistNotFound(playlistId));
   }
 
-  private async itemsChange(
+  private async permitted(
     actor: UserContext,
-    playlistId: string
-  ): Promise<Result<Playlist, ItemsFailure>> {
-    const playlist = await this.deps.playlists.findById(playlistId);
+    playlistId: string,
+    action: 'addItem' | 'manageItems'
+  ): Promise<Result<SeatedPlaylist, ItemsFailure>> {
+    const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
-    return decidePlaylistItemsChange({ actor, playlist: playlist.value, playlistId });
+    return decidePlaylistAction({ actor, playlist: playlist.value, playlistId }, action);
   }
 
   /** A playlist becomes a series only when every video it holds is the owner's own. */

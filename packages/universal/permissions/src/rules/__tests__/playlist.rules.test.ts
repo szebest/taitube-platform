@@ -1,6 +1,6 @@
 import { subject } from '@casl/ability';
 import { adminUser, creatorUser, guestUser, standardUser } from '../../__mocks__/fixtures';
-import type { AppAction, UserContext } from '../../types/index';
+import type { AppAction, PlaylistResource, UserContext } from '../../types/index';
 import { definePlaylistRules } from '../playlist.rules';
 import { buildAbility } from './build-ability';
 
@@ -96,11 +96,11 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
     expect(buildAbility(definePlaylistRules, user).can('create', 'Playlist')).toBe(expected);
   });
 
-  const seated = (role: 'editor' | 'contributor', fields: Record<string, unknown> = {}) =>
+  const seated = (role: 'editor' | 'contributor', fields: PlaylistResource = {}) =>
     subject('Playlist', {
       id: 'pl-1',
       ownerId: creatorUser.id,
-      visibility: 'private',
+      visibility: 'private' as const,
       collaboratorId: standardUser.id,
       collaboratorRole: role,
       ...fields,
@@ -110,11 +110,16 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
     scenario: string;
     role: 'editor' | 'contributor';
     action: AppAction;
-    fields?: Record<string, unknown>;
+    fields?: PlaylistResource;
     field?: string;
     expected: boolean;
   }>([
-    { scenario: 'an editor reads the private list', role: 'editor', action: 'read', expected: true },
+    {
+      scenario: 'an editor reads the private list',
+      role: 'editor',
+      action: 'read',
+      expected: true,
+    },
     { scenario: 'a contributor reads it', role: 'contributor', action: 'read', expected: true },
     { scenario: 'an editor adds', role: 'editor', action: 'addItem', expected: true },
     { scenario: 'an editor reorders', role: 'editor', action: 'manageItems', expected: true },
@@ -125,7 +130,13 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
       fields: { addedBy: 'someone' },
       expected: true,
     },
-    { scenario: 'an editor renames', role: 'editor', action: 'update', field: 'title', expected: true },
+    {
+      scenario: 'an editor renames',
+      role: 'editor',
+      action: 'update',
+      field: 'title',
+      expected: true,
+    },
     {
       scenario: 'an editor changes the visibility',
       role: 'editor',
@@ -182,7 +193,7 @@ describe('rules/playlist.rules: who may read and curate a playlist', () => {
       visibility: 'private',
       collaboratorId: standardUser.id,
       collaboratorRole: 'editor',
-    });
+    } satisfies PlaylistResource);
 
     expect([ability.can('read', other), ability.can('addItem', other)]).toEqual([false, false]);
   });
