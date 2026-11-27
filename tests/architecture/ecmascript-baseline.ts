@@ -62,6 +62,7 @@ const FILES: Readonly<Record<string, EcmaScriptLevel | typeof UNSET>> = {
   'tsconfig.base.json': UNSET,
   'tsconfig.repo.json': SERVER,
   'apps/client/web/tsconfig.sw.json': SERVICE_WORKER,
+  'scripts/__tests__/typecheck-fixtures/tsconfig.json': BROWSER,
 };
 
 /** Projects that install the platform from tarballs and own their compiler options, outside any tier. */
