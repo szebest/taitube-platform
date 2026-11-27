@@ -7,7 +7,7 @@ export default defineConfig({
     ignorePatterns: [],
     overrides: [
       ...(lint.overrides ?? []),
-      { files: ['**/view-transition-*.ts'], rules: NEWER_THAN_FLOOR },
+      { files: ['**/view-transition-*.ts', '**/idle-callback-*.ts'], rules: NEWER_THAN_FLOOR },
     ],
   },
 });

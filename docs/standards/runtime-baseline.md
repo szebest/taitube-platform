@@ -39,7 +39,7 @@ the floor. No analytics source backs the numbers: they are Baseline's, not a bus
 | What | Gate |
 |---|---|
 | An ES built-in newer than the tier's lib (`Set.prototype.union`, `Promise.try` on a client) | `pnpm typecheck` fails: the lib does not type it. `scripts/__tests__/client-lib-ceiling.test.ts` proves it on a fixture |
-| A DOM or Web API the floor lacks | `lib.dom.d.ts` is not versioned, so `house/guard-newer-apis` (`lint.config.ts`, `scripts/lint-plugin/index.ts`) fails `pnpm lint --deny-warnings` on a use in `packages/{universal,client}`, `packages/platform/{universal,client}` and `apps/client` unless the same file checks `typeof` of that API |
+| A DOM or Web API the floor lacks | `lib.dom.d.ts` is not versioned, so `house/guard-newer-apis` (`lint.config.ts`, `scripts/lint-plugin/index.ts`) fails `pnpm lint --deny-warnings` on a use in `packages/{universal,client}`, `packages/platform/{universal,client}` and `apps/client` unless the same file checks `typeof` of that API or calls it as `api?.(...)`; `'x' in obj` is not accepted. The bare global (`requestIdleCallback`) counts as `window.requestIdleCallback` |
 
 `eslint-plugin-compat` runs under oxlint `jsPlugins` and reads the same `browserslist`, but its table has no entry for
 `document.startViewTransition`, `Intl.DurationFormat` or `Promise.try`, so it cannot be the guard. The rule's `apis` list is
