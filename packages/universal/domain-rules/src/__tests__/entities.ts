@@ -2,6 +2,7 @@ import type {
   CaptionTrack,
   Category,
   Channel,
+  ChannelPost,
   Comment,
   CommentHost,
   CommentReport,
@@ -220,6 +221,26 @@ export function aLiveStream(overrides: Partial<LiveStream> = {}): LiveStream {
     videoId: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aPost(overrides: Partial<ChannelPost> = {}): ChannelPost {
+  return {
+    id: 'post-1',
+    channelId: 'channel-1',
+    authorUserId: OWNER.id,
+    payload: { kind: 'text', text: 'Hello' },
+    status: 'published',
+    publishAt: null,
+    publishedAt: new Date('2026-01-01T00:00:00.000Z'),
+    pinnedAt: null,
+    commentsEnabled: true,
+    editedAt: null,
+    likeCount: 0,
+    commentsCount: 0,
+    version: 1,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
   };
 }
