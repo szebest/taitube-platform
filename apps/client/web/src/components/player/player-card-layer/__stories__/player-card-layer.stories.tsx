@@ -57,7 +57,7 @@ const card = (overrides: Partial<PlayerCard> = {}): PlayerCard => ({
   ...overrides,
 });
 
-const at = (seconds: number): Story => ({
+const at = (seconds: number): Pick<Story, 'render'> => ({
   render: (args) => (
     <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <Frame seconds={seconds}>

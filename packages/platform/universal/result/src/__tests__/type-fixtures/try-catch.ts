@@ -20,5 +20,7 @@ expectTypeOf(
 // @ts-expect-error the failure is built from the cause
 tryCatch(() => 1, 'failed');
 
-// @ts-expect-error a promise or a thunk of one, not a bare value
-fromPromise(1, () => 'failed');
+expectTypeOf(
+  // @ts-expect-error a promise or a thunk of one, not a bare value
+  fromPromise(1, () => 'failed')
+).toBeObject();
