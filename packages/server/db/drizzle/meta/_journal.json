@@ -358,6 +358,13 @@
       "when": 1795813206841,
       "tag": "0050_channel_page_builder",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1795816423358,
+      "tag": "0051_page_image_kind",
+      "breakpoints": true
     }
   ]
 }

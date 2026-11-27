@@ -5,6 +5,7 @@ import type {
   ImageCrops,
   PostImageUrls,
   PostImageVariants,
+  VariantImageKind,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 
@@ -50,8 +51,8 @@ export interface ChannelImageRepositoryPort {
   /**
    * One write: the upload becomes `ready`, the channel's version moves to it when it is newer and
    * its `avatarUrl` or `bannerUrl` becomes `defaultUrl`, the address of the variant that stands for
-   * the image wherever only one is shown, and the uploader is told. A post image touches no channel
-   * column: it becomes `ready` and keeps `variantUrls` for `findReadyPostImages`. Committing an
+   * the image wherever only one is shown, and the uploader is told. A post image or a page image touches no channel
+   * column: it becomes `ready` and keeps `variantUrls` for `findReadyImages`. Committing an
    * upload that is already `ready` or `superseded` repeats that outcome and writes nothing more.
    */
   commit(
@@ -59,8 +60,9 @@ export interface ChannelImageRepositoryPort {
     defaultUrl: string,
     variantUrls?: PostImageUrls
   ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>>;
-  /** The ready post images of the channel among `uploadIds`; an id that is not one is left out. */
-  findReadyPostImages(
+  /** The ready images of `kind` of the channel among `uploadIds`; an id that is not one is left out. */
+  findReadyImages(
+    kind: VariantImageKind,
     channelId: string,
     uploadIds: readonly string[]
   ): Promise<Result<PostImageVariants[], DatabaseUnavailable>>;

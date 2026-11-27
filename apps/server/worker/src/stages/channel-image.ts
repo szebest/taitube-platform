@@ -143,7 +143,7 @@ export function createChannelImageProcessor(deps: ChannelImageProcessorDeps) {
       `${cdn}/${channelImageVariantKey(channelId, kind, variant, version)}`;
     const defaultUrl = urlOf(defaultChannelImageVariant(kind));
     const committed =
-      kind === 'post-image'
+      kind === 'post-image' || kind === 'page-image'
         ? await images.commit(id, defaultUrl, postImageUrls(urlOf))
         : await images.commit(id, defaultUrl);
     if (isErr(committed)) return committed;

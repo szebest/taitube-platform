@@ -48,26 +48,32 @@ export function describeChannelImageLifecycleContract(makeSubject: MakeRepositor
         );
       });
 
-      it('finds the ready post images of the channel among the ids and nothing else', async () => {
-        await queue(FIRST, 'post-image');
-        await queue(SECOND, 'post-image');
-        await queue(THIRD, 'avatar');
-        expectOk(await ctx.images.commit(FIRST, POST_URLS.w1280, POST_URLS));
-        expectOk(await ctx.images.commit(THIRD, DEFAULT_URL));
-        const missing = '00000000-0000-7000-8000-0000000004f0';
+      it.each(['post-image', 'page-image'] as const)(
+        'finds the ready %s of the channel among the ids and nothing else',
+        async (kind) => {
+          const otherKind = kind === 'post-image' ? 'page-image' : 'post-image';
+          await queue(FIRST, kind);
+          await queue(SECOND, kind);
+          await queue(THIRD, otherKind);
+          expectOk(await ctx.images.commit(FIRST, POST_URLS.w1280, POST_URLS));
+          expectOk(await ctx.images.commit(THIRD, POST_URLS.w1280, POST_URLS));
+          const missing = '00000000-0000-7000-8000-0000000004f0';
 
-        const found = expectOk(
-          await ctx.images.findReadyPostImages(ctx.channelId, [FIRST, SECOND, THIRD, missing])
-        );
+          const found = expectOk(
+            await ctx.images.findReadyImages(kind, ctx.channelId, [FIRST, SECOND, THIRD, missing])
+          );
 
-        expect(found).toEqual([{ uploadId: FIRST, urls: POST_URLS }]);
-        expect(expectOk(await ctx.images.findReadyPostImages(ctx.channelId, []))).toEqual([]);
-        expect(
-          expectOk(
-            await ctx.images.findReadyPostImages('00000000-0000-7000-8000-0000000004e0', [FIRST])
-          )
-        ).toEqual([]);
-      });
+          expect(found).toEqual([{ uploadId: FIRST, urls: POST_URLS }]);
+          expect(expectOk(await ctx.images.findReadyImages(kind, ctx.channelId, []))).toEqual([]);
+          expect(
+            expectOk(
+              await ctx.images.findReadyImages(kind, '00000000-0000-7000-8000-0000000004e0', [
+                FIRST,
+              ])
+            )
+          ).toEqual([]);
+        }
+      );
     });
 
     describe('fail', () => {

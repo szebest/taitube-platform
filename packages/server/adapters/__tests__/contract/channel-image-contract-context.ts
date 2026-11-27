@@ -38,6 +38,10 @@ const COMPLETIONS: Record<ChannelImageKind, ChannelImageCompletion> = {
   banner: BANNER_DONE,
   'playlist-cover': PLAYLIST_COVER_DONE,
   'post-image': POST_DONE,
+  'page-image': {
+    ...POST_DONE,
+    crops: { kind: 'page-image', crop: { x: 0, y: 0, width: 3000, height: 2000 } },
+  },
 };
 
 export const POST_URLS = {

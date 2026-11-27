@@ -9,12 +9,12 @@ describe('@vp/validation: channel image vocabulary', () => {
     {
       name: 'the kinds',
       actual: CHANNEL_IMAGE_KINDS,
-      expected: ['avatar', 'banner', 'post-image', 'playlist-cover'],
+      expected: ['avatar', 'banner', 'post-image', 'page-image', 'playlist-cover'],
     },
     {
       name: 'the channel page kinds',
       actual: CHANNEL_PAGE_IMAGE_KINDS,
-      expected: ['avatar', 'banner', 'post-image'],
+      expected: ['avatar', 'banner', 'post-image', 'page-image'],
     },
     {
       name: 'the content types',

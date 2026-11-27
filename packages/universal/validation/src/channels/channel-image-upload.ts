@@ -18,6 +18,7 @@ const CHANNEL_IMAGE_UPLOAD_LIMITS: Readonly<
   banner: { maxBytes: 6 * MEGABYTE, minWidth: 1024, minHeight: 576 },
   'playlist-cover': { maxBytes: 2 * MEGABYTE, minWidth: 640, minHeight: 360 },
   'post-image': { maxBytes: 5 * MEGABYTE, minWidth: 640, minHeight: 64 },
+  'page-image': { maxBytes: 5 * MEGABYTE, minWidth: 640, minHeight: 64 },
 };
 
 export interface ImageDimensions {

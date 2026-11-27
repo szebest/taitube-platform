@@ -11,6 +11,7 @@ import {
   type ChannelImageUpload,
   type PostImageUrls,
   type PostImageVariants,
+  type VariantImageKind,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, eq, inArray, lt, or, sql } from 'drizzle-orm';
@@ -100,7 +101,8 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
     });
   }
 
-  async findReadyPostImages(
+  async findReadyImages(
+    kind: VariantImageKind,
     channelId: string,
     uploadIds: readonly string[]
   ): Promise<Result<PostImageVariants[], DatabaseUnavailable>> {
@@ -113,12 +115,12 @@ export class PostgresChannelImageRepository implements ChannelImageRepositoryPor
           .where(
             and(
               eq(up.channelId, channelId),
-              eq(up.kind, 'post-image'),
+              eq(up.kind, kind),
               eq(up.status, 'ready'),
               inArray(up.id, [...uploadIds])
             )
           ),
-      databaseUnavailable.during('findReadyPostImages')
+      databaseUnavailable.during('findReadyImages')
     );
     return map(rows, (found) =>
       found.flatMap(({ uploadId, urls }) => (urls ? [{ uploadId, urls }] : []))

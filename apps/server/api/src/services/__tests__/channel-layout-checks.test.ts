@@ -31,7 +31,11 @@ describe('checkLayout', () => {
     });
     await seedVideo(repositories, { id: THEIRS, ownerId: OTHER });
     const acting: ActingChannel = { channelId: channel.id, ownerId: OWNER, role: 'owner' };
-    const deps = { layouts: repositories.channelLayouts, sources: repositories.channelPageSources };
+    const deps = {
+      layouts: repositories.channelLayouts,
+      sources: repositories.channelPageSources,
+      images: repositories.channelImages,
+    };
 
     expectOk(await checkLayout(deps, acting, picking(MINE)));
     expect(expectErr(await checkLayout(deps, acting, picking(PRIVATE)))).toMatchObject({

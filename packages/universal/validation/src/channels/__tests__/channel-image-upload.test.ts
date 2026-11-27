@@ -13,6 +13,7 @@ describe('@vp/validation: channel image upload', () => {
     { kind: 'banner', contentType: 'image/png', sizeBytes: 1 },
     { kind: 'playlist-cover', contentType: 'image/jpeg', sizeBytes: 2 * MB },
     { kind: 'post-image', contentType: 'image/png', sizeBytes: 5 * MB },
+    { kind: 'page-image', contentType: 'image/webp', sizeBytes: 5 * MB },
   ] as const)('accepts a $kind of $sizeBytes bytes as $contentType', (input) => {
     expect(expectOk(validateChannelImageUploadRequest(input))).toEqual(input);
   });
@@ -66,6 +67,7 @@ describe('@vp/validation: channel image upload', () => {
     { kind: 'playlist-cover', width: 2000, height: 359 },
     { kind: 'post-image', width: 639, height: 400 },
     { kind: 'post-image', width: 1000, height: 63 },
+    { kind: 'page-image', width: 639, height: 400 },
   ] as const)('refuses a $kind of $width x $height as too small', ({ kind, ...size }) => {
     expect(expectErr(validateChannelImageDimensions(kind, size))).toMatchObject({
       code: 'IMAGE_TOO_SMALL',

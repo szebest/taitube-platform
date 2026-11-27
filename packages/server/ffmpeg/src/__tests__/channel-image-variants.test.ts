@@ -23,6 +23,7 @@ const COVER_CROP = { x: 0, y: 0, width: 1600, height: 900 };
 const COVER_CROPS: ChannelImageCrops = { kind: 'playlist-cover', crop: COVER_CROP };
 const POST_CROP = { x: 0, y: 0, width: 3000, height: 2000 };
 const POST_CROPS: ChannelImageCrops = { kind: 'post-image', crop: POST_CROP };
+const PAGE_CROPS: ChannelImageCrops = { kind: 'page-image', crop: POST_CROP };
 
 describe('@vp/ffmpeg: channel image variants', () => {
   it.each(AVATAR_SIZES)('cuts the avatar crop to a %i px square', (size) => {
@@ -77,6 +78,7 @@ describe('@vp/ffmpeg: channel image variants', () => {
     { crops: BANNER_CROPS, count: BANNER_TARGETS.length * BANNER_WIDTHS.length },
     { crops: COVER_CROPS, count: PLAYLIST_COVER_WIDTHS.length },
     { crops: POST_CROPS, count: POST_IMAGE_WIDTHS.length },
+    { crops: PAGE_CROPS, count: POST_IMAGE_WIDTHS.length },
   ])('plans $count variants for a $crops.kind with unique names', ({ crops, count }) => {
     const names = planChannelImageVariants(crops).map((variant) => variant.name);
     expect(new Set(names).size).toBe(count);
@@ -87,6 +89,7 @@ describe('@vp/ffmpeg: channel image variants', () => {
     { crops: BANNER_CROPS, variant: 'desktop-1280' },
     { crops: COVER_CROPS, variant: '1280' },
     { crops: POST_CROPS, variant: '1280' },
+    { crops: PAGE_CROPS, variant: '1280' },
   ])('names $variant the default of a $crops.kind', ({ crops, variant }) => {
     expect(defaultChannelImageVariant(crops.kind)).toBe(variant);
     expect(planChannelImageVariants(crops).map((planned) => planned.name)).toContain(variant);

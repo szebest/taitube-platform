@@ -75,6 +75,10 @@ const TabSummarySchema = z.strictObject({
   icon: z.string().nullable(),
 });
 
+const PageImageUrlsSchema = z
+  .strictObject({ w640: z.string(), w1280: z.string() })
+  .meta({ id: 'PageImageUrls', description: 'The variants of one `page-image`, by width' });
+
 export const ChannelPageSchema = z
   .strictObject({
     channelId: z.uuid(),
@@ -91,6 +95,11 @@ export const ChannelPageSchema = z
       header: z.uuid().nullable(),
       sections: z.array(ResolvedSectionSchema),
     }),
+    images: z
+      .record(z.uuid(), PageImageUrlsSchema)
+      .describe(
+        'The ready `page-image` the tab uses (headers, backgrounds, rich text images) by id; one that is not ready is absent'
+      ),
   })
   .meta({ id: 'ChannelPage', description: 'A channel page as one viewer sees one tab of it' });
 

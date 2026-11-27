@@ -20,6 +20,7 @@ export function registerChannelPageServices(c: Container): Container {
           layouts: repositories().channelLayouts,
           revisions: repositories().entityRevisions,
           sources: repositories().channelPageSources,
+          images: repositories().channelImages,
           paginator: c.get(Services.Paginator),
         })
     )
@@ -30,6 +31,7 @@ export function registerChannelPageServices(c: Container): Container {
           layouts: repositories().channelLayouts,
           schedules: repositories().channelLayoutSchedules,
           sources: repositories().channelPageSources,
+          images: repositories().channelImages,
           now: Date.now,
         })
     )
@@ -38,6 +40,7 @@ export function registerChannelPageServices(c: Container): Container {
       (c) =>
         new ChannelPageResolver({
           sources: repositories().channelPageSources,
+          images: repositories().channelImages,
           history: repositories().watchHistory,
           cache: c.get(Adapters.Cache),
           singleflight: new Singleflight(),

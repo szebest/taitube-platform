@@ -29,7 +29,7 @@ export type LayoutSlugInvalid = Failure<
   { slug: string; reason: LayoutSlugReason }
 >;
 
-export type LayoutReferenceKind = 'video' | 'playlist' | 'post' | 'channel';
+export type LayoutReferenceKind = 'video' | 'playlist' | 'post' | 'channel' | 'page-image';
 
 export type LayoutReferenceInvalid = Failure<
   typeof ErrorCodes.LAYOUT_REFERENCE_INVALID,

@@ -22,7 +22,8 @@ export type ImageCrops =
   | { readonly kind: 'avatar'; readonly crop: CropRect }
   | { readonly kind: 'banner'; readonly crops: BannerCrops }
   | { readonly kind: 'playlist-cover'; readonly crop: CropRect }
-  | { readonly kind: 'post-image'; readonly crop: CropRect };
+  | { readonly kind: 'post-image'; readonly crop: CropRect }
+  | { readonly kind: 'page-image'; readonly crop: CropRect };
 
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
@@ -59,7 +60,16 @@ export const HANDLE_RESERVATION_DAYS = 90;
 
 export const CONTACT_REVEALS_PER_DAY = 20;
 
-export type ChannelImageKind = 'avatar' | 'banner' | 'playlist-cover' | 'post-image';
+export type ChannelImageKind = 'avatar' | 'banner' | 'playlist-cover' | 'post-image' | 'page-image';
+
+export type VariantImageKind = Extract<ChannelImageKind, 'post-image' | 'page-image'>;
+
+export type ChannelVersionedImageKind = Extract<ChannelImageKind, 'avatar' | 'banner'>;
+
+/** Whether an upload of this kind moves a version the channel holds: an avatar or a banner, never an image a playlist, a post or the page keeps. */
+export function holdsChannelVersion(kind: ChannelImageKind): kind is ChannelVersionedImageKind {
+  return kind === 'avatar' || kind === 'banner';
+}
 
 export const IMAGE_UPLOAD_STATUSES = [
   'issued',
@@ -95,7 +105,7 @@ export const CHANNEL_IMAGE_UPLOAD_EDGES = {
 } as const satisfies Record<string, { from: readonly ImageUploadStatus[]; to: ImageUploadStatus }>;
 
 /**
- * One file a creator uploaded for an avatar, a banner, a playlist cover or a post image, from the
+ * One file a creator uploaded for an avatar, a banner, a playlist cover, a post image or a page image, from the
  * presigned URL to the version it became.
  */
 export interface ChannelImageUpload {

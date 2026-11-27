@@ -97,7 +97,7 @@ describe('apps/server/api/services: toPostViews', () => {
     ];
     const channels = vi.spyOn(repositories.channels, 'findByIds');
     const videos = vi.spyOn(repositories.videos, 'findById');
-    const images = vi.spyOn(repositories.channelImages, 'findReadyPostImages');
+    const images = vi.spyOn(repositories.channelImages, 'findReadyImages');
 
     const views = expectOk(await toPostViews(viewDeps, entries, VIEWER));
 

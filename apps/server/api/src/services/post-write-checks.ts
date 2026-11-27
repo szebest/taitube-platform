@@ -21,7 +21,8 @@ export async function checkPayloadReferences(
   const closing = decidePollClose(payload, opens.at, opens.previous);
   if (isErr(closing)) return closing;
   if (payload.kind !== 'images') return ok();
-  const ready = await deps.images.findReadyPostImages(
+  const ready = await deps.images.findReadyImages(
+    'post-image',
     channelId,
     payload.images.map((image) => image.uploadId)
   );

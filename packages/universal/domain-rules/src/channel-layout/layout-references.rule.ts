@@ -1,5 +1,6 @@
 import { type Result, assertNever, err, ok } from '@kit/result';
 import { type ChannelLayout, tabSections } from '@vp/domain';
+import { richTextImageIds, richTextTree } from '@vp/validation';
 import {
   type LayoutReferenceInvalid,
   type LayoutReferenceKind,
@@ -24,7 +25,13 @@ export interface LayoutReferenceScope {
 
 export function layoutReferences(layout: ChannelLayout): LayoutReference[] {
   const found: LayoutReference[] = [];
+  for (const tab of layout.tabs) {
+    if (tab.kind === 'custom' && tab.header) found.push({ kind: 'page-image', id: tab.header });
+  }
   for (const section of layout.tabs.flatMap(tabSections)) {
+    if (section.presentation.background) {
+      found.push({ kind: 'page-image', id: section.presentation.background });
+    }
     switch (section.kind) {
       case 'content':
         if (section.source.type === 'playlist') {
@@ -36,6 +43,13 @@ export function layoutReferences(layout: ChannelLayout): LayoutReference[] {
         found.push(...section.channelIds.map((id) => ({ kind: 'channel' as const, id })));
         break;
       case 'rich_text':
+        found.push(
+          ...richTextImageIds(richTextTree(section.body)).map((id) => ({
+            kind: 'page-image' as const,
+            id,
+          }))
+        );
+        break;
       case 'links':
         break;
       default:
@@ -56,6 +70,7 @@ function belongs(
   switch (reference.kind) {
     case 'video':
     case 'post':
+    case 'page-image':
       return fact.channelId === scope.channelId;
     case 'playlist':
       return fact.ownerUserId === scope.ownerUserId;

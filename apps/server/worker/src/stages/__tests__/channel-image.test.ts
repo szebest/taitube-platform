@@ -60,25 +60,26 @@ describe('channel image stage', () => {
     );
   });
 
-  it('cuts two post image widths, commits their urls and leaves the channel images alone', async () => {
-    stage.probe = POST_IMAGE_PROBE;
-    const id = await queued('post-image');
-    const commit = vi.spyOn(stage.repositories.channelImages, 'commit');
+  it.each(['post-image', 'page-image'] as const)(
+    'cuts two %s widths, commits their urls and leaves the channel images alone',
+    async (kind) => {
+      stage.probe = POST_IMAGE_PROBE;
+      const id = await queued(kind);
+      const commit = vi.spyOn(stage.repositories.channelImages, 'commit');
 
-    expectOk(await processor()(jobFor(id, 'post-image')));
+      expectOk(await processor()(jobFor(id, kind)));
 
-    const url = (name: string) =>
-      `${STAGE_SETTINGS.cdn}/${channelImageVariantKey(stage.channelId, 'post-image', name, 1)}`;
-    const urls = { w640: url('640'), w1280: url('1280') };
-    expect((await publicKeys()).sort()).toEqual(
-      ['640', '1280']
-        .map((name) => channelImageVariantKey(stage.channelId, 'post-image', name, 1))
-        .sort()
-    );
-    expect(commit).toHaveBeenCalledWith(id, urls.w1280, urls);
-    expect(await channel()).toMatchObject({ avatarVersion: 0, bannerVersion: 0 });
-    expect(await status(id)).toBe('ready');
-  });
+      const url = (name: string) =>
+        `${STAGE_SETTINGS.cdn}/${channelImageVariantKey(stage.channelId, kind, name, 1)}`;
+      const urls = { w640: url('640'), w1280: url('1280') };
+      expect((await publicKeys()).sort()).toEqual(
+        ['640', '1280'].map((name) => channelImageVariantKey(stage.channelId, kind, name, 1)).sort()
+      );
+      expect(commit).toHaveBeenCalledWith(id, urls.w1280, urls);
+      expect(await channel()).toMatchObject({ avatarVersion: 0, bannerVersion: 0 });
+      expect(await status(id)).toBe('ready');
+    }
+  );
 
   it('answers a second run of the same job without a second commit or event', async () => {
     const id = await queued('avatar');

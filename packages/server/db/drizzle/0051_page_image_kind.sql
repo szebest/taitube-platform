@@ -1,0 +1,2 @@
+ALTER TABLE "channel_image_uploads" DROP CONSTRAINT "channel_image_uploads_kind_check";--> statement-breakpoint
+ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'playlist-cover', 'post-image', 'page-image'));

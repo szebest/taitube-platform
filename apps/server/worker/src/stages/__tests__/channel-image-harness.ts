@@ -40,6 +40,7 @@ function completionFor(kind: ChannelImageKind): ChannelImageCompletion {
     case 'playlist-cover':
       return { width: 1600, height: 900, crops: { kind, crop: PLAYLIST_COVER_CROP } };
     case 'post-image':
+    case 'page-image':
       return { width: 3000, height: 2000, crops: { kind, crop: POST_IMAGE_CROP } };
     default:
       return assertNever(kind, 'ChannelImageKind');

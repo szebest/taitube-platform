@@ -48,3 +48,4 @@ export * from './watch-parties/room-details';
 export * from './watch-parties/room-limits';
 export * from './layout/failures';
 export * from './layout/rich-text';
+export * from './layout/rich-text-tree';

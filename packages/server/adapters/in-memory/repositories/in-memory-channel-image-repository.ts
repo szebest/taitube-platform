@@ -13,9 +13,11 @@ import {
   channelImageFailed,
   channelImageReady,
   type ChannelImageKind,
+  holdsChannelVersion,
   type ChannelImageUpload,
   type PostImageUrls,
   type PostImageVariants,
+  type VariantImageKind,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -89,8 +91,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     }
 
     const applied =
-      upload.kind === 'playlist-cover' ||
-      upload.kind === 'post-image' ||
+      !holdsChannelVersion(upload.kind) ||
       this.deps.channels.advanceImageVersion(
         upload.channelId,
         upload.kind,
@@ -108,7 +109,8 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     return ok({ upload: { ...upload }, applied });
   }
 
-  async findReadyPostImages(
+  async findReadyImages(
+    kind: VariantImageKind,
     channelId: string,
     uploadIds: readonly string[]
   ): Promise<Result<PostImageVariants[], DatabaseUnavailable>> {
@@ -116,7 +118,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       const upload = this.uploads.get(id);
       const ready =
         upload?.channelId === channelId &&
-        upload.kind === 'post-image' &&
+        upload.kind === kind &&
         upload.status === CHANNEL_IMAGE_UPLOAD_EDGES.commit.to &&
         upload.variantUrls;
       return ready && upload ? [{ uploadId: upload.id, urls: ready }] : [];
@@ -209,7 +211,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     upload: ChannelImageUpload,
     version: number
   ): Promise<Result<unknown, DatabaseUnavailable>> {
-    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
+    if (holdsChannelVersion(upload.kind)) {
       const audited = await this.deps.audit.append({
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,
@@ -243,6 +245,7 @@ function heldVersion(
       return channel?.bannerVersion;
     case 'playlist-cover':
     case 'post-image':
+    case 'page-image':
       return 0;
     default:
       return assertNever(kind, 'ChannelImageKind');

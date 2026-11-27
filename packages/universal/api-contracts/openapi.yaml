@@ -1319,6 +1319,18 @@ components:
             - kind
             - items
           additionalProperties: false
+    PageImageUrlsInput:
+      type: object
+      properties:
+        w640:
+          type: string
+        w1280:
+          type: string
+      required:
+        - w640
+        - w1280
+      additionalProperties: false
+      description: The variants of one `page-image`, by width
     ChannelPageInput:
       type: object
       properties:
@@ -1419,6 +1431,15 @@ components:
             - header
             - sections
           additionalProperties: false
+        images:
+          type: object
+          propertyNames:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          additionalProperties:
+            $ref: '#/components/schemas/PageImageUrlsInput'
+          description: The ready `page-image` the tab uses (headers, backgrounds, rich text images) by id; one that is not ready is absent
       required:
         - channelId
         - revision
@@ -1426,6 +1447,7 @@ components:
         - landing
         - tabs
         - tab
+        - images
       additionalProperties: false
       description: A channel page as one viewer sees one tab of it
     ChannelPageDraftInput:
@@ -4962,6 +4984,18 @@ components:
             - kind
             - items
           additionalProperties: false
+    PageImageUrls:
+      type: object
+      properties:
+        w640:
+          type: string
+        w1280:
+          type: string
+      required:
+        - w640
+        - w1280
+      additionalProperties: false
+      description: The variants of one `page-image`, by width
     ChannelPage:
       type: object
       properties:
@@ -5062,6 +5096,15 @@ components:
             - header
             - sections
           additionalProperties: false
+        images:
+          type: object
+          propertyNames:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          additionalProperties:
+            $ref: '#/components/schemas/PageImageUrls'
+          description: The ready `page-image` the tab uses (headers, backgrounds, rich text images) by id; one that is not ready is absent
       required:
         - channelId
         - revision
@@ -5069,6 +5112,7 @@ components:
         - landing
         - tabs
         - tab
+        - images
       additionalProperties: false
       description: A channel page as one viewer sees one tab of it
     ChannelPageDraft:
@@ -43379,6 +43423,7 @@ paths:
               - avatar
               - banner
               - post-image
+              - page-image
           in: path
           name: kind
           required: true
@@ -43768,6 +43813,7 @@ paths:
               - avatar
               - banner
               - post-image
+              - page-image
           in: path
           name: kind
           required: true
@@ -86593,6 +86639,7 @@ paths:
                               - avatar
                               - banner
                               - post-image
+                              - page-image
                               - playlist-cover
                           version:
                             type: integer
@@ -86631,6 +86678,7 @@ paths:
                               - avatar
                               - banner
                               - post-image
+                              - page-image
                               - playlist-cover
                           reason:
                             type: string
