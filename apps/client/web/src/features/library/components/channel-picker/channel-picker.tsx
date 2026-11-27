@@ -40,12 +40,14 @@ export function ChannelPicker({ label, onPick, exclude = [] }: ChannelPickerProp
         onValueChange={setTyped}
         placeholder={tOr('playlistPeople.handlePlaceholder', {}, '')}
       />
-      {query.length > 0 && (
-        <Command.List>
-          {found.isSuccess && channels.length === 0 && (
-            <Command.Empty>{tOr('playlistPeople.noChannels', {}, '')}</Command.Empty>
-          )}
-          {channels.map((channel) => (
+      {query.length > 0 && found.isSuccess && channels.length === 0 && (
+        <p role="status" className="m-0 px-2 py-1 text-body-sm text-fg-muted">
+          {tOr('playlistPeople.noChannels', {}, '')}
+        </p>
+      )}
+      <Command.List>
+        {query.length > 0 &&
+          channels.map((channel) => (
             <Command.Item
               key={channel.id}
               value={channel.id}
@@ -63,8 +65,7 @@ export function ChannelPicker({ label, onPick, exclude = [] }: ChannelPickerProp
               <span className="truncate text-fg-muted">@{channel.handle}</span>
             </Command.Item>
           ))}
-        </Command.List>
-      )}
+      </Command.List>
     </Command.Root>
   );
 }

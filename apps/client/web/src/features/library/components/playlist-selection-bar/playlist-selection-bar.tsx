@@ -17,7 +17,7 @@ export function PlaylistSelectionBar({ count, onCancel }: PlaylistSelectionBarPr
     <div
       role="toolbar"
       aria-label={tOr('playlistEdit.selectionLabel', {}, '')}
-      className="sticky top-0 z-10 flex flex-wrap items-center gap-inline rounded-card bg-accent-soft p-2"
+      className="sticky top-0 z-sticky flex flex-wrap items-center gap-inline rounded-card bg-accent-soft p-2"
     >
       <span aria-live="polite" className="me-auto text-label">
         {tOr('playlistEdit.selectedCount', { count }, '')}

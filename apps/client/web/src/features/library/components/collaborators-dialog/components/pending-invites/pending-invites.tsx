@@ -11,12 +11,12 @@ import { useCollaboratorChanges } from '#app/features/library/hooks/use-collabor
 import { useCopyLink } from '#app/hooks/use-copy-link';
 import { useT } from '#app/lib/messages';
 
-const STATE_TONE = {
-  active: 'success',
-  expired: 'neutral',
-  revoked: 'danger',
-  exhausted: 'neutral',
-} as const satisfies Record<PlaylistInviteState, BadgeTone>;
+const STATE_VIEW = {
+  active: { tone: 'success', usable: true },
+  expired: { tone: 'neutral', usable: false },
+  revoked: { tone: 'danger', usable: false },
+  exhausted: { tone: 'neutral', usable: false },
+} as const satisfies Record<PlaylistInviteState, { tone: BadgeTone; usable: boolean }>;
 
 export interface PendingInvitesProps {
   playlistId: string;
@@ -61,7 +61,7 @@ export function PendingInvites({ playlistId }: PendingInvitesProps) {
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {invites.data.items.map((invite) => {
             const name = nameOf(invite);
-            const active = invite.state === 'active';
+            const active = STATE_VIEW[invite.state].usable;
             return (
               <li key={invite.id} className="flex min-w-0 flex-wrap items-center gap-inline">
                 <div className="flex min-w-0 flex-1 flex-col">
@@ -87,7 +87,7 @@ export function PendingInvites({ playlistId }: PendingInvitesProps) {
                     )}
                   </span>
                 </div>
-                <Badge size="sm" tone={STATE_TONE[invite.state]}>
+                <Badge size="sm" tone={STATE_VIEW[invite.state].tone}>
                   {tOr('playlistPeople.inviteState', { state: invite.state }, '')}
                 </Badge>
                 {active && invite.invitee === null && (

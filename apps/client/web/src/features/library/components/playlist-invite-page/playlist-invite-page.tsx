@@ -37,7 +37,7 @@ export function PlaylistInvitePage({ token, personal }: PlaylistInvitePageProps)
 
   return (
     <section
-      className="mx-auto flex max-w-xl flex-col gap-stack py-section"
+      className="mx-auto flex max-w-[36rem] flex-col gap-stack py-section"
       aria-labelledby="playlist-invite-title"
     >
       <h1 id="playlist-invite-title" className="m-0 text-headline">

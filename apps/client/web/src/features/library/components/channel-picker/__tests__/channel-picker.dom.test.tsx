@@ -36,6 +36,7 @@ describe('apps/client/web: the channel picker', () => {
 
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
     expect(asked).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
 
     await user.type(box, '@a');
     await user.click(await screen.findByRole('option', { name: /Ana/ }));
@@ -60,6 +61,7 @@ describe('apps/client/web: the channel picker', () => {
 
     await user.type(box, 'zz');
 
-    expect(await screen.findByText('No channel matches')).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('No channel matches');
+    expect(await axeViolations()).toEqual([]);
   });
 });

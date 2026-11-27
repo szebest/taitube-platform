@@ -55,6 +55,7 @@ The root is a `fieldset`: name it with `aria-label`. Every word, the thumbs' nam
 |---|---|---|---|
 | `ChaptersPanel` | studio `features/videos/components/` | `position`: the scrub position; each row's "Use the playhead" button writes it into that row's time field | one per row with a readable time, the focused row active |
 | `CorrectionsPanel` | studio `features/videos/components/` | `range`: 2 to 30 seconds, bound to the start and end fields | the start of each saved correction, the one being edited active |
+| `PlaylistItemDialog` | web `features/library/components/` | `range`: a playlist item's segment, at least `PLAYLIST_SEGMENT_MIN_MS` long, bound to the start and end fields | none |
 
 The studio has no player, so the scrub thumb stands in for the playhead. The `m:ss` text fields stay beside the slider as the way to type an exact time and the accessible fallback: the slider and the fields hold one value, and changing either moves the other. Without a known duration the wrapper draws no slider and no playhead button.
 

@@ -15,11 +15,11 @@ import { NewShareLinkForm } from './components/new-share-link-form/new-share-lin
 
 const { UrlModal } = urlModals;
 
-const STATE_TONE = {
-  active: 'success',
-  expired: 'neutral',
-  revoked: 'danger',
-} as const satisfies Record<ShareLinkState, BadgeTone>;
+const STATE_VIEW = {
+  active: { tone: 'success', usable: true },
+  expired: { tone: 'neutral', usable: false },
+  revoked: { tone: 'danger', usable: false },
+} as const satisfies Record<ShareLinkState, { tone: BadgeTone; usable: boolean }>;
 
 export interface ShareLinksDialogProps {
   playlist: PlaylistView;
@@ -34,7 +34,7 @@ export function ShareLinksDialog({ playlist }: ShareLinksDialogProps) {
   const { revoke } = useShareLinkChanges(playlist.id);
 
   const items = links.data?.items ?? [];
-  const active = items.filter(({ state }) => state === 'active').length;
+  const active = items.filter(({ state }) => STATE_VIEW[state].usable).length;
   const nameOf = (link: ShareLinkView) => link.label ?? tOr('playlistTools.noLabel', {}, '');
 
   const copy = ({ token }: ShareLinkView) =>
@@ -100,10 +100,10 @@ export function ShareLinksDialog({ playlist }: ShareLinksDialogProps) {
                           )}
                     </span>
                   </div>
-                  <Badge size="sm" tone={STATE_TONE[link.state]}>
+                  <Badge size="sm" tone={STATE_VIEW[link.state].tone}>
                     {tOr('playlistTools.linkState', { state: link.state }, '')}
                   </Badge>
-                  {link.state === 'active' && (
+                  {STATE_VIEW[link.state].usable && (
                     <>
                       <Button
                         size="sm"

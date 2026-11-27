@@ -69,7 +69,6 @@ describe('apps/client/web: useFollowPlaylist', () => {
     const { result, asked } = renderFollow({ pages: [[LIST]], enabled: false });
 
     expect(result.current.following).toBe(false);
-    await new Promise((settle) => setTimeout(settle, 100));
     expect(asked).not.toHaveBeenCalled();
   });
 

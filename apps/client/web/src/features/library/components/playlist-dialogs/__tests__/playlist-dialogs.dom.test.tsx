@@ -11,13 +11,13 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { playlistDetail } from '#app/__tests__/library-fixtures';
 import { LAZY, LIST, renderPart } from '#app/features/library/__tests__/render-playlist';
+import { LazyActivityDrawer } from '#app/features/library/components/activity-drawer/activity-drawer.lazy';
+import { LazyCollaboratorsDialog } from '#app/features/library/components/collaborators-dialog/collaborators-dialog.lazy';
+import { LazyRulesDialog } from '#app/features/library/components/rules-dialog/rules-dialog.lazy';
+import { LazySettingsDialog } from '#app/features/library/components/settings-dialog/settings-dialog.lazy';
+import { LazyShareLinksDialog } from '#app/features/library/components/share-links-dialog/share-links-dialog.lazy';
+import { LazyStatsSheet } from '#app/features/library/components/stats-sheet/stats-sheet.lazy';
 import type { PlaylistAbilities } from '#app/features/library/hooks/use-playlist-abilities';
-import { LazyActivityDrawer } from '../../activity-drawer/activity-drawer.lazy';
-import { LazyCollaboratorsDialog } from '../../collaborators-dialog/collaborators-dialog.lazy';
-import { LazyRulesDialog } from '../../rules-dialog/rules-dialog.lazy';
-import { LazySettingsDialog } from '../../settings-dialog/settings-dialog.lazy';
-import { LazyShareLinksDialog } from '../../share-links-dialog/share-links-dialog.lazy';
-import { LazyStatsSheet } from '../../stats-sheet/stats-sheet.lazy';
 import { PlaylistDialogs } from '../playlist-dialogs';
 
 const NOBODY: PlaylistAbilities = {
