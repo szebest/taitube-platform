@@ -1,7 +1,8 @@
+import type { PostPayload } from './channel-post';
 import type { VideoVisibility } from './status-vocabulary';
 import type { ThumbnailSelection, Video } from './video';
 
-export const ENTITY_REVISION_TYPES = ['video_metadata'] as const;
+export const ENTITY_REVISION_TYPES = ['video_metadata', 'channel_post'] as const;
 export type EntityRevisionType = (typeof ENTITY_REVISION_TYPES)[number];
 
 export const ENTITY_REVISION_KEEP = 50;
@@ -22,20 +23,27 @@ export interface VideoMetadataSnapshot {
   commentsEnabled: boolean;
 }
 
-export interface EntitySnapshots {
-  video_metadata: VideoMetadataSnapshot;
+export interface ChannelPostSnapshot {
+  payload: PostPayload;
 }
 
-export interface EntityRevision<T extends EntityRevisionType = EntityRevisionType> {
-  id: string;
-  entityType: T;
-  entityId: string;
-  version: number;
-  snapshot: EntitySnapshots[T];
-  authorUserId: string | null;
-  restoredFromVersion: number | null;
-  createdAt: Date;
+export interface EntitySnapshots {
+  video_metadata: VideoMetadataSnapshot;
+  channel_post: ChannelPostSnapshot;
 }
+
+export type EntityRevision<T extends EntityRevisionType = EntityRevisionType> = {
+  [K in T]: {
+    id: string;
+    entityType: K;
+    entityId: string;
+    version: number;
+    snapshot: EntitySnapshots[K];
+    authorUserId: string | null;
+    restoredFromVersion: number | null;
+    createdAt: Date;
+  };
+}[T];
 
 export type VideoMetadataField = keyof VideoMetadataSnapshot;
 

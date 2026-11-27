@@ -121,9 +121,11 @@ CREATE INDEX "video_threads_video_anchor_idx" ON "video_threads" USING btree ("v
 CREATE INDEX "video_threads_author_video_idx" ON "video_threads" USING btree ("author_id","video_id") WHERE "video_threads"."deleted_at" IS NULL;--> statement-breakpoint
 ALTER TABLE "channel_image_uploads" DROP CONSTRAINT "channel_image_uploads_kind_check";--> statement-breakpoint
 ALTER TABLE "data_exports" DROP CONSTRAINT "data_exports_kind_check";--> statement-breakpoint
+ALTER TABLE "entity_revisions" DROP CONSTRAINT "entity_revisions_type_check";--> statement-breakpoint
 ALTER TABLE "api_tokens" DROP CONSTRAINT "api_tokens_scopes_check";--> statement-breakpoint
 ALTER TABLE "channel_image_uploads" ADD COLUMN "variant_urls" jsonb;--> statement-breakpoint
-ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'post-image'));--> statement-breakpoint
+ALTER TABLE "channel_image_uploads" ADD CONSTRAINT "channel_image_uploads_kind_check" CHECK ("channel_image_uploads"."kind" IN ('avatar', 'banner', 'playlist-cover', 'post-image'));--> statement-breakpoint
+ALTER TABLE "entity_revisions" ADD CONSTRAINT "entity_revisions_type_check" CHECK ("entity_revisions"."entity_type" IN ('video_metadata', 'channel_post'));--> statement-breakpoint
 ALTER TABLE "data_exports" ADD CONSTRAINT "data_exports_kind_check" CHECK ("data_exports"."kind" IN ('video_analytics', 'channel_analytics', 'comments', 'videos', 'posts'));--> statement-breakpoint
 ALTER TABLE "api_tokens" ADD CONSTRAINT "api_tokens_scopes_check" CHECK (cardinality("api_tokens"."scopes") >= 1 AND "api_tokens"."scopes" <@ ARRAY['videos:read', 'videos:write', 'analytics:read', 'comments:read', 'comments:moderate', 'exports:read', 'exports:create', 'webhooks:manage', 'posts:write']::text[]);--> statement-breakpoint
 CREATE FUNCTION "delete_target_comments"() RETURNS trigger LANGUAGE plpgsql AS $$

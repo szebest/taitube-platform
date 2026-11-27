@@ -9403,7 +9403,7 @@
       "checkConstraints": {
         "channel_image_uploads_kind_check": {
           "name": "channel_image_uploads_kind_check",
-          "value": "\"channel_image_uploads\".\"kind\" IN ('avatar', 'banner', 'post-image')"
+          "value": "\"channel_image_uploads\".\"kind\" IN ('avatar', 'banner', 'playlist-cover', 'post-image')"
         },
         "channel_image_uploads_status_check": {
           "name": "channel_image_uploads_status_check",
@@ -10071,7 +10071,7 @@
       "checkConstraints": {
         "entity_revisions_type_check": {
           "name": "entity_revisions_type_check",
-          "value": "\"entity_revisions\".\"entity_type\" IN ('video_metadata')"
+          "value": "\"entity_revisions\".\"entity_type\" IN ('video_metadata', 'channel_post')"
         },
         "entity_revisions_restored_from_check": {
           "name": "entity_revisions_restored_from_check",

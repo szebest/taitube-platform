@@ -64,7 +64,7 @@ export const channelImageUploads = pgTable(
     index('channel_image_uploads_status_idx').on(table.status, table.updatedAt),
     check(
       'channel_image_uploads_kind_check',
-      sql`${table.kind} IN ('avatar', 'banner', 'post-image')`
+      sql`${table.kind} IN ('avatar', 'banner', 'playlist-cover', 'post-image')`
     ),
     check('channel_image_uploads_status_check', sql`${table.status} IN (${STATUS_LIST})`),
   ]
