@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { type SocketDatabase, startSocketDatabase } from './socket-database';
 
 const DRIZZLE = path.join(__dirname, '../../drizzle');
-const MIGRATION = '0048_community_posts';
+const MIGRATION = '0049_community_posts';
 
 function migrationsUpTo(tag: string): string[] {
   const journal: { entries: { tag: string }[] } = JSON.parse(
