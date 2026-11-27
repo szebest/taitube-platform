@@ -37,10 +37,6 @@ function sourceOf(built: string): string {
   return inSrc.endsWith('.js') ? `${inSrc.slice(0, -'.js'.length)}.ts` : inSrc;
 }
 
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 type SourceExport = { specifier: string; source: string };
 
 type SourceAlias = Alias & { find: RegExp };
@@ -77,7 +73,7 @@ function byNodePrecedence(a: SourceExport, b: SourceExport): number {
 
 function toAlias({ specifier, source }: SourceExport): SourceAlias {
   return {
-    find: new RegExp(`^${specifier.split('*').map(escapeRegExp).join('(.+)')}$`),
+    find: new RegExp(`^${specifier.split('*').map(RegExp.escape).join('(.+)')}$`),
     replacement: source.replaceAll('*', '$1'),
   };
 }
