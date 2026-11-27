@@ -37,7 +37,7 @@ export const VIDEO_EDIT_EDGES = {
   render: { from: ['applied', 'failed', 'reverted'], to: 'rendering' },
   apply: { from: ['rendering'], to: 'applied' },
   fail: { from: ['rendering'], to: 'failed' },
-  revert: { from: ['applied'], to: 'reverted' },
+  revert: { from: ['applied', 'failed'], to: 'reverted' },
 } as const satisfies Record<string, { from: readonly VideoEditStatus[]; to: VideoEditStatus }>;
 
 export interface VideoEdit extends VideoEditList {

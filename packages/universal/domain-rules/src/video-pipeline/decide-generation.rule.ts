@@ -7,7 +7,6 @@ import {
   generationInProgress,
   noEditToRevert,
 } from './failures';
-import { VIDEO_EDIT } from './video-edit.machine';
 import { VIDEO_GENERATION } from './video-generation.machine';
 
 /** Only a video that plays can be replaced or edited, and only while it still does can a render swap in. */
@@ -31,16 +30,22 @@ export function decideGenerationStart(
     : ok(video);
 }
 
-/** Reverting swaps back to the base generation, so the edit has to be the one playing. */
+/**
+ * Reverting swaps back to the base of the edit that plays, read off its own generation: a later edit
+ * that failed or is still saved over the edit list never hides it. Nothing reverts while a render is in
+ * flight.
+ */
 export function decideEditRevert(
   video: Video,
-  edit: VideoEdit | null
-): Result<VideoEdit, NoEditToRevert> {
-  return edit &&
-    VIDEO_EDIT.sources('revert').includes(edit.status) &&
-    edit.generation === video.generation &&
-    edit.baseGeneration !== edit.generation
-    ? ok(edit)
+  generations: readonly VideoGeneration[]
+): Result<{ baseGeneration: number }, NoEditToRevert> {
+  const playing = generations.find(({ generation }) => generation === video.generation);
+  const inFlight = generations.some(({ status }) => IN_FLIGHT_GENERATIONS.includes(status));
+  return playing?.kind === 'edit' &&
+    playing.baseGeneration !== null &&
+    playing.baseGeneration !== playing.generation &&
+    !inFlight
+    ? ok({ baseGeneration: playing.baseGeneration })
     : err(noEditToRevert(video.id));
 }
 

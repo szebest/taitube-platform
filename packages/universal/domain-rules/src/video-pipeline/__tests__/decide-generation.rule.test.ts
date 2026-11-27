@@ -22,6 +22,17 @@ const generation = (status: GenerationStatus): VideoGeneration => ({
   updatedAt: new Date(0),
 });
 
+const editOf = (
+  generationNumber: number,
+  base: number,
+  status: GenerationStatus = 'active'
+): VideoGeneration => ({
+  ...generation(status),
+  generation: generationNumber,
+  kind: 'edit',
+  baseGeneration: base,
+});
+
 const edit = (overrides: Partial<VideoEdit> = {}): VideoEdit => ({
   videoId: 'video-1',
   baseGeneration: 1,
@@ -56,46 +67,46 @@ describe('@vp/domain-rules: decideGenerationStart', () => {
 });
 
 describe('@vp/domain-rules: decideEditRevert', () => {
-  it('reverts the applied edit that is playing', () => {
-    const applied = edit();
-    expect(expectOk(decideEditRevert(aVideo({ generation: 2 }), applied))).toBe(applied);
+  it.each([
+    { shape: 'the edit that plays', generations: [editOf(2, 1)] },
+    {
+      shape: 'the edit that plays after a later edit failed',
+      generations: [editOf(3, 1, 'failed'), editOf(2, 1)],
+    },
+  ])('reverts $shape to its base', ({ generations }) => {
+    expect(expectOk(decideEditRevert(aVideo({ generation: 2 }), generations))).toEqual({
+      baseGeneration: 1,
+    });
   });
 
   it.each([
-    { shape: 'no edit', video: aVideo({ generation: 2 }), current: null },
+    { shape: 'no edit playing', video: aVideo({ generation: 2 }), generations: [] },
     {
-      shape: 'an edit still rendering',
+      shape: 'while a later edit renders',
       video: aVideo({ generation: 2 }),
-      current: edit({ status: 'rendering' }),
+      generations: [editOf(3, 1, 'rendering'), editOf(2, 1)],
     },
     {
-      shape: 'an edit already reverted',
+      shape: 'the base playing after a revert',
       video: aVideo({ generation: 1 }),
-      current: edit({ status: 'reverted' }),
+      generations: [editOf(2, 1, 'retired')],
     },
     {
       shape: 'a replacement playing over the edit',
       video: aVideo({ generation: 3 }),
-      current: edit(),
+      generations: [{ ...generation('active'), generation: 3 }, editOf(2, 1, 'retired')],
     },
     {
       shape: 'an edit baked into its base',
       video: aVideo({ generation: 2 }),
-      current: edit({ baseGeneration: 2 }),
+      generations: [editOf(2, 2)],
     },
-  ])('refuses $shape', ({ video, current }) => {
-    expect(expectErr(decideEditRevert(video, current)).code).toBe(ErrorCodes.NO_EDIT_TO_REVERT);
+  ])('refuses $shape', ({ video, generations }) => {
+    expect(expectErr(decideEditRevert(video, generations)).code).toBe(ErrorCodes.NO_EDIT_TO_REVERT);
   });
 });
 
 describe('@vp/domain-rules: decideEditBase', () => {
-  const editOf = (generationNumber: number, base: number): VideoGeneration => ({
-    ...generation('active'),
-    generation: generationNumber,
-    kind: 'edit',
-    baseGeneration: base,
-  });
-
   it.each([
     {
       shape: 'no edit yet',
