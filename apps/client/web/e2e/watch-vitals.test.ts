@@ -58,9 +58,9 @@ test.describe('watch vitals', () => {
     stack,
     api,
   }) => {
-    const viewer = await api('viewer');
+    const stranger = await api('stranger');
     for (let index = 0; index < COMMENT_COUNT; index++) {
-      await viewer.post(`/v1/videos/${stack.videos.watchable.id}/comments`, {
+      await stranger.post(`/v1/videos/${stack.videos.watchable.id}/comments`, {
         data: { content: `Vitals comment ${index}` },
       });
     }
