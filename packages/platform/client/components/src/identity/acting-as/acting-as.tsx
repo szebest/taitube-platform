@@ -1,6 +1,5 @@
 import { Avatar, Button, cn } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
-import { initialsOf } from '../../account-menu/account-menu';
 import { AccentRing, type AccentRingAccent } from '../accent-ring';
 
 /** The line above a composer that says which identity the write goes out as. */
@@ -18,17 +17,17 @@ export function ActingAsRoot({ className, ...props }: ComponentPropsWithRef<'p'>
 }
 
 export interface ActingAsAvatarProps {
-  name: string;
+  initials: string;
   imageUrl?: string | null;
   accent: AccentRingAccent;
 }
 
-export function ActingAsAvatar({ name, imageUrl, accent }: ActingAsAvatarProps) {
+export function ActingAsAvatar({ initials, imageUrl, accent }: ActingAsAvatarProps) {
   return (
     <AccentRing accent={accent} className="ring-1 ring-offset-1">
       <Avatar.Root size="xs">
         {imageUrl ? <Avatar.Image src={imageUrl} alt="" /> : null}
-        <Avatar.Fallback aria-hidden="true">{initialsOf(name)}</Avatar.Fallback>
+        <Avatar.Fallback aria-hidden="true">{initials}</Avatar.Fallback>
       </Avatar.Root>
     </AccentRing>
   );

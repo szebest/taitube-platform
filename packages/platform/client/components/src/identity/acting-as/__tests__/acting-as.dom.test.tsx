@@ -8,7 +8,7 @@ describe('@kit/components: ActingAs', () => {
     const onSwitch = vi.fn();
     renderWithCopy(
       <ActingAs.Root>
-        <ActingAs.Avatar name="Ada Lovelace" accent={2} />
+        <ActingAs.Avatar initials="AL" accent={2} />
         <ActingAs.Label>Commenting as Ada Lovelace</ActingAs.Label>
         <ActingAs.Switch onClick={onSwitch}>Switch</ActingAs.Switch>
       </ActingAs.Root>

@@ -27,6 +27,13 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
     expected: /^Swedish$/,
   },
   { value: { type: 'truncate', value: 'abcdef', options: { maxGraphemes: 3 } }, expected: /^ab…$/ },
+  { value: { type: 'initials', value: 'ada lovelace' }, expected: /^AL$/ },
+  { value: { type: 'capitalize', value: 'ada' }, expected: /^Ada$/ },
+  {
+    value: { type: 'timeZone', value: 'Europe/Berlin', options: { style: 'offset' } },
+    expected: /^GMT\+2$/,
+  },
+  { value: { type: 'isolate', value: 'Ada' }, expected: /^\u2068Ada\u2069$/ },
 ];
 
 describe('@kit/intl: formatValue', () => {

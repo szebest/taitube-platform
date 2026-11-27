@@ -24,6 +24,10 @@ expectTypeOf<TaggedValue['type']>().toEqualTypeOf<
   | 'list'
   | 'displayName'
   | 'truncate'
+  | 'initials'
+  | 'capitalize'
+  | 'timeZone'
+  | 'isolate'
 >();
 
 // @ts-expect-error a kind the registry does not hold is no tagged value

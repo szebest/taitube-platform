@@ -14,7 +14,7 @@ export const Composer: Story = {
   render: () => (
     <div className="w-96 p-stack">
       <ActingAs.Root>
-        <ActingAs.Avatar name="Analytical Engines" accent={3} />
+        <ActingAs.Avatar initials="AE" accent={3} />
         <ActingAs.Label>Commenting as Analytical Engines</ActingAs.Label>
         <ActingAs.Switch>Switch</ActingAs.Switch>
       </ActingAs.Root>

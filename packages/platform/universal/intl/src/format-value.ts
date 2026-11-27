@@ -1,6 +1,7 @@
 import { bitrate } from './formatters/bitrate';
 import { bytes } from './formatters/bytes';
 import { calendarDay } from './formatters/calendar-day';
+import { capitalize } from './formatters/capitalize';
 import { collator } from './formatters/collator';
 import { compact } from './formatters/compact';
 import { date } from './formatters/date';
@@ -8,6 +9,8 @@ import { dateRange } from './formatters/date-range';
 import { dateTime } from './formatters/date-time';
 import { displayName } from './formatters/display-name';
 import { duration } from './formatters/duration';
+import { initials } from './formatters/initials';
+import { isolate } from './formatters/isolate';
 import { list } from './formatters/list';
 import { money } from './formatters/money';
 import { number } from './formatters/number';
@@ -17,6 +20,7 @@ import { plainDate } from './formatters/plain-date';
 import { pluralCategory } from './formatters/plural';
 import { relative } from './formatters/relative';
 import { time } from './formatters/time';
+import { timeZone } from './formatters/time-zone';
 import { truncate } from './formatters/truncate';
 import type { Kind, TaggedOf } from './kind';
 
@@ -42,6 +46,10 @@ export const formatKinds = [
   collator,
   pluralCategory,
   truncate,
+  initials,
+  capitalize,
+  timeZone,
+  isolate,
 ] as const;
 
 export type FormatKinds = typeof formatKinds;

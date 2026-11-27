@@ -4,7 +4,7 @@ import { IdentityRow } from '..';
 function renderRow(props: { current?: boolean; expired?: boolean; accent?: 1 | 4 }) {
   return render(
     <IdentityRow.Root current={props.current} expired={props.expired} data-testid="row">
-      <IdentityRow.Avatar name="Ada Lovelace" accent={props.accent} />
+      <IdentityRow.Avatar initials="AL" accent={props.accent} />
       <IdentityRow.Text>
         <IdentityRow.Name>Ada Lovelace</IdentityRow.Name>
         <IdentityRow.Detail>@ada</IdentityRow.Detail>

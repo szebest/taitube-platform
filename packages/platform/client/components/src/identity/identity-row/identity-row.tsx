@@ -1,6 +1,5 @@
 import { Avatar, Badge, Icon, cn } from '@kit/ui';
 import type { ComponentPropsWithRef } from 'react';
-import { initialsOf } from '../../account-menu/account-menu';
 import { AccentRing, type AccentRingAccent } from '../accent-ring';
 import { IdentityRowContext, useIdentityRow } from './identity-row.context';
 
@@ -32,18 +31,18 @@ export function IdentityRowRoot({
 }
 
 export interface IdentityRowAvatarProps {
-  name: string;
+  initials: string;
   imageUrl?: string | null;
   /** Draws the identity's ring; none for a row that only lists it. */
   accent?: AccentRingAccent;
 }
 
-export function IdentityRowAvatar({ name, imageUrl, accent }: IdentityRowAvatarProps) {
+export function IdentityRowAvatar({ initials, imageUrl, accent }: IdentityRowAvatarProps) {
   const { expired } = useIdentityRow('Avatar');
   const avatar = (
     <Avatar.Root size="sm" className={cn(expired && 'opacity-60')}>
       {imageUrl ? <Avatar.Image src={imageUrl} alt="" /> : null}
-      <Avatar.Fallback aria-hidden="true">{initialsOf(name)}</Avatar.Fallback>
+      <Avatar.Fallback aria-hidden="true">{initials}</Avatar.Fallback>
     </Avatar.Root>
   );
 

@@ -1,6 +1,6 @@
 import { SegmentedControl } from '@kit/ui';
+import { useSetName } from '#app/features/account/hooks/use-set-name';
 import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
-import { setName } from '#app/features/account/utils/set-name';
 import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 
@@ -8,6 +8,7 @@ import { SettingItem } from '../setting-item/setting-item';
 export function RoundnessRow() {
   const { sets, shown, choose } = useTokenOverride('radius');
   const { tOr } = useT();
+  const setName = useSetName();
 
   return (
     <SettingItem

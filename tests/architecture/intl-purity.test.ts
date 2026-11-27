@@ -30,12 +30,13 @@ function isArgumentlessDate(node: ts.Node): boolean {
   );
 }
 
+const CASE_METHODS = new Set(['toLocaleUpperCase', 'toLocaleLowerCase']);
+
 function isLocaleMethodCall(node: ts.Node): boolean {
-  return (
-    ts.isCallExpression(node) &&
-    ts.isPropertyAccessExpression(node.expression) &&
-    node.expression.name.text.startsWith('toLocale')
-  );
+  if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return false;
+  const method = node.expression.name.text;
+  const namesItsLocale = CASE_METHODS.has(method) && node.arguments.length > 0;
+  return method.startsWith('toLocale') && !namesItsLocale;
 }
 
 function isAmbientGlobal(node: ts.Node): boolean {
@@ -75,6 +76,10 @@ describe('architecture: the formatting core reads nothing from the runtime', () 
     { shape: 'the wall clock', source: 'const now = Date.now();' },
     { shape: 'a date built from the clock', source: 'const today = new Date();' },
     { shape: 'a locale method', source: 'const text = value.toLocaleDateString();' },
+    {
+      shape: 'a case change by the runtime locale',
+      source: 'const up = value.toLocaleUpperCase();',
+    },
     { shape: 'the environment', source: "const tz = process.env['TZ'];" },
   ])('recognises $shape', ({ source }) => {
     expect(impurities('fixture.ts', source)).toHaveLength(1);
@@ -83,6 +88,10 @@ describe('architecture: the formatting core reads nothing from the runtime', () 
   it.each([
     { shape: 'a date built from a value', source: 'const instant = new Date(iso);' },
     { shape: 'a field that shares a name', source: 'const x = config.navigator;' },
+    {
+      shape: 'a case change by a locale it is given',
+      source: 'const up = v.toLocaleUpperCase(locale);',
+    },
     { shape: 'a context field', source: 'const c = { process: 1 };' },
   ])('leaves $shape alone', ({ source }) => {
     expect(impurities('fixture.ts', source)).toEqual([]);

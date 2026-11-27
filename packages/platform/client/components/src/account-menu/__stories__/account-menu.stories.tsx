@@ -5,7 +5,7 @@ import { AccountMenuTrigger } from '../account-menu';
 const meta = {
   title: 'Components/AccountMenu',
   component: AccountMenuTrigger,
-  args: { name: 'The Creator' },
+  args: { initials: 'TC' },
 } satisfies Meta<typeof AccountMenuTrigger>;
 
 export default meta;

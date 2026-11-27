@@ -7,7 +7,7 @@ import { renderWithCopy } from '../../__tests__/render-with-copy';
 const renderMenu = () =>
   renderWithCopy(
     <AccountMenu.Root>
-      <AccountMenu.Trigger name="The Creator" />
+      <AccountMenu.Trigger initials="TC" />
       <AccountMenu.Content>
         <AccountMenu.Label>The Creator</AccountMenu.Label>
         <AccountMenu.Item asChild>
@@ -20,19 +20,14 @@ const renderMenu = () =>
   );
 
 describe('@kit/components: AccountMenu', () => {
-  it.each([
-    { name: 'The Creator', initials: 'TC' },
-    { name: 'acme', initials: 'A' },
-    { name: '  Ada   Lovelace Byron ', initials: 'AL' },
-    { name: '', initials: '' },
-  ])('draws $name as $initials', ({ name, initials }) => {
+  it('draws the initials it is given in the avatar', () => {
     renderWithCopy(
       <AccountMenu.Root>
-        <AccountMenu.Trigger name={name} />
+        <AccountMenu.Trigger initials="TC" />
       </AccountMenu.Root>
     );
 
-    expect(screen.getByRole('button', { name: 'account' })).toHaveTextContent(`${initials}account`);
+    expect(screen.getByRole('button', { name: 'account' })).toHaveTextContent('TCaccount');
   });
 
   it('opens from the avatar and lists the viewer, the pages and the way out', async () => {
@@ -52,7 +47,7 @@ describe('@kit/components: AccountMenu', () => {
   ])('rings the avatar in accent $accent of the identity the tab acts as', ({ accent, ringed }) => {
     renderWithCopy(
       <AccountMenu.Root>
-        <AccountMenu.Trigger name="The Creator" accent={accent} />
+        <AccountMenu.Trigger initials="TC" accent={accent} />
       </AccountMenu.Root>
     );
 
