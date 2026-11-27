@@ -28,6 +28,7 @@ import type { InMemoryNotificationRepository } from './in-memory-notification-re
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -100,6 +101,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly channelImages: InMemoryChannelImageRepository;
   readonly channelPages: InMemoryChannelPageRepository;
   readonly channelPosts: InMemoryChannelPostRepository;
+  readonly postEngagement: InMemoryPostEngagement;
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
@@ -152,6 +154,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.channelImages = c.get(Repo.channelImages);
     this.channelPages = c.get(Repo.channelPages);
     this.channelPosts = c.get(Repo.channelPosts);
+    this.postEngagement = c.get(Repo.postEngagement);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);

@@ -22,6 +22,8 @@ export function shareRefOf(payload: PostPayload): ShareRef | null {
   switch (payload.kind) {
     case 'text':
     case 'images':
+    case 'poll':
+    case 'quiz':
       return null;
     case 'video_share':
       return { type: 'video', id: payload.videoId };

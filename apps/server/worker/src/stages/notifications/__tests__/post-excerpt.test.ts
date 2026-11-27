@@ -19,6 +19,23 @@ describe('apps/server/worker/stages: post-excerpt', () => {
       excerpt: null,
     },
     {
+      scenario: 'a poll',
+      payload: { kind: 'poll', question: 'Which one?', options: ['a', 'b'], closesAt: null },
+      excerpt: 'Which one?',
+    },
+    {
+      scenario: 'a quiz',
+      payload: {
+        kind: 'quiz',
+        question: 'Why?',
+        options: ['a', 'b'],
+        closesAt: null,
+        correctIndex: 0,
+        explanation: null,
+      },
+      excerpt: 'Why?',
+    },
+    {
       scenario: 'a video share',
       payload: { kind: 'video_share', videoId: 'v1', comment: 'Watch this', startMs: null },
       excerpt: 'Watch this',

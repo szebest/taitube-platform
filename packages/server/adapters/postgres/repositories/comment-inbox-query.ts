@@ -21,7 +21,7 @@ const {
  * over the comments left-joined to the video and the post the target may be.
  */
 const targetTitle = sql<string>`coalesce(${v.title}, left(coalesce(
-  ${p.payload} ->> 'text', ${p.payload} ->> 'caption', ${p.payload} ->> 'comment', ''
+  ${p.payload} ->> 'text', ${p.payload} ->> 'question', ${p.payload} ->> 'caption', ${p.payload} ->> 'comment', ''
 ), ${POST_TARGET_TITLE_LENGTH}))`;
 
 /** The thread columns plus the title of the target the comment sits under. */

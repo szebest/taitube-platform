@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { postErrors } from './errors-posts';
 import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
@@ -27,6 +28,7 @@ export const errors = {
   invalidHandleFormat: dt('Handles use lowercase letters, digits and dashes only.'),
   cannotSubscribeToSelf: dt('You cannot subscribe to your own channel.'),
   ...channelErrors,
+  ...postErrors,
   ...commentErrors,
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
@@ -44,9 +46,6 @@ export const errors = {
   exportNotFound: dt('This export does not exist or was deleted.'),
   exportInProgress: dt('An export of this channel is already running. Wait for it to finish.'),
   exportDailyLimit: dt('This channel has requested as many exports as it can today.'),
-  postNotFound: dt('This post does not exist or was deleted.'),
-  postShareNotPublic: dt('Only a public video or playlist can be shared in a post.'),
-  postDailyLimit: dt('This channel has published as many posts as it can today.'),
   exportTooLarge: dt('The export is too large. Choose a shorter range.'),
   apiTokenNotFound: dt('This token does not exist or was already revoked.'),
   apiTokenLimitReached: dt(

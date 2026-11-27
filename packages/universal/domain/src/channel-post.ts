@@ -17,7 +17,18 @@ export const POST_LIFECYCLE_EDGES = {
   publish: { from: ['draft', 'scheduled'], to: 'published' },
 } as const satisfies Record<string, { from: readonly PostStatus[]; to: PostStatus }>;
 
+const PUBLISHED = POST_LIFECYCLE_EDGES.publish.to;
+const SCHEDULED = POST_LIFECYCLE_EDGES.schedule.to;
+
+export const isPostPublished = (status: PostStatus): boolean => status === PUBLISHED;
+export const isPostScheduled = (status: PostStatus): boolean => status === SCHEDULED;
+
 export const POSTS_PER_DAY = 20;
+export const POLL_OPTION_SLOTS = 6;
+export const POST_OPEN_SKETCH_TTL_SECONDS = 3 * 24 * 60 * 60;
+export const POSTS_PENDING_LIMIT = 50;
+export const POSTS_PINNED_LIMIT = 3;
+export const POLL_MAX_OPEN_DAYS = 30;
 
 interface PostImage {
   /** A ready `post-image` upload of the post's channel. */
@@ -28,6 +39,15 @@ interface PostImage {
 export type PostPayload =
   | { kind: 'text'; text: string }
   | { kind: 'images'; images: PostImage[]; caption: string | null }
+  | { kind: 'poll'; question: string; options: string[]; closesAt: string | null }
+  | {
+      kind: 'quiz';
+      question: string;
+      options: string[];
+      closesAt: string | null;
+      correctIndex: number;
+      explanation: string | null;
+    }
   | { kind: 'video_share'; videoId: string; comment: string | null; startMs: number | null }
   | { kind: 'playlist_share'; playlistId: string; comment: string | null };
 
@@ -56,6 +76,33 @@ export interface NewChannelPostInput {
   authorUserId: string;
   payload: PostPayload;
   commentsEnabled: boolean;
+}
+
+export interface NewPostInput extends NewChannelPostInput {
+  status: PostStatus;
+  publishAt: Date | null;
+}
+
+export interface NewUnpublishedPostInput extends NewChannelPostInput {
+  status: 'draft' | 'scheduled';
+  publishAt: Date | null;
+}
+
+/** A published post as the team sees it in the studio list, with its place in the pipeline. */
+export interface ManagedPostCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export type PostPinOutcome = 'pinned' | 'unpinned' | 'limit' | 'missing' | 'not_published';
+
+export interface PostStats {
+  opens: number;
+  shareClicks: number;
+  likes: number;
+  replies: number;
+  votesByOption: number[];
+  quizCorrectShare: number | null;
 }
 
 /** What a shared video or playlist shows on the card, or `unavailable` once it is not public. */

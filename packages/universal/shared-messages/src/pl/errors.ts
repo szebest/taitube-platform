@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { postErrors } from './errors-posts';
 import { videoToolErrors } from './errors-video-tools';
 
 export const errors = {
@@ -27,6 +28,7 @@ export const errors = {
   invalidHandleFormat: dt('Nazwa użytkownika może zawierać tylko małe litery, cyfry i myślniki.'),
   cannotSubscribeToSelf: dt('Nie możesz subskrybować własnego kanału.'),
   ...channelErrors,
+  ...postErrors,
   ...commentErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),
   reportAlreadyResolved: dt('To zgłoszenie zostało już rozpatrzone.'),
@@ -44,9 +46,6 @@ export const errors = {
   exportNotFound: dt('Ten eksport nie istnieje lub został usunięty.'),
   exportInProgress: dt('Eksport tego kanału już trwa. Poczekaj, aż się zakończy.'),
   exportDailyLimit: dt('Ten kanał zlecił dziś już wszystkie dostępne eksporty.'),
-  postNotFound: dt('Ten post nie istnieje lub został usunięty.'),
-  postShareNotPublic: dt('W poście można udostępnić tylko publiczny film lub playlistę.'),
-  postDailyLimit: dt('Ten kanał opublikował dziś już wszystkie dostępne posty.'),
   exportTooLarge: dt('Eksport jest za duży. Wybierz krótszy zakres.'),
   apiTokenNotFound: dt('Ten token nie istnieje albo został już unieważniony.'),
   apiTokenLimitReached: dt(

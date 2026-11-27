@@ -3,7 +3,7 @@ import type { ImageCrops } from '@vp/domain';
 import { SESSION_KEY, useApi, useUserEvent } from '@vp/queries';
 import { useState } from 'react';
 import type { ImageCropperKind } from '#app/components/image/image-cropper';
-import { uploadChannelImage } from '../api/upload-channel-image';
+import { uploadChannelImage } from '#app/utils/upload-channel-image';
 
 export type ChannelImageJobStatus = 'idle' | 'working' | 'ready' | 'failed';
 

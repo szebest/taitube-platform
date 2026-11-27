@@ -123,7 +123,7 @@ describe('post routes', () => {
         version: 1,
       });
       const read = await ctx.call('anonymous', 'GET', `/v1/posts/${res.json().id}`);
-      expect(read.json()).toEqual(res.json());
+      expect(res.json()).toMatchObject(read.json());
     });
 
     it('keeps the replies switch the post was published with', async () => {

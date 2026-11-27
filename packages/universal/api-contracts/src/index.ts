@@ -39,6 +39,8 @@ import * as oembed from './oembed';
 import * as picks from './picks';
 import * as playback from './playback';
 import * as playlists from './playlists';
+import * as postRevisions from './post-revisions';
+import * as postStudio from './post-studio';
 import * as posts from './posts';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
@@ -115,6 +117,8 @@ export * from './pagination';
 export * from './picks';
 export * from './playback';
 export * from './playlists';
+export * from './post-revisions';
+export * from './post-studio';
 export * from './posts';
 export * from './preferences';
 export * from './problem';
@@ -193,6 +197,8 @@ export const contracts = {
   picks,
   playback,
   playlists,
+  postRevisions,
+  postStudio,
   posts,
   preferences,
   reactions,

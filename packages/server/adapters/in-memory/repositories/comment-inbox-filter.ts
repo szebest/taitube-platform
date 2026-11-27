@@ -74,6 +74,9 @@ function textOf(payload: PostPayload): string {
       return payload.text;
     case 'images':
       return payload.caption ?? '';
+    case 'poll':
+    case 'quiz':
+      return payload.question;
     case 'video_share':
     case 'playlist_share':
       return payload.comment ?? '';

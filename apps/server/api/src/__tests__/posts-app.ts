@@ -1,5 +1,5 @@
 import { expectOk } from '@kit/testing/result';
-import { CHANNEL_HEADER, type PostWriteBody } from '@vp/api-contracts';
+import { CHANNEL_HEADER, type PostWriteInput } from '@vp/api-contracts';
 import { mintToken } from '@vp/dev-identity';
 import type { ChannelRole } from '@vp/domain';
 import type { LightMyRequestResponse } from 'fastify';
@@ -42,12 +42,12 @@ export interface PostsApp extends TestApp {
     url: string,
     options?: { payload?: object; as?: string }
   ): Promise<LightMyRequestResponse>;
-  publish(who: Who, body: PostWriteBody, as?: string): Promise<LightMyRequestResponse>;
+  publish(who: Who, body: PostWriteInput, as?: string): Promise<LightMyRequestResponse>;
   text(who: Who, text: string): Promise<string>;
   join(role: ChannelRole, userId: string): Promise<void>;
 }
 
-export const textBody = (text: string): PostWriteBody => ({
+export const textBody = (text: string): PostWriteInput => ({
   payload: { kind: 'text', text },
   commentsEnabled: true,
 });

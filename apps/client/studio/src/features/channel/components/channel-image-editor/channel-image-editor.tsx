@@ -15,8 +15,8 @@ import {
 import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
 import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
 import { useT } from '#app/lib/messages';
+import { readImageSize } from '#app/utils/read-image-size';
 import { ChannelImage } from '../channel-image/channel-image';
-import { readImageSize } from './utils/read-image-size';
 
 const IMAGE_ACCEPT = Object.fromEntries(CHANNEL_IMAGE_CONTENT_TYPES.map((type) => [type, []]));
 

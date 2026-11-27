@@ -5,6 +5,7 @@ import { InMemoryCommentModerationRepository } from './in-memory-comment-moderat
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import { Repo } from './in-memory-repo-tokens';
 import { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
 
@@ -21,8 +22,14 @@ export function provideCommentRepositories(c: Container): Container {
           auditRepo: c.get(Repo.channelAudit),
           outboxRepo: c.get(Repo.outbox),
           subscriptionsRepo: c.get(Repo.subscriptions),
+          votes: (postId) => c.get(Repo.postEngagement).total(postId),
+          revisions: c.get(Repo.entityRevisions),
           removeComments: (target) => c.get(Repo.comments).removeTarget(target),
         })
+    )
+    .provide(
+      Repo.postEngagement,
+      (c) => new InMemoryPostEngagement({ posts: c.get(Repo.channelPosts) })
     )
     .provide(
       Repo.commentSettings,

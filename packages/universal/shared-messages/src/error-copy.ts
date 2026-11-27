@@ -1,6 +1,7 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { SharedArgumentFreeKey } from './catalogue';
 import { CHANNEL_ERROR_COPY } from './error-copy-channels';
+import { POST_ERROR_COPY } from './error-copy-posts';
 
 /**
  * The words a person sees for each failure code. Declared over the whole `ErrorCode` union, so a
@@ -81,9 +82,6 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.EXPORT_NOT_FOUND]: 'errors.exportNotFound',
   [ErrorCodes.EXPORT_IN_PROGRESS]: 'errors.exportInProgress',
   [ErrorCodes.EXPORT_DAILY_LIMIT]: 'errors.exportDailyLimit',
-  [ErrorCodes.POST_NOT_FOUND]: 'errors.postNotFound',
-  [ErrorCodes.POST_SHARE_NOT_PUBLIC]: 'errors.postShareNotPublic',
-  [ErrorCodes.POST_DAILY_LIMIT]: 'errors.postDailyLimit',
   [ErrorCodes.EXPORT_TOO_LARGE]: 'errors.exportTooLarge',
   [ErrorCodes.API_TOKEN_NOT_FOUND]: 'errors.apiTokenNotFound',
   [ErrorCodes.API_TOKEN_LIMIT_REACHED]: 'errors.apiTokenLimitReached',
@@ -154,4 +152,5 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
   ...CHANNEL_ERROR_COPY,
+  ...POST_ERROR_COPY,
 };

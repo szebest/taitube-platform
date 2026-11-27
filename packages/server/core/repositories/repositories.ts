@@ -29,6 +29,7 @@ import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PickRepositoryPort } from './pick-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
+import type { PostEngagementRepositoryPort } from './post-engagement-repository';
 import type { RecommendationFeedbackRepositoryPort } from './recommendation-feedback-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
@@ -121,6 +122,7 @@ export interface Repositories {
   channelImages: ChannelImageRepositoryPort;
   channelPages: ChannelPageRepositoryPort;
   channelPosts: ChannelPostRepositoryPort;
+  postEngagement: PostEngagementRepositoryPort;
   picks: PickRepositoryPort;
   webhooks: WebhookRepositoryPort;
   liveStreams: LiveStreamRepositoryPort;

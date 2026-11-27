@@ -1,12 +1,18 @@
 import { type Result, err, ok } from '@kit/result';
 import type { ChannelPost } from '@vp/domain';
-import { type UserContext, canManagePost, canReactPost } from '@vp/permissions';
+import {
+  type PostAction,
+  type UserContext,
+  canManagePost,
+  canReactPost,
+  canReadPostStats,
+} from '@vp/permissions';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type PostNotFound, postNotFound } from './failures';
 
 export interface PostWriteInput {
   readonly actor: UserContext | null;
-  readonly action: 'create' | 'update' | 'delete';
+  readonly action: PostAction;
   readonly channel: { readonly id: string; readonly ownerId: string };
 }
 
@@ -36,4 +42,16 @@ export function decidePostReact(
   reactor: UserContext | null
 ): Result<UserContext, AuthorizationFailure> {
   return authorize(reactor, canReactPost({ user: reactor }), { action: 'react', subject: 'Post' });
+}
+
+/** Only the team's analytics grants read what a post collected; it is never on a public resource. */
+export function decidePostStatsRead(
+  input: Pick<PostWriteInput, 'actor' | 'channel'>
+): Result<UserContext, AuthorizationFailure> {
+  const { actor, channel } = input;
+  const post = { ownerId: channel.ownerId, channelId: channel.id };
+  return authorize(actor, canReadPostStats({ user: actor, post }), {
+    action: 'read',
+    subject: 'PostStats',
+  });
 }

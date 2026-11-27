@@ -1,7 +1,11 @@
 import { expectOk } from '@kit/testing/result';
 import type { ChannelPostEntry, PostPayload } from '@vp/domain';
+import { uuidv7 } from 'uuidv7';
+import { postAuditOf } from '../post-audit';
 import { toPostViews } from '../post-views';
-import { ABSENT, CDN, OWNER, postsFixture } from './post-deps';
+import { ABSENT, CDN, NOW, OWNER, postsFixture } from './post-deps';
+
+const VIEWER = { user: null, now: new Date(NOW) };
 
 async function setup() {
   const fixture = await postsFixture();
@@ -11,14 +15,25 @@ async function setup() {
     images: repositories.channelImages,
     videos: repositories.videos,
     playlists: repositories.playlists,
+    engagement: repositories.postEngagement,
     cdn: CDN,
   };
-  const entryOf = async (payload: PostPayload): Promise<ChannelPostEntry> => ({
-    post: expectOk(
-      await repositories.channelPosts.findById((await fixture.publish(payload)).id)
-    ) as ChannelPostEntry['post'],
-    likedByViewer: false,
-  });
+  const entryOf = async (payload: PostPayload): Promise<ChannelPostEntry> => {
+    const id = uuidv7();
+    const post = expectOk(
+      await repositories.channelPosts.publish(
+        {
+          id,
+          channelId: fixture.channel.id,
+          authorUserId: OWNER.id,
+          payload,
+          commentsEnabled: true,
+        },
+        postAuditOf('post.published', OWNER, fixture.channel.id, { id, payload })
+      )
+    );
+    return { post, likedByViewer: false };
+  };
   return { ...fixture, viewDeps, entryOf };
 }
 
@@ -27,7 +42,7 @@ describe('apps/server/api/services: toPostViews', () => {
     const { viewDeps, repositories } = await setup();
     const channels = vi.spyOn(repositories.channels, 'findByIds');
 
-    expect(expectOk(await toPostViews(viewDeps, []))).toEqual([]);
+    expect(expectOk(await toPostViews(viewDeps, [], VIEWER))).toEqual([]);
     expect(channels).not.toHaveBeenCalled();
   });
 
@@ -54,7 +69,7 @@ describe('apps/server/api/services: toPostViews', () => {
       caption: 'c',
     });
 
-    const [view] = expectOk(await toPostViews(viewDeps, [entry]));
+    const [view] = expectOk(await toPostViews(viewDeps, [entry], VIEWER));
 
     expect(view?.body).toEqual({
       kind: 'images',
@@ -84,7 +99,7 @@ describe('apps/server/api/services: toPostViews', () => {
     const videos = vi.spyOn(repositories.videos, 'findById');
     const images = vi.spyOn(repositories.channelImages, 'findReadyPostImages');
 
-    const views = expectOk(await toPostViews(viewDeps, entries));
+    const views = expectOk(await toPostViews(viewDeps, entries, VIEWER));
 
     expect(views.map(({ id }) => id)).toEqual(entries.map(({ post }) => post.id));
     expect([channels, videos, images].map((spy) => spy.mock.calls.length)).toEqual([1, 1, 0]);
@@ -94,7 +109,7 @@ describe('apps/server/api/services: toPostViews', () => {
     const { viewDeps, entryOf, channel } = await setup();
     const entry = await entryOf({ kind: 'text', text: 'x' });
 
-    const [view] = expectOk(await toPostViews(viewDeps, [entry]));
+    const [view] = expectOk(await toPostViews(viewDeps, [entry], VIEWER));
 
     expect(view?.channel).toEqual({
       id: channel.id,
@@ -110,7 +125,7 @@ describe('apps/server/api/services: toPostViews', () => {
     const entry = await entryOf({ kind: 'text', text: 'x' });
     const orphan = { ...entry, post: { ...entry.post, channelId: ABSENT } };
 
-    expect(expectOk(await toPostViews(viewDeps, [orphan]))).toEqual([]);
+    expect(expectOk(await toPostViews(viewDeps, [orphan], VIEWER))).toEqual([]);
   });
 
   it('reports what the viewer did and when the post was edited', async () => {
@@ -121,7 +136,7 @@ describe('apps/server/api/services: toPostViews', () => {
       likedByViewer: true,
     };
 
-    const [view] = expectOk(await toPostViews(viewDeps, [edited]));
+    const [view] = expectOk(await toPostViews(viewDeps, [edited], VIEWER));
 
     expect(view).toMatchObject({
       likedByViewer: true,

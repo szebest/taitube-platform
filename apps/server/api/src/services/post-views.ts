@@ -1,13 +1,18 @@
 import { type Result, all, assertNever, isErr, ok } from '@kit/result';
 import type { PostView } from '@vp/api-contracts';
-import type { ChannelImageRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
+import type {
+  ChannelImageRepositoryPort,
+  ChannelRepositoryPort,
+  PostEngagementRepositoryPort,
+} from '@vp/core/repositories';
 import {
-  type ChannelCard,
+  type Channel,
   type ChannelPostEntry,
   type PostImageVariants,
   toChannelCard,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { type PollLookups, type PostViewer, loadPollLookups, pollBodyOf } from './post-poll-views';
 import {
   type PostShareDeps,
   type ShareRef,
@@ -20,12 +25,14 @@ import {
 export interface PostViewDeps extends PostShareDeps {
   channels: Pick<ChannelRepositoryPort, 'findByIds'>;
   images: Pick<ChannelImageRepositoryPort, 'findReadyPostImages'>;
+  engagement: Pick<PostEngagementRepositoryPort, 'votedIndexes' | 'tallies'>;
 }
 
 type PostBody = PostView['body'];
 
 interface Lookups {
-  channels: ReadonlyMap<string, ChannelCard>;
+  channels: ReadonlyMap<string, Channel>;
+  polls: PollLookups;
   images: ReadonlyMap<string, PostImageVariants>;
   shares: ReadonlyMap<string, ShareSource | null>;
 }
@@ -79,7 +86,8 @@ async function loadShares(
 
 async function loadLookups(
   deps: PostViewDeps,
-  entries: readonly ChannelPostEntry[]
+  entries: readonly ChannelPostEntry[],
+  viewer: PostViewer
 ): Promise<Result<Lookups, DatabaseUnavailable>> {
   const channels = await deps.channels.findByIds(unique(entries.map(({ post }) => post.channelId)));
   if (isErr(channels)) return channels;
@@ -87,16 +95,33 @@ async function loadLookups(
   if (isErr(images)) return images;
   const shares = await loadShares(deps, entries);
   if (isErr(shares)) return shares;
+  const polls = await loadPollLookups(
+    deps.engagement,
+    entries.map(({ post }) => post),
+    viewer
+  );
+  if (isErr(polls)) return polls;
   return ok({
-    channels: new Map(channels.value.map((channel) => [channel.id, toChannelCard(channel)])),
+    channels: new Map(channels.value.map((channel) => [channel.id, channel])),
+    polls: polls.value,
     images: images.value,
     shares: shares.value,
   });
 }
 
-function bodyOf({ post }: ChannelPostEntry, lookups: Lookups, deps: PostShareDeps): PostBody {
+function bodyOf(
+  { post }: ChannelPostEntry,
+  lookups: Lookups,
+  deps: PostShareDeps,
+  viewer: PostViewer
+): PostBody {
   const { payload } = post;
   switch (payload.kind) {
+    case 'poll':
+    case 'quiz': {
+      const ownerId = lookups.channels.get(post.channelId)?.userId ?? '';
+      return pollBodyOf(post, payload, ownerId, lookups.polls, viewer);
+    }
     case 'text':
       return payload;
     case 'images':
@@ -138,10 +163,11 @@ function bodyOf({ post }: ChannelPostEntry, lookups: Lookups, deps: PostShareDep
  */
 export async function toPostViews(
   deps: PostViewDeps,
-  entries: readonly ChannelPostEntry[]
+  entries: readonly ChannelPostEntry[],
+  viewer: PostViewer
 ): Promise<Result<PostView[], DatabaseUnavailable>> {
   if (entries.length === 0) return ok([]);
-  const lookups = await loadLookups(deps, entries);
+  const lookups = await loadLookups(deps, entries, viewer);
   if (isErr(lookups)) return lookups;
 
   return ok(
@@ -152,9 +178,10 @@ export async function toPostViews(
       return [
         {
           id: post.id,
-          channel,
+          channel: toChannelCard(channel),
           kind: post.payload.kind,
-          body: bodyOf(entry, lookups.value, deps),
+          body: bodyOf(entry, lookups.value, deps, viewer),
+          pinned: post.pinnedAt !== null,
           commentsEnabled: post.commentsEnabled,
           likeCount: post.likeCount,
           commentsCount: post.commentsCount,
