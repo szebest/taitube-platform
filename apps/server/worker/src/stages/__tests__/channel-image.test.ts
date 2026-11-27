@@ -17,6 +17,7 @@ import {
   AVATAR_PROBE,
   BANNER_CROPS,
   BANNER_PROBE,
+  POST_IMAGE_PROBE,
   type ChannelImageJobArgs,
   channelImageJob,
   fakeMedia,
@@ -125,6 +126,24 @@ describe('channel image stage', () => {
       id,
       `${STAGE_SETTINGS.cdn}/${channelImageVariantKey(channelId, 'banner', 'desktop-1280', 1)}`
     );
+  });
+
+  it('cuts two post image widths, commits their urls and leaves the channel images alone', async () => {
+    probe = POST_IMAGE_PROBE;
+    const id = await queued('post-image');
+    const commit = vi.spyOn(repositories.channelImages, 'commit');
+
+    expectOk(await processor()(jobFor(id, 'post-image')));
+
+    const url = (name: string) =>
+      `${STAGE_SETTINGS.cdn}/${channelImageVariantKey(channelId, 'post-image', name, 1)}`;
+    const urls = { w640: url('640'), w1280: url('1280') };
+    expect((await publicKeys()).sort()).toEqual(
+      ['640', '1280'].map((name) => channelImageVariantKey(channelId, 'post-image', name, 1)).sort()
+    );
+    expect(commit).toHaveBeenCalledWith(id, urls.w1280, urls);
+    expect(await channel()).toMatchObject({ avatarVersion: 0, bannerVersion: 0 });
+    expect(await status(id)).toBe('ready');
   });
 
   it.each([

@@ -20,11 +20,24 @@ export type BannerCrops = Record<BannerTarget, CropRect>;
 
 export type ImageCrops =
   | { readonly kind: 'avatar'; readonly crop: CropRect }
-  | { readonly kind: 'banner'; readonly crops: BannerCrops };
+  | { readonly kind: 'banner'; readonly crops: BannerCrops }
+  | { readonly kind: 'post-image'; readonly crop: CropRect };
 
 export const AVATAR_SIZES = [48, 72, 128, 256] as const;
 
 export const BANNER_WIDTHS = [1280, 2560] as const;
+
+export const POST_IMAGE_WIDTHS = [640, 1280] as const;
+
+export interface PostImageUrls {
+  readonly w640: string;
+  readonly w1280: string;
+}
+
+export interface PostImageVariants {
+  readonly uploadId: string;
+  readonly urls: PostImageUrls;
+}
 
 export interface ChannelBannerLink {
   label: string;
@@ -37,7 +50,7 @@ export const HANDLE_RESERVATION_DAYS = 90;
 
 export const CONTACT_REVEALS_PER_DAY = 20;
 
-export type ChannelImageKind = 'avatar' | 'banner';
+export type ChannelImageKind = 'avatar' | 'banner' | 'post-image';
 
 export const IMAGE_UPLOAD_STATUSES = [
   'issued',
@@ -62,7 +75,7 @@ export const CHANNEL_IMAGE_UPLOAD_EDGES = {
   purge: { from: ['issued', 'failed', 'superseded', 'ready'], to: 'purged' },
 } as const satisfies Record<string, { from: readonly ImageUploadStatus[]; to: ImageUploadStatus }>;
 
-/** One file a creator uploaded for an avatar or banner, from the presigned URL to the version it became. */
+/** One file a creator uploaded for an avatar, banner or post image, from the presigned URL to the version it became. */
 export interface ChannelImageUpload {
   id: string;
   channelId: string;
@@ -75,6 +88,7 @@ export interface ChannelImageUpload {
   height: number | null;
   crops: ImageCrops | null;
   version: number | null;
+  variantUrls: PostImageUrls | null;
   failure: string | null;
   createdAt: Date;
   updatedAt: Date;

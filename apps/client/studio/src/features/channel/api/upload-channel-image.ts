@@ -31,7 +31,7 @@ export async function uploadChannelImage(
     body: {
       uploadId: prepared.uploadId,
       ...size,
-      ...(crops.kind === 'avatar' ? { crop: crops.crop } : { crops: crops.crops }),
+      ...(crops.kind === 'banner' ? { crops: crops.crops } : { crop: crops.crop }),
     },
     ...(signal && { signal }),
   });

@@ -1,4 +1,4 @@
-import { isErr, ok, type Result } from '@kit/result';
+import { assertNever, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
   ChannelImageCommit,
@@ -13,6 +13,8 @@ import {
   channelImageFailed,
   channelImageReady,
   type ChannelImageUpload,
+  type PostImageUrls,
+  type PostImageVariants,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -42,6 +44,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       height: null,
       crops: null,
       version: null,
+      variantUrls: null,
       failure: null,
       createdAt: now,
       updatedAt: now,
@@ -72,7 +75,8 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
 
   async commit(
     id: string,
-    defaultUrl: string
+    defaultUrl: string,
+    variantUrls?: PostImageUrls
   ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>> {
     const upload = this.uploads.get(id);
     if (!upload) return ok(null);
@@ -83,20 +87,39 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       return ok(null);
     }
 
-    const applied = this.deps.channels.advanceImageVersion(
-      upload.channelId,
-      upload.kind,
-      upload.version,
-      upload.crops,
-      defaultUrl
-    );
+    const applied =
+      upload.kind === 'post-image' ||
+      this.deps.channels.advanceImageVersion(
+        upload.channelId,
+        upload.kind,
+        upload.version,
+        upload.crops,
+        defaultUrl
+      );
     upload.status = applied ? 'ready' : 'superseded';
+    if (applied && variantUrls) upload.variantUrls = variantUrls;
     upload.updatedAt = new Date();
     if (applied) {
       const announced = await this.announceReady(upload, upload.version);
       if (isErr(announced)) return announced;
     }
     return ok({ upload: { ...upload }, applied });
+  }
+
+  async findReadyPostImages(
+    channelId: string,
+    uploadIds: readonly string[]
+  ): Promise<Result<PostImageVariants[], DatabaseUnavailable>> {
+    const found = uploadIds.flatMap((id) => {
+      const upload = this.uploads.get(id);
+      const ready =
+        upload?.channelId === channelId &&
+        upload.kind === 'post-image' &&
+        upload.status === 'ready' &&
+        upload.variantUrls;
+      return ready && upload ? [{ uploadId: upload.id, urls: ready }] : [];
+    });
+    return ok(found);
   }
 
   async fail(
@@ -155,9 +178,23 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
   ): Promise<Result<number, DatabaseUnavailable>> {
     const channel = await this.deps.channels.findById(upload.channelId);
     if (isErr(channel)) return channel;
-    const held =
-      upload.kind === 'avatar' ? channel.value?.avatarVersion : channel.value?.bannerVersion;
-    return ok(held ?? 0);
+    return ok(this.heldVersion(upload.kind, channel.value) ?? 0);
+  }
+
+  private heldVersion(
+    kind: ChannelImageUpload['kind'],
+    channel: { avatarVersion: number; bannerVersion: number } | null | undefined
+  ): number | undefined {
+    switch (kind) {
+      case 'avatar':
+        return channel?.avatarVersion;
+      case 'banner':
+        return channel?.bannerVersion;
+      case 'post-image':
+        return 0;
+      default:
+        return assertNever(kind, 'ChannelImageKind');
+    }
   }
 
   private async nextVersion(
@@ -186,15 +223,17 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     upload: ChannelImageUpload,
     version: number
   ): Promise<Result<unknown, DatabaseUnavailable>> {
-    const audited = await this.deps.audit.append({
-      channelId: upload.channelId,
-      actorUserId: upload.uploadedBy,
-      action: 'channel.updated',
-      targetType: 'channel',
-      targetId: upload.channelId,
-      meta: { fields: [upload.kind] },
-    });
-    if (isErr(audited)) return audited;
+    if (upload.kind !== 'post-image') {
+      const audited = await this.deps.audit.append({
+        channelId: upload.channelId,
+        actorUserId: upload.uploadedBy,
+        action: 'channel.updated',
+        targetType: 'channel',
+        targetId: upload.channelId,
+        meta: { fields: [upload.kind] },
+      });
+      if (isErr(audited)) return audited;
+    }
     return this.deps.userEvents.append({
       userId: upload.uploadedBy,
       ...channelImageReady({

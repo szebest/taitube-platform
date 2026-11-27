@@ -28,6 +28,21 @@ const BANNER_DONE: ChannelImageCompletion = {
   crops: { kind: 'banner', crops: BANNER_CROPS },
 };
 
+const POST_DONE: ChannelImageCompletion = {
+  width: 3000,
+  height: 2000,
+  crops: { kind: 'post-image', crop: { x: 0, y: 0, width: 3000, height: 2000 } },
+};
+const COMPLETIONS: Record<ChannelImageKind, ChannelImageCompletion> = {
+  avatar: AVATAR_DONE,
+  banner: BANNER_DONE,
+  'post-image': POST_DONE,
+};
+const POST_URLS = {
+  w640: 'https://cdn.example/c/post-image/v1/640.webp',
+  w1280: 'https://cdn.example/c/post-image/v1/1280.webp',
+};
+
 const DAY_MS = 86_400_000;
 const DEFAULT_URL = 'https://cdn.example/c/banner/v1/desktop-1280.webp';
 
@@ -51,7 +66,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
       );
     const queue = async (id: string, kind: ChannelImageKind = 'banner') => {
       await issue(id, kind);
-      return expectOk(await images.queue(id, kind === 'banner' ? BANNER_DONE : AVATAR_DONE));
+      return expectOk(await images.queue(id, COMPLETIONS[kind]));
     };
     const channel = async () => expectOk(await repositories.channels.findById(channelId));
     const eventTypes = async () =>
@@ -84,6 +99,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         kind: 'banner',
         status: 'issued',
         version: null,
+        variantUrls: null,
         crops: null,
         failure: null,
       });
@@ -180,6 +196,58 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         },
       ])('answers null for $scenario', async ({ prepare }) => {
         expect(expectOk(await images.commit(await prepare(), DEFAULT_URL))).toBeNull();
+      });
+    });
+
+    describe('post images', () => {
+      it('numbers them apart from the channel images and keeps every ready one beside the others', async () => {
+        await queue(FIRST, 'post-image');
+        await queue(SECOND, 'post-image');
+        await queue(THIRD, 'banner');
+
+        const first = expectOk(await images.commit(FIRST, POST_URLS.w1280, POST_URLS));
+        const second = expectOk(await images.commit(SECOND, POST_URLS.w1280, POST_URLS));
+
+        expect(first).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
+        expect(second).toMatchObject({ applied: true, upload: { status: 'ready', version: 2 } });
+        expect(expectOk(await images.findById(THIRD))?.version).toBe(1);
+        expect(await channel()).toMatchObject({
+          avatarVersion: 0,
+          bannerVersion: 0,
+          bannerCrops: null,
+          avatarUrl: null,
+          bannerUrl: null,
+        });
+        expect(await auditActions()).toEqual([]);
+        expect(await eventTypes()).toEqual(['channel.image.ready', 'channel.image.ready']);
+      });
+
+      it('is never purgeable while ready', async () => {
+        await queue(FIRST, 'post-image');
+        expectOk(await images.commit(FIRST, POST_URLS.w1280, POST_URLS));
+
+        expect(expectOk(await images.listPurgeable(new Date(Date.now() + DAY_MS), 10))).toEqual([]);
+      });
+
+      it('finds the ready post images of the channel among the ids and nothing else', async () => {
+        await queue(FIRST, 'post-image');
+        await queue(SECOND, 'post-image');
+        await queue(THIRD, 'avatar');
+        expectOk(await images.commit(FIRST, POST_URLS.w1280, POST_URLS));
+        expectOk(await images.commit(THIRD, DEFAULT_URL));
+        const missing = '00000000-0000-7000-8000-0000000004f0';
+
+        const found = expectOk(
+          await images.findReadyPostImages(channelId, [FIRST, SECOND, THIRD, missing])
+        );
+
+        expect(found).toEqual([{ uploadId: FIRST, urls: POST_URLS }]);
+        expect(expectOk(await images.findReadyPostImages(channelId, []))).toEqual([]);
+        expect(
+          expectOk(
+            await images.findReadyPostImages('00000000-0000-7000-8000-0000000004e0', [FIRST])
+          )
+        ).toEqual([]);
       });
     });
 

@@ -1,4 +1,4 @@
-import { type Result, all, andThen, map } from '@kit/result';
+import { type Result, all, andThen, assertNever, map, ok } from '@kit/result';
 import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type ImageCrops } from '@vp/domain';
 import {
   type ChannelImageKind,
@@ -14,16 +14,26 @@ export type DecideImageCropsFailure = ImageTooSmall | InvalidCropRect;
 type CropsOf<K extends ChannelImageKind> = Extract<ImageCrops, { kind: K }>;
 
 /**
- * An avatar is cropped square, a banner once per target to that target's shape; every crop lies
- * inside the image the worker will read, so the job never meets a rectangle it cannot cut.
+ * An avatar is cropped square, a banner once per target to that target's shape, a post image not
+ * at all: its crop is the whole image. Every crop lies inside the image the worker will read, so
+ * the job never meets a rectangle it cannot cut.
  */
 export function decideImageCrops(
   crops: ImageCrops,
   image: ImageDimensions
 ): Result<ImageCrops, DecideImageCropsFailure> {
-  return andThen(validateChannelImageDimensions(crops.kind, image), () =>
-    crops.kind === 'avatar' ? avatarCrop(crops, image) : bannerCrops(crops, image)
-  );
+  return andThen(validateChannelImageDimensions(crops.kind, image), () => {
+    switch (crops.kind) {
+      case 'avatar':
+        return avatarCrop(crops, image);
+      case 'banner':
+        return bannerCrops(crops, image);
+      case 'post-image':
+        return ok({ kind: 'post-image' as const, crop: { x: 0, y: 0, ...image } });
+      default:
+        return assertNever(crops, 'ImageCrops.kind');
+    }
+  });
 }
 
 function avatarCrop(
