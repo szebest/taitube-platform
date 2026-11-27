@@ -6,12 +6,25 @@ import {
   validateChannelImageUploadRequest,
 } from '@vp/validation';
 import { useState } from 'react';
-import { usePlaylistCoverUpload } from '#app/features/library/hooks/use-playlist-cover-upload';
+import {
+  type CoverUploadStatus,
+  usePlaylistCoverUpload,
+} from '#app/features/library/hooks/use-playlist-cover-upload';
 import { useT } from '#app/lib/messages';
 
 const KIND = 'playlist-cover';
 
 const IMAGE_ACCEPT = Object.fromEntries(CHANNEL_IMAGE_CONTENT_TYPES.map((type) => [type, []]));
+
+const NOTICE = {
+  idle: null,
+  working: { role: 'status', key: 'playlistTools.coverUploading', tone: 'text-fg-muted' },
+  ready: null,
+  failed: { role: 'alert', key: 'playlistTools.coverUploadFailed', tone: 'text-danger-ink' },
+} as const satisfies Record<
+  CoverUploadStatus,
+  { role: 'status' | 'alert'; key: string; tone: string } | null
+>;
 
 const validateCoverFile = validateWith(([file]: File[]) =>
   file
@@ -33,6 +46,7 @@ export function CoverUpload({ playlistId }: CoverUploadProps) {
   const upload = usePlaylistCoverUpload(playlistId);
   const [refusal, setRefusal] = useState<string>();
   const form = useAppForm({ defaultValues: { file: [] as File[] } });
+  const notice = NOTICE[upload.status];
 
   const choose = async (file: File | undefined) => {
     setRefusal(undefined);
@@ -71,15 +85,16 @@ export function CoverUpload({ playlistId }: CoverUploadProps) {
         )}
       </form.AppField>
       <p className="m-0 text-caption text-fg-muted">{tOr('playlistTools.coverHint', {}, '')}</p>
-      {upload.status === 'working' && (
-        <p role="status" className="m-0 text-caption text-fg-muted">
-          {tOr('playlistTools.coverUploading', {}, '')}
-        </p>
-      )}
-      {(refusal !== undefined || upload.status === 'failed') && (
+      {refusal !== undefined ? (
         <p role="alert" className="m-0 text-caption text-danger-ink">
-          {refusal ?? tOr('playlistTools.coverUploadFailed', {}, '')}
+          {refusal}
         </p>
+      ) : (
+        notice && (
+          <p role={notice.role} className={`m-0 text-caption ${notice.tone}`}>
+            {tOr(notice.key, {}, '')}
+          </p>
+        )
       )}
     </div>
   );
