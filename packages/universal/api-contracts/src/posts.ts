@@ -7,7 +7,7 @@ import { KeysetQuerySchema } from './pagination';
 
 const TAG = 'Posts';
 
-export const PostIdParamSchema = z.object({
+const PostIdParamSchema = z.object({
   id: z.uuid({ error: 'Invalid post ID format' }),
 });
 
@@ -16,7 +16,7 @@ const PostImageInputSchema = z.object({
   alt: z.string().describe('Alt text, 1-200 characters after trimming'),
 });
 
-export const PostPayloadSchema = z
+const PostPayloadSchema = z
   .discriminatedUnion('kind', [
     z.object({
       kind: z.literal('text'),
@@ -97,7 +97,7 @@ const PostBodySchema = z
   ])
   .meta({ id: 'PostBody', description: 'The post ready to render, by kind' });
 
-export const PostSchema = z
+const PostSchema = z
   .object({
     id: z.uuid(),
     channel: ChannelCardSchema.describe(

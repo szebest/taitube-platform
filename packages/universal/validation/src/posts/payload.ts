@@ -13,7 +13,7 @@ const ALT_BOUNDS: LengthBounds = { minLength: 1, maxLength: 200 };
 const COMMENT_BOUNDS: LengthBounds = { minLength: 0, maxLength: 500 };
 const IMAGE_COUNT = { minItems: 1, maxItems: 4 } as const;
 
-export interface PostImageInput {
+interface PostImageInput {
   readonly uploadId: string;
   readonly alt: string;
 }

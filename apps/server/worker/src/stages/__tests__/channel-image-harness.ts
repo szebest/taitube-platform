@@ -16,7 +16,7 @@ import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createChannelImageProcessor } from '../channel-image';
 
-export const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
+const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
 export const IMMUTABLE = 'public, max-age=31536000, immutable';
 const AVATAR_CROP: CropRect = { x: 0, y: 0, width: 400, height: 400 };
 const POST_IMAGE_CROP: CropRect = { x: 0, y: 0, width: 3000, height: 2000 };
@@ -25,7 +25,7 @@ export const BANNER_CROPS: BannerCrops = {
   mobile: { x: 0, y: 0, width: 1500, height: 500 },
   tv: { x: 0, y: 0, width: 1600, height: 900 },
 };
-export const AVATAR_PROBE: ChannelImageProbe = { format: 'png', width: 800, height: 800 };
+const AVATAR_PROBE: ChannelImageProbe = { format: 'png', width: 800, height: 800 };
 export const BANNER_PROBE: ChannelImageProbe = { format: 'jpeg', width: 2560, height: 1440 };
 
 export const POST_IMAGE_PROBE: ChannelImageProbe = { format: 'jpeg', width: 3000, height: 2000 };
@@ -43,10 +43,7 @@ function completionFor(kind: ChannelImageKind): ChannelImageCompletion {
   }
 }
 
-export function fakeMedia(
-  probed: () => ChannelImageProbe | Error,
-  onRender: () => void
-): MediaTools {
+function fakeMedia(probed: () => ChannelImageProbe | Error, onRender: () => void): MediaTools {
   return {
     ...STAGE_SETTINGS.media,
     probeChannelImage: async () => {
@@ -73,7 +70,7 @@ export type ChannelImageJobArgs = [
   overrides?: Partial<QueueJob<ChannelImageJob>>,
 ];
 
-export const channelImageJob = (
+const channelImageJob = (
   channelId: string,
   ...[uploadId, kind = 'avatar', overrides = {}]: ChannelImageJobArgs
 ) =>
@@ -89,7 +86,7 @@ interface UploadContext {
   channelId: string;
 }
 
-export async function queueUpload(
+async function queueUpload(
   { repositories, storage, channelId }: UploadContext,
   kind: ChannelImageKind,
   { raw = true } = {}

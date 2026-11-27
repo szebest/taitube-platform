@@ -19,7 +19,7 @@ const INVITES: Record<string, string> = {
   [MODERATOR]: '00000000-0000-7000-8000-0000000012e2',
 };
 
-export const AS = {
+const AS = {
   owner: bearer(mintToken({ sub: OWNER, role: 'USER', ttl: '1h' })),
   editor: bearer(mintToken({ sub: EDITOR, role: 'USER', ttl: '1h' })),
   moderator: bearer(mintToken({ sub: MODERATOR, role: 'USER', ttl: '1h' })),
@@ -28,7 +28,7 @@ export const AS = {
   anonymous: {},
 };
 
-export type Who = keyof typeof AS;
+type Who = keyof typeof AS;
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export interface PostsApp extends TestApp {

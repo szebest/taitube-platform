@@ -66,7 +66,7 @@ export interface CommentVideoSummary {
 export const POST_TARGET_TITLE_LENGTH = 80;
 
 /** The target an inbox row sits under, with the title the row shows. */
-export interface CommentTargetSummary {
+interface CommentTargetSummary {
   type: CommentTarget['type'];
   id: string;
   title: string;

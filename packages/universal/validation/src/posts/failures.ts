@@ -6,7 +6,7 @@ export interface ItemBounds {
   readonly maxItems: number;
 }
 
-export interface MinimumValue {
+interface MinimumValue {
   readonly min: number;
 }
 

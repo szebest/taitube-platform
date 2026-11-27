@@ -26,6 +26,7 @@ export interface CommentLookupDeps {
 type HostLookups = Omit<CommentLookupDeps, 'comments'>;
 
 /** The target loaded as a host, or null once it is gone; no read rule applies yet. */
+/** @internal */
 export async function findHost(
   deps: HostLookups,
   target: CommentTarget

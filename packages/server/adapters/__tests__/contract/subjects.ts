@@ -29,7 +29,7 @@ export interface RepositoriesSubject {
   close(): Promise<void>;
 }
 
-export type PostPlacement = Partial<{ pinnedAt: Date; publishedAt: Date }>;
+type PostPlacement = Partial<{ pinnedAt: Date; publishedAt: Date }>;
 
 interface MicrosecondSpread {
   stamp: AnyPgColumn;

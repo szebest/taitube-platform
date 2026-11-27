@@ -50,6 +50,7 @@ export async function loadShareSource(
   }
 }
 
+/** @internal */
 export function sharedTargetOf(source: ShareSource | null): SharedTarget | null {
   if (!source) return null;
   switch (source.type) {

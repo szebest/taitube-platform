@@ -16,6 +16,7 @@ export function canManagePost({
   return getUserPermissions(user).can(action, subject('Post', { ...post }));
 }
 
+/** @internal */
 export function canReadPostStats({
   user,
   post,

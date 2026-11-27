@@ -17,13 +17,9 @@ export const POST_LIFECYCLE_EDGES = {
   publish: { from: ['draft', 'scheduled'], to: 'published' },
 } as const satisfies Record<string, { from: readonly PostStatus[]; to: PostStatus }>;
 
-export const POST_TEXT_MAX = 2000;
-export const POST_IMAGES_MAX = 4;
-export const POST_IMAGE_ALT_MAX = 200;
-export const POST_SHARE_COMMENT_MAX = 500;
 export const POSTS_PER_DAY = 20;
 
-export interface PostImage {
+interface PostImage {
   /** A ready `post-image` upload of the post's channel. */
   uploadId: string;
   alt: string;
