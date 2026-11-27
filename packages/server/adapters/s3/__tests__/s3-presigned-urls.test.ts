@@ -29,6 +29,8 @@ describe('S3StorageClient presigned urls', () => {
 
     expect(presigned.url).toContain(`http://localhost:9000/${BUCKET}/`);
     expect(presigned.url).toContain('X-Amz-Signature');
+    expect(presigned.url.toLowerCase()).not.toContain('x-amz-checksum');
+    expect(presigned.url.toLowerCase()).not.toContain('x-amz-sdk-checksum-algorithm');
     expect(presigned.url).toContain('X-Amz-Expires=900');
     expect(presigned.headers['content-type']).toBe('video/mp4');
     expect(presigned.headers['content-length']).toBe('1048576');

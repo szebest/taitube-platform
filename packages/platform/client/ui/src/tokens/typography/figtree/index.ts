@@ -2,9 +2,15 @@ import { defineTokenSet } from '@kit/design-tokens';
 
 export const typographyFigtree = defineTokenSet('typography', 'figtree', {
   font: {
-    sans: ['Figtree Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-    editorial: ['Newsreader Variable', 'ui-serif', 'Georgia', 'serif'],
-    mono: ['Geist Mono Variable', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+    sans: ['Figtree Variable', 'Figtree Fallback', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    editorial: ['Newsreader Variable', 'Newsreader Fallback', 'ui-serif', 'Georgia', 'serif'],
+    mono: [
+      'Geist Mono Variable',
+      'Geist Mono Fallback',
+      'ui-monospace',
+      'SFMono-Regular',
+      'monospace',
+    ],
   },
   weight: {
     display: 800,
