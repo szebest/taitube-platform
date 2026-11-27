@@ -47,6 +47,11 @@ export class InMemoryShareLinkRepository extends ShareLinkRepository {
     return ok(found ? { ...found } : null);
   }
 
+  async findById(id: string): Promise<Result<ShareLink | null, DatabaseUnavailable>> {
+    const found = this.links.get(id);
+    return ok(found ? { ...found } : null);
+  }
+
   async revoke(
     targetType: ShareLinkTargetType,
     targetId: string,
