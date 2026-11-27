@@ -3,6 +3,7 @@ import type { FormatFailure } from './failures';
 import type { IntlCache } from './intl-cache';
 
 export interface DurationParts {
+  readonly days?: number;
   readonly hours: number;
   readonly minutes: number;
   readonly seconds: number;
@@ -21,6 +22,7 @@ export interface DurationFormatLike {
 type WordStyle = Exclude<DurationFormatOptions['style'], 'digital'>;
 
 const FIELDS = [
+  { field: 'days', unit: 'day' },
   { field: 'hours', unit: 'hour' },
   { field: 'minutes', unit: 'minute' },
   { field: 'seconds', unit: 'second' },
@@ -48,21 +50,28 @@ function digital(
 ): Result<DurationFormatLike, FormatFailure> {
   return andThen(timeSeparator(locale, cache), (separator) =>
     andThen(cache.numberFormat(locale, { useGrouping: false }), (hours) =>
-      map(
+      andThen(
         cache.numberFormat(locale, { minimumIntegerDigits: 2, useGrouping: false }),
-        (padded) => ({
-          format: (duration: DurationParts) => {
-            const minutesAndSeconds = [
-              padded.format(duration.minutes),
-              padded.format(duration.seconds),
-            ];
-            const showHours = hoursDisplay !== 'auto' || duration.hours > 0;
-            const shown = showHours
-              ? [hours.format(duration.hours), ...minutesAndSeconds]
-              : minutesAndSeconds;
-            return shown.join(separator);
-          },
-        })
+        (padded) =>
+          andThen(
+            cache.numberFormat(locale, { style: 'unit', unit: 'day', unitDisplay: 'short' }),
+            (days) =>
+              map(cache.listFormat(locale, { type: 'unit', style: 'short' }), (list) => ({
+                format: (duration: DurationParts) => {
+                  const minutesAndSeconds = [
+                    padded.format(duration.minutes),
+                    padded.format(duration.seconds),
+                  ];
+                  const showHours = hoursDisplay !== 'auto' || duration.hours > 0;
+                  const clock = (
+                    showHours
+                      ? [hours.format(duration.hours), ...minutesAndSeconds]
+                      : minutesAndSeconds
+                  ).join(separator);
+                  return duration.days ? list.format([days.format(duration.days), clock]) : clock;
+                },
+              }))
+          )
       )
     )
   );
@@ -87,9 +96,9 @@ function words(
       format: (duration: DurationParts) => {
         const shown = formats.filter(
           ({ field }) =>
-            duration[field] !== 0 || (field === 'seconds' && secondsDisplay === 'always')
+            (duration[field] ?? 0) !== 0 || (field === 'seconds' && secondsDisplay === 'always')
         );
-        return list.format(shown.map(({ field, format }) => format.format(duration[field])));
+        return list.format(shown.map(({ field, format }) => format.format(duration[field] ?? 0)));
       },
     }))
   );

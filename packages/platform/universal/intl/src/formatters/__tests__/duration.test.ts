@@ -65,6 +65,9 @@ describe('@kit/intl: duration', () => {
     { value: 3753, options: { style: 'words', maxUnits: 1 }, expected: '1 hr' },
     { value: 600, options: { style: 'words', maxUnits: 1 }, expected: '10 min' },
     { value: 765, options: { hoursDisplay: 'always' }, expected: '0:12:45' },
+    { value: 93_600, options: { style: 'words', days: true }, expected: '1 day, 2 hr' },
+    { value: 93_600, options: { style: 'words' }, expected: '26 hr' },
+    { value: 93_600, options: { style: 'words', days: true, maxUnits: 1 }, expected: '1 day' },
     { value: 765, options: { maxUnits: 0, style: 'words' }, expected: 'FORMAT_UNRENDERABLE' },
   ] as const)('takes $options for $value', ({ value, options, expected }) => {
     expect(formatText({ type: 'duration', value, options })).toBe(expected);

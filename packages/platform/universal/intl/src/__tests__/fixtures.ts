@@ -1,7 +1,19 @@
 import type { FormatContext } from '../context';
 import { createIntl } from '../create-intl';
 import type { FormatValue } from '../format-value';
-import { createIntlCache } from '../intl-cache';
+import { type IntlEnvironment, createIntlCache } from '../intl-cache';
+
+export const WITHOUT_DURATION_FORMAT: IntlEnvironment = {
+  NumberFormat: Intl.NumberFormat,
+  DateTimeFormat: Intl.DateTimeFormat,
+  RelativeTimeFormat: Intl.RelativeTimeFormat,
+  PluralRules: Intl.PluralRules,
+  ListFormat: Intl.ListFormat,
+  DisplayNames: Intl.DisplayNames,
+  Collator: Intl.Collator,
+  Segmenter: Intl.Segmenter,
+  supportedValuesOf: Intl.supportedValuesOf,
+};
 
 export const NOW = '2026-09-22T18:30:00.000Z';
 

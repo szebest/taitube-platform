@@ -61,6 +61,44 @@ spec pins ordering, grouping and digits, and uses a pattern where engines disagr
 abbreviation. The suites run under node and again under jsdom (`vitest.jsdom.config.ts`), and under
 `bun test`.
 
+`duration-fallback.test.ts` runs the fallback against the engine's own `Intl.DurationFormat` over 17 locales, 6 option
+sets and 6 durations (days included) and asserts equal strings, so a drift in the fallback fails on the engine that
+has the constructor. It skips where the constructor is absent; a second test builds a cache from an
+`IntlEnvironment` without `DurationFormat`, which exercises the fallback on every runtime.
+
+### Runtime matrix
+
+`Intl.DurationFormat` is native on:
+
+| Runtime | Native | Source |
+|---|---|---|
+| Node 24.10 (ICU 77.1), and jsdom on it | yes | run: conformance table green |
+| Bun 1.4.2 | yes | run: conformance table green under `bun test` |
+| Chrome and Edge 129+, Safari 18.4+, Firefox 136+ | yes | MDN, documented, not run |
+
+### Known engine differences
+
+The fallback is built from the same engine's `NumberFormat`, `ListFormat` and `DateTimeFormat`, so within one
+runtime native and fallback agree on every case in the table (612 of 612 on Node and on Bun). Engines differ from each
+other, which is why no spec pins a literal outside a locale's own rules and why `duration.test.ts` asserts the
+same text with and without the native constructor, never a string copied from one engine. Observed Node 24.10 against
+Bun 1.4.2 (116 of the 612 cases differ):
+
+| Locale, style, duration | Node 24.10 | Bun 1.4.2 |
+|---|---|---|
+| `de` `long`, 1 d 2 h | `1 Tag, 2 Stunden` | `1 Tag und 2 Stunden` |
+| `de` `narrow`, 5 min | `5 Min.` | `5min` |
+| `pl` `narrow`, 2 h 1 min 1 s | `2 h, 1 min i 1 s` | `2h 1min 1s` |
+| `hi` `long`, 2 h 1 min 1 s | `2 घंटे, 1 मिनट, और 1 सेकंड` | `2 घंटे, 1 मिनट और 1 सेकंड` |
+| `pt-BR` `short`, 1 s | `1 s` | `1 seg` |
+| `ru` `digital`, 1 d 2 h | `1 дн. 2:00:00` | `1 дн 2:00:00` |
+| `ja` `digital`, 1 d 2 h | `1 日 2:00:00` | `1日 2:00:00` |
+| `he` `digital`, 1 d 2 h | `1 יום, 2:00:00` | `1 יום ו-2:00:00` |
+| `ar` `digital`, 1 d 2 h | `يوم و2:00:00` | `يوم 2:00:00` |
+
+Bun's `ListFormat` also places bidi isolates around Latin items in `ar`; V8's does not. A spec that must hold on both
+matches the digits and the order, not the separators.
+
 ```bash
 pnpm --filter @kit/intl typecheck
 pnpm --filter @kit/intl test

@@ -1,16 +1,5 @@
-import { type IntlEnvironment, createIntlCache } from '../intl-cache';
-
-const WITHOUT_DURATION_FORMAT: IntlEnvironment = {
-  NumberFormat: Intl.NumberFormat,
-  DateTimeFormat: Intl.DateTimeFormat,
-  RelativeTimeFormat: Intl.RelativeTimeFormat,
-  PluralRules: Intl.PluralRules,
-  ListFormat: Intl.ListFormat,
-  DisplayNames: Intl.DisplayNames,
-  Collator: Intl.Collator,
-  Segmenter: Intl.Segmenter,
-  supportedValuesOf: Intl.supportedValuesOf,
-};
+import { createIntlCache } from '../intl-cache';
+import { WITHOUT_DURATION_FORMAT } from './fixtures';
 
 describe('@kit/intl: the Intl cache', () => {
   afterEach(() => {
