@@ -9,7 +9,8 @@ import { useT } from '#app/lib/messages';
 
 export type PollBody = Extract<PostView['body'], { kind: 'poll' | 'quiz' }>;
 
-const SETTLED = new Set<string>([ErrorCodes.POST_ALREADY_VOTED, ErrorCodes.POST_POLL_CLOSED]);
+const isSettled = (code: string) =>
+  code === ErrorCodes.POST_ALREADY_VOTED || code === ErrorCodes.POST_POLL_CLOSED;
 
 const percentOf = (votes: number | null, total: number | null) =>
   votes !== null && total ? (votes / total) * 100 : 0;
@@ -30,7 +31,7 @@ export function PostPoll({ post, body }: { post: PostView; body: PollBody }) {
         { postId: post.id, optionIndex },
         {
           onError: (error) =>
-            !SETTLED.has(failureCode(error)) && showFailure(tOr('posts.voteFailed', {}, ''), error),
+            !isSettled(failureCode(error)) && showFailure(tOr('posts.voteFailed', {}, ''), error),
         }
       )
     );

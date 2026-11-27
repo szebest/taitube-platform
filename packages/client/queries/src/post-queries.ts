@@ -18,6 +18,7 @@ import { useAccount, useActingChannelId } from './session-provider';
 
 const GUEST_KEY = 'guest';
 
+/** @internal */
 export const postKeys = {
   all: ['posts'] as const,
   lists: () => [...postKeys.all, 'list'] as const,
@@ -136,7 +137,8 @@ interface PostVote {
   optionIndex: number;
 }
 
-const SETTLED_POLL = new Set<string>([ErrorCodes.POST_ALREADY_VOTED, ErrorCodes.POST_POLL_CLOSED]);
+const isSettledPoll = (code: string) =>
+  code === ErrorCodes.POST_ALREADY_VOTED || code === ErrorCodes.POST_POLL_CLOSED;
 
 function votePostMutationOptions(api: ApiClient) {
   return mutationOptions({
@@ -145,7 +147,7 @@ function votePostMutationOptions(api: ApiClient) {
     onSuccess: (voted, _variables, _snapshot, { client }) =>
       writePost(client, voted.id, () => voted),
     onError: (error, _variables, _snapshot, { client }) =>
-      SETTLED_POLL.has(failureCode(error)) && client.invalidateQueries({ queryKey: postKeys.all }),
+      isSettledPoll(failureCode(error)) && client.invalidateQueries({ queryKey: postKeys.all }),
   });
 }
 

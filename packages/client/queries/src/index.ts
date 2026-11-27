@@ -39,6 +39,7 @@ export * from './session-middleware';
 export * from './session-provider';
 export * from './session-sync';
 export * from './sign-in-button';
+export * from './thread-queries';
 export * from './use-failure-toast';
 export { useLiveChat } from './use-live-chat';
 export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';

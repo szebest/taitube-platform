@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/queries/intl';
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { WEB_MESSAGES } from '#app/lib/messages';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
@@ -53,12 +53,14 @@ export function renderBar({
   live = false,
   range,
   chapters,
+  markers,
   title,
 }: Partial<Playhead> & {
   channel?: boolean;
   live?: boolean;
   range?: PlaybackRange;
   chapters?: readonly PlayerChapter[];
+  markers?: ReactNode;
   title?: string;
 } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
@@ -78,7 +80,13 @@ export function renderBar({
           posterUrl="http://localhost:9000/posters/p.jpg"
           title="Launch day"
         >
-          <ControlBar title={title} live={live} range={range} chapters={chapters} />
+          <ControlBar
+            title={title}
+            live={live}
+            range={range}
+            chapters={chapters}
+            markers={markers}
+          />
         </VideoJsEngine>
         <TheaterProbe />
       </Channel>

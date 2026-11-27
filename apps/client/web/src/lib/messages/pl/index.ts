@@ -21,6 +21,7 @@ import { shell } from './shell';
 import { shorts } from './shorts';
 import { signInPrompt } from './sign-in-prompt';
 import { themeBuilder } from './theme-builder';
+import { threads } from './threads';
 import { watch } from './watch';
 
 export const pl = defineCatalogue<typeof en>()({
@@ -45,5 +46,6 @@ export const pl = defineCatalogue<typeof en>()({
   shorts,
   signInPrompt,
   themeBuilder,
+  threads,
   watch,
 });

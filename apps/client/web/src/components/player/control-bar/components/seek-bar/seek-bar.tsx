@@ -1,7 +1,7 @@
 import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { videoDuration } from '@vp/intl-formats';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   chapterAt,
   chapterMarkers,
@@ -19,12 +19,14 @@ export interface SeekBarProps {
   range?: PlaybackRange;
   /** Each one after the first is marked where it starts, and the chapter the playhead is in is spoken with the time. */
   chapters?: readonly PlayerChapter[];
+  /** Laid over the track, positioned by the layer itself, such as the thread markers. */
+  markers?: ReactNode;
 }
 
 const percentOf = (part: number, whole: number) =>
   `${whole > 0 ? Math.min((part / whole) * 100, 100) : 0}%`;
 
-export function SeekBar({ range, chapters = [] }: SeekBarProps) {
+export function SeekBar({ range, chapters = [], markers }: SeekBarProps) {
   const videoCurrentTime = usePlayerState((state) => state.currentTime);
   const videoDurationSeconds = usePlayerState((state) => state.duration);
   const bufferedEnd = usePlayerState((state) => state.bufferedEnd);
@@ -43,7 +45,7 @@ export function SeekBar({ range, chapters = [] }: SeekBarProps) {
 
   const time = unwrapOr(format(videoDuration(currentTime)), '');
   const chapter = chapterAt(chapters, videoCurrentTime);
-  const markers = chapterMarkers(chapters, range, videoDurationSeconds);
+  const marks = chapterMarkers(chapters, range, videoDurationSeconds);
 
   return (
     <div className="relative">
@@ -69,7 +71,7 @@ export function SeekBar({ range, chapters = [] }: SeekBarProps) {
         className="media-seek block w-full cursor-pointer"
       />
       <span aria-hidden="true" className="pointer-events-none absolute inset-0">
-        {markers.map(({ startMs, percent }) => (
+        {marks.map(({ startMs, percent }) => (
           <span
             key={startMs}
             data-slot="chapter-marker"
@@ -78,6 +80,7 @@ export function SeekBar({ range, chapters = [] }: SeekBarProps) {
           />
         ))}
       </span>
+      {markers}
     </div>
   );
 }

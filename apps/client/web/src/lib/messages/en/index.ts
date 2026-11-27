@@ -19,6 +19,7 @@ import { shell } from './shell';
 import { shorts } from './shorts';
 import { signInPrompt } from './sign-in-prompt';
 import { themeBuilder } from './theme-builder';
+import { threads } from './threads';
 import { watch } from './watch';
 
 /** The words only the web app renders. */
@@ -44,5 +45,6 @@ export const en = {
   shorts,
   signInPrompt,
   themeBuilder,
+  threads,
   watch,
 } as const;
