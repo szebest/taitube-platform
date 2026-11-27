@@ -6,7 +6,12 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQLWrapper, and, asc, between, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
-const { playlistStatsDaily: daily, playlistPlaysDaily: plays, videos: v } = schema;
+const {
+  playlistStatsDaily: daily,
+  playlistPlaysDaily: plays,
+  playlistItems: items,
+  videos: v,
+} = schema;
 
 const total = (column: SQLWrapper) => sql<number>`coalesce(sum(${column}), 0)`.mapWith(Number);
 
@@ -31,6 +36,10 @@ export class PostgresPlaylistStatsRepository implements PlaylistStatsRepositoryP
       const topItems = await this.db
         .select({ videoId: plays.videoId, title: v.title, plays: played })
         .from(plays)
+        .innerJoin(
+          items,
+          and(eq(items.playlistId, plays.playlistId), eq(items.videoId, plays.videoId))
+        )
         .innerJoin(v, eq(v.id, plays.videoId))
         .where(and(eq(plays.playlistId, playlistId), between(plays.day, from, to)))
         .groupBy(plays.videoId, v.title)

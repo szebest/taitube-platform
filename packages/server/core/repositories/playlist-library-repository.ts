@@ -5,6 +5,9 @@ import type { UserContext } from '@vp/permissions';
 
 export type FollowOutcome = 'followed' | 'present' | 'playlist-missing';
 
+/** `full` when the owner holds `PLAYLIST_PIN_LIMIT` pins already; repinning a pinned one is `pinned`. */
+export type PinOutcome = 'pinned' | 'full' | 'missing';
+
 /** A followed playlist as the follower may read it now; `playlist` is null once they cannot. */
 export interface FollowedPlaylist {
   playlistId: string;
@@ -38,9 +41,14 @@ export interface PlaylistCopy {
  * copy is written with its items in one transaction, so a half-made playlist is never seen.
  */
 export interface PlaylistLibraryRepositoryPort {
-  countPinned(ownerId: string): Promise<Result<number, DatabaseUnavailable>>;
-  /** Pins at `at`, or unpins with null; false when the playlist is gone. */
-  setPinned(playlistId: string, at: Date | null): Promise<Result<boolean, DatabaseUnavailable>>;
+  /** Counts the owner's pins and pins under one lock on the owner, so parallel pins never pass the limit. */
+  pin(
+    ownerId: string,
+    playlistId: string,
+    at: Date
+  ): Promise<Result<PinOutcome, DatabaseUnavailable>>;
+  /** False when the playlist is gone. */
+  unpin(playlistId: string): Promise<Result<boolean, DatabaseUnavailable>>;
   follow(userId: string, playlistId: string): Promise<Result<FollowOutcome, DatabaseUnavailable>>;
   unfollow(userId: string, playlistId: string): Promise<Result<boolean, DatabaseUnavailable>>;
   /** Newest follow first, up to `limit + 1`, each read through the viewer's read scope. */

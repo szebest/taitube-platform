@@ -1,14 +1,19 @@
 import * as schema from '@vp/db';
 import { type PlaylistCount, mergePlaylistCounts } from '@vp/domain';
-import { inArray, sql } from 'drizzle-orm';
+import { and, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
-const { playlists: p, videos: v, playlistStatsDaily: daily, playlistPlaysDaily: plays } = schema;
+const {
+  playlists: p,
+  playlistItems: items,
+  playlistStatsDaily: daily,
+  playlistPlaysDaily: plays,
+} = schema;
 
 /**
  * Adds a batch's playlist counts: every count to its playlist's day, a play to its video's day in the
- * playlist too. A playlist or video deleted since the beacon is left out, as the view counts leave
- * out a deleted video.
+ * playlist too. A playlist deleted since the beacon is left out, as the view counts leave out a
+ * deleted video, and so is a play of a video the playlist does not hold: the beacon is unauthenticated.
  */
 export async function applyPlaylistStats(
   tx: PostgresDatabase,
@@ -21,12 +26,17 @@ export async function applyPlaylistStats(
   const knownPlaylists = new Set(
     (await tx.select({ id: p.id }).from(p).where(inArray(p.id, playlistIds))).map(({ id }) => id)
   );
-  const kept = merged.filter(({ playlistId }) => knownPlaylists.has(playlistId));
-  const videoIds = [...new Set(kept.flatMap(({ videoId }) => (videoId ? [videoId] : [])))];
-  const knownVideos = new Set(
-    videoIds.length === 0
-      ? []
-      : (await tx.select({ id: v.id }).from(v).where(inArray(v.id, videoIds))).map(({ id }) => id)
+  const held = new Set(
+    (
+      await tx
+        .select({ playlistId: items.playlistId, videoId: items.videoId })
+        .from(items)
+        .where(and(inArray(items.playlistId, playlistIds), isNotNull(items.videoId)))
+    ).map(({ playlistId, videoId }) => `${playlistId}:${videoId}`)
+  );
+  const kept = merged.filter(
+    ({ playlistId, videoId }) =>
+      knownPlaylists.has(playlistId) && (videoId === null || held.has(`${playlistId}:${videoId}`))
   );
 
   const days = mergePlaylistCounts(kept.map((count) => ({ ...count, videoId: null })));
@@ -46,9 +56,7 @@ export async function applyPlaylistStats(
   }
 
   const videoDays = kept.flatMap(({ playlistId, videoId, viewDate, plays: started }) =>
-    videoId && knownVideos.has(videoId) && started > 0
-      ? [{ playlistId, videoId, day: viewDate, plays: started }]
-      : []
+    videoId && started > 0 ? [{ playlistId, videoId, day: viewDate, plays: started }] : []
   );
   if (videoDays.length > 0) {
     await tx

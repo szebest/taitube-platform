@@ -4,6 +4,7 @@ import type {
   FollowedPlaylist,
   ListFollowedOptions,
   PlaylistCopy,
+  PinOutcome,
   PlaylistLibraryRepositoryPort,
 } from '@vp/core/repositories';
 import type { Playlist } from '@vp/domain';
@@ -22,7 +23,7 @@ interface Follow {
 
 type Playlists = Pick<
   InMemoryPlaylistRepository,
-  'create' | 'findById' | 'findDetail' | 'rowsOf' | 'seedRows' | 'countPinned' | 'setPinned'
+  'create' | 'findById' | 'findDetail' | 'rowsOf' | 'seedRows' | 'pin' | 'unpin'
 >;
 
 /** Pins and copies live on the playlists; the follows are this repository's own rows. */
@@ -31,15 +32,16 @@ export class InMemoryPlaylistLibraryRepository implements PlaylistLibraryReposit
 
   constructor(private readonly playlists: () => Playlists) {}
 
-  async countPinned(ownerId: string): Promise<Result<number, DatabaseUnavailable>> {
-    return ok(this.playlists().countPinned(ownerId));
+  async pin(
+    ownerId: string,
+    playlistId: string,
+    at: Date
+  ): Promise<Result<PinOutcome, DatabaseUnavailable>> {
+    return ok(this.playlists().pin(ownerId, playlistId, at));
   }
 
-  async setPinned(
-    playlistId: string,
-    at: Date | null
-  ): Promise<Result<boolean, DatabaseUnavailable>> {
-    return ok(this.playlists().setPinned(playlistId, at));
+  async unpin(playlistId: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    return ok(this.playlists().unpin(playlistId));
   }
 
   async follow(

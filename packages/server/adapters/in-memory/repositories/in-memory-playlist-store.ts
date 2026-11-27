@@ -1,7 +1,12 @@
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
-import type { AppendItemOutcome, WatchHistoryRepositoryPort } from '@vp/core/repositories';
+import type {
+  AppendItemOutcome,
+  PinOutcome,
+  WatchHistoryRepositoryPort,
+} from '@vp/core/repositories';
 import {
   DEFAULT_PLAYLIST_SETTINGS,
+  PLAYLIST_PIN_LIMIT,
   type NewPlaylistInput,
   type Playlist,
   type PlaylistActivityEntry,
@@ -110,16 +115,23 @@ export class InMemoryPlaylistStore {
     return this.itemsOf(playlistId);
   }
 
-  countPinned(ownerId: string): number {
-    return [...this.playlists.values()].filter(
-      (playlist) => playlist.ownerId === ownerId && playlist.pinnedAt !== null
+  /** Counts and pins with no await between, so parallel pins never pass the limit. */
+  pin(ownerId: string, playlistId: string, at: Date): PinOutcome {
+    const playlist = this.playlists.get(playlistId);
+    if (!playlist) return 'missing';
+    if (playlist.pinnedAt !== null) return 'pinned';
+    const pins = [...this.playlists.values()].filter(
+      (held) => held.ownerId === ownerId && held.pinnedAt !== null
     ).length;
+    if (pins >= PLAYLIST_PIN_LIMIT) return 'full';
+    playlist.pinnedAt = at;
+    return 'pinned';
   }
 
-  setPinned(playlistId: string, at: Date | null): boolean {
+  unpin(playlistId: string): boolean {
     const playlist = this.playlists.get(playlistId);
     if (!playlist) return false;
-    playlist.pinnedAt = at;
+    playlist.pinnedAt = null;
     return true;
   }
 

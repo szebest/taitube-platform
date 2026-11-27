@@ -1,6 +1,7 @@
 import { expectOk } from '@kit/testing/result';
-import type { SmartPlaylistRules } from '@vp/domain';
+import { PLAYLIST_PIN_LIMIT, type SmartPlaylistRules } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+import { uuidv7 } from 'uuidv7';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import { P } from './playlist-contract-context';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -46,19 +47,30 @@ export function describePlaylistLibraryContract(makeSubject: MakeRepositoriesSub
       expectOk(await create(P.mix));
     });
 
-    it('pins and unpins, counting the owner pins', async () => {
-      expectOk(await create(P.other));
+    it('pins and unpins, and answers a playlist gone', async () => {
       const at = new Date('2026-11-01T00:00:00.000Z');
 
-      expect(expectOk(await library().setPinned(P.mix, at))).toBe(true);
-      expect(expectOk(await library().setPinned(P.other, at))).toBe(true);
-      expect(expectOk(await library().countPinned(OWNER_ID))).toBe(2);
+      expect(expectOk(await library().pin(OWNER_ID, P.mix, at))).toBe('pinned');
       expect(expectOk(await repos().playlists.findById(P.mix))?.pinnedAt).toEqual(at);
+      expect(expectOk(await library().unpin(P.mix))).toBe(true);
+      expect(expectOk(await repos().playlists.findById(P.mix))?.pinnedAt).toBeNull();
+      expect(expectOk(await library().pin(OWNER_ID, P.absent, at))).toBe('missing');
+      expect(expectOk(await library().unpin(P.absent))).toBe(false);
+    });
 
-      expectOk(await library().setPinned(P.mix, null));
+    it('never lets parallel pins pass the limit, and repins a pinned one', async () => {
+      const ids = Array.from({ length: PLAYLIST_PIN_LIMIT + 2 }, () => uuidv7());
+      for (const id of ids) expectOk(await create(id));
+      const at = new Date('2026-11-01T00:00:00.000Z');
 
-      expect(expectOk(await library().countPinned(OWNER_ID))).toBe(1);
-      expect(expectOk(await library().setPinned(P.absent, at))).toBe(false);
+      const outcomes = await Promise.all(
+        ids.map(async (id) => expectOk(await library().pin(OWNER_ID, id, at)))
+      );
+
+      expect(outcomes.filter((outcome) => outcome === 'pinned')).toHaveLength(PLAYLIST_PIN_LIMIT);
+      expect(outcomes.filter((outcome) => outcome === 'full')).toHaveLength(2);
+      const pinnedId = ids[outcomes.indexOf('pinned')] ?? '';
+      expect(expectOk(await library().pin(OWNER_ID, pinnedId, at))).toBe('pinned');
     });
 
     it('follows once, and unfollows', async () => {

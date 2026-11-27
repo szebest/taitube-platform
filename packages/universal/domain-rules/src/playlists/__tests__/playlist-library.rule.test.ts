@@ -10,7 +10,6 @@ import {
   decidePlaylistPin,
   decidePlaylistShare,
   decidePlaylistStatsRead,
-  decidePlaylistUnpin,
 } from '../playlist-library.rule';
 
 const RULES: SmartPlaylistRules = { match: 'all', conditions: [], sort: 'newest', limit: 10 };
@@ -29,8 +28,7 @@ const input = (actor: UserContext | null, playlist: SeatedPlaylist) => ({
 });
 
 const DECISIONS = {
-  pin: (actor, playlist) => decidePlaylistPin(input(actor, playlist), 0),
-  unpin: (actor, playlist) => decidePlaylistUnpin(input(actor, playlist)),
+  pin: (actor, playlist) => decidePlaylistPin(input(actor, playlist)),
   follow: (actor, playlist) => decidePlaylistFollow(input(actor, playlist)),
   fork: (actor, playlist) => decidePlaylistFork(input(actor, playlist)),
   freeze: (actor, playlist) => decidePlaylistFreeze(input(actor, playlist)),
@@ -51,7 +49,6 @@ describe('@vp/domain-rules: the library actions on a playlist', () => {
   }>([
     { decision: 'pin', who: 'owner', playlist: publicList, code: null },
     { decision: 'pin', who: 'stranger', playlist: publicList, code: ErrorCodes.FORBIDDEN },
-    { decision: 'unpin', who: 'stranger', playlist: publicList, code: ErrorCodes.FORBIDDEN },
     { decision: 'follow', who: 'stranger', playlist: publicList, code: null },
     { decision: 'follow', who: 'owner', playlist: publicList, code: ErrorCodes.FORBIDDEN },
     { decision: 'follow', who: 'guest', playlist: publicList, code: ErrorCodes.UNAUTHORIZED },
@@ -105,20 +102,5 @@ describe('@vp/domain-rules: the library actions on a playlist', () => {
     },
   ])('$decision by the $who: $code', ({ decision, who, playlist, code }) => {
     expect(codeOf(DECISIONS[decision](ACTORS[who], playlist))).toBe(code);
-  });
-
-  it.each([
-    { scenario: 'a sixth pin', pinned: 5, pinnedAt: null, code: ErrorCodes.PLAYLIST_PIN_LIMIT },
-    { scenario: 'a fifth pin', pinned: 4, pinnedAt: null, code: null },
-    {
-      scenario: 'pinning a pinned one again',
-      pinned: 5,
-      pinnedAt: new Date('2026-01-02T00:00:00.000Z'),
-      code: null,
-    },
-  ])('allows $scenario: $code', ({ pinned, pinnedAt, code }) => {
-    const playlist = aPlaylist({ pinnedAt });
-
-    expect(codeOf(decidePlaylistPin(input(OWNER, playlist), pinned))).toBe(code);
   });
 });

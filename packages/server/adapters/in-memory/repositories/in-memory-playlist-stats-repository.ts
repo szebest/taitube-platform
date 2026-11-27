@@ -11,6 +11,8 @@ import type { DatabaseUnavailable } from '@vp/errors';
 interface StatsDeps {
   /** Whether the playlist still exists, as a flush leaves out one deleted since the beacon. */
   hasPlaylist(playlistId: string): boolean;
+  /** Whether the playlist holds the video, as a play of any other one is not counted. */
+  holds(playlistId: string, videoId: string): boolean;
   titleOf(videoId: string): string | null;
 }
 
@@ -24,7 +26,7 @@ export class InMemoryPlaylistStatsRepository implements PlaylistStatsRepositoryP
     const kept = counts.filter(
       ({ playlistId, videoId }) =>
         this.deps.hasPlaylist(playlistId) &&
-        (videoId === null || this.deps.titleOf(videoId) !== null)
+        (videoId === null || this.deps.holds(playlistId, videoId))
     );
     this.counts = mergePlaylistCounts([...this.counts, ...kept]);
   }
@@ -47,7 +49,8 @@ export class InMemoryPlaylistStatsRepository implements PlaylistStatsRepositoryP
     );
     const byVideo = new Map<string, number>();
     for (const { videoId, plays } of days) {
-      if (videoId !== null) byVideo.set(videoId, (byVideo.get(videoId) ?? 0) + plays);
+      if (videoId !== null && this.deps.holds(playlistId, videoId))
+        byVideo.set(videoId, (byVideo.get(videoId) ?? 0) + plays);
     }
     const topItems = [...byVideo]
       .sort(([leftId, left], [rightId, right]) => right - left || leftId.localeCompare(rightId))

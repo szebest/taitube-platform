@@ -16,8 +16,8 @@ import {
   decidePlaylistFork,
   decidePlaylistFreeze,
   decidePlaylistPin,
-  decidePlaylistUnpin,
   playlistNotFound,
+  playlistPinLimit,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -55,20 +55,28 @@ export class PlaylistLibraryService {
     actor: UserContext,
     playlistId: string
   ): Promise<Result<void, Refused | PlaylistPinLimit>> {
-    const pinned = await this.deps.library.countPinned(actor.id);
-    if (isErr(pinned)) return pinned;
-    const playlist = await this.decided(actor, playlistId, (input) =>
-      decidePlaylistPin(input, pinned.value)
-    );
+    const playlist = await this.decided(actor, playlistId, decidePlaylistPin);
     if (isErr(playlist)) return playlist;
-    if (playlist.value.pinnedAt !== null) return ok();
-    return await this.pinned(playlistId, new Date(this.deps.now()));
+    const pinned = await this.deps.library.pin(actor.id, playlistId, new Date(this.deps.now()));
+    if (isErr(pinned)) return pinned;
+    switch (pinned.value) {
+      case 'pinned':
+        return ok();
+      case 'full':
+        return err(playlistPinLimit(playlistId));
+      case 'missing':
+        return err(playlistNotFound(playlistId));
+      default:
+        return assertNever(pinned.value, 'PinOutcome');
+    }
   }
 
   async unpin(actor: UserContext, playlistId: string): Promise<Result<void, Refused>> {
-    const playlist = await this.decided(actor, playlistId, decidePlaylistUnpin);
+    const playlist = await this.decided(actor, playlistId, decidePlaylistPin);
     if (isErr(playlist)) return playlist;
-    return await this.pinned(playlistId, null);
+    const unpinned = await this.deps.library.unpin(playlistId);
+    if (isErr(unpinned)) return unpinned;
+    return unpinned.value ? ok() : err(playlistNotFound(playlistId));
   }
 
   async follow(actor: UserContext, playlistId: string): Promise<Result<void, Refused>> {
@@ -171,12 +179,6 @@ export class PlaylistLibraryService {
     const playlist = await this.deps.playlists.findSeated(playlistId, actor.id);
     if (isErr(playlist)) return playlist;
     return decide({ actor, playlist: playlist.value, playlistId });
-  }
-
-  private async pinned(playlistId: string, at: Date | null): Promise<Result<void, Refused>> {
-    const set = await this.deps.library.setPinned(playlistId, at);
-    if (isErr(set)) return set;
-    return set.value ? ok() : err(playlistNotFound(playlistId));
   }
 
   private toFollowedView({

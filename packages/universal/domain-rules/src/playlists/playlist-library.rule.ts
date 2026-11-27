@@ -1,5 +1,5 @@
 import { type Result, andThen, err, map, ok } from '@kit/result';
-import { PLAYLIST_PIN_LIMIT, type SeatedPlaylist } from '@vp/domain';
+import type { SeatedPlaylist } from '@vp/domain';
 import {
   canCreatePlaylist,
   canFollowPlaylist,
@@ -11,35 +11,15 @@ import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type PlaylistNotFound,
   type PlaylistNotSmart,
-  type PlaylistPinLimit,
   type SystemPlaylistImmutable,
   playlistNotSmart,
-  playlistPinLimit,
 } from './failures';
 import { type ManagePlaylistInput, decidePlaylistRead, userEditable } from './manage-playlist.rule';
 
 type Refused = PlaylistNotFound | AuthorizationFailure;
 
-/** The owner pins up to `PLAYLIST_PIN_LIMIT` lists; pinning a pinned one counts nothing new. */
-export function decidePlaylistPin(
-  input: ManagePlaylistInput,
-  pinned: number
-): Result<SeatedPlaylist, Refused | PlaylistPinLimit> {
-  return andThen(decidePlaylistRead(input), (playlist) =>
-    andThen(
-      authorize(input.actor, canPinPlaylist({ user: input.actor, playlist }), {
-        action: 'pin',
-        subject: 'Playlist',
-      }),
-      () =>
-        playlist.pinnedAt === null && pinned >= PLAYLIST_PIN_LIMIT
-          ? err(playlistPinLimit(playlist.id))
-          : ok(playlist)
-    )
-  );
-}
-
-export function decidePlaylistUnpin(input: ManagePlaylistInput): Result<SeatedPlaylist, Refused> {
+/** The owner's own list, to pin or unpin; the pin limit is held where the pin is written, under a lock on the owner. */
+export function decidePlaylistPin(input: ManagePlaylistInput): Result<SeatedPlaylist, Refused> {
   return andThen(decidePlaylistRead(input), (playlist) =>
     map(
       authorize(input.actor, canPinPlaylist({ user: input.actor, playlist }), {

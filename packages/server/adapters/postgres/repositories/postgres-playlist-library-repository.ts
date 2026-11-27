@@ -4,10 +4,11 @@ import type {
   FollowedPlaylist,
   ListFollowedOptions,
   PlaylistCopy,
+  PinOutcome,
   PlaylistLibraryRepositoryPort,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { Playlist } from '@vp/domain';
+import { PLAYLIST_PIN_LIMIT, type Playlist } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, count, desc, eq, isNotNull } from 'drizzle-orm';
@@ -19,33 +20,49 @@ import { appendRows, storedItems } from './playlist-item-writes';
 import { toPlaylist, toStoredItem } from './playlist-query';
 import type { PostgresDatabase } from './types';
 
-const { playlists: p, playlistFollows: pf } = schema;
+const { playlists: p, playlistFollows: pf, users: u } = schema;
 
 export class PostgresPlaylistLibraryRepository implements PlaylistLibraryRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
 
-  async countPinned(ownerId: string): Promise<Result<number, DatabaseUnavailable>> {
+  async pin(
+    ownerId: string,
+    playlistId: string,
+    at: Date
+  ): Promise<Result<PinOutcome, DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db.transaction(async (tx): Promise<PinOutcome> => {
+          await tx.select({ id: u.id }).from(u).where(eq(u.id, ownerId)).for('update');
+          const [target] = await tx
+            .select({ pinnedAt: p.pinnedAt })
+            .from(p)
+            .where(eq(p.id, playlistId));
+          if (!target) return 'missing';
+          if (target.pinnedAt !== null) return 'pinned';
+          const [pins] = await tx
+            .select({ n: count() })
+            .from(p)
+            .where(and(eq(p.ownerId, ownerId), isNotNull(p.pinnedAt)));
+          if ((pins?.n ?? 0) >= PLAYLIST_PIN_LIMIT) return 'full';
+          await tx.update(p).set({ pinnedAt: at }).where(eq(p.id, playlistId));
+          return 'pinned';
+        }),
+      databaseUnavailable.during('pinPlaylist')
+    );
+  }
+
+  async unpin(playlistId: string): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
-          .select({ n: count() })
-          .from(p)
-          .where(and(eq(p.ownerId, ownerId), isNotNull(p.pinnedAt))),
-      databaseUnavailable.during('countPinnedPlaylists')
+          .update(p)
+          .set({ pinnedAt: null })
+          .where(eq(p.id, playlistId))
+          .returning({ id: p.id }),
+      databaseUnavailable.during('unpinPlaylist')
     );
-    return map(rows, ([row]) => row?.n ?? 0);
-  }
-
-  async setPinned(
-    playlistId: string,
-    at: Date | null
-  ): Promise<Result<boolean, DatabaseUnavailable>> {
-    const rows = await fromPromise(
-      () =>
-        this.db.update(p).set({ pinnedAt: at }).where(eq(p.id, playlistId)).returning({ id: p.id }),
-      databaseUnavailable.during('pinPlaylist')
-    );
-    return map(rows, (pinned) => pinned.length > 0);
+    return map(rows, (unpinned) => unpinned.length > 0);
   }
 
   async follow(

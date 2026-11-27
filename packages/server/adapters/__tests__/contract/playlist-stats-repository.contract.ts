@@ -9,6 +9,9 @@ const DAY = '2026-11-20';
 const NEXT_DAY = '2026-11-21';
 const OUTSIDE = '2026-10-01';
 const { a, b, c, d, e, f } = VIDEO_IDS;
+const HELD = [a, b, c, d, e];
+const itemIdOf = (index: number) =>
+  `00000000-0000-7000-8000-0000000007${String(index).padStart(2, '0')}`;
 
 const count = (overrides: Partial<PlaylistCount>): PlaylistCount => ({
   ...NO_PLAYLIST_COUNTS,
@@ -52,6 +55,13 @@ export function describePlaylistStatsContract(makeSubject: MakeRepositoriesSubje
           visibility: 'public',
         })
       );
+      expectOk(
+        await repos().playlists.appendItems(
+          P.mix,
+          HELD.map((videoId, index) => ({ id: itemIdOf(index), videoId, addedBy: OWNER_ID })),
+          OWNER_ID
+        )
+      );
     });
 
     it('adds the opens, plays, follows and forks of the range, across flushes', async () => {
@@ -87,6 +97,16 @@ export function describePlaylistStatsContract(makeSubject: MakeRepositoriesSubje
         { videoId: d, plays: 2, title: 'Video d' },
         { videoId: e, plays: 1, title: 'Video e' },
       ]);
+    });
+
+    it('counts no play of a video the playlist does not hold, and ranks none it holds no more', async () => {
+      await flush([plays(a, 3), plays(b, 2), plays(f, 9), count({ opens: 1, videoId: f })]);
+      expectOk(await repos().playlists.removeItem(P.mix, { by: 'video', videoId: b }, OWNER_ID));
+
+      expect(await stats()).toEqual({
+        totals: { opens: 0, plays: 5, follows: 0, forks: 0 },
+        topItems: [{ videoId: a, plays: 3, title: 'Video a' }],
+      });
     });
 
     it('leaves out a playlist deleted since the beacon, and answers zeros for one never counted', async () => {

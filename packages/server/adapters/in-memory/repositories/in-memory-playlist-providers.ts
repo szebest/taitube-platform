@@ -63,6 +63,11 @@ export function providePlaylists(container: Container, now: Clock = realClock): 
       (c) =>
         new InMemoryPlaylistStatsRepository({
           hasPlaylist: (playlistId) => c.get(Repo.playlists).ownerOf(playlistId) !== null,
+          holds: (playlistId, videoId) =>
+            c
+              .get(Repo.playlists)
+              .rowsOf(playlistId)
+              .some((item) => item.videoId === videoId),
           titleOf: (videoId) =>
             c
               .get(Repo.videos)
