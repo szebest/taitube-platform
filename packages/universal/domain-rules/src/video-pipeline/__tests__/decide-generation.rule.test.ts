@@ -67,11 +67,13 @@ describe('@vp/domain-rules: decideGenerationStart', () => {
 });
 
 describe('@vp/domain-rules: decideEditRevert', () => {
+  const kept: VideoGeneration = { ...generation('retired'), generation: 1, kind: 'upload' };
+
   it.each([
-    { shape: 'the edit that plays', generations: [editOf(2, 1)] },
+    { shape: 'the edit that plays', generations: [editOf(2, 1), kept] },
     {
       shape: 'the edit that plays after a later edit failed',
-      generations: [editOf(3, 1, 'failed'), editOf(2, 1)],
+      generations: [editOf(3, 1, 'failed'), editOf(2, 1), kept],
     },
   ])('reverts $shape to its base', ({ generations }) => {
     expect(expectOk(decideEditRevert(aVideo({ generation: 2 }), generations))).toEqual({
@@ -80,11 +82,16 @@ describe('@vp/domain-rules: decideEditRevert', () => {
   });
 
   it.each([
-    { shape: 'no edit playing', video: aVideo({ generation: 2 }), generations: [] },
+    { shape: 'no edit playing', video: aVideo({ generation: 2 }), generations: [kept] },
     {
       shape: 'while a later edit renders',
       video: aVideo({ generation: 2 }),
-      generations: [editOf(3, 1, 'rendering'), editOf(2, 1)],
+      generations: [editOf(3, 1, 'rendering'), editOf(2, 1), kept],
+    },
+    {
+      shape: 'an edit whose base was purged',
+      video: aVideo({ generation: 2 }),
+      generations: [editOf(2, 1), { ...kept, status: 'purged' as const }],
     },
     {
       shape: 'the base playing after a revert',
