@@ -131,6 +131,20 @@ describe('apps/server/worker/stages: notify-party-invite', () => {
     ]);
   });
 
+  it('announces the notification to the invitee’s open sessions as notification.created', async () => {
+    await setUp();
+    await invite();
+
+    await notify();
+
+    expect(
+      expectOk(await repositories.userEvents.listFrom(FAN, 0, 10)).map(({ type, payload }) => ({
+        type,
+        kind: (payload as { notification?: { kind?: string } }).notification?.kind,
+      }))
+    ).toEqual([{ type: 'notification.created', kind: 'party_invite' }]);
+  });
+
   it('names no video the invitee may not see', async () => {
     await setUp({ visibility: 'private' });
     await invite();

@@ -92,6 +92,84 @@ describe('the room socket', () => {
     });
   });
 
+  async function roleOf(key: string) {
+    const res = await a.world.call('owner', 'GET', `/v1/watch-parties/${roomId}/roles`);
+    const role = res.json().items.find((item: { key: string | null }) => item.key === key);
+    return role as { id: string; updatedAt: string; permissions: string[] };
+  }
+
+  it('refuses a pause sent with pre-revoke versions as stale, then as a missing permission', async () => {
+    const owner = await connect(a, 'owner');
+    const member = await connect(b, 'other');
+    const { version, rolesVersion } = owner.hello;
+    owner.send({ type: 'start', ref: 's1', version, rolesVersion });
+    const started = await member.next('state');
+    const role = await roleOf('member');
+
+    const revoked = await a.world.call(
+      'owner',
+      'PATCH',
+      `/v1/watch-parties/${roomId}/roles/${role.id}`,
+      {
+        payload: {
+          permissions: role.permissions.filter((id) => id !== 'playback.control'),
+          updatedAt: role.updatedAt,
+        },
+      }
+    );
+    expect(revoked.statusCode).toBe(200);
+    const roles = await member.next('roles');
+    member.send({
+      type: 'pause',
+      ref: 'p1',
+      version: started.version,
+      rolesVersion,
+      positionMs: 1_000,
+    });
+    const stale = await member.next('error');
+    member.send({
+      type: 'pause',
+      ref: 'p2',
+      version: started.version,
+      rolesVersion: roles.rolesVersion,
+      positionMs: 1_000,
+    });
+    const missing = await member.next('error');
+
+    expect(roles.rolesVersion).toBe(rolesVersion + 1);
+    expect(stale).toMatchObject({
+      ref: 'p1',
+      problem: { code: ErrorCodes.WATCH_PARTY_STATE_STALE },
+    });
+    expect(missing).toMatchObject({
+      ref: 'p2',
+      problem: { code: ErrorCodes.WATCH_PARTY_PERMISSION_MISSING },
+    });
+    expect(JSON.stringify(missing.problem)).toContain('playback.control');
+  });
+
+  it('refuses the next chat line on one pod when the member was muted on the other', async () => {
+    const member = await connect(b, 'other');
+    const muted = await roleOf('chat_muted');
+
+    const res = await a.world.call(
+      'owner',
+      'PUT',
+      `/v1/watch-parties/${roomId}/members/${MEMBER_KEY}/roles/${muted.id}`,
+      { payload: {} }
+    );
+    expect(res.statusCode).toBe(204);
+    await member.next('member.roles');
+    member.send({ type: 'chat.send', ref: 'c1', message: 'still here' });
+    const refused = await member.next('error');
+
+    expect(refused).toMatchObject({
+      ref: 'c1',
+      problem: { code: ErrorCodes.WATCH_PARTY_PERMISSION_MISSING },
+    });
+    expect(JSON.stringify(refused.problem)).toContain('chat.post');
+  });
+
   it('opens with the room, the caller and the clock, and answers a clock ping', async () => {
     const member = await connect(b, 'other');
 
