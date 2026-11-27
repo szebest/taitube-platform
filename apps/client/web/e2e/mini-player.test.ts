@@ -9,7 +9,7 @@ test.describe('the mini player follows the viewer, on one player that never move
     signIn,
     stack,
   }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.clippable.id}`, { waitUntil: 'networkidle' });
     await expect(oneVideo(page)).toHaveCount(1);
     const host = page.locator('[data-slot=playback-host]');
@@ -44,7 +44,7 @@ test.describe('the mini player follows the viewer, on one player that never move
     signIn,
     stack,
   }) => {
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
     await page.getByRole('link', { name: 'Home' }).first().click();
     const bar = page.getByRole('region', { name: 'Now playing' });
@@ -63,7 +63,7 @@ test.describe('the mini player follows the viewer, on one player that never move
     stack,
   }) => {
     await page.setViewportSize({ width: 375, height: 700 });
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${stack.videos.watchable.id}`, { waitUntil: 'networkidle' });
     await page.getByRole('link', { name: 'Home' }).first().click();
     const host = page.locator('[data-slot=playback-host]');
