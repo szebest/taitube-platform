@@ -118,7 +118,6 @@ const STRICTER_THAN_BIOME = [
 const TYPE_AWARE_BACKLOG = [
   'typescript/await-thenable',
   'typescript/consistent-type-exports',
-  'typescript/no-base-to-string',
   'typescript/no-floating-promises',
   'typescript/no-implied-eval',
   'typescript/no-misused-spread',
@@ -126,7 +125,6 @@ const TYPE_AWARE_BACKLOG = [
   'typescript/no-useless-default-assignment',
   'typescript/prefer-optional-chain',
   'typescript/require-array-sort-compare',
-  'typescript/restrict-template-expressions',
   'typescript/unbound-method',
 ];
 

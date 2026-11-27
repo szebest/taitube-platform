@@ -7,6 +7,7 @@ import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 import { sendSocketResult } from './send-socket-result';
 import { keepAlive } from './socket-keepalive';
+import { socketText } from './socket-text';
 
 const SERVER_ERROR = 1011;
 
@@ -43,7 +44,7 @@ export async function liveChatRoutes(app: FastifyInstance): Promise<void> {
       socket.on('message', async (raw) => {
         const connection = await connecting;
         if (!isOk(connection)) return;
-        const { ref, result } = await connection.value.receive(String(raw));
+        const { ref, result } = await connection.value.receive(socketText(raw));
         sendSocketResult(socket, request.url, result, ref);
       });
       socket.on('close', async () => {

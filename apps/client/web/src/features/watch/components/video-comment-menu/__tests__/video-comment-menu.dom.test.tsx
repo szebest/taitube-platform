@@ -134,7 +134,7 @@ describe('apps/client/web: VideoCommentMenu', () => {
     const sent: string[] = [];
     const handlers = [pinComment, unpinComment].map((contract) =>
       mockEndpoint(contract, ({ request, params }) => {
-        sent.push(`${request.method} ${params.id}`);
+        sent.push(`${request.method} ${String(params.id)}`);
         return HttpResponse.json(comment(top));
       })
     );

@@ -48,7 +48,7 @@ export function cdnFetch(
     ...overrides,
   };
   return vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = input instanceof Request ? input.url : String(input);
     const answer =
       known[url] ?? (url.endsWith('.ts') ? new Response('x'.repeat(segmentBytes)) : undefined);
     if (answer instanceof Error) {

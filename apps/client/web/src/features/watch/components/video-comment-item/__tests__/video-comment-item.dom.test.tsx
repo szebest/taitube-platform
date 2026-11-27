@@ -66,7 +66,7 @@ describe('apps/client/web: video comment item', () => {
     const asked: string[] = [];
     const replies = mockEndpoint(listCommentReplies, ({ request, params }) => {
       const cursor = new URL(request.url).searchParams.get('cursor');
-      asked.push(`${params.id}:${cursor}`);
+      asked.push(`${String(params.id)}:${cursor}`);
       return cursor
         ? HttpResponse.json({ items: [lastReply], nextCursor: null })
         : HttpResponse.json({ items: [reply], nextCursor: 'more' });

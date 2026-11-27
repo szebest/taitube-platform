@@ -17,7 +17,8 @@ function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (Array.isArray(value)) return textCell(value.map(String).join(LIST_SEPARATOR));
   if (typeof value === 'string') return textCell(value);
-  return String(value);
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return textCell(JSON.stringify(value));
 }
 
 /** RFC 4180: a header of the column names, then one CRLF-ended record per row in the same order. */

@@ -9,7 +9,10 @@ function lines(value: unknown, path: readonly string[]): string[] {
   if (typeof value === 'object') {
     return Object.entries(value).flatMap(([key, child]) => lines(child, [...path, key]));
   }
-  return [`${name(path)}=${quote(String(value))}`];
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return [`${name(path)}=${quote(String(value))}`];
+  }
+  return [];
 }
 
 /**

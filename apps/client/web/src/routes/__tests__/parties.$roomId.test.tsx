@@ -17,7 +17,7 @@ function renderParty(
   return serverRender(getRouter, path, {
     handlers: [
       mockEndpoint(getWatchParty, ({ params, request }) => {
-        asked.push(`${params.id}${new URL(request.url).search}`);
+        asked.push(`${String(params.id)}${new URL(request.url).search}`);
         return HttpResponse.json(
           partyPreview({
             currentVideo: {

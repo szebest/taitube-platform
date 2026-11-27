@@ -23,7 +23,7 @@ async function run<TVariables>(
   apiServer.use(
     ...contracts.map((contract) =>
       mockEndpoint(contract, ({ request, params }) => {
-        asked.push(`${request.method} ${params.id}`);
+        asked.push(`${request.method} ${String(params.id)}`);
         return HttpResponse.json(comment());
       })
     )

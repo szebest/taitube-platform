@@ -133,7 +133,7 @@ export function verifyToken(
   const alg = isRecord(header) ? header.alg : undefined;
 
   if (alg !== 'EdDSA') {
-    throw new Error(`Unsupported JWT algorithm: expected EdDSA, got "${alg}"`);
+    throw new Error(`Unsupported JWT algorithm: expected EdDSA, got ${JSON.stringify(alg)}`);
   }
 
   const { publicKey } = getDevKeyPair(config, options.seed);
