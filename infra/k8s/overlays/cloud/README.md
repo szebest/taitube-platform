@@ -22,6 +22,7 @@ Secret from a `ClusterSecretStore` named `vp-secret-store`, and the overlay dele
 - `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` (Cloudflare R2)
 - `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` (Grafana Cloud, read by Alloy only)
 - `CLOUDFLARE_TUNNEL_TOKEN` (cloudflared)
+- `VIDEO_ACCESS_SECRET` (signs the video password unlock cookies; without it video passwords are off)
 
 There is no `ADMIN_TOKEN` in the cloud: production refuses one, and an admin is a token whose verified role
 claim says so. Set `AUTH_JWKS_URL`, `AUTH_ISSUER` and `AUTH_AUDIENCE` in `kustomization.yaml` to your IdP.

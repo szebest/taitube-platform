@@ -19,6 +19,9 @@ patches:
       - op: add
         path: /stringData/ADMIN_TOKEN
         value: "change-me-admin-token-local-cluster"
+      - op: add
+        path: /stringData/VIDEO_ACCESS_SECRET
+        value: "change-me-video-access"
   - target:
       kind: Deployment
       name: .*
