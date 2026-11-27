@@ -374,7 +374,11 @@ jobs:
           build: 'false'
 
       - name: Install, typecheck and test every platform package and the second app outside the repository, offline, four at a time
-        run: pnpm -s check:extractable --list | jq -r '.[]' | xargs -P 4 -n 1 pnpm -s check:extractable
+        run: |
+          set -o pipefail
+          targets=$(pnpm -s check:extractable --list | jq -r '.[]')
+          test -n "$targets"
+          echo "$targets" | xargs -P 4 -n 1 pnpm -s check:extractable
 
   integration:
     name: integration
