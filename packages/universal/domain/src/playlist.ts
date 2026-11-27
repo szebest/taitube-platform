@@ -1,4 +1,5 @@
 import type { ChannelCard } from './channel';
+import type { PlaylistViewerState } from './playlist-collaboration';
 import type { SmartPlaylistRules } from './smart-playlist';
 import { VIDEO_VISIBILITIES, type VideoVisibility } from './status-vocabulary';
 import type { Video } from './video';
@@ -157,6 +158,7 @@ export interface PlaylistDetail {
   owner: ChannelCard | null;
   items: PlaylistEntry[];
   sections: PlaylistSection[];
+  viewer: PlaylistViewerState;
 }
 
 export interface OwnedPlaylist extends Playlist {

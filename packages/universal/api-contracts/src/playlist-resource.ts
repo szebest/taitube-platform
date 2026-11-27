@@ -2,6 +2,7 @@ import {
   PLAYLIST_COVER_MODES,
   PLAYLIST_COVER_MOSAIC_SIZE,
   PLAYLIST_KINDS,
+  PLAYLIST_VIEWER_ROLES,
   PLAYLIST_VISIBILITIES,
 } from '@vp/domain';
 import { z } from 'zod';
@@ -88,6 +89,14 @@ const PlaylistSectionSchema = z.object({
     .describe('Its place among the items and sections; never counted as a video'),
 });
 
+const PlaylistViewerSchema = z.object({
+  role: z
+    .enum(PLAYLIST_VIEWER_ROLES)
+    .nullable()
+    .describe("The caller's seat on it; null for anyone without one and for a guest"),
+  following: z.boolean().describe('The caller follows it; false for a guest'),
+});
+
 export const PlaylistSchema = z.object({
   id: z.uuid(),
   ownerId: z.uuid(),
@@ -124,6 +133,7 @@ export const PlaylistSchema = z.object({
   sections: z
     .array(PlaylistSectionSchema)
     .describe('Dividers between the items, in the same order'),
+  viewer: PlaylistViewerSchema,
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 timestamp of the last change, items included'),
 });

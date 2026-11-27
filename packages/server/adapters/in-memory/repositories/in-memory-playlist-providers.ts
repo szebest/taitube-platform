@@ -42,6 +42,7 @@ export function providePlaylists(container: Container, now: Clock = realClock): 
           videosRepo: c.get(Repo.videos),
           seats: () => c.get(Repo.playlistCollaborators),
           history: () => c.get(Repo.watchHistory),
+          follows: () => c.get(Repo.playlistLibrary),
         })
     )
     .provide(

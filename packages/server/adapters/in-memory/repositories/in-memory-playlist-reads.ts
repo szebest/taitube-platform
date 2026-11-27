@@ -71,12 +71,17 @@ export class InMemoryPlaylistReads extends InMemoryPlaylistStore {
         ? [{ id: item.id, title: item.title, position, addedBy: item.addedBy }]
         : []
     );
-    const { collaboratorId: _, collaboratorRole: __, ...playlist } = seated;
+    const { collaboratorId: _, collaboratorRole, ...playlist } = seated;
+    const viewerId = viewer?.id ?? null;
     return ok({
       playlist,
       owner: await primaryChannelCard(this.deps, playlist.ownerId),
       items: entries.filter((entry): entry is PlaylistEntry => entry !== null),
       sections,
+      viewer: {
+        role: playlist.ownerId === viewerId ? 'owner' : collaboratorRole,
+        following: this.deps.follows().isFollowing(viewerId, id),
+      },
     });
   }
 

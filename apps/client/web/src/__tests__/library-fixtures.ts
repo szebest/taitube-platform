@@ -102,6 +102,7 @@ export function playlistDetail(
       channel: null,
     })),
     sections: [],
+    viewer: { role: 'owner', following: false },
     createdAt: NOW,
     updatedAt: NOW,
     ...overrides,

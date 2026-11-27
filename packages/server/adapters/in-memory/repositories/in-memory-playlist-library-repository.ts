@@ -122,6 +122,10 @@ export class InMemoryPlaylistLibraryRepository implements PlaylistLibraryReposit
     return created;
   }
 
+  isFollowing(userId: string | null, playlistId: string): boolean {
+    return userId !== null && this.indexOf(userId, playlistId) >= 0;
+  }
+
   clear(): void {
     this.follows = [];
   }

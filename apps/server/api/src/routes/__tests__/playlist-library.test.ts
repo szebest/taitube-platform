@@ -142,6 +142,17 @@ describe('playlist library routes', () => {
     expect(await following()).toEqual([]);
   });
 
+  it.each([
+    { caller: 'owner' as const, viewer: { role: 'owner', following: false } },
+    { caller: 'stranger' as const, viewer: { role: null, following: true } },
+    { caller: 'anonymous' as const, viewer: { role: null, following: false } },
+  ])('tells the $caller on the playlist read where they stand', async ({ caller, viewer }) => {
+    const id = await ctx.playlist('owner', { title: 'Shared', visibility: 'public' });
+    await ctx.call('stranger', 'PUT', `/v1/playlists/${id}/follow`);
+
+    expect((await ctx.call(caller, 'GET', `/v1/playlists/${id}`)).json().viewer).toEqual(viewer);
+  });
+
   it('forks a playlist into an independent private copy that credits its source', async () => {
     const id = await ctx.playlist('owner', { title: 'Source', visibility: 'public' });
     await ctx.call('owner', 'POST', `/v1/playlists/${id}/items`, { videoId: V0 });

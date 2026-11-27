@@ -54,7 +54,7 @@ function coverUrlOf(playlist: Playlist, entries: readonly ItemView[], cdn: CdnBa
 
 /** `computed` stands for the stored items of a smart playlist, which holds none. */
 export function toPlaylistView(
-  { playlist, owner, items, sections }: PlaylistDetail,
+  { playlist, owner, items, sections, viewer }: PlaylistDetail,
   cdn: CdnBase,
   sprite: SpriteGeometry,
   computed?: readonly ItemView[]
@@ -80,6 +80,7 @@ export function toPlaylistView(
     nextEpisodeVideoId: null,
     items: entries,
     sections: sections.map(({ id, title, position }) => ({ id, title, position })),
+    viewer,
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };

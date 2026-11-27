@@ -83,6 +83,7 @@ function detail(
       },
     ],
     sections: [{ id: 's1', title: 'Part one', position: 1, addedBy: 'u1' }],
+    viewer: { role: 'editor', following: true },
   };
 }
 
@@ -175,10 +176,14 @@ describe('apps/server/api/services: library views', () => {
     expect(toOwnedPlaylistView(owned)).toMatchObject({ isSmart, pinnedAt: null });
   });
 
-  it("dates the playlist and its items on the wire, each video under its owner's channel", () => {
+  it("dates the playlist and its items on the wire, each video under its owner's channel, and keeps where the caller stands", () => {
     const view = toPlaylistView(detail(null, null), CDN, SPRITE);
 
-    expect(view).toMatchObject({ createdAt: AT.toISOString(), videoCount: 1 });
+    expect(view).toMatchObject({
+      createdAt: AT.toISOString(),
+      videoCount: 1,
+      viewer: { role: 'editor', following: true },
+    });
     expect(view.items[0]).toMatchObject({
       addedAt: AT.toISOString(),
       video: { id: 'v1', channel: VIDEO_CHANNEL },

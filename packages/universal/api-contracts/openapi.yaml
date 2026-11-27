@@ -38194,6 +38194,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -38219,6 +38238,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -38911,6 +38931,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -38936,6 +38975,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -39882,6 +39922,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -39907,6 +39966,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -40903,6 +40963,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -40928,6 +41007,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -42453,6 +42533,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -42478,6 +42577,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -49847,6 +49947,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -49872,6 +49991,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -50554,6 +50674,25 @@ paths:
                         - position
                       additionalProperties: false
                     description: Dividers between the items, in the same order
+                  viewer:
+                    type: object
+                    properties:
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - owner
+                              - editor
+                              - contributor
+                          - type: 'null'
+                        description: The caller's seat on it; null for anyone without one and for a guest
+                      following:
+                        type: boolean
+                        description: The caller follows it; false for a guest
+                    required:
+                      - role
+                      - following
+                    additionalProperties: false
                   createdAt:
                     type: string
                     description: ISO 8601 creation timestamp
@@ -50579,6 +50718,7 @@ paths:
                   - nextEpisodeVideoId
                   - items
                   - sections
+                  - viewer
                   - createdAt
                   - updatedAt
                 additionalProperties: false

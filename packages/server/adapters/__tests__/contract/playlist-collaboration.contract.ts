@@ -111,6 +111,10 @@ export function describePlaylistCollaborationContract(makeSubject: MakeRepositor
         seated: 1,
         isCollaborator: true,
       });
+      expect(
+        expectOk(await repos().playlists.findDetail(P.mix, { id: OTHER_OWNER_ID, role: 'USER' }))
+          ?.viewer
+      ).toEqual({ role: 'editor', following: false });
       expect(await actions()).toEqual(['collaborator_added']);
     });
 

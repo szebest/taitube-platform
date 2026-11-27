@@ -28,6 +28,7 @@ import {
   sortKeyOf,
   storedRow,
 } from './in-memory-playlist-items';
+import type { InMemoryPlaylistLibraryRepository } from './in-memory-playlist-library-repository';
 import {
   type VideoLookups,
   channelCard,
@@ -41,6 +42,7 @@ export interface InMemoryPlaylistDeps extends VideoLookups {
     'seatOf' | 'record' | 'forget' | 'userIdsOn'
   >;
   history: () => Pick<WatchHistoryRepositoryPort, 'findMany'>;
+  follows: () => Pick<InMemoryPlaylistLibraryRepository, 'isFollowing'>;
 }
 
 export interface KeyedRow {

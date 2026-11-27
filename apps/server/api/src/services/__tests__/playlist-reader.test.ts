@@ -31,7 +31,7 @@ async function setUp(visibility: 'public' | 'private', rules = false) {
       (sum, row) => sum + row.opens,
       0
     );
-  return { ...reading, opens };
+  return { ...reading, repositories, opens };
 }
 
 describe('PlaylistReader', () => {
@@ -62,6 +62,17 @@ describe('PlaylistReader', () => {
     expect(
       expectErr(await reader.open(null, LIST, { ...NO_ACCESS, shareToken: link.token })).code
     ).toBe(ErrorCodes.SHARE_LINK_EXPIRED);
+  });
+
+  it.each([
+    { scenario: 'its owner', viewer: OWNER, stands: { role: 'owner', following: false } },
+    { scenario: 'a follower', viewer: FAN, stands: { role: null, following: true } },
+    { scenario: 'a guest', viewer: null, stands: { role: null, following: false } },
+  ])('tells $scenario where they stand on the page', async ({ viewer, stands }) => {
+    const { reader, repositories } = await setUp('public');
+    expectOk(await repositories.playlistLibrary.follow(FAN.id, LIST));
+
+    expect(expectOk(await reader.open(viewer, LIST, NO_ACCESS)).viewer).toEqual(stands);
   });
 
   it('shows the items a smart playlist computes, with the viewer progress on each', async () => {

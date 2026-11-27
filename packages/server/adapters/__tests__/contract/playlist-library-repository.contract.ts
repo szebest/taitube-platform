@@ -6,6 +6,7 @@ import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './
 import { P } from './playlist-contract-context';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
+const OWNER: UserContext = { id: OWNER_ID, role: 'USER' };
 const FOLLOWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
 const FORK = '00000000-0000-7000-8000-0000000006a1';
 const FROZEN = '00000000-0000-7000-8000-0000000006a2';
@@ -79,6 +80,16 @@ export function describePlaylistLibraryContract(makeSubject: MakeRepositoriesSub
       expect(expectOk(await library().follow(OTHER_OWNER_ID, P.absent))).toBe('playlist-missing');
       expect(expectOk(await library().unfollow(OTHER_OWNER_ID, P.mix))).toBe(true);
       expect(expectOk(await library().unfollow(OTHER_OWNER_ID, P.mix))).toBe(false);
+    });
+
+    it.each([
+      { scenario: 'its owner', viewer: OWNER, stands: { role: 'owner', following: false } },
+      { scenario: 'a follower', viewer: FOLLOWER, stands: { role: null, following: true } },
+      { scenario: 'a guest', viewer: null, stands: { role: null, following: false } },
+    ])('tells $scenario where they stand on a playlist they read', async ({ viewer, stands }) => {
+      expectOk(await library().follow(OTHER_OWNER_ID, P.mix));
+
+      expect(expectOk(await repos().playlists.findDetail(P.mix, viewer))?.viewer).toEqual(stands);
     });
 
     it('lists a followed playlist live, and as gone once it turns private', async () => {
