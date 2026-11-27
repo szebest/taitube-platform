@@ -1,0 +1,9 @@
+# The load smoke writes a few GB into MinIO; on a hosted runner's disk that stalls Postgres and the API
+# with it, so the storm would measure the disk instead of the API.
+volumes:
+  miniodata:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=6g

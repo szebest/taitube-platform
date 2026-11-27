@@ -57,7 +57,8 @@ jobs:
           cp .env.example .env
           # The load profile drives far more uploads per user than the production limit allows.
           echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
-          make up api worker
+          pnpm --silent preflight
+          pnpm --silent stack up api worker --file infra/compose/docker-compose.yml --file infra/compose/docker-compose.load-smoke.yml
 
       # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6
@@ -82,7 +83,7 @@ jobs:
             sleep 2
           done
           echo "ERROR: API not healthy after 120s"
-          docker compose -f infra/compose/docker-compose.yml --profile '*' logs --tail=50
+          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.load-smoke.yml --profile '*' logs --tail=50
           exit 1
 
       # The runner class varies from run to run by more than any regression this smoke looks for, so
@@ -114,11 +115,12 @@ jobs:
           # Pre-baked dev JWT: sub=00000000-0000-7000-8000-000000000001, role=user, exp=2036
           TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
           API: http://localhost:3000
-        # --vus/--duration override the script's scenarios block entirely (k6 uses constant-vus instead)
+        # --vus/--iterations override the script's scenarios block; a fixed amount of work, not a duration, so a
+        # slow runner takes longer instead of moving less data at worse latencies.
         run: |
           echo "presign bar: p95<${PRESIGN_P95_MS} ms p99<${PRESIGN_P99_MS} ms"
-          k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
+          k6 run --vus 5 --iterations 150 tests/load/s1-upload-storm.js
 
       - name: Teardown
         if: always()
-        run: docker compose -f infra/compose/docker-compose.yml --profile '*' down -v
+        run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.load-smoke.yml --profile '*' down -v
