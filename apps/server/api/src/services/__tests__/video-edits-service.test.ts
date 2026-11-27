@@ -94,6 +94,23 @@ describe('apps/server/api/services: video edits', () => {
     );
   });
 
+  it('keeps the edit that plays revertible after a later edit fails to render', async () => {
+    expectOk(await edits.save(OWNER, VIDEO_ID, TRIM));
+    await swapIn(2);
+    expectOk(await edits.save(OWNER, VIDEO_ID, { trim: { startMs: 0, endMs: 59_000 }, blurs: [] }));
+    expectOk(await repositories.videoGenerations.fail(VIDEO_ID, 3, 'RENDER_FAILED'));
+
+    expect(expectOk(await edits.generations(OWNER, VIDEO_ID))).toMatchObject({
+      activeGeneration: 2,
+      edit: { generation: 3, status: 'failed' },
+      revertible: true,
+    });
+    const playing = expectOk(await repositories.videos.findById(VIDEO_ID));
+    expect(expectOk(await edits.revert(OWNER, VIDEO_ID, playing?.version ?? 0))).toMatchObject({
+      generation: 1,
+    });
+  });
+
   it('lists the generations newest first with the edit list over its base', async () => {
     expectOk(await edits.save(OWNER, VIDEO_ID, TRIM));
     await swapIn(2);
@@ -101,6 +118,7 @@ describe('apps/server/api/services: video edits', () => {
     expect(expectOk(await edits.generations(OWNER, VIDEO_ID))).toMatchObject({
       activeGeneration: 2,
       edit: { baseGeneration: 1, generation: 2, status: 'applied', trim: TRIM.trim },
+      revertible: true,
       items: [
         { generation: 2, kind: 'edit', status: 'active', durationMs: 45_000 },
         { generation: 1, kind: 'upload', status: 'retired', durationMs: 60_000 },

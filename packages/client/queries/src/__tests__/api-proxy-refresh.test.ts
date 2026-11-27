@@ -1,4 +1,6 @@
 import { HttpResponse } from 'msw/http';
+import { NO_ACCOUNTS, withSignedIn } from '../accounts';
+import { accountsAfter, accountsCookies } from './accounts-fixtures';
 import { api, callProxy, cookieNames, refused } from './api-proxy-fixtures';
 
 describe('@vp/queries: the same-origin API proxy, refreshing a refused token', () => {
@@ -23,22 +25,22 @@ describe('@vp/queries: the same-origin API proxy, refreshing a refused token', (
 
   it('clears the one slot the API refused when there is no refresh to be had, marks it expired, and passes the 401 on', async () => {
     const sent = api(refused);
-    const accounts = {
-      defaultSlot: 1,
-      slots: [0, 1].map((slot) => ({
-        slot,
-        userId: `user-${slot}`,
-        label: `Account ${slot}`,
-        avatarUrl: null,
-        channel: null,
-        expired: false,
-      })),
-    };
+    const accounts = [0, 1].reduce(
+      (listed, slot) =>
+        withSignedIn(listed, {
+          slot,
+          userId: `user-${slot}`,
+          label: `Account ${slot}`,
+          avatarUrl: null,
+        }),
+      NO_ACCOUNTS
+    );
+    const cookie = `vp.session.0=valid; vp.session.1=stale; ${accountsCookies(accounts)}`;
 
     const answer = await callProxy('/api/v1/me/account', {
       init: {
         headers: {
-          cookie: `vp.session.0=valid; vp.session.1=stale; vp.accounts=${encodeURIComponent(JSON.stringify(accounts))}`,
+          cookie,
         },
       },
       slot: 1,
@@ -46,16 +48,12 @@ describe('@vp/queries: the same-origin API proxy, refreshing a refused token', (
 
     expect(sent).toHaveLength(1);
     expect(answer.status).toBe(401);
-    expect(answer.headers.getSetCookie()).toHaveLength(2);
-    const [cleared, marked] = answer.headers.getSetCookie();
+    const [cleared, marked, ...others] = answer.headers.getSetCookie();
     expect(cleared).toMatch(/^vp\.session\.1=; Max-Age=0;/);
-    const written = JSON.parse(
-      decodeURIComponent(marked?.split(';')[0]?.slice('vp.accounts='.length) ?? '')
-    );
-    expect(written.slots.map(({ expired }: { expired: boolean }) => expired)).toEqual([
-      false,
-      true,
-    ]);
+    expect(marked).toMatch(/^vp\.accounts\.1=/);
+    expect(others).toEqual([]);
+    const written = await accountsAfter(cookie, answer.headers.getSetCookie());
+    expect(written.slots.map(({ expired }) => expired)).toEqual([false, true]);
   });
 
   it("passes a guest's 401 on and leaves the cookies alone", async () => {

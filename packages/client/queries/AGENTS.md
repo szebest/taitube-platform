@@ -93,18 +93,22 @@ The session (SDD §11, Transport and Origins and cookies; slots and identities f
   `/login?slot=<n>&reason=expired`, and a signed-in page is `Cache-Control: private, no-store`. Every other
   request gets the settings in its context (`requestSession()`).
 - The cookies: `vp.session.<slot>` holds that slot's bearer token, httpOnly, `SameSite=Lax`, `Secure` off
-  localhost, `Domain` the app's `COOKIE_DOMAIN`, eight hours; `vp.accounts` (`accounts.ts`, `accounts-cookie.ts`)
-  is the non-secret slot list (user id, label, avatar, acting channel, expired) with the default slot, cut so
-  ten rows always fit one cookie (`serializeAccounts` drops the avatar hints that would not);
-  `vp.add-nonce` binds an add to the browser that started it, httpOnly, ten minutes, one use. Only server code
-  writes them.
+  localhost, `Domain` the app's `COOKIE_DOMAIN`, eight hours; the non-secret slot list (`accounts.ts`,
+  `accounts-cookie.ts`) is one `vp.accounts.<slot>` per row (user id, label, avatar, acting channel, expired) and
+  `vp.accounts` for what the slots share (the default slot, accents, pins), and `writeAccounts` sets only the
+  cookies that differ from the request's and clears only ones it carried, so two tabs changing different slots
+  both land. Each row has a fixed share of the 4 KB the list once had in one cookie (its avatar hint dropped when
+  it would not fit); a browser's pre-split `vp.accounts`, rows inside, is read and split on the next write.
+  `vp.add-nonce.<slot>` binds an add to the browser that started it and holds the slot it will take, so two adds
+  at once never pick the same one (bare `vp.add-nonce` when every slot was taken), httpOnly, ten minutes, one
+  use. Only server code writes them.
 - The browser's API client names its slot on every call (`X-Account-Slot`, a custom header no cross-site form
   sends); the stream, which an `EventSource` cannot give a header, names it in its path (`/u/<slot>/api/...`).
 - `completeSignIn(issue, grant, target)` (`sign-in.ts`) is every sign-in's callback: an add (`{ mode: 'add',
   state }`) spends its nonce first, as does a new user into one slot beside another (`{ mode: 'slot', slot, state }`,
   recorded as an add), the token is always the new one `issue` returns, a user already in a slot
-  (signed in or expired) ends on it, an add takes the lowest slot with neither a session nor a row (else the
-  lowest expired row), a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
+  (signed in or expired) ends on it, an add takes the slot its nonce held (picked as the lowest with neither a
+  session, a row nor another add's nonce, else the lowest expired row) or, taken meanwhile, the first free one, a session past `ACCOUNTS_MAX` is refused, and `POST /v1/me/security/sign-ins` records it (the API
   rate-limits adds) before the cookie is written. Server functions: `hasSession`, `signOut`, `signOutAll`,
   `expireSession`, `rememberIdentity`, `startAddAccount`, `listAccounts` (the rows, one whose cookie is gone read as
   expired), `setIdentityAccent` and `setPinnedIdentities` (`vp.accounts` keeps up to 10 picked ring colours and 8

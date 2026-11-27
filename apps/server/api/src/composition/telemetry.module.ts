@@ -18,6 +18,8 @@ export function registerTelemetryServices(c: Container): Container {
       (c) =>
         new PlaybackTelemetryService({
           viewBuffer: c.get(Adapters.ViewBuffer),
+          experiments: c.get(Adapters.Repositories).videoExperiments,
+          shareLinks: c.get(Adapters.Repositories).shareLinks,
           metrics: c.get(Adapters.Metrics),
           limits: c.get(Adapters.Config).views,
           now: Date.now,
