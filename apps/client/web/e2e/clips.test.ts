@@ -11,7 +11,7 @@ test.describe('clips', () => {
   }) => {
     const { clippable } = stack.videos;
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/watch/${clippable.id}`);
 
     await page.getByRole('button', { name: 'Clip', exact: true }).click();
@@ -54,12 +54,12 @@ test.describe('clips', () => {
     signIn,
     stack,
   }) => {
-    const viewer = await api('viewer');
-    const created = await viewer.post(`/v1/videos/${stack.videos.clippable.id}/clips`, {
+    const stranger = await api('stranger');
+    const created = await stranger.post(`/v1/videos/${stack.videos.clippable.id}/clips`, {
       data: CLIP,
     });
     const { id } = await created.json();
-    await signIn('viewer');
+    await signIn('stranger');
     await page.goto(`/clip/${id}`);
 
     await page.getByRole('button', { name: 'Delete clip' }).click();

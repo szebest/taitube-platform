@@ -1,9 +1,9 @@
+import { describeJobQueueContract } from '@kit/ports/contract';
 import { isOk } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { bullMqJobQueueSubject } from '../../__tests__/contract/bullmq-subjects';
-import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
 import { type WorkerHandler, fakeWorkerFactory, workers } from './fake-worker';

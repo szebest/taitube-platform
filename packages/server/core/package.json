@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@kit/errors": "workspace:*",
+    "@kit/ports": "workspace:*",
     "@kit/result": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",

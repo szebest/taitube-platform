@@ -22,6 +22,9 @@ Secret from a `ClusterSecretStore` named `vp-secret-store`, and the overlay dele
 - `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` (Cloudflare R2)
 - `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` (Grafana Cloud, read by Alloy only)
 - `CLOUDFLARE_TUNNEL_TOKEN` (cloudflared)
+- `VIDEO_ACCESS_SECRET` (signs the video password unlock cookies; without it video passwords are off)
+- `LIVE_HOOK_SECRET` (what MediaMTX sends on every auth and event call; unset, every publisher is refused)
+- `WATCH_PARTY_GUEST_SALT` (keys the guest IP hash kept for a ban; unset, guest joins are off)
 
 There is no `ADMIN_TOKEN` in the cloud: production refuses one, and an admin is a token whose verified role
 claim says so. Set `AUTH_JWKS_URL`, `AUTH_ISSUER` and `AUTH_AUDIENCE` in `kustomization.yaml` to your IdP.
