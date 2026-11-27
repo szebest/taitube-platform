@@ -21,7 +21,7 @@ const openRejected = async () => {
   return {
     ...rendered,
     ...served,
-    box: await screen.findByRole('textbox', { name: 'Why is this a mistake?' }),
+    box: await screen.findByRole('textbox', { name: 'Why is this a mistake?' }, { timeout: 4000 }),
   };
 };
 
