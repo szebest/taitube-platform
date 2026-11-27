@@ -48,8 +48,14 @@ export function describeVideoGenerationRepositoryContract(
       expectOk(await ctx.generations.startRender(VIDEO, generation, outboxRow(generation)));
     };
 
-    it('holds one replacement in flight per video and moves it to rendering once', async () => {
+    it('holds one replacement in flight per video and moves it to rendering once, serving the old generation meanwhile', async () => {
+      const before = await video(ctx);
       await replace(2);
+      expect(await video(ctx)).toMatchObject({
+        id: VIDEO,
+        generation: 1,
+        masterPlaylistKey: before.masterPlaylistKey,
+      });
 
       expect(
         expectOk(
@@ -79,7 +85,10 @@ export function describeVideoGenerationRepositoryContract(
         version: before.version + 1,
         masterPlaylistKey: playback(2).masterPlaylistKey,
         durationMs: 300_000,
-        viewsCount: before.viewsCount,
+        id: VIDEO,
+        viewsCount: 1_234,
+        likesCount: 56,
+        commentsCount: 7,
       });
       expect(await rowOf(ctx, 2)).toMatchObject({ status: 'active', needsReview: true });
       expect(await rowOf(ctx, 1)).toMatchObject({

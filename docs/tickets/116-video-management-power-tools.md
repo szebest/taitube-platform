@@ -155,28 +155,30 @@ One stack of three slices:
 
 ## Acceptance criteria
 
-- [ ] Bulk edit changes visibility, category, tags and comments on 30 videos; one unauthorised id fails alone and is
+- [x] Bulk edit changes visibility, category, tags and comments on 30 videos; one unauthorised id fails alone and is
       reported; each change is in that video's history and can be restored, and a stale restore is a 409.
-- [ ] Chapters saved in the editor show on the seek bar and replace the description's timestamps; suggestions from a fixture
+- [x] Chapters saved in the editor show on the seek bar and replace the description's timestamps; suggestions from a fixture
       transcript are deterministic and respect the 90-second rule; nothing is saved by suggesting.
-- [ ] A correction card appears only inside its range, is dismissible by keyboard, never covers the controls, and is also
+- [x] A correction card appears only inside its range, is dismissible by keyboard, never covers the controls, and is also
       listed under the description.
-- [ ] A share link opens a private video, stops at its expiry with 410, counts opens, views and watch seconds per link, and
+- [x] A share link opens a private video, stops at its expiry with 410, counts opens, views and watch seconds per link, and
       revoking it works at once; the link grants nothing beyond watching.
-- [ ] A password-protected video shows a gate on the page and the embed, a wrong password is counted and limited, and the
+- [x] A password-protected video shows a gate on the page and the embed, a wrong password is counted and limited, and the
       12-hour cookie lifts the gate; the password is never in a response or a log.
-- [ ] A two-variant test serves each session one variant consistently, leaves oEmbed and OpenGraph on the control, reports
+- [x] A two-variant test serves each session one variant consistently, leaves oEmbed and OpenGraph on the control, reports
       watch seconds per impression, click-through and view duration per variant, and says "not enough data" under 1000
       impressions; the winner is applied only by the creator.
-- [ ] Replacing a video keeps its URL, views, likes and comments, serves the old renditions until the new ladder is
+- [x] Replacing a video keeps its URL, views, likes and comments, serves the old renditions until the new ladder is
       complete, swaps once even if the job retries, and a failed replacement changes nothing.
-- [ ] A trim and a blur render into a new generation with the blur on the right frames and the chapters shifted; reverting
+- [x] A trim and a blur render into a new generation with the blur on the right frames and the chapters shifted; reverting
       swaps back to the base generation within the 14 days.
-- [ ] Clip suggestions return windows inside the video and creating one yields a normal 105 clip.
-- [ ] An editor (117) may do all of this except delete; a moderator gets a 403; `privilege-escalation.test.ts` gains the
+- [x] Clip suggestions return windows inside the video and creating one yields a normal 105 clip.
+- [x] An editor (117) may do all of this except delete; a moderator gets a 403; `privilege-escalation.test.ts` gains the
       rows.
 - [ ] The studio tabs and the player cards meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+      Not proved here: `PlayerCardLayer` and the editor tabs have no stories and no visual baselines yet; a follow-up
+      ticket adds them and runs the design review.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -213,5 +215,5 @@ One stack of three slices:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §3, §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] SDD §3, §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

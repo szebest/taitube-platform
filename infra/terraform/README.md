@@ -7,8 +7,8 @@ Infrastructure-as-Code for the `video-pipeline` cloud reference deployment, on t
 ## Provisioned Resources
 
 - **Cloudflare R2 Buckets:**
-  - `vp-raw`: private storage for incoming uploads, with a lifecycle rule that aborts incomplete multipart uploads after a day and expires objects after `raw_retention_days`.
-  - `vp-public`: HLS playlists, segments and thumbnails, served through the `cdn.<domain>` custom domain.
+  - `vp-raw`: private storage for incoming uploads, with a lifecycle rule that aborts incomplete multipart uploads after a day and expires objects after `raw_retention_days`. A CORS rule lets `https://studio.<domain>` PUT to it, the browser upload path, and read the `ETag` of each multipart part.
+  - `vp-public`: HLS playlists, segments and thumbnails, served through the `cdn.<domain>` custom domain. A CORS rule lets `https://<web host>` GET and HEAD it with `Range`.
 - **Scoped R2 API tokens:** the API's and the worker's both read and write `vp-raw` and `vp-public` (the API writes `vp-public` only for caption `.vtt` files).
 - **Cloudflare Tunnel:** routes `api.<domain>` and `studio.<domain>` to the k3s node without an open inbound port.
 - **Cloudflare Access:** in front of `api.<domain>/admin`, allowing `admin_email` only.
