@@ -35,6 +35,9 @@ export class InMemoryWatchPartyStore {
   readonly invites = new Map<string, WatchPartyInvite>();
   readonly inviteLinks = new Map<string, WatchPartyInviteLink>();
   readonly controls = new Map<string, PersonalControlRecord>();
+  /** The columns the room record leaves out: what discovery's text search and trending sort read. */
+  readonly searchTexts = new Map<string, string>();
+  readonly trendScores = new Map<string, number>();
 
   appendSystemLine(
     roomId: string,
@@ -88,6 +91,8 @@ export class InMemoryWatchPartyStore {
       this.invites,
       this.inviteLinks,
       this.controls,
+      this.searchTexts,
+      this.trendScores,
     ]) {
       table.clear();
     }

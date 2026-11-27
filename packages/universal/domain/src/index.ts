@@ -70,6 +70,7 @@ export * from './watch-history';
 export * from './watch-party';
 export * from './watch-party-capacity';
 export * from './watch-party-clock';
+export * from './watch-party-discovery';
 export * from './watch-party-drift';
 export * from './watch-party-permissions';
 export * from './watch-party-personal-controls';

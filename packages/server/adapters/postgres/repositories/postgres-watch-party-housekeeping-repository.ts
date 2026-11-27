@@ -1,12 +1,12 @@
 import { fromPromise, map, type Result } from '@kit/result';
 import type { WatchPartyHousekeepingRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { WatchPartyRoom } from '@vp/domain';
+import { WATCH_PARTY_TREND, type WatchPartyRoom } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, eq, gt, lt, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
-const { watchPartyRooms: rooms, watchPartyMessages: messages } = schema;
+const { watchPartyRooms: rooms, watchPartyMessages: messages, watchPartyMembers: members } = schema;
 
 export class PostgresWatchPartyHousekeepingRepository implements WatchPartyHousekeepingRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -32,6 +32,25 @@ export class PostgresWatchPartyHousekeepingRepository implements WatchPartyHouse
     return map(rows, (found) =>
       found.map(({ trendScore: _trendScore, searchText: _searchText, ...room }) => room)
     );
+  }
+
+  async refreshTrendScores(at: Date): Promise<Result<void, DatabaseUnavailable>> {
+    const { joinWindowMs, ageOffsetHours, exponent } = WATCH_PARTY_TREND;
+    const instant = sql`${at.toISOString()}::timestamptz`;
+    const windowStart = sql`${new Date(at.getTime() - joinWindowMs).toISOString()}::timestamptz`;
+    const recentJoins = sql`(select count(*) from ${members} where ${members.roomId} = ${rooms.id} and ${members.joinedAt} >= ${windowStart})`;
+    const ageHours = sql`(greatest(0, extract(epoch from (${instant} - ${rooms.createdAt}))) / 3600)`;
+    const refreshed = await fromPromise(
+      () =>
+        this.db
+          .update(rooms)
+          .set({
+            trendScore: sql`(${recentJoins} + ${rooms.presentCount})::double precision / power(${ageHours} + ${sql.raw(String(ageOffsetHours))}, ${sql.raw(String(exponent))})`,
+          })
+          .where(eq(rooms.status, 'open')),
+      databaseUnavailable.during('refreshWatchPartyTrendScores')
+    );
+    return map(refreshed, () => undefined);
   }
 
   async databaseClock(): Promise<Result<Date, DatabaseUnavailable>> {

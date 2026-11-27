@@ -1,6 +1,7 @@
 import type { Result } from '@kit/result';
 import type {
   WatchPartyCloseReason,
+  WatchPartyDiscoveryQuery,
   WatchPartyMember,
   WatchPartyPlayback,
   WatchPartyQueueItem,
@@ -76,6 +77,14 @@ export interface OwnerTransfer {
   readonly at: Date;
 }
 
+/** A room discovery lists, with the columns its filters and sorts read that the room itself leaves out. */
+export interface DiscoverableRoom {
+  readonly room: WatchPartyRoom;
+  /** The current video's category. */
+  readonly categoryId: string | null;
+  readonly trendScore: number;
+}
+
 export interface WatchPartyRoomRepositoryPort {
   create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>>;
   findById(id: string): Promise<Result<WatchPartyRoom | null, DatabaseUnavailable>>;
@@ -102,6 +111,15 @@ export interface WatchPartyRoomRepositoryPort {
     line: NewSystemLine | null,
     at: Date
   ): Promise<Result<RoomWrite, DatabaseUnavailable>>;
+  /**
+   * Discovery's page: the open, public, visible rooms that match the filters, in the sort's order
+   * after its position, up to `limit + 1` so the caller can tell a further page exists.
+   */
+  listDiscoverable(
+    query: WatchPartyDiscoveryQuery
+  ): Promise<Result<DiscoverableRoom[], DatabaseUnavailable>>;
+  /** What discovery's text search reads; the caller builds it from the room, its owner and its video. */
+  setSearchText(id: string, text: string): Promise<Result<void, DatabaseUnavailable>>;
   /** The count the poller and discovery read; `last_present_at` moves only while someone is there. */
   recordPresence(id: string, present: number, at: Date): Promise<Result<void, DatabaseUnavailable>>;
   transferOwner(

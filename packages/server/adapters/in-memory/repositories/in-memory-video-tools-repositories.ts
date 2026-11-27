@@ -21,7 +21,11 @@ export class InMemoryVideoToolsRepositories extends InMemoryWatchPartyRepositori
   readonly videoThreads: InMemoryVideoThreadRepository;
 
   constructor(c: Container) {
-    super(c.get(Repo.outbox), c.get(Repo.userEvents));
+    super(c.get(Repo.outbox), c.get(Repo.userEvents), {
+      videosRepo: c.get(Repo.videos),
+      channelsRepo: c.get(Repo.channels),
+      subscriptionsRepo: c.get(Repo.subscriptions),
+    });
     this.entityRevisions = c.get(Repo.entityRevisions);
     this.videoChapters = c.get(Repo.videoChapters);
     this.videoCorrections = c.get(Repo.videoCorrections);

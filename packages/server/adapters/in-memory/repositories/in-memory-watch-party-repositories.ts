@@ -1,5 +1,6 @@
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryUserEventRepository } from './in-memory-user-event-repository';
+import type { DiscoveryLookups } from './in-memory-watch-party-discovery';
 import { InMemoryWatchPartyHousekeepingRepository } from './in-memory-watch-party-housekeeping-repository';
 import { InMemoryWatchPartyInviteLinkRepository } from './in-memory-watch-party-invite-link-repository';
 import { InMemoryWatchPartyInviteRepository } from './in-memory-watch-party-invite-repository';
@@ -24,8 +25,12 @@ export class InMemoryWatchPartyRepositories {
   readonly watchPartyHousekeeping: InMemoryWatchPartyHousekeepingRepository;
   private readonly watchParties = new InMemoryWatchPartyStore();
 
-  constructor(outbox: InMemoryOutboxRepository, userEvents: InMemoryUserEventRepository) {
-    this.watchPartyRooms = new InMemoryWatchPartyRoomRepository(this.watchParties);
+  constructor(
+    outbox: InMemoryOutboxRepository,
+    userEvents: InMemoryUserEventRepository,
+    discovery: DiscoveryLookups
+  ) {
+    this.watchPartyRooms = new InMemoryWatchPartyRoomRepository(this.watchParties, discovery);
     this.watchPartyRoles = new InMemoryWatchPartyRoleRepository(this.watchParties);
     this.watchPartyMembers = new InMemoryWatchPartyMemberRepository(this.watchParties);
     this.watchPartyQueue = new InMemoryWatchPartyQueueRepository(this.watchParties);
