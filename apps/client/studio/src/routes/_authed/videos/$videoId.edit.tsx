@@ -23,6 +23,7 @@ export const Route = createFileRoute('/_authed/videos/$videoId/edit')({
     await Promise.all([
       ensureFound(queryClient, videoQueryOptions(api, videoId)),
       prefetched(queryClient.query(categoriesQueryOptions(api))),
+      LazyCaptionsSection.preload(),
     ]);
   },
   pendingComponent: EditVideoPageSkeleton,
