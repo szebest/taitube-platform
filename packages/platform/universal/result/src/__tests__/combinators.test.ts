@@ -1,4 +1,4 @@
-import { all, andThen, ignore, map, unwrapOr } from '../combinators';
+import { all, andThen, ignore, ignoreRejection, map, unwrapOr } from '../combinators';
 import { type Result, err, ok } from '../result';
 
 type Boom = { readonly code: 'BOOM'; readonly at: string };
@@ -67,5 +67,16 @@ describe('@kit/result: ignore', () => {
     { shape: 'a pending result', result: Promise.resolve(err(boom)) },
   ])('drops $shape and returns nothing', ({ result }) => {
     expect(ignore(result, 'the cache is advisory')).toBeUndefined();
+  });
+});
+
+describe('@kit/result: ignoreRejection', () => {
+  it.each([
+    { shape: 'a resolved promise', promise: () => Promise.resolve('done') },
+    { shape: 'a rejected promise', promise: () => Promise.reject(new Error('refused')) },
+  ])('drops $shape without an unhandled rejection', async ({ promise }) => {
+    expect(ignoreRejection(promise(), 'the caller has no use for the outcome')).toBeUndefined();
+
+    await Promise.resolve();
   });
 });

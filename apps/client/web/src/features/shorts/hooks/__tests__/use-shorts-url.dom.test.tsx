@@ -27,7 +27,9 @@ describe('apps/client/web: useShortsUrl', () => {
     const navigate = vi.spyOn(router, 'navigate');
 
     vi.useFakeTimers();
-    act(() => vi.advanceTimersByTime(300));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(navigate).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe(pathOf(2));

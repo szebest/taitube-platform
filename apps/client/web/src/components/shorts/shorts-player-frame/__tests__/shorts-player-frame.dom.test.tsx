@@ -135,7 +135,9 @@ describe('apps/client/web: ShortsPlayerFrame', () => {
 
     expect(screen.queryByRole('status', { name: 'Loading' })).not.toBeInTheDocument();
 
-    act(() => vi.advanceTimersByTime(400));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading');
     vi.useRealTimers();

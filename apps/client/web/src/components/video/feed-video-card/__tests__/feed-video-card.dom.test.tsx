@@ -84,7 +84,9 @@ describe('apps/client/web: FeedVideoCard', () => {
 
       vi.useFakeTimers();
       fireEvent.pointerOver(article, { pointerType: 'mouse' });
-      act(() => vi.advanceTimersByTime(500));
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
 
       expect(article.hasAttribute('data-expanded')).toBe(expanded);
     }
@@ -105,7 +107,9 @@ describe('apps/client/web: FeedVideoCard', () => {
       const article = screen.getByRole('article');
       vi.useFakeTimers();
       fireEvent.pointerEnter(article, { pointerType: 'mouse' });
-      act(() => vi.advanceTimersByTime(500));
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
       return article.querySelector('[data-slot=video-card-frames]');
     };
 

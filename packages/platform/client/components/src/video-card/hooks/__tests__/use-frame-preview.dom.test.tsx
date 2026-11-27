@@ -33,11 +33,15 @@ describe('@kit/components: useFramePreview', () => {
       vi.advanceTimersByTime(500);
     });
 
-    act(() => end(result));
+    act(() => {
+      end(result);
+    });
     expect(result.current.playing).toBe(false);
 
     act(() => result.current.wait());
-    act(() => end(result));
+    act(() => {
+      end(result);
+    });
     act(() => {
       vi.advanceTimersByTime(600);
     });

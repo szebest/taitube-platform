@@ -86,7 +86,9 @@ describe('@kit/ui: ToastProvider', () => {
     toaster.show({ title: 'Signed out' });
 
     renderSave({ title: 'Saved' }, { toaster });
-    act(() => toaster.show({ tone: 'danger', title: 'Could not save' }));
+    act(() => {
+      toaster.show({ tone: 'danger', title: 'Could not save' });
+    });
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(screen.getByText('Could not save')).toBeInTheDocument();

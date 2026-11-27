@@ -45,7 +45,9 @@ describe('apps/client/web: UpdatePrompt', () => {
     const { register } = renderPrompt();
     const activate = vi.fn();
 
-    act(() => register.mock.calls[0]?.[0].onWaiting(activate));
+    act(() => {
+      register.mock.calls[0]?.[0].onWaiting(activate);
+    });
 
     expect(await screen.findByText('A new version of Taitube is ready')).toBeInTheDocument();
     expect(activate).not.toHaveBeenCalled();

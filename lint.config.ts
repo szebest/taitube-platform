@@ -119,7 +119,6 @@ const TYPE_AWARE_BACKLOG = [
   'typescript/await-thenable',
   'typescript/consistent-type-exports',
   'typescript/no-base-to-string',
-  'typescript/no-floating-promises',
   'typescript/no-implied-eval',
   'typescript/no-misused-spread',
   'typescript/no-redundant-type-constituents',

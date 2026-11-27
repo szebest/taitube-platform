@@ -12,11 +12,17 @@ describe('apps/client/studio: useUploadProgress', () => {
 
     expect(progress.current).toBeUndefined();
 
-    act(() => client.setQueryData(uploadKeys.progress('upload-1'), { loaded: 1, total: 4 }));
+    act(() => {
+      client.setQueryData(uploadKeys.progress('upload-1'), { loaded: 1, total: 4 });
+    });
     await vi.waitFor(() => expect(progress.current).toEqual({ loaded: 1, total: 4 }));
 
-    act(() => client.setQueryData(uploadKeys.progress('upload-2'), { loaded: 3, total: 4 }));
-    act(() => client.setQueryData(uploadKeys.progress('upload-1'), { loaded: 2, total: 4 }));
+    act(() => {
+      client.setQueryData(uploadKeys.progress('upload-2'), { loaded: 3, total: 4 });
+    });
+    act(() => {
+      client.setQueryData(uploadKeys.progress('upload-1'), { loaded: 2, total: 4 });
+    });
     await vi.waitFor(() => expect(progress.current).toEqual({ loaded: 2, total: 4 }));
   });
 });

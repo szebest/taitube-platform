@@ -19,7 +19,7 @@ expectTypeOf(store.snapshot()).toEqualTypeOf<ActiveLocale<'en' | 'sv', Catalogue
 expectTypeOf(fallbackActiveLocale<'en', Catalogue>('en').locale).toEqualTypeOf<'en'>();
 
 // @ts-expect-error a locale outside the set
-store.activate('de');
+expectTypeOf(store.activate('de')).toBeObject();
 
 createLocaleStore<'en' | 'sv', Catalogue>({
   // @ts-expect-error the fallback is one of the locales

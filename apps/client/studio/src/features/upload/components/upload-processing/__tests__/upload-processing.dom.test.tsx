@@ -22,15 +22,15 @@ describe('apps/client/studio: UploadProcessing', () => {
   it('shows the status, each rendition and the thumbnail as the stream patches them', async () => {
     const { queryClient } = await sendClip();
 
-    act(() =>
+    act(() => {
       queryClient.setQueryData(
         videoKeys.detail(VIDEO_ID),
         video({
           status: 'PROCESSING',
           progress: { overall: 40, byRendition: { '720p': 60, '480p': 20, thumbnail: 75 } },
         })
-      )
-    );
+      );
+    });
 
     const bar = (name: string) => screen.getByRole('progressbar', { name: `${name} of Harbour` });
     await vi.waitFor(() => expect(bar('Overall')).toHaveAttribute('aria-valuenow', '40'));
@@ -45,7 +45,9 @@ describe('apps/client/studio: UploadProcessing', () => {
     const panel = within(await screen.findByRole('complementary', { name: 'Uploads' }));
     expect(panel.queryByRole('link', { name: 'Watch on Taitube' })).not.toBeInTheDocument();
 
-    act(() => queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'READY' })));
+    act(() => {
+      queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'READY' }));
+    });
 
     expect(await panel.findByRole('link', { name: 'Watch on Taitube' })).toHaveAttribute(
       'href',

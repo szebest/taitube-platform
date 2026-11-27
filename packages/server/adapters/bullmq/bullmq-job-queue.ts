@@ -116,8 +116,8 @@ export class BullMqJobQueue extends JobQueue {
 
   /** Handlers are read when the event fires, so one set after `process()` still hears it. */
   private listen(worker: Worker): void {
-    worker.on('failed', (job: Job | undefined, err: Error) => {
-      if (job) this.failedHandler?.(toQueueJob(job), err);
+    worker.on('failed', async (job: Job | undefined, err: Error) => {
+      if (job) await this.failedHandler?.(toQueueJob(job), err);
     });
     worker.on('stalled', (jobId: string) => this.stalledHandler?.(jobId));
   }

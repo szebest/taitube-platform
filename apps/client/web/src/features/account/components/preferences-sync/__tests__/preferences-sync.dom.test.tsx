@@ -150,12 +150,12 @@ describe('apps/client/web: syncing preferences with the account', () => {
     ]);
     await waitFor(() => expect(shownMode()).toBe('oled'));
 
-    act(() =>
+    act(() => {
       queryClient.setQueryData(
         ['preferences'],
         preferencesView({ version: 2, appearance: { ...OLED, mode: 'light' } })
-      )
-    );
+      );
+    });
 
     await waitFor(() => expect(shownMode()).toBe('light'));
     expect(sent).toEqual([]);
@@ -189,9 +189,9 @@ describe('apps/client/web: syncing preferences with the account', () => {
 
     await user.click(screen.getByRole('button', { name: 'Appearance' }));
     await user.click(screen.getByRole('menuitemradio', { name: 'Nocturne' }));
-    act(() =>
-      queryClient.setQueryData(['preferences'], preferencesView({ version: 2, appearance: OLED }))
-    );
+    act(() => {
+      queryClient.setQueryData(['preferences'], preferencesView({ version: 2, appearance: OLED }));
+    });
 
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(shownTheme()).toBe('nocturne');

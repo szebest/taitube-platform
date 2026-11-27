@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { useToast } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useEffectEvent } from 'react';
@@ -16,11 +17,14 @@ export function useAccessDeniedToast() {
       title: tOr('studio.adminDeniedTitle', {}, ''),
       description: tOr('studio.adminDeniedDescription', {}, ''),
     });
-    navigate({
-      to: '.',
-      search: (previous) => ({ ...previous, denied: undefined }),
-      replace: true,
-    });
+    ignoreRejection(
+      navigate({
+        to: '.',
+        search: (previous) => ({ ...previous, denied: undefined }),
+        replace: true,
+      }),
+      'a refused navigation leaves the viewer where they are'
+    );
   });
 
   useEffect(() => {
