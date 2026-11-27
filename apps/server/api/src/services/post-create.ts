@@ -1,21 +1,16 @@
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { ManagedPostView, PostWriteBody } from '@vp/api-contracts';
-import type {
-  ActingChannel,
-  ChannelPost,
-  NewChannelAuditEntry,
-  NewChannelPostInput,
-} from '@vp/domain';
+import { type ActingChannel, POSTS_PENDING_LIMIT, POSTS_PER_DAY } from '@vp/domain';
 import {
   type CreatePostFailure,
   type PostDraftLimit,
   type PostNotFound,
   type PostScheduleInvalid,
   type PostTiming,
-  type PostTimingDecision,
   decidePostCreate,
-  decidePostPendingLimit,
+  postDailyLimit,
+  postDraftLimit,
   decidePostTiming,
   isPublishNow,
   postNotFound,
@@ -73,10 +68,14 @@ export async function createPost(
   });
   if (isErr(decided)) return decided;
   const { payload } = decided.value;
-  const referenced = await checkPayloadReferences(deps, channel.id, payload, now);
-  if (isErr(referenced)) return referenced;
   const timing = decidePostTiming({ current: null, timing: toPostTiming(body.timing), now });
   if (isErr(timing)) return timing;
+  const publishAt = isPublishNow(timing.value) ? null : timing.value.publishAt;
+  const referenced = await checkPayloadReferences(deps, channel.id, payload, {
+    at: publishAt ?? now,
+    previous: null,
+  });
+  if (isErr(referenced)) return referenced;
 
   const input = {
     id: uuidv7(),
@@ -84,30 +83,21 @@ export async function createPost(
     authorUserId: user.id,
     payload,
     commentsEnabled: body.commentsEnabled,
+    status: timing.value.status,
+    publishAt,
   };
-  const written = await write(deps, input, timing.value, (action) =>
-    postAuditOf(action, user, channel.id, input)
-  );
+  const action = isPublishNow(timing.value) ? 'post.published' : 'post.updated';
+  const written = await posts.create(input, postAuditOf(action, user, channel.id, input), {
+    dailySince: new Date(today),
+    daily: POSTS_PER_DAY,
+    pending: POSTS_PENDING_LIMIT,
+  });
   if (isErr(written)) return written;
-  const views = await toManagedPostViews(deps, [written.value], { user, now });
+  const outcome = written.value;
+  if (outcome.type === 'daily_limit') return err(postDailyLimit(POSTS_PER_DAY));
+  if (outcome.type === 'pending_limit') return err(postDraftLimit(POSTS_PENDING_LIMIT));
+  const views = await toManagedPostViews(deps, [outcome.post], { user, now });
   if (isErr(views)) return views;
   const [view] = views.value;
   return view ? ok(view) : err(postNotFound(input.id));
-}
-
-async function write(
-  deps: PostServiceDeps,
-  input: NewChannelPostInput,
-  timing: PostTimingDecision,
-  audit: (action: 'post.published' | 'post.updated') => NewChannelAuditEntry
-): Promise<Result<ChannelPost, PostDraftLimit | DatabaseUnavailable>> {
-  if (isPublishNow(timing)) return deps.posts.publish(input, audit('post.published'));
-  const pending = await deps.posts.countPending(input.channelId);
-  if (isErr(pending)) return pending;
-  const limit = decidePostPendingLimit(pending.value);
-  if (isErr(limit)) return limit;
-  return deps.posts.saveUnpublished(
-    { ...input, status: timing.status, publishAt: timing.publishAt },
-    audit('post.updated')
-  );
 }

@@ -78,6 +78,11 @@ export interface NewChannelPostInput {
   commentsEnabled: boolean;
 }
 
+export interface NewPostInput extends NewChannelPostInput {
+  status: PostStatus;
+  publishAt: Date | null;
+}
+
 export interface NewUnpublishedPostInput extends NewChannelPostInput {
   status: 'draft' | 'scheduled';
   publishAt: Date | null;

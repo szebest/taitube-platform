@@ -1,7 +1,9 @@
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
+  ChannelPostCreated,
   ChannelPostEdit,
   ListManagedPostsOptions,
+  PostWriteLimits,
   ChannelPostEdited,
   ChannelPostRepositoryPort,
   ListChannelPostsOptions,
@@ -13,6 +15,7 @@ import type {
   ChannelPostEntry,
   NewChannelAuditEntry,
   NewChannelPostInput,
+  NewPostInput,
   NewUnpublishedPostInput,
   PostPinOutcome,
 } from '@vp/domain';
@@ -22,10 +25,11 @@ import { and, count, eq, gte, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';
 import {
   countPendingPosts,
+  createPostWithinLimits,
   dueScheduledIds,
+  editPostRow,
   insertUnpublishedPost,
   managedPostsPage,
-  placementColumns,
   promotePost,
   setPostPinned,
 } from './channel-post-lifecycle-writes';
@@ -92,34 +96,23 @@ export class PostgresChannelPostRepository implements ChannelPostRepositoryPort 
   async edit(
     id: string,
     version: number,
-    { payload, commentsEnabled, placement }: ChannelPostEdit,
+    edit: ChannelPostEdit,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPostEdited, DatabaseUnavailable>> {
     return fromPromise(
-      () =>
-        this.db.transaction(async (tx): Promise<ChannelPostEdited> => {
-          const now = new Date();
-          const [row] = await tx
-            .update(p)
-            .set({
-              payload,
-              kind: payload.kind,
-              commentsEnabled,
-              ...placementColumns(placement),
-              editedAt: now,
-              updatedAt: now,
-              version: sql`${p.version} + 1`,
-            })
-            .where(and(eq(p.id, id), eq(p.version, version)))
-            .returning();
-          if (row) {
-            await appendChannelAudit(tx, audit);
-            return { type: 'edited', post: toChannelPost(row) };
-          }
-          const [current] = await tx.select({ version: p.version }).from(p).where(eq(p.id, id));
-          return current ? { type: 'stale', version: current.version } : { type: 'missing' };
-        }),
+      () => this.db.transaction((tx) => editPostRow(tx, { id, version, edit, audit })),
       databaseUnavailable.during('editChannelPost')
+    );
+  }
+
+  async create(
+    input: NewPostInput,
+    audit: NewChannelAuditEntry,
+    limits: PostWriteLimits
+  ): Promise<Result<ChannelPostCreated, DatabaseUnavailable>> {
+    return fromPromise(
+      () => this.db.transaction((tx) => createPostWithinLimits(tx, input, audit, limits)),
+      databaseUnavailable.during('createChannelPost')
     );
   }
 

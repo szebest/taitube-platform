@@ -17,16 +17,20 @@ export class PostgresPostEngagementRepository implements PostEngagementRepositor
     userId: string,
     optionIndex: number
   ): Promise<Result<PostVoteWritten, DatabaseUnavailable>> {
-    return fromPromise(async (): Promise<PostVoteWritten> => {
-      const [post] = await this.db.select({ id: p.id }).from(p).where(eq(p.id, postId));
-      if (!post) return 'missing';
-      const written = await this.db
-        .insert(v)
-        .values({ postId, userId, optionIndex })
-        .onConflictDoNothing()
-        .returning({ postId: v.postId });
-      return written.length === 0 ? 'already_voted' : 'voted';
-    }, databaseUnavailable.during('votePost'));
+    return fromPromise(
+      () =>
+        this.db.transaction(async (tx): Promise<PostVoteWritten> => {
+          const [post] = await tx.select({ id: p.id }).from(p).where(eq(p.id, postId)).for('share');
+          if (!post) return 'missing';
+          const written = await tx
+            .insert(v)
+            .values({ postId, userId, optionIndex })
+            .onConflictDoNothing()
+            .returning({ postId: v.postId });
+          return written.length === 0 ? 'already_voted' : 'voted';
+        }),
+      databaseUnavailable.during('votePost')
+    );
   }
 
   async votedIndexes(

@@ -86,6 +86,25 @@ describe('apps/server/api/services: createPost', () => {
     expect(failure.code).toBe(code);
   });
 
+  it.each([
+    { scenario: 'before the post publishes', closesInDays: 2, ok: false },
+    { scenario: 'within 30 days of the time it publishes', closesInDays: 20, ok: true },
+    { scenario: 'past 30 days of the time it publishes', closesInDays: 45, ok: false },
+  ])(
+    'holds the close time of a scheduled poll to its publish time: $scenario',
+    async ({ closesInDays, ok }) => {
+      const { service, acting } = await postsFixture();
+
+      const result = await service.create(OWNER, acting, {
+        payload: { ...POLL, closesAt: later(closesInDays) },
+        commentsEnabled: true,
+        timing: { mode: 'schedule', publishAt: later(10) },
+      });
+
+      expect(result.ok).toBe(ok);
+    }
+  );
+
   it('refuses an image that is not a ready post image of the channel, and names it', async () => {
     const { service, acting, readyImage, repositories } = await postsFixture();
     const other = expectOk(

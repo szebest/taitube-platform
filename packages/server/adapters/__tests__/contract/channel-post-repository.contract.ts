@@ -1,6 +1,7 @@
 import type { ChannelPostRepositoryPort } from '@vp/core/repositories';
 import type { ChannelPostContractContext } from './channel-post-contract-context';
 import { describeChannelPostLifecycleContract } from './channel-post-lifecycle.contract';
+import { describeChannelPostLimitsContract } from './channel-post-limits.contract';
 import { describeChannelPostListingContract } from './channel-post-listing.contract';
 import { describeChannelPostWritesContract } from './channel-post-writes.contract';
 import { describePostEngagementContract } from './post-engagement.contract';
@@ -37,6 +38,7 @@ export function describeChannelPostRepositoryContract(makeSubject: MakeRepositor
     describeChannelPostWritesContract(ctx);
     describeChannelPostListingContract(ctx);
     describeChannelPostLifecycleContract(ctx);
+    describeChannelPostLimitsContract(ctx);
     describePostEngagementContract(ctx);
   });
 }

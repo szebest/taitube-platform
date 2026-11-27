@@ -9,6 +9,8 @@ export const postKeys = {
   list: (channelId: string, status: PostStatus | undefined) =>
     [...postKeys.channel(channelId), 'list', status ?? 'all'] as const,
   stats: (channelId: string, id: string) => [...postKeys.channel(channelId), 'stats', id] as const,
+  history: (channelId: string, id: string) =>
+    [...postKeys.channel(channelId), 'history', id] as const,
   videos: (channelId: string) => [...postKeys.channel(channelId), 'videos'] as const,
   playlists: (channelId: string) => [...postKeys.channel(channelId), 'playlists'] as const,
 };
@@ -24,6 +26,19 @@ export function managedPostsQueryOptions(
     queryFn: ({ pageParam }) =>
       api.postStudio.listManagedPosts({
         query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam, ...(status && { status }) },
+      }),
+    ...keysetPaging,
+  });
+}
+
+/** The saved states of one published post, newest first; the channel is in the key like every post read. */
+export function postHistoryQueryOptions(api: ApiClient, channelId: string, id: string) {
+  return infiniteQueryOptions({
+    queryKey: postKeys.history(channelId, id),
+    queryFn: ({ pageParam }) =>
+      api.postRevisions.listPostRevisions({
+        params: { id },
+        query: { cursor: pageParam },
       }),
     ...keysetPaging,
   });

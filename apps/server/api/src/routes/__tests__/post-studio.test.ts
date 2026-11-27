@@ -205,4 +205,48 @@ describe('post studio routes', () => {
       expect([onDraft.statusCode, onMissing.statusCode]).toEqual([404, 404]);
     });
   });
+
+  describe('edit history', () => {
+    it('keeps the history of an edited post for the team, restores a state and shows it as edited', async () => {
+      const id = await ctx.text('owner', 'first');
+      const read = async () => (await ctx.call('owner', 'GET', `/v1/posts/${id}`)).json();
+      const edit = async (text: string, version: number) =>
+        ctx.call('owner', 'PATCH', `/v1/me/channel/posts/${id}`, {
+          payload: { ...textBody(text), version },
+        });
+      expect((await edit('second', 1)).statusCode).toBe(200);
+
+      const history = await ctx.call('owner', 'GET', `/v1/me/channel/posts/${id}/revisions`);
+      const original = history.json().items.at(-1);
+      const restored = await ctx.call(
+        'owner',
+        'POST',
+        `/v1/me/channel/posts/${id}/revisions/${original.id}/restore`,
+        { payload: { version: 2 } }
+      );
+      const stale = await ctx.call(
+        'owner',
+        'POST',
+        `/v1/me/channel/posts/${id}/revisions/${original.id}/restore`,
+        { payload: { version: 1 } }
+      );
+
+      expect(history.json().items.map((item: { version: number }) => item.version)).toEqual([2, 1]);
+      expect(restored.statusCode).toBe(200);
+      expect((await read()).body.text).toBe('first');
+      expect((await read()).isEdited).toBe(true);
+      expect([stale.statusCode, codeOf(stale)]).toEqual([409, ErrorCodes.VERSION_CONFLICT]);
+    });
+
+    it('answers a moderator with 403 and an anonymous caller with 401', async () => {
+      await ctx.join('moderator', MODERATOR);
+      const id = await ctx.text('owner', 'x');
+      const url = `/v1/me/channel/posts/${id}/revisions`;
+
+      const moderator = await ctx.call('moderator', 'GET', url, { as: ctx.ownerChannelId });
+      const anonymous = await ctx.call('anonymous', 'GET', url);
+
+      expect([moderator.statusCode, anonymous.statusCode]).toEqual([403, 401]);
+    });
+  });
 });

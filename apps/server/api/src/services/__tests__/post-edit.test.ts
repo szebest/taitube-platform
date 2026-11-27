@@ -123,4 +123,20 @@ describe('apps/server/api/services: editPost', () => {
 
     expect(edited.body).toMatchObject({ options: [{ text: 'a' }, { text: 'b' }, { text: 'c' }] });
   });
+
+  it('lets a poll that has closed be edited without asking for its close time again', async () => {
+    let now = NOW;
+    const { service, acting, publish } = await postsFixture(() => now);
+    const poll = await publish({ ...POLL, closesAt: later(1) });
+    now = NOW + 2 * DAY;
+
+    const edited = expectOk(
+      await service.edit(OWNER, acting, poll.id, {
+        payload: { ...POLL, question: 'Reworded?', closesAt: later(1) },
+        version: poll.version,
+      })
+    );
+
+    expect(edited.body).toMatchObject({ question: 'Reworded?', closed: true });
+  });
 });

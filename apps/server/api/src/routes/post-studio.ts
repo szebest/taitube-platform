@@ -3,7 +3,9 @@ import {
   listManagedPosts,
   pinPost,
   recordPostOpen,
+  listPostRevisions,
   recordPostShareClick,
+  restorePostRevision,
   unpinPost,
   votePost,
 } from '@vp/api-contracts';
@@ -15,7 +17,7 @@ import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
 export async function postStudioRoutes(app: FastifyInstance): Promise<void> {
-  const { postManageService, postEngagementService } = app.services;
+  const { postManageService, postEngagementService, postRevisionService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   server.get(
@@ -101,5 +103,44 @@ export async function postStudioRoutes(app: FastifyInstance): Promise<void> {
       sendResult(reply, request, await postEngagementService.recordShareClick(request.params.id), {
         status: recordPostShareClick.status,
       })
+  );
+
+  server.get(
+    listPostRevisions.path,
+    {
+      schema: {
+        ...contractSchema(listPostRevisions),
+        params: listPostRevisions.params,
+        querystring: listPostRevisions.query,
+      },
+    },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      return sendResult(
+        reply,
+        request,
+        await postRevisionService.list(user, acting, request.params.id, request.query)
+      );
+    }
+  );
+
+  server.post(
+    restorePostRevision.path,
+    {
+      schema: {
+        ...contractSchema(restorePostRevision),
+        params: restorePostRevision.params,
+        body: restorePostRevision.body,
+      },
+    },
+    async (request, reply) => {
+      const { user, acting } = requireActingChannel(request);
+      const { id, revisionId } = request.params;
+      return sendResult(
+        reply,
+        request,
+        await postRevisionService.restore(user, acting, id, revisionId, request.body.version)
+      );
+    }
   );
 }

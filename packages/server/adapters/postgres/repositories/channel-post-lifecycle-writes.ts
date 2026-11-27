@@ -1,23 +1,44 @@
-import type { ChannelPostPlacement } from '@vp/core/repositories';
+import type {
+  ChannelPostCreated,
+  ChannelPostEdit,
+  ChannelPostEdited,
+  ChannelPostPlacement,
+  PostWriteLimits,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
   isPostPublished,
   type ChannelPost,
   type ManagedPostCursor,
   type NewChannelAuditEntry,
+  type NewPostInput,
   type NewUnpublishedPostInput,
   type PostPinOutcome,
   type PostStatus,
 } from '@vp/domain';
+import { decidePollUnlocked } from '@vp/domain-rules';
 import { postSubscribersOutbox } from '@vp/job-contracts';
-import { type SQL, and, asc, count, desc, eq, inArray, isNotNull, lte, sql } from 'drizzle-orm';
+import {
+  type SQL,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lte,
+  sql,
+} from 'drizzle-orm';
 import { msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { toChannelPost } from './channel-post-queries';
 import { enqueueNotificationJobs } from './notification-jobs';
+import { appendPostRevisions } from './post-revision-writes';
 import type { PostgresDatabase } from './types';
 
-const { channelPosts: p } = schema;
+const { channelPosts: p, postPollVotes: v } = schema;
 
 const createdAt = msTimestamp(p.createdAt);
 
@@ -44,7 +65,7 @@ export async function insertUnpublishedPost(
   return toChannelPost(row);
 }
 
-export function placementColumns(placement: ChannelPostPlacement | undefined) {
+function placementColumns(placement: ChannelPostPlacement | undefined) {
   return placement ? { status: placement.status, publishAt: placement.publishAt } : {};
 }
 
@@ -57,7 +78,14 @@ export async function promotePost(
   const now = new Date();
   const [row] = await tx
     .update(p)
-    .set({ status: 'published', publishedAt: now, publishAt: null, updatedAt: now })
+    .set({
+      status: 'published',
+      publishedAt: now,
+      publishAt: null,
+      editedAt: null,
+      updatedAt: now,
+      version: sql`${p.version} + 1`,
+    })
     .where(and(eq(p.id, id), inArray(p.status, ['draft', 'scheduled'])))
     .returning();
   if (!row) return null;
@@ -132,4 +160,80 @@ export async function setPostPinned(
     .where(eq(p.id, id));
   await appendChannelAudit(tx, audit);
   return pinned ? 'pinned' : 'unpinned';
+}
+
+/**
+ * Adds a post under a lock on its channel row, so the day's count and the held count that decide it
+ * cannot be read by two requests at once.
+ */
+export async function createPostWithinLimits(
+  tx: PostgresDatabase,
+  input: NewPostInput,
+  audit: NewChannelAuditEntry,
+  limits: PostWriteLimits
+): Promise<ChannelPostCreated> {
+  await tx.execute(sql`select id from channels where id = ${input.channelId}::uuid for update`);
+  const [today] = await tx
+    .select({ total: count() })
+    .from(p)
+    .where(and(eq(p.channelId, input.channelId), gte(p.createdAt, limits.dailySince)));
+  if ((today?.total ?? 0) >= limits.daily) return { type: 'daily_limit' };
+  if (!isPostPublished(input.status)) {
+    const pending = await countPendingPosts(tx, input.channelId);
+    if (pending >= limits.pending) return { type: 'pending_limit' };
+  }
+  const now = new Date();
+  const published = isPostPublished(input.status);
+  const [row] = await tx
+    .insert(p)
+    .values({
+      ...input,
+      kind: input.payload.kind,
+      publishedAt: published ? now : null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  if (!row) throw new Error('channel post insert returned no row');
+  await appendChannelAudit(tx, audit);
+  if (published) await enqueueNotificationJobs(tx, [postSubscribersOutbox({ postId: row.id })]);
+  return { type: 'created', post: toChannelPost(row) };
+}
+
+export async function editPostRow(
+  tx: PostgresDatabase,
+  args: { id: string; version: number; edit: ChannelPostEdit; audit: NewChannelAuditEntry }
+): Promise<ChannelPostEdited> {
+  const { id, version, edit, audit } = args;
+  const [before] = await tx.select().from(p).where(eq(p.id, id)).for('update');
+  if (!before) return { type: 'missing' };
+  if (before.version !== version) return { type: 'stale', version: before.version };
+  const [votes] = await tx.select({ total: count() }).from(v).where(eq(v.postId, id));
+  const unlocked = decidePollUnlocked({
+    post: toChannelPost(before),
+    next: edit.payload,
+    voteCount: votes?.total ?? 0,
+  });
+  if (!unlocked.ok) return { type: 'locked' };
+
+  const now = new Date();
+  const [after] = await tx
+    .update(p)
+    .set({
+      payload: edit.payload,
+      kind: edit.payload.kind,
+      commentsEnabled: edit.commentsEnabled,
+      ...placementColumns(edit.placement),
+      editedAt: now,
+      updatedAt: now,
+      version: sql`${p.version} + 1`,
+    })
+    .where(eq(p.id, id))
+    .returning();
+  if (!after) return { type: 'missing' };
+  if (isPostPublished(before.status)) {
+    await appendPostRevisions(tx, { before, after, author: edit.revision });
+  }
+  await appendChannelAudit(tx, audit);
+  return { type: 'edited', post: toChannelPost(after) };
 }

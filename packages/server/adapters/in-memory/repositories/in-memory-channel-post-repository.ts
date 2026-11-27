@@ -1,6 +1,9 @@
 import { isErr, ok, type Result } from '@kit/result';
 import type {
+  ChannelPostCreated,
   ChannelPostEdit,
+  EntityRevisionRepository,
+  PostWriteLimits,
   ChannelPostEdited,
   ChannelPostRepositoryPort,
   ListChannelPostsOptions,
@@ -10,26 +13,36 @@ import type {
 } from '@vp/core/repositories';
 import {
   isPostPublished,
-  isPostScheduled,
   type ChannelPost,
   type ChannelPostEntry,
   type CommentTarget,
   type NewChannelAuditEntry,
   type NewChannelPostInput,
+  type NewPostInput,
   type NewUnpublishedPostInput,
   type PostPinOutcome,
 } from '@vp/domain';
-import { POST_LIFECYCLE } from '@vp/domain-rules';
+import { decidePollUnlocked } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
-import { compareDesc, compareIdDesc, cursorOf } from './channel-post-ordering';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
+import {
+  dueScheduled,
+  managedPage,
+  newUnpublishedPost,
+  pinnedCount,
+  publishedPage,
+} from './in-memory-post-queries';
+import { limitRefusal, recordPostRevisions } from './in-memory-post-revisions';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 
 export interface InMemoryChannelPostRepositoryOptions {
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
   outboxRepo: Pick<OutboxRepository, 'enqueue'>;
   subscriptionsRepo: Pick<InMemorySubscriptionRepository, 'getChannelSubscriptionChannelIds'>;
+  /** The votes a post holds, which lock its poll. */
+  votes: (postId: string) => number;
+  revisions: Pick<EntityRevisionRepository, 'append' | 'list'>;
   /** The in-memory form of the trigger that deletes a target's comments with it. */
   removeComments: (target: CommentTarget) => void;
 }
@@ -84,13 +97,16 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   async edit(
     id: string,
     version: number,
-    { payload, commentsEnabled, placement }: ChannelPostEdit,
+    { payload, commentsEnabled, placement, revision }: ChannelPostEdit,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPostEdited, DatabaseUnavailable>> {
     const post = this.posts.get(id);
     if (!post) return ok({ type: 'missing' });
     if (post.version !== version) return ok({ type: 'stale', version: post.version });
+    const unlocked = decidePollUnlocked({ post, next: payload, voteCount: this.deps.votes(id) });
+    if (!unlocked.ok) return ok({ type: 'locked' });
 
+    const before = { ...post };
     Object.assign(post, {
       payload,
       commentsEnabled,
@@ -98,8 +114,28 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
       editedAt: new Date(),
       version: version + 1,
     });
+    if (isPostPublished(before.status)) {
+      const recorded = await recordPostRevisions(this.deps.revisions, before, post, revision);
+      if (isErr(recorded)) return recorded;
+    }
     const audited = await this.deps.auditRepo.append(audit);
     return isErr(audited) ? audited : ok({ type: 'edited', post: { ...post } });
+  }
+
+  async create(
+    input: NewPostInput,
+    audit: NewChannelAuditEntry,
+    limits: PostWriteLimits
+  ): Promise<Result<ChannelPostCreated, DatabaseUnavailable>> {
+    const refused = limitRefusal([...this.posts.values()], input, limits);
+    if (refused) return ok(refused);
+    const written = isPostPublished(input.status)
+      ? await this.publish(input, audit)
+      : await this.saveUnpublished(
+          { ...input, status: input.status as 'draft' | 'scheduled' },
+          audit
+        );
+    return isErr(written) ? written : ok({ type: 'created', post: written.value });
   }
 
   async remove(
@@ -125,16 +161,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
     input: NewUnpublishedPostInput,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPost, DatabaseUnavailable>> {
-    const post: ChannelPost = {
-      ...input,
-      publishedAt: null,
-      pinnedAt: null,
-      editedAt: null,
-      likeCount: 0,
-      commentsCount: 0,
-      version: 1,
-      createdAt: new Date(),
-    };
+    const post = newUnpublishedPost(input);
     this.posts.set(post.id, post);
     const audited = await this.deps.auditRepo.append(audit);
     return isErr(audited) ? audited : ok({ ...post });
@@ -146,7 +173,13 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   ): Promise<Result<ChannelPost | null, DatabaseUnavailable>> {
     const post = this.posts.get(id);
     if (!post || isPostPublished(post.status)) return ok(null);
-    Object.assign(post, { status: 'published', publishedAt: new Date(), publishAt: null });
+    Object.assign(post, {
+      status: 'published',
+      publishedAt: new Date(),
+      publishAt: null,
+      editedAt: null,
+      version: post.version + 1,
+    });
     if (audit) {
       const audited = await this.deps.auditRepo.append(audit);
       if (isErr(audited)) return audited;
@@ -156,10 +189,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   }
 
   async promoteDue(now: Date, limit: number): Promise<Result<string[], DatabaseUnavailable>> {
-    const due = [...this.posts.values()]
-      .filter((post) => isPostScheduled(post.status) && post.publishAt && post.publishAt <= now)
-      .sort((a, b) => (a.publishAt?.getTime() ?? 0) - (b.publishAt?.getTime() ?? 0))
-      .slice(0, limit);
+    const due = dueScheduled([...this.posts.values()], now, limit);
     const promoted: string[] = [];
     for (const { id } of due) {
       const result = await this.promote(id, null);
@@ -171,20 +201,9 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
 
   async listManaged(
     channelId: string,
-    { status, cursor, limit }: ListManagedPostsOptions
+    options: ListManagedPostsOptions
   ): Promise<Result<ChannelPost[], DatabaseUnavailable>> {
-    const before = (post: ChannelPost) =>
-      !cursor ||
-      post.createdAt < cursor.createdAt ||
-      (post.createdAt.getTime() === cursor.createdAt.getTime() && post.id < cursor.id);
-    return ok(
-      [...this.posts.values()]
-        .filter((post) => post.channelId === channelId && (!status || post.status === status))
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || compareIdDesc(a.id, b.id))
-        .filter(before)
-        .slice(0, limit + 1)
-        .map((post) => ({ ...post }))
-    );
+    return ok(managedPage([...this.posts.values()], channelId, options));
   }
 
   async setPinned(
@@ -198,10 +217,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
     if (post?.channelId !== channelId) return ok('missing');
     if (!isPostPublished(post.status)) return ok('not_published');
     if (pinned === (post.pinnedAt !== null)) return ok(pinned ? 'pinned' : 'unpinned');
-    const held = [...this.posts.values()].filter(
-      (other) => other.channelId === channelId && other.pinnedAt !== null
-    ).length;
-    if (pinned && held >= limit) return ok('limit');
+    if (pinned && pinnedCount([...this.posts.values()], channelId) >= limit) return ok('limit');
     post.pinnedAt = pinned ? new Date() : null;
     const audited = await this.deps.auditRepo.append(audit);
     return isErr(audited) ? audited : ok(pinned ? 'pinned' : 'unpinned');
@@ -265,21 +281,9 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
 
   private page(
     belongs: (post: ChannelPost) => boolean,
-    { viewerId, cursor, limit }: ListChannelPostsOptions,
-    ordered: (post: ChannelPost) => ChannelPost = (post) => post
+    options: ListChannelPostsOptions,
+    ordered?: (post: ChannelPost) => ChannelPost
   ): ChannelPostEntry[] {
-    return [...this.posts.values()]
-      .filter((post) => post.status === POST_LIFECYCLE.target('publish') && belongs(post))
-      .map(ordered)
-      .flatMap((post) => {
-        const key = cursorOf(post);
-        return key && (!cursor || compareDesc(key, cursor) > 0) ? [{ post, key }] : [];
-      })
-      .sort((a, b) => compareDesc(a.key, b.key))
-      .slice(0, limit + 1)
-      .map(({ post }) => ({
-        post: { ...(this.posts.get(post.id) ?? post) },
-        likedByViewer: viewerId !== null && this.likes.has(`${post.id}:${viewerId}`),
-      }));
+    return publishedPage(this.posts, this.likes, belongs, options, ordered);
   }
 }

@@ -6,6 +6,7 @@ import type {
   ManagedPostCursor,
   NewChannelAuditEntry,
   NewChannelPostInput,
+  NewPostInput,
   NewUnpublishedPostInput,
   PostPayload,
   PostPinOutcome,
@@ -25,11 +26,30 @@ export type ChannelPostPlacement =
   | { status: 'draft'; publishAt: null }
   | { status: 'scheduled'; publishAt: Date };
 
+/** Who saved the edit; a published post's edit records a revision with it, in the same transaction. */
+export interface ChannelPostRevisionAuthor {
+  authorUserId: string;
+  restoredFromVersion: number | null;
+}
+
 export interface ChannelPostEdit {
   payload: PostPayload;
   commentsEnabled: boolean;
   placement?: ChannelPostPlacement;
+  revision: ChannelPostRevisionAuthor;
 }
+
+/** What a channel holds at most, counted inside the transaction that adds a post. */
+export interface PostWriteLimits {
+  dailySince: Date;
+  daily: number;
+  pending: number;
+}
+
+export type ChannelPostCreated =
+  | { type: 'created'; post: ChannelPost }
+  | { type: 'daily_limit' }
+  | { type: 'pending_limit' };
 
 export interface ListManagedPostsOptions {
   /** One status, or every status when `null`. */
@@ -41,6 +61,7 @@ export interface ListManagedPostsOptions {
 export type ChannelPostEdited =
   | { type: 'edited'; post: ChannelPost }
   | { type: 'stale'; version: number }
+  | { type: 'locked' }
   | { type: 'missing' };
 
 /** Whether the viewer likes the post now, and its count after the write. */
@@ -59,11 +80,24 @@ export interface ChannelPostRepositoryPort {
   findById(id: string): Promise<Result<ChannelPost | null, DatabaseUnavailable>>;
   /** The channel's posts created at or after `since`, published or not, for the daily limit. */
   countCreatedSince(channelId: string, since: Date): Promise<Result<number, DatabaseUnavailable>>;
+  /**
+   * Adds a post as published, a draft or a scheduled post, counting the channel's posts of the day
+   * and its held posts under a lock on the channel row, so two requests cannot both take the last slot.
+   */
+  create(
+    input: NewPostInput,
+    audit: NewChannelAuditEntry,
+    limits: PostWriteLimits
+  ): Promise<Result<ChannelPostCreated, DatabaseUnavailable>>;
   publish(
     input: NewChannelPostInput,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelPost, DatabaseUnavailable>>;
-  /** Applies only while the post is still at `version`, and moves it one version on. */
+  /**
+   * Applies only while the post is still at `version`, and moves it one version on. With the post
+   * row locked it counts the votes: a poll that has any keeps its question and options (`locked`).
+   * Editing a published post appends the revision.
+   */
   edit(
     id: string,
     version: number,

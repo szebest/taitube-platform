@@ -13,6 +13,7 @@ import {
   HOUR_MS,
   OTHER_OWNER_CHANNEL_ID,
   OTHER_OWNER_ID,
+  OWNER_ID,
   OWNER_CHANNEL_ID,
   VIDEO_IDS,
   publicVideo,
@@ -20,7 +21,8 @@ import {
 } from './fixtures';
 
 const NEXT_PAYLOAD = { kind: 'text', text: 'Edited' } as const;
-const EDIT = { payload: NEXT_PAYLOAD, commentsEnabled: false };
+const REVISION = { authorUserId: OWNER_ID, restoredFromVersion: null };
+const EDIT = { payload: NEXT_PAYLOAD, commentsEnabled: false, revision: REVISION };
 
 export function describeChannelPostWritesContract(ctx: ChannelPostContractContext): void {
   describe('channel post writes', () => {

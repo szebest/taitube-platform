@@ -16,12 +16,10 @@ describe('apps/server/api/services: checkPayloadReferences', () => {
     };
     const poll: PostPayload = { kind: 'poll', question: 'q', options: ['a', 'b'], closesAt: null };
     const check = async (payload: PostPayload) =>
-      checkPayloadReferences(
-        { images: repositories.channelImages },
-        channel.id,
-        payload,
-        new Date(NOW)
-      );
+      checkPayloadReferences({ images: repositories.channelImages }, channel.id, payload, {
+        at: new Date(NOW),
+        previous: null,
+      });
 
     expectOk(await check({ kind: 'text', text: 'x' }));
     expectOk(await check(poll));
@@ -42,12 +40,10 @@ describe('apps/server/api/services: checkPayloadReferences', () => {
     };
 
     const failure = expectErr(
-      await checkPayloadReferences(
-        { images: repositories.channelImages },
-        channel.id,
-        payload,
-        new Date(NOW)
-      )
+      await checkPayloadReferences({ images: repositories.channelImages }, channel.id, payload, {
+        at: new Date(NOW),
+        previous: null,
+      })
     );
 
     expect(failure.code).toBe(code);
@@ -63,17 +59,40 @@ describe('apps/server/api/services: checkPayloadReferences', () => {
     };
 
     const failure = expectErr(
-      await checkPayloadReferences(
-        { images: repositories.channelImages },
-        channel.id,
-        payload,
-        new Date(NOW)
-      )
+      await checkPayloadReferences({ images: repositories.channelImages }, channel.id, payload, {
+        at: new Date(NOW),
+        previous: null,
+      })
     );
 
     expect(failure).toMatchObject({
       code: ErrorCodes.POST_IMAGE_NOT_READY,
       uploadId: '00000000-0000-7000-8000-0000000012aa',
     });
+  });
+
+  it('leaves the close time of an edited poll alone when it did not change, and holds a new one to the opening', async () => {
+    const { channel, repositories } = await postsFixture();
+    const closed: PostPayload = {
+      kind: 'poll',
+      question: 'q',
+      options: ['a', 'b'],
+      closesAt: new Date(NOW - DAY).toISOString(),
+    };
+    const check = async (payload: PostPayload, at: Date) =>
+      checkPayloadReferences({ images: repositories.channelImages }, channel.id, payload, {
+        at,
+        previous: closed,
+      });
+
+    expectOk(await check({ ...closed, question: 'reworded' }, new Date(NOW)));
+    expect(
+      expectErr(
+        await check(
+          { ...closed, closesAt: new Date(NOW + DAY).toISOString() },
+          new Date(NOW + 2 * DAY)
+        )
+      ).code
+    ).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 });

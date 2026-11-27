@@ -39,6 +39,27 @@ export function useUpdatePost() {
   );
 }
 
+export interface PostRestore {
+  id: string;
+  revisionId: string;
+  version: number;
+}
+
+export function useRestorePostRevision() {
+  const api = useApi();
+
+  return useMutation(
+    mutationOptions({
+      mutationFn: ({ id, revisionId, version }: PostRestore) =>
+        api.postRevisions.restorePostRevision({
+          params: { id, revisionId },
+          body: { version },
+        }),
+      onSettled: (_data, _error, _restore, _snapshot, { client }) => refetchPosts(client),
+    })
+  );
+}
+
 export function useDeletePost() {
   const api = useApi();
 

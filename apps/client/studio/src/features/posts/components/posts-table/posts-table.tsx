@@ -17,6 +17,7 @@ import { PostRowMenu, type PostRowMenuProps } from '../post-row-menu/post-row-me
 interface PostRowActions {
   onEdit: (post: ManagedPostView) => void;
   onStats: (post: ManagedPostView) => void;
+  onHistory: (post: ManagedPostView) => void;
   onDelete: (post: ManagedPostView) => void;
 }
 
@@ -38,11 +39,12 @@ const STATUS_TONE = {
 
 const WHEN = { draft: 'createdAt', scheduled: 'publishAt', published: 'publishedAt' } as const;
 
-type MenuActions = Pick<PostRowMenuProps, 'onEdit' | 'onStats' | 'onDelete'>;
+type MenuActions = Pick<PostRowMenuProps, 'onEdit' | 'onStats' | 'onHistory' | 'onDelete'>;
 
 const menuFor = (post: ManagedPostView, actions: PostRowActions): MenuActions => ({
   onEdit: () => actions.onEdit(post),
   onStats: () => actions.onStats(post),
+  onHistory: () => actions.onHistory(post),
   onDelete: () => actions.onDelete(post),
 });
 

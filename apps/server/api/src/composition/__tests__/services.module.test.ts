@@ -79,6 +79,7 @@ describe('apps/server/api/composition: services module', () => {
       'playlistService',
       'postEngagementService',
       'postManageService',
+      'postRevisionService',
       'postService',
       'preferencesService',
       'queueBoard',

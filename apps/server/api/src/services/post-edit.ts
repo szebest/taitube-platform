@@ -6,11 +6,11 @@ import {
   type EditPostFailure,
   type PostPollLocked,
   type PostScheduleInvalid,
-  decidePollUnlocked,
   decidePostEdit,
   decidePostTiming,
   isPublishNow,
   postNotFound,
+  postPollLocked,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -25,6 +25,7 @@ export type EditPostBody = Omit<PostWriteBody, 'commentsEnabled' | 'timing'> & {
   commentsEnabled?: boolean;
   timing?: PostWriteBody['timing'];
   version: number;
+  restoredFromVersion?: number;
 };
 
 export type EditPostServiceFailure =
@@ -34,15 +35,6 @@ export type EditPostServiceFailure =
   | PostPollLocked
   | VersionConflict
   | DatabaseUnavailable;
-
-async function votesOn(
-  deps: PostServiceDeps,
-  post: ChannelPost
-): Promise<Result<number, DatabaseUnavailable>> {
-  const tallies = await deps.engagement.tallies([post.id]);
-  if (isErr(tallies)) return tallies;
-  return ok((tallies.value.get(post.id) ?? []).reduce((sum, count) => sum + count, 0));
-}
 
 /**
  * An edit under the caller's version. A draft or scheduled post may also be moved, and moved to
@@ -76,12 +68,6 @@ export async function editPost(
   if (!current) return err(postNotFound(postId));
   const { payload } = decided.value;
 
-  const referenced = await checkPayloadReferences(deps, channel.id, payload, now);
-  if (isErr(referenced)) return referenced;
-  const voteCount = await votesOn(deps, current);
-  if (isErr(voteCount)) return voteCount;
-  const unlocked = decidePollUnlocked({ post: current, next: payload, voteCount: voteCount.value });
-  if (isErr(unlocked)) return unlocked;
   const decision = body.timing
     ? decidePostTiming({ current: current.status, timing: toPostTiming(body.timing), now })
     : null;
@@ -89,6 +75,11 @@ export async function editPost(
   const moved = decision?.value ?? null;
   const placement: ChannelPostPlacement | undefined =
     moved && !isPublishNow(moved) ? moved : undefined;
+  const referenced = await checkPayloadReferences(deps, channel.id, payload, {
+    at: placement?.publishAt ?? current.publishAt ?? now,
+    previous: current.payload,
+  });
+  if (isErr(referenced)) return referenced;
 
   const written = await posts.edit(
     postId,
@@ -97,6 +88,10 @@ export async function editPost(
       payload,
       commentsEnabled: body.commentsEnabled ?? current.commentsEnabled,
       placement,
+      revision: {
+        authorUserId: user.id,
+        restoredFromVersion: body.restoredFromVersion ?? null,
+      },
     },
     postAuditOf('post.updated', user, channel.id, { id: postId, payload })
   );
@@ -107,6 +102,8 @@ export async function editPost(
       return err(postNotFound(postId));
     case 'stale':
       return err(versionConflict(postId, body.version));
+    case 'locked':
+      return err(postPollLocked(postId));
     case 'edited':
       return finish(deps, user, outcome.post, moved !== null && isPublishNow(moved), now);
     default:

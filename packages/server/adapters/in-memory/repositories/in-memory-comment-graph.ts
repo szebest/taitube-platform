@@ -22,6 +22,8 @@ export function provideCommentRepositories(c: Container): Container {
           auditRepo: c.get(Repo.channelAudit),
           outboxRepo: c.get(Repo.outbox),
           subscriptionsRepo: c.get(Repo.subscriptions),
+          votes: (postId) => c.get(Repo.postEngagement).total(postId),
+          revisions: c.get(Repo.entityRevisions),
           removeComments: (target) => c.get(Repo.comments).removeTarget(target),
         })
     )

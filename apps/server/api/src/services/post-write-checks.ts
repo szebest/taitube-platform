@@ -8,16 +8,17 @@ import type { PostViewDeps } from './post-views';
 export type PayloadCheckFailure = InvalidPostPayload | PostImageNotReady | DatabaseUnavailable;
 
 /**
- * What a payload needs beyond its own shape: a close time inside the window and every image a ready
+ * What a payload needs beyond its own shape: a close time inside the window that opens when voting
+ * does, and every image a ready
  * post image of the posting channel, which only the repositories can say.
  */
 export async function checkPayloadReferences(
   deps: Pick<PostViewDeps, 'images'>,
   channelId: string,
   payload: PostPayload,
-  now: Date
+  opens: { at: Date; previous: PostPayload | null }
 ): Promise<Result<void, PayloadCheckFailure>> {
-  const closing = decidePollClose(payload, now);
+  const closing = decidePollClose(payload, opens.at, opens.previous);
   if (isErr(closing)) return closing;
   if (payload.kind !== 'images') return ok();
   const ready = await deps.images.findReadyPostImages(

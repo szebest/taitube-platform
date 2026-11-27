@@ -9,6 +9,7 @@ import {
   postPinLimit,
   postPollClosed,
   postPollLocked,
+  postRevisionNotFound,
   postScheduleInvalid,
   postShareNotPublic,
 } from '../failures';
@@ -39,6 +40,11 @@ describe('@vp/domain-rules: post failures', () => {
       name: 'a closed poll',
       failure: postPollClosed('p'),
       expected: { code: ErrorCodes.POST_POLL_CLOSED, postId: 'p' },
+    },
+    {
+      name: 'a missing revision',
+      failure: postRevisionNotFound('p', 'r'),
+      expected: { code: ErrorCodes.REVISION_NOT_FOUND, postId: 'p', revisionId: 'r' },
     },
     {
       name: 'a locked poll',

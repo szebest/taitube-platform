@@ -44,6 +44,13 @@ export const studioPosts = {
   postsPin: dt('Pin to the top'),
   postsUnpin: dt('Unpin'),
   postsStats: dt('Stats'),
+  postsHistory: dt('Edit history'),
+  postsHistoryTitle: dt('Edit history'),
+  postsHistoryDescription: dt(
+    'Every edit of this post, newest first. Restoring one is a new edit; the history is never rewritten.'
+  ),
+  postsHistoryRestored: dt('Restored the earlier version.'),
+  postsHistoryRestoreFailed: dt('Could not restore that version.'),
   postsDelete: dt('Delete'),
   postsPinnedToast: dt('Post pinned'),
   postsUnpinnedToast: dt('Post unpinned'),

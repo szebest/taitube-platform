@@ -80,6 +80,10 @@ export class InMemoryPostEngagement implements PostEngagementRepositoryPort {
     });
   }
 
+  total(postId: string): number {
+    return this.votes.get(postId)?.size ?? 0;
+  }
+
   clear(): void {
     this.votes.clear();
     this.days.clear();

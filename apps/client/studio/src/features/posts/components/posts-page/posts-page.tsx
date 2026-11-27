@@ -13,6 +13,7 @@ import { useT } from '#app/lib/messages';
 import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { DeletePostDialog } from '../delete-post-dialog/delete-post-dialog';
 import { PostComposerDialog } from '../post-composer-dialog/post-composer-dialog';
+import { PostHistoryDialog } from '../post-history-dialog/post-history-dialog';
 import { PostStatsSheet } from '../post-stats-sheet/post-stats-sheet';
 import { PostStatusFilter } from '../post-status-filter/post-status-filter';
 import { PostsTable } from '../posts-table/posts-table';
@@ -20,6 +21,7 @@ import { PostsTable } from '../posts-table/posts-table';
 type Open =
   | { kind: 'compose'; post?: ManagedPostView }
   | { kind: 'stats'; id: string }
+  | { kind: 'history'; id: string }
   | { kind: 'delete'; id: string };
 
 const NONE: readonly ManagedPostView[] = [];
@@ -44,6 +46,7 @@ export function PostsPage() {
   const composing = open?.kind === 'compose' ? open : undefined;
   const editing = composing?.post && (postOf(composing.post.id) ?? composing.post);
   const statsFor = open?.kind === 'stats' ? postOf(open.id) : undefined;
+  const historyFor = open?.kind === 'history' ? postOf(open.id) : undefined;
   const close = () => setOpen(undefined);
 
   const confirmDelete = (id: string) =>
@@ -78,6 +81,7 @@ export function PostsPage() {
         actions={{
           onEdit: (post) => setOpen({ kind: 'compose', post }),
           onStats: ({ id }) => setOpen({ kind: 'stats', id }),
+          onHistory: ({ id }) => setOpen({ kind: 'history', id }),
           onDelete: ({ id }) => setOpen({ kind: 'delete', id }),
         }}
       />
@@ -90,6 +94,7 @@ export function PostsPage() {
         <PostComposerDialog key={editing?.id ?? 'new'} post={editing} onClose={close} />
       )}
       {statsFor && <PostStatsSheet post={statsFor} onClose={close} />}
+      {historyFor && <PostHistoryDialog post={historyFor} onClose={close} />}
       {open?.kind === 'delete' && (
         <DeletePostDialog onConfirm={() => confirmDelete(open.id)} onClose={close} />
       )}

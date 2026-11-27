@@ -128,13 +128,27 @@ describe('apps/client/studio: /posts', () => {
     {
       stage: 'published',
       words: 'Published words',
-      items: ['Edit', 'Pin to the top', 'Stats', 'Delete'],
+      items: ['Edit', 'Pin to the top', 'Edit history', 'Stats', 'Delete'],
     },
     { stage: 'draft', words: 'Drafted words', items: ['Edit', 'Delete'] },
   ])('offers a $stage post $items', async ({ words, items }) => {
     const { user } = await renderPosts('/posts', { posts: POSTS.slice(0, 2) });
 
     await openMenu(user, words);
+
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual(items);
+  });
+
+  it.each([
+    {
+      role: 'editor' as const,
+      items: ['Edit', 'Pin to the top', 'Edit history', 'Stats', 'Delete'],
+    },
+    { role: 'analytics' as const, items: ['Stats'] },
+  ])('offers a $role of the channel $items on a published post', async ({ role, items }) => {
+    const { user } = await renderPosts('/posts', { posts: POSTS.slice(0, 1), role });
+
+    await openMenu(user, 'Published words');
 
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual(items);
   });

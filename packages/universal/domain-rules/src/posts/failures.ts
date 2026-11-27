@@ -93,3 +93,12 @@ export function postImageNotReady(uploadId: string): PostImageNotReady {
     uploadId,
   };
 }
+
+export type PostRevisionNotFound = Failure<
+  typeof ErrorCodes.REVISION_NOT_FOUND,
+  { postId: string; revisionId: string }
+>;
+
+export function postRevisionNotFound(postId: string, revisionId: string): PostRevisionNotFound {
+  return { code: ErrorCodes.REVISION_NOT_FOUND, message: 'Revision not found', postId, revisionId };
+}

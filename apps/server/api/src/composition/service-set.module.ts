@@ -56,6 +56,7 @@ export function registerServiceSet(c: Container): Container {
     postService: c.get(Services.PostService),
     postManageService: c.get(Services.PostManageService),
     postEngagementService: c.get(Services.PostEngagementService),
+    postRevisionService: c.get(Services.PostRevisionService),
     channelRestrictionService: c.get(Services.ChannelRestrictionService),
     commentBulkService: c.get(Services.CommentBulkService),
     commentModerationService: c.get(Services.CommentModerationService),

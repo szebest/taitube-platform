@@ -49,6 +49,13 @@ export const studioPosts = {
   postsPin: dt('Przypnij na górze'),
   postsUnpin: dt('Odepnij'),
   postsStats: dt('Statystyki'),
+  postsHistory: dt('Historia zmian'),
+  postsHistoryTitle: dt('Historia zmian'),
+  postsHistoryDescription: dt(
+    'Każda zmiana tego posta, od najnowszej. Przywrócenie wersji to nowa zmiana; historia nie jest nadpisywana.'
+  ),
+  postsHistoryRestored: dt('Przywrócono wcześniejszą wersję.'),
+  postsHistoryRestoreFailed: dt('Nie udało się przywrócić tej wersji.'),
   postsDelete: dt('Usuń'),
   postsPinnedToast: dt('Post przypięty'),
   postsUnpinnedToast: dt('Post odpięty'),

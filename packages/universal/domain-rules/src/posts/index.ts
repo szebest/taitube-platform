@@ -11,5 +11,4 @@ export * from './poll-visibility.rule';
 export * from './poll-close.rule';
 export * from './poll-lock.rule';
 export * from './post-timing.rule';
-export * from './pending-limit.rule';
 export * from './post-images.rule';

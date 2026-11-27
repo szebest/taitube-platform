@@ -1,6 +1,11 @@
 import type { Container } from '@kit/composition';
 import { Adapters } from '@vp/adapters/composition';
-import { PostEngagementService, PostManageService, PostService } from '../services/index';
+import {
+  PostEngagementService,
+  PostManageService,
+  PostRevisionService,
+  PostService,
+} from '../services/index';
 import { Services } from './service-tokens';
 
 export function registerPostServices(c: Container): Container {
@@ -34,6 +39,16 @@ export function registerPostServices(c: Container): Container {
         now: Date.now,
       });
     })
+    .provide(
+      Services.PostRevisionService,
+      (c) =>
+        new PostRevisionService({
+          posts: c.get(Adapters.Repositories).channelPosts,
+          revisions: c.get(Adapters.Repositories).entityRevisions,
+          editor: c.get(Services.PostService),
+          paginator: c.get(Services.Paginator),
+        })
+    )
     .provide(Services.PostEngagementService, (c) => {
       const repositories = c.get(Adapters.Repositories);
       return new PostEngagementService({

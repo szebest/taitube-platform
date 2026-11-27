@@ -11,7 +11,7 @@ import {
   postInput,
   publishPost,
 } from './channel-post-contract-context';
-import { OTHER_OWNER_CHANNEL_ID, OWNER_CHANNEL_ID } from './fixtures';
+import { OTHER_OWNER_CHANNEL_ID, OWNER_CHANNEL_ID, OWNER_ID } from './fixtures';
 
 const DAY_MS = 86_400_000;
 
@@ -136,6 +136,7 @@ export function describeChannelPostLifecycleContract(ctx: ChannelPostContractCon
             payload: { kind: 'text', text: 'Edited' },
             commentsEnabled: true,
             placement: { status: 'scheduled', publishAt: at },
+            revision: { authorUserId: OWNER_ID, restoredFromVersion: null },
           },
           postAudit('post.updated', POST_IDS.a)
         )

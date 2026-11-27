@@ -1480,6 +1480,45 @@ components:
             - mode
             - publishAt
       description: Publish now, keep as a draft or schedule
+    PostRevisionInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        version:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: The post version this state belongs to
+        payload:
+          $ref: '#/components/schemas/PostPayloadInput'
+        authorUserId:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: Who saved it; null for the state before the first edit
+        restoredFromVersion:
+          anyOf:
+            - type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            - type: 'null'
+          description: The version a restore went back to; null for an ordinary edit
+        createdAt:
+          type: string
+          description: ISO 8601 timestamp
+      required:
+        - id
+        - version
+        - payload
+        - authorUserId
+        - restoredFromVersion
+        - createdAt
+      description: One saved state of a published post
     PostStatsInput:
       type: object
       properties:
@@ -3745,6 +3784,46 @@ components:
             - publishAt
           additionalProperties: false
       description: Publish now, keep as a draft or schedule
+    PostRevision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        version:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: The post version this state belongs to
+        payload:
+          $ref: '#/components/schemas/PostPayload'
+        authorUserId:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: Who saved it; null for the state before the first edit
+        restoredFromVersion:
+          anyOf:
+            - type: integer
+              minimum: 0
+              maximum: 9007199254740991
+            - type: 'null'
+          description: The version a restore went back to; null for an ordinary edit
+        createdAt:
+          type: string
+          description: ISO 8601 timestamp
+      required:
+        - id
+        - version
+        - payload
+        - authorUserId
+        - restoredFromVersion
+        - createdAt
+      additionalProperties: false
+      description: One saved state of a published post
     PostStats:
       type: object
       properties:
@@ -28834,6 +28913,609 @@ paths:
                     type: string
                     enum:
                       - POST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/channel/posts/{id}/revisions:
+    get:
+      summary: List the edit history of a post
+      tags:
+        - Posts
+      description: Newest first, keyset-paginated on the version. Every edit of a published post is one entry, and the last 50 are kept. Owner, manager and editor of the channel the request acts on; a moderator and an analyst are refused.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - posts:write
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PostRevision'
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                      - API_TOKEN_WITH_SESSION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                      - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - POST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/channel/posts/{id}/revisions/{revisionId}/restore:
+    post:
+      summary: Restore an earlier state of a post
+      tags:
+        - Posts
+      description: A normal edit under the current version, so a stale version answers 409 VERSION_CONFLICT; it appends a new revision rather than rewriting history. A poll that has votes cannot be restored to different options (409 POST_POLL_LOCKED). Owner, manager and editor of the channel the request acts on; a moderator and an analyst are refused.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  exclusiveMinimum: 0
+                  maximum: 9007199254740991
+                  description: The post version the restore was made against
+              required:
+                - version
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: revisionId
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      security:
+        - bearerAuth: []
+        - personalAccessToken:
+            - posts:write
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagedPost'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - API_TOKEN_WITH_SESSION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                      - FORBIDDEN
+                      - API_TOKEN_SCOPE_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - POST_NOT_FOUND
+                      - REVISION_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                      - POST_POLL_LOCKED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - POST_SHARE_NOT_PUBLIC
+                      - POST_IMAGE_NOT_READY
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string

@@ -11,7 +11,7 @@ const PostImageInputSchema = z.object({
   alt: z.string().describe('Alt text, 1-200 characters after trimming'),
 });
 
-const PostPayloadSchema = z
+export const PostPayloadSchema = z
   .discriminatedUnion('kind', [
     z.object({
       kind: z.literal('text'),
