@@ -2,7 +2,7 @@ import { clampRange } from '../clamp-range';
 
 const WIDE = { startMs: 10_000, endMs: 40_000 };
 
-describe('apps/client/studio: clampRange', () => {
+describe('@kit/components: clampRange', () => {
   it.each([
     {
       name: 'a range inside the limit',

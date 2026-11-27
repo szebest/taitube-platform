@@ -10,7 +10,7 @@ const SHEET = `data:image/svg+xml,${encodeURIComponent(
 const sprite = { url: SHEET, intervalSec: 10, columns: 10, tileWidth: 160, tileHeight: 90 };
 
 const meta = {
-  title: 'Studio/TimelineRangeEditor',
+  title: 'Components/TimelineRangeEditor',
   component: TimelineRangeEditor,
   args: {
     'aria-label': 'Timeline',

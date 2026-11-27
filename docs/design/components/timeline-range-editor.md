@@ -1,6 +1,6 @@
 # TimelineRangeEditor
 
-One slider over a video's frames: two thumbs for a range, or one for a position, with a tick for each point already set. It is the editor's way of picking a moment without typing it: the corrections panel picks a 2 to 30 second range, and the chapters panel scrubs a position to take a chapter's start from. It lives in the studio's kit, `apps/client/studio/src/components/video/timeline-range-editor/` ([README](README.md)), and builds on the `Slider` primitive and `SpriteStrip` from `@kit/components` ([116](../../../tickets/116-video-management-power-tools.md)).
+One slider over a video's frames: two thumbs for a range, or one for a position, with a tick for each point already set. It is the way to pick a moment without typing it: the studio's corrections panel picks a 2 to 30 second range, its chapters panel scrubs a position to take a chapter's start from, and web's playlist page picks the segment of an item. It lives in `@kit/components` (`src/timeline-range-editor/`) since web renders it too ([119](../../tickets/119-playlists-customisation-and-collaboration.md)), and builds on the `Slider` primitive and `SpriteStrip` ([116](../../tickets/116-video-management-power-tools.md)).
 
 ## Anatomy
 
@@ -53,8 +53,8 @@ The root is a `fieldset`: name it with `aria-label`. Every word, the thumbs' nam
 
 | Wrapper | Feature folder | Control | Markers |
 |---|---|---|---|
-| `ChaptersPanel` | `features/videos/components/` | `position`: the scrub position; each row's "Use the playhead" button writes it into that row's time field | one per row with a readable time, the focused row active |
-| `CorrectionsPanel` | `features/videos/components/` | `range`: 2 to 30 seconds, bound to the start and end fields | the start of each saved correction, the one being edited active |
+| `ChaptersPanel` | studio `features/videos/components/` | `position`: the scrub position; each row's "Use the playhead" button writes it into that row's time field | one per row with a readable time, the focused row active |
+| `CorrectionsPanel` | studio `features/videos/components/` | `range`: 2 to 30 seconds, bound to the start and end fields | the start of each saved correction, the one being edited active |
 
 The studio has no player, so the scrub thumb stands in for the playhead. The `m:ss` text fields stay beside the slider as the way to type an exact time and the accessible fallback: the slider and the fields hold one value, and changing either moves the other. Without a known duration the wrapper draws no slider and no playhead button.
 

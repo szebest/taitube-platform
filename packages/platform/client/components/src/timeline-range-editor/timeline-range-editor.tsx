@@ -1,7 +1,6 @@
-import { type SpriteSheet, SpriteStrip } from '@kit/components';
-import { assertNever } from '@kit/result';
 import { cn, Slider } from '@kit/ui';
-import type { ComponentPropsWithRef } from 'react';
+import type { ComponentPropsWithRef, JSX } from 'react';
+import { type SpriteSheet, SpriteStrip } from '../sprite-strip';
 import type { TimelineControl, TimelineMarker } from './types';
 import { clampRange } from './utils/clamp-range';
 
@@ -21,38 +20,44 @@ export interface TimelineRangeEditorProps extends Omit<
   summary: string;
 }
 
-const percentOf = (ms: number, durationMs: number) => `${(ms / durationMs) * 100}%`;
-
-function TimelineSlider({ control, spanMs }: { control: TimelineControl; spanMs: number }) {
-  const sliderProps = { min: 0, max: spanMs / MS_PER_SECOND, step: 1 };
+function TimelineSlider({
+  control,
+  spanMs,
+}: {
+  control: TimelineControl;
+  spanMs: number;
+}): JSX.Element {
+  const max = spanMs / MS_PER_SECOND;
 
   switch (control.mode) {
-    case 'range':
+    case 'range': {
+      const { range, minSpanMs, maxSpanMs, onRangeChange, startLabel, endLabel } = control;
       return (
         <Slider.Root
-          {...sliderProps}
-          minStepsBetweenThumbs={control.minSpanMs / MS_PER_SECOND}
-          value={[control.range.startMs / MS_PER_SECOND, control.range.endMs / MS_PER_SECOND]}
-          onValueChange={(next) =>
-            control.onRangeChange(clampRange(control.range, next, control.maxSpanMs))
-          }
+          min={0}
+          max={max}
+          step={1}
+          minStepsBetweenThumbs={minSpanMs / MS_PER_SECOND}
+          value={[range.startMs / MS_PER_SECOND, range.endMs / MS_PER_SECOND]}
+          onValueChange={(next) => onRangeChange(clampRange(range, next, maxSpanMs))}
         >
-          <Slider.Thumb aria-label={control.startLabel} />
-          <Slider.Thumb aria-label={control.endLabel} />
+          <Slider.Thumb aria-label={startLabel} />
+          <Slider.Thumb aria-label={endLabel} />
         </Slider.Root>
       );
+    }
     case 'position':
       return (
         <Slider.Root
-          {...sliderProps}
+          min={0}
+          max={max}
+          step={1}
           value={[control.positionMs / MS_PER_SECOND]}
           onValueChange={([seconds = 0]) => control.onPositionChange(seconds * MS_PER_SECOND)}
         >
           <Slider.Thumb aria-label={control.label} />
         </Slider.Root>
       );
-    default:
-      return assertNever(control, 'TimelineControl');
   }
 }
 
@@ -93,7 +98,7 @@ export function TimelineRangeEditor({
               data-slot="timeline-marker"
               data-active={active || undefined}
               title={label}
-              style={{ insetInlineStart: percentOf(Math.min(ms, spanMs), spanMs) }}
+              style={{ insetInlineStart: `${(Math.min(ms, spanMs) / spanMs) * 100}%` }}
               className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-fg data-active:bg-accent"
             />
           ))}

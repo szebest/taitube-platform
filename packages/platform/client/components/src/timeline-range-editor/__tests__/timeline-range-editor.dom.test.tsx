@@ -1,7 +1,6 @@
 import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AppProviders } from '#app/__tests__/providers';
 import { TimelineRangeEditor, type TimelineRangeEditorProps } from '../timeline-range-editor';
 import type { PositionControl, RangeControl } from '../types';
 
@@ -40,8 +39,7 @@ const renderEditor = (props: Partial<TimelineRangeEditorProps> = {}) =>
       control={range()}
       summary="0:10 to 0:15"
       {...props}
-    />,
-    { wrapper: AppProviders }
+    />
   );
 
 const markersOf = (container: HTMLElement) =>
@@ -49,7 +47,7 @@ const markersOf = (container: HTMLElement) =>
     (marker) => marker.style.insetInlineStart
   );
 
-describe('apps/client/studio: TimelineRangeEditor', () => {
+describe('@kit/components: TimelineRangeEditor', () => {
   it.each([
     {
       name: 'a range',
