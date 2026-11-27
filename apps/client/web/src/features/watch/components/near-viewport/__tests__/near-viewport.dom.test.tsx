@@ -35,6 +35,14 @@ describe('apps/client/web: near viewport', () => {
     expect(screen.queryByText('Placeholder')).not.toBeInTheDocument();
   });
 
+  it('mounts the children of a section that appears after the view was entered', async () => {
+    RecordingObserver.enterView();
+
+    renderSection();
+
+    expect(await screen.findByText('Loaded')).toBeInTheDocument();
+  });
+
   it('mounts the children once eager turns on, and keeps them after it turns off', () => {
     const { update } = renderSection();
 

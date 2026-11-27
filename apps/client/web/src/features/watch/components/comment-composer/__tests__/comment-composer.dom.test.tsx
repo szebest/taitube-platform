@@ -74,9 +74,7 @@ describe('apps/client/web: CommentComposer', () => {
       });
 
       if (field) {
-        await vi.waitFor(() =>
-          expect(screen.getByRole('textbox', { name: 'Add a comment' })).toBeVisible()
-        );
+        expect(await screen.findByRole('textbox', { name: 'Add a comment' })).toBeVisible();
         return;
       }
       expect(await screen.findByText('Comments are turned off for this video')).toBeInTheDocument();
