@@ -1,8 +1,9 @@
+import type { StoredLayout } from './channel-layout';
 import type { PostPayload } from './channel-post';
 import type { VideoVisibility } from './status-vocabulary';
 import type { ThumbnailSelection, Video } from './video';
 
-export const ENTITY_REVISION_TYPES = ['video_metadata', 'channel_post'] as const;
+export const ENTITY_REVISION_TYPES = ['video_metadata', 'channel_post', 'channel_layout'] as const;
 export type EntityRevisionType = (typeof ENTITY_REVISION_TYPES)[number];
 
 export const ENTITY_REVISION_KEEP = 50;
@@ -23,9 +24,15 @@ export interface VideoMetadataSnapshot {
   commentsEnabled: boolean;
 }
 
+export interface ChannelLayoutSnapshot {
+  document: StoredLayout;
+  note: string | null;
+}
+
 export interface EntitySnapshots {
   video_metadata: VideoMetadataSnapshot;
   channel_post: { payload: PostPayload };
+  channel_layout: ChannelLayoutSnapshot;
 }
 
 export type EntityRevision<T extends EntityRevisionType = EntityRevisionType> = {

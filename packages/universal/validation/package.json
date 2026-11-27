@@ -23,11 +23,13 @@
     "@kit/errors": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/validation": "workspace:*",
-    "@vp/errors": "workspace:*"
+    "@vp/errors": "workspace:*",
+    "mdast-util-from-markdown": "^2.1.0"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
+    "@types/mdast": "^4.0.4",
     "jsdom": "^30.1.2",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",

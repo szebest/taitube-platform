@@ -81,7 +81,17 @@ type ChannelAuditEvent =
   | { action: 'video.uploaded'; targetType: 'video'; targetId: string; meta: UserMeta }
   | { action: 'post.published'; targetType: 'post'; targetId: string; meta: PostMeta }
   | { action: 'post.updated'; targetType: 'post'; targetId: string; meta: PostMeta }
-  | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta };
+  | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta }
+  | { action: 'page.draft_saved'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
+  | { action: 'page.published'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
+  | { action: 'page.scheduled'; targetType: 'page'; targetId: string; meta: PageScheduleMeta }
+  | {
+      action: 'page.schedule_cancelled';
+      targetType: 'page';
+      targetId: string;
+      meta: PageScheduleMeta;
+    }
+  | { action: 'page.restored'; targetType: 'page'; targetId: string; meta: PageRestoreMeta };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -104,6 +114,12 @@ type PostedMeta = { videoId: string | null };
 type UserMeta = Record<never, never>;
 
 type PostMeta = { kind: PostKind };
+
+type PageVersionMeta = { version: number };
+
+type PageScheduleMeta = { scheduleId: string; publishAt: string };
+
+type PageRestoreMeta = { version: number; fromVersion: number };
 
 type BanMeta = { expiresAt: string | null };
 
@@ -183,6 +199,11 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'post.published': true,
   'post.updated': true,
   'post.deleted': true,
+  'page.draft_saved': true,
+  'page.published': true,
+  'page.scheduled': true,
+  'page.schedule_cancelled': true,
+  'page.restored': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];

@@ -21,6 +21,7 @@ type ChannelTask =
   | 'read-library'
   | 'read-inbox'
   | 'edit-channel'
+  | 'edit-page'
   | 'pin-content'
   | 'upload'
   | 'read-team'
@@ -49,6 +50,7 @@ function allows(
     case 'read-inbox':
       return canModerateComments({ user, videoOwnerId: ownerId, videoChannelId: channelId });
     case 'edit-channel':
+    case 'edit-page':
       return canUpdateChannel({ user, channel: { id: channelId, userId: ownerId, ownerId } });
     case 'pin-content':
       return canPinVideo({ user, video: { ownerId, channelId } });
