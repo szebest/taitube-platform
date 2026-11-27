@@ -59,7 +59,9 @@ describe('apps/client/web: usePartySync', () => {
   it('mutes and offers sound when the browser refused to play, then takes it back', () => {
     const { result } = renderSync(partyState({ playback: PLAYING }));
 
-    act(() => vi.advanceTimersByTime(1_000));
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
 
     expect(fakePlayer.commands.setMuted).toHaveBeenCalledWith(true);
     expect(result.current.soundBlocked).toBe(true);
@@ -116,7 +118,9 @@ describe('apps/client/web: usePartySync', () => {
     fakePlayer.state.currentTime = 0;
     const { send } = renderSync(partyState({ playback: PLAYING }));
 
-    act(() => vi.advanceTimersByTime(30_000));
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+    });
 
     expect(send).toHaveBeenCalledWith({
       type: 'stats',

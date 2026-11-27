@@ -20,6 +20,7 @@ export function assertNever(value: never, context: string): never
 export function err<E>(error: E): Err<E>
 export function fromPromise<T, E>(promise: PromiseLike<T> | (() => PromiseLike<T>), onThrow: (cause: unknown) => E): Promise<Result<T, E>>
 export function ignore<S extends string>(_result: Result<unknown, unknown> | PromiseLike<Result<unknown, unknown>>, _reason: IgnoreReason<S>): void
+export function ignoreRejection<S extends string>(promise: PromiseLike<unknown>, _reason: IgnoreReason<S>): void
 export function isErr<T, E>(result: Result<T, E>): result is Err<E>
 export function isOk<T, E>(result: Result<T, E>): result is Ok<T>
 export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E>

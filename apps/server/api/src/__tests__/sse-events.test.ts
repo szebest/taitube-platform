@@ -82,6 +82,7 @@ describe('apps/server/api SSE video event streams', () => {
   it('writes snapshot, progress, status and ping frames in the SDD §10.1 wire format', async () => {
     let response: IncomingMessage | undefined;
     let published = false;
+    const publishing: ReturnType<typeof publishVideoEvent>[] = [];
 
     const fullStream = await readSseUntil(`${baseUrl}/v1/videos/${PUBLIC_VIDEO_ID}/events`, {
       onResponse: (res) => {
@@ -90,26 +91,20 @@ describe('apps/server/api SSE video event streams', () => {
       onText: (text) => {
         if (published || !text.includes('event: snapshot') || !text.includes(': ping')) return;
         published = true;
-        publishVideoEvent({
-          ts: Date.now(),
-          cache,
-          videoId: PUBLIC_VIDEO_ID,
-          event: 'progress',
-          data: { rendition: '720p', percent: 50, overall: 25 },
-          id: 101,
-        });
-        publishVideoEvent({
-          ts: Date.now(),
-          cache,
-          videoId: PUBLIC_VIDEO_ID,
-          event: 'status',
-          data: { status: 'READY', playbackUrl: PLAYBACK_URL },
-          id: 102,
-        });
+        for (const [id, event, data] of [
+          [101, 'progress', { rendition: '720p', percent: 50, overall: 25 }],
+          [102, 'status', { status: 'READY', playbackUrl: PLAYBACK_URL }],
+        ] as const) {
+          const ts = Date.now();
+          publishing.push(
+            publishVideoEvent({ ts, cache, videoId: PUBLIC_VIDEO_ID, event, data, id })
+          );
+        }
       },
       until: (text) => text.includes('event: progress') && text.includes('event: status'),
     });
 
+    for (const result of await Promise.all(publishing)) expectOk(result);
     expect(response?.statusCode).toBe(200);
     expect(response?.headers['content-type']).toBe('text/event-stream');
     expect(response?.headers['cache-control']).toBe('no-cache');

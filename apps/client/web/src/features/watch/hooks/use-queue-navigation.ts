@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
@@ -19,13 +20,16 @@ export function useQueueNavigation() {
     }
 
     const index = queue.videos.findIndex(({ id }) => id === video.id);
-    navigate({
-      to: '/watch/$videoId',
-      params: { videoId: video.id },
-      search: queue.playlistId && index >= 0 ? { list: queue.playlistId, index } : {},
-      replace: replace ?? index >= 0,
-      state: { autoplay: true },
-    });
+    ignoreRejection(
+      navigate({
+        to: '/watch/$videoId',
+        params: { videoId: video.id },
+        search: queue.playlistId && index >= 0 ? { list: queue.playlistId, index } : {},
+        replace: replace ?? index >= 0,
+        state: { autoplay: true },
+      }),
+      'a refused navigation leaves the viewer where they are'
+    );
   };
 
   return {
