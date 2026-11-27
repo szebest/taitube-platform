@@ -23,13 +23,9 @@ export interface VideoMetadataSnapshot {
   commentsEnabled: boolean;
 }
 
-export interface ChannelPostSnapshot {
-  payload: PostPayload;
-}
-
 export interface EntitySnapshots {
   video_metadata: VideoMetadataSnapshot;
-  channel_post: ChannelPostSnapshot;
+  channel_post: { payload: PostPayload };
 }
 
 export type EntityRevision<T extends EntityRevisionType = EntityRevisionType> = {
