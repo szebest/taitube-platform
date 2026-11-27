@@ -21,7 +21,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
     `thumbnail`, `screen`, `captions`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
   - ServiceMonitors and the Grafana dashboard ConfigMaps.
 - `infra/k8s/components/dev-mode/`: the dev-mode patches (`NODE_ENV=development`, `AUTH_MODE=dev`, the placeholder
-  `ADMIN_TOKEN`, `imagePullPolicy: IfNotPresent`) the local overlay and the `preview` environment share.
+  `ADMIN_TOKEN`, `VIDEO_ACCESS_SECRET`, `LIVE_HOOK_SECRET` and `WATCH_PARTY_GUEST_SALT`, `imagePullPolicy: IfNotPresent`) the local overlay and the `preview` environment share.
 - `infra/k8s/charts.env`: the Helm chart versions `scripts/deploy/k8s.sh` installs for a preview;
   `tests/architecture/environments.test.ts` holds them equal to the Makefile's.
 - `infra/k8s/overlays/local/`: the k3d/kind overlay.
