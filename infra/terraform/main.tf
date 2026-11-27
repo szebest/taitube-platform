@@ -23,6 +23,20 @@ resource "cloudflare_r2_bucket" "raw" {
   location   = "WEUR"
 }
 
+resource "cloudflare_r2_bucket_cors" "raw" {
+  account_id  = var.cloudflare_account_id
+  bucket_name = cloudflare_r2_bucket.raw.name
+  rules = [{
+    allowed = {
+      origins = ["https://studio.${var.domain}"]
+      methods = ["PUT"]
+      headers = ["content-type"]
+    }
+    expose_headers  = ["ETag"]
+    max_age_seconds = 86400
+  }]
+}
+
 resource "cloudflare_r2_bucket_lifecycle" "raw" {
   account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.raw.name

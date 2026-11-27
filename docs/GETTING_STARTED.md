@@ -18,7 +18,7 @@ make demo-down                   # stop the containers, keep the data (the next 
 | Step | What happens | Skipped when |
 |---|---|---|
 | 1 Prerequisites | Node 24, pnpm 12, a reachable Docker daemon, Compose v2, ffmpeg, free disk, free ports; each failure names the fix for your OS | never |
-| 2 `.env` | copied from `.env.example` when absent, never overwritten | `.env` exists |
+| 2 `.env` | copied from `.env.example` when absent, never overwritten; it carries the local `ADMIN_TOKEN` and `VIDEO_ACCESS_SECRET` placeholders | `.env` exists |
 | 3 Stack | `pnpm stack up` starts a tier at a time (infrastructure, migrate and bucket setup, API and workers, web and studio), each gated on health, building images only when needed | containers already healthy |
 | 4 Seed | a deterministic world through the real API: users, channels, videos through the real pipeline, comments, playlists, subscriptions | every item already exists (a re-run adds nothing) |
 | 5 Table | URLs, credentials and the personas | never |
@@ -109,6 +109,12 @@ a `curl` line and a one-liner for the browser console on http://localhost:5173 o
 One-click persona buttons on `/login` exist under `pnpm dev` only (`VITE_DEMO_PERSONAS`, see
 [ENVIRONMENT.md](ENVIRONMENT.md)): the compose images are built without it, so `make demo-login` is the way in on the
 demo stack. Production builds refuse it.
+
+## Password-protected videos
+
+Setting a video password needs `VIDEO_ACCESS_SECRET`, which signs the cookie that unlocks the video for 12 hours. `.env.example`
+holds a local value, so it works out of the box; without the key the API answers 409 `VIDEO_PASSWORDS_OFF`. A deployed
+environment generates its own (`openssl rand -hex 32`) and production refuses the local one.
 
 ## Reset and clean up
 
