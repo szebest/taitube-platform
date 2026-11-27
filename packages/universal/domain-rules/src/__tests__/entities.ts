@@ -6,7 +6,7 @@ import type {
   CommentReport,
   EditorPick,
   LiveStream,
-  Playlist,
+  SeatedPlaylist,
   Upload,
   Video,
 } from '@vp/domain';
@@ -144,8 +144,10 @@ export function aCategory(overrides: Partial<Category> = {}): Category {
   };
 }
 
-export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
+export function aPlaylist(overrides: Partial<SeatedPlaylist> = {}): SeatedPlaylist {
   return {
+    collaboratorId: null,
+    collaboratorRole: null,
     id: 'playlist-1',
     ownerId: OWNER.id,
     title: 'Road trip',

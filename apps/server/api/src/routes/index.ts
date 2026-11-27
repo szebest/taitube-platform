@@ -41,6 +41,9 @@ import { myChannelsRoutes } from './my-channels';
 import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
+import { playlistCollaborationRoutes } from './playlist-collaboration';
+import { playlistItemsRoutes } from './playlist-items';
+import { playlistTransferRoutes } from './playlist-transfer';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
@@ -105,6 +108,9 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   captionsRoutes,
   notificationsRoutes,
   playlistsRoutes,
+  playlistCollaborationRoutes,
+  playlistItemsRoutes,
+  playlistTransferRoutes,
   watchHistoryRoutes,
   searchHistoryRoutes,
   viewerActivityRoutes,

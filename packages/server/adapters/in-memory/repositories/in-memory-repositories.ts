@@ -26,7 +26,7 @@ import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repos
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
-import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import { type PlaylistRepositories, playlistsOf } from './in-memory-playlist-providers';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -81,7 +81,9 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly comments: InMemoryCommentRepository;
   readonly commentModeration: InMemoryCommentModerationRepository;
   readonly commentReports: InMemoryCommentReportRepository;
-  readonly playlists: InMemoryPlaylistRepository;
+  declare readonly playlists: PlaylistRepositories['playlists'];
+  declare readonly playlistCollaborators: PlaylistRepositories['playlistCollaborators'];
+  declare readonly playlistActivity: PlaylistRepositories['playlistActivity'];
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
   readonly notifications: InMemoryNotificationRepository;
@@ -132,7 +134,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.comments = c.get(Repo.comments);
     this.commentModeration = c.get(Repo.commentModeration);
     this.commentReports = c.get(Repo.commentReports);
-    this.playlists = c.get(Repo.playlists);
+    Object.assign(this, playlistsOf(c));
     this.watchHistory = c.get(Repo.watchHistory);
     this.userPreferences = c.get(Repo.userPreferences);
     this.notifications = c.get(Repo.notifications);

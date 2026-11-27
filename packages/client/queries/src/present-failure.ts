@@ -41,6 +41,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CHANNEL_MEMBER_NOT_FOUND:
     case ErrorCodes.RESTRICTION_NOT_FOUND:
     case ErrorCodes.SAVED_REPLY_NOT_FOUND:
+    case ErrorCodes.PLAYLIST_COLLABORATOR_NOT_FOUND:
+    case ErrorCodes.PLAYLIST_ACTIVITY_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
     case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
@@ -62,6 +64,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WATCH_PARTY_ROLE_ESCALATION:
     case ErrorCodes.WATCH_PARTY_ROLE_PROTECTED:
     case ErrorCodes.WATCH_PARTY_CHAT_OFF:
+    case ErrorCodes.PLAYLIST_INVITE_INVALID:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
     case ErrorCodes.LIVE_INGEST_REFUSED:
@@ -169,6 +172,9 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.IMAGE_TOO_SMALL:
     case ErrorCodes.IMAGE_UPLOAD_NOT_FOUND:
     case ErrorCodes.SERIES_VIDEO_NOT_OWNED:
+    case ErrorCodes.PLAYLIST_COLLABORATOR_EXISTS:
+    case ErrorCodes.PLAYLIST_COLLABORATOR_LIMIT:
+    case ErrorCodes.PLAYLIST_ACTIVITY_NOT_RESTORABLE:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

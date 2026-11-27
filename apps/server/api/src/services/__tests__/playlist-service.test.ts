@@ -93,7 +93,13 @@ describe('PlaylistService', () => {
       visibility: 'private',
     });
     const id = await created();
-    expectOk(await repositories.playlists.addItem(id, { id: 'item-hidden', videoId: hidden }));
+    expectOk(
+      await repositories.playlists.addItem(
+        id,
+        { id: 'item-hidden', videoId: hidden, addedBy: OWNER.id },
+        OWNER.id
+      )
+    );
 
     const converted = await service.update(OWNER, id, { kind: 'series' });
 

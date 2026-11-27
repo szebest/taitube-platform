@@ -5,6 +5,7 @@ export * from './comment-reports-schema';
 export * from './comment-moderation-schema';
 export * from './view-schema';
 export * from './library-schema';
+export * from './playlist-collaboration-schema';
 export * from './preferences-schema';
 export * from './search-schema';
 export * from './search-history-schema';

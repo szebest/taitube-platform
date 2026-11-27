@@ -1,97 +1,179 @@
-import type { ListPublicPlaylistsOptions } from '@vp/core/repositories';
+import type {
+  ListPlaylistItemsOptions,
+  ListPublicPlaylistsOptions,
+  SortedPlaylistEntry,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
   PLAYLIST_PREVIEW_THUMBNAILS,
   type Playlist,
   type PlaylistEntry,
+  type PlaylistSection,
   type PositionWrite,
+  type StoredPlaylistItem,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { asc, count, desc, eq, getTableColumns, isNotNull, sql } from 'drizzle-orm';
+import {
+  type SQL,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  isNotNull,
+  or,
+  sql,
+} from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { toVideoRecord } from '../mappers/video.mapper';
-import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
-import { type ChannelCardRow, channelCardColumns, toChannelCard } from './channel-card-query';
+import {
+  drizzleWhere,
+  keysetBefore,
+  keysetPast,
+  msTimestamp,
+  watchableVideoScope,
+} from '../scopes/index';
+import { channelCardColumns, toChannelCard } from './channel-card-query';
+import { sortKeyOf } from './playlist-item-sort';
 import type { PostgresDatabase } from './types';
 
 const { playlists: p, playlistItems: pi, videos: v, channels: ch } = schema;
 
 export function toPlaylist(row: typeof p.$inferSelect): Playlist {
-  return row;
+  const { id, ownerId, title, description, visibility, kind, isSystem } = row;
+  const { customThumbnailKey, createdAt, updatedAt } = row;
+  return {
+    id,
+    ownerId,
+    title,
+    description,
+    visibility,
+    kind,
+    isSystem,
+    customThumbnailKey,
+    createdAt,
+    updatedAt,
+  };
 }
 
-/**
- * Ranks every item before the viewer's scope drops any, so a hidden video keeps its slot and the
- * `position` a client sends back to reorder means the same item on the server.
- */
-export function entriesOf(db: PostgresDatabase, playlistId: string, viewer: UserContext | null) {
-  const ranked = db
+const adder = alias(ch, 'adder_channel');
+
+/** Every row with its 0-based place, sections and hidden videos counted. */
+function rankedItems(db: PostgresDatabase, playlistId: string) {
+  return db
     .select({
-      id: pi.id,
-      videoId: pi.videoId,
-      addedAt: pi.addedAt,
-      position: sql<number>`(row_number() over (order by ${pi.position}, ${pi.id}) - 1)::int`.as(
+      ...getTableColumns(pi),
+      ordinal: sql<number>`(row_number() over (order by ${pi.position}, ${pi.id}) - 1)::int`.as(
         'ordinal'
       ),
     })
     .from(pi)
     .where(eq(pi.playlistId, playlistId))
     .as('ranked');
+}
 
+type Ranked = ReturnType<typeof rankedItems>;
+
+/** A ranked row with its video, the video's channel and the adder's primary channel, left-joined. */
+function rowsFrom<E extends Record<string, SQL>>(
+  db: PostgresDatabase,
+  ranked: Ranked,
+  extra: E = {} as E
+) {
   return db
     .select({
-      id: ranked.id,
-      videoId: ranked.videoId,
-      addedAt: ranked.addedAt,
-      position: ranked.position,
+      ...extra,
+      item: {
+        id: ranked.id,
+        kind: ranked.kind,
+        videoId: ranked.videoId,
+        title: ranked.title,
+        addedAt: ranked.addedAt,
+        addedBy: ranked.addedBy,
+        note: ranked.note,
+        startMs: ranked.startMs,
+        endMs: ranked.endMs,
+        position: ranked.ordinal,
+      },
       video: getTableColumns(v),
       ...channelCardColumns,
+      adder: {
+        channelId: adder.id,
+        handle: adder.handle,
+        displayName: adder.displayName,
+        avatarUrl: adder.avatarUrl,
+      },
     })
     .from(ranked)
-    .innerJoin(v, eq(v.id, ranked.videoId))
+    .leftJoin(v, eq(v.id, ranked.videoId))
     .leftJoin(ch, eq(ch.id, v.channelId))
-    .where(watchableVideoScope(viewer))
-    .orderBy(asc(ranked.position));
+    .leftJoin(adder, and(eq(adder.userId, ranked.addedBy), eq(adder.isPrimary, true)));
 }
 
-type VideoRow = typeof v.$inferSelect;
-
-interface EntryRow extends ChannelCardRow {
-  id: string;
-  videoId: string;
-  addedAt: Date;
-  position: number;
-  video: VideoRow;
+/**
+ * Ranks every row before the viewer's scope drops any, so an item keeps its slot and the
+ * `position` a client sends back to reorder means the same row here.
+ */
+export function rowsOf(db: PostgresDatabase, playlistId: string, viewer: UserContext | null) {
+  const ranked = rankedItems(db, playlistId);
+  return rowsFrom(db, ranked)
+    .where(or(eq(ranked.kind, 'section'), watchableVideoScope(viewer)))
+    .orderBy(asc(ranked.ordinal));
 }
 
-export function toPlaylistEntry({
-  id,
-  videoId,
-  addedAt,
-  position,
-  video,
-  ...card
-}: EntryRow): PlaylistEntry {
-  return {
-    id,
-    videoId,
-    addedAt,
-    position,
-    video: toVideoRecord(video),
-    channel: toChannelCard(card),
-  };
+type PlaylistRow = Awaited<ReturnType<typeof rowsOf>>[number];
+
+/** The ranked rows split into the videos the viewer may watch and the sections between them. */
+export function toDetailItems(rows: readonly PlaylistRow[]): {
+  items: PlaylistEntry[];
+  sections: PlaylistSection[];
+} {
+  const items: PlaylistEntry[] = [];
+  const sections: PlaylistSection[] = [];
+  for (const { item, video, adder: adderCard, ...card } of rows) {
+    const { id, videoId, title, addedAt, addedBy, note, startMs, endMs, position } = item;
+    if (video && videoId) {
+      items.push({
+        id,
+        videoId,
+        position,
+        addedAt,
+        addedBy:
+          addedBy === null
+            ? null
+            : { userId: addedBy, channel: adderCard && toChannelCard(adderCard) },
+        note,
+        startMs,
+        endMs,
+        video: toVideoRecord(video),
+        channel: toChannelCard(card),
+      });
+    } else if (title !== null) {
+      sections.push({ id, title, position, addedBy });
+    }
+  }
+  return { items, sections };
 }
 
-/** Every slot in playlist order, `hidden` where the viewer may not watch the video. */
+export function toStoredItem(row: typeof pi.$inferSelect): StoredPlaylistItem {
+  const { id, kind, videoId, title, addedBy, note, startMs, endMs, position } = row;
+  return { id, kind, videoId, title, addedBy, note, startMs, endMs, position };
+}
+
+/** Every slot in playlist order, `hidden` where the viewer may not watch the video; a section shows. */
 export function reorderSlots(tx: PostgresDatabase, playlistId: string, viewer: UserContext) {
   const watchable = watchableVideoScope(viewer) ?? sql`true`;
   return tx
     .select({
       id: pi.id,
       position: pi.position,
-      hidden: sql<boolean>`not coalesce(${watchable}, false)`.mapWith(Boolean),
+      hidden: sql<boolean>`${pi.kind} = 'video' and not coalesce(${watchable}, false)`.mapWith(
+        Boolean
+      ),
     })
     .from(pi)
-    .innerJoin(v, eq(v.id, pi.videoId))
+    .leftJoin(v, eq(v.id, pi.videoId))
     .where(eq(pi.playlistId, playlistId))
     .orderBy(asc(pi.position), asc(pi.id));
 }
@@ -150,4 +232,32 @@ export function publicPlaylistsOf(
     )
     .orderBy(desc(changedAt), desc(p.id))
     .limit(limit + 1);
+}
+
+/** The video items the viewer may watch, in `sort`, after the cursor, each with its key. */
+export async function sortedItems(
+  db: PostgresDatabase,
+  playlistId: string,
+  viewer: UserContext | null,
+  { sort, cursor, limit }: ListPlaylistItemsOptions
+): Promise<SortedPlaylistEntry[]> {
+  const ranked = rankedItems(db, playlistId);
+  const { key, order } = sortKeyOf(sort, viewer, ranked);
+  const direction = order === 'asc' ? asc : desc;
+  const rows = await rowsFrom(db, ranked, { sortKey: key })
+    .where(
+      drizzleWhere(
+        eq(ranked.kind, 'video'),
+        watchableVideoScope(viewer),
+        keysetPast(key, ranked.id, cursor && { sort: cursor.key, tie: cursor.id }, order)
+      )
+    )
+    .orderBy(direction(key), direction(ranked.id))
+    .limit(limit + 1);
+  const { items } = toDetailItems(rows);
+  return items.map((entry, index) => ({ entry, key: keyOf(rows[index]?.sortKey) }));
+}
+
+function keyOf(value: unknown): string | number {
+  return typeof value === 'number' || typeof value === 'string' ? value : 0;
 }

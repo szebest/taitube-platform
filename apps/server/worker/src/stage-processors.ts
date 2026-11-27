@@ -69,6 +69,7 @@ import { createNotifyPartyInviteProcessor } from './stages/notifications/notify-
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
 import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
 import { createNotifyTeamInviteProcessor } from './stages/notifications/notify-team-invite';
+import { playlistNotifications } from './stages/notifications/playlist-notifications';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
@@ -136,6 +137,7 @@ export const notify = (d: StageDeps): StageProcessor => {
     [NOTIFY_MODERATION]: consuming(NotifyModerationJob, createNotifyModerationProcessor(rowDeps)),
     [NOTIFY_TEAM_INVITE]: consuming(NotifyTeamInviteJob, createNotifyTeamInviteProcessor(rowDeps)),
     [NOTIFY_PROCESSING]: consuming(NotifyProcessingJob, createNotifyProcessingProcessor(rowDeps)),
+    ...playlistNotifications({ ...rowDeps, now: d.now }),
     [EXPORT_DATA]: consuming(
       ExportJob,
       createExportProcessor({

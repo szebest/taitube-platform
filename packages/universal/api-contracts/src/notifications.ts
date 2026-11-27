@@ -1,6 +1,7 @@
 import {
   NOTIFICATION_FILTERS,
   NOTIFICATION_KINDS,
+  PLAYLIST_COLLABORATOR_ROLES,
   type NotificationReadScope,
   type NotificationView,
 } from '@vp/domain';
@@ -46,6 +47,17 @@ const NotificationPayloadSchema = z.object({
     })
     .optional()
     .describe('What a `moderation` notification tells: the visible action, its reason and end'),
+  playlist: z
+    .object({
+      id: z.uuid(),
+      title: z.string(),
+      invite: z
+        .object({ token: z.string(), role: z.enum(PLAYLIST_COLLABORATOR_ROLES) })
+        .nullable()
+        .describe('On `playlist_invite`: the token to accept with and the role it seats'),
+    })
+    .optional()
+    .describe('The playlist a `playlist_invite` or `playlist_update` is about'),
 });
 
 export const NotificationSchema = z.object({

@@ -51,7 +51,8 @@ export type UserEvent =
   | { type: 'video.stats.updated'; payload: { videoId: string } }
   | { type: 'video.generation.updated'; payload: VideoGenerationUpdatedPayload }
   | { type: 'export.ready'; payload: ExportReadyPayload }
-  | { type: 'export.failed'; payload: ExportFailedPayload };
+  | { type: 'export.failed'; payload: ExportFailedPayload }
+  | { type: 'playlist.updated'; payload: { playlistId: string } };
 
 /** A replacement or an edit swapped in (`active`) or failed, leaving the video as it was. */
 export interface VideoGenerationUpdatedPayload {
@@ -192,4 +193,9 @@ export function exportReady(payload: ExportReadyPayload): UserEvent {
 
 export function exportFailed(payload: ExportFailedPayload): UserEvent {
   return { type: 'export.failed', payload };
+}
+
+/** The id only: an open list refetches itself, so a collaborator's change shows without a reload. */
+export function playlistUpdated(playlistId: string): UserEvent {
+  return { type: 'playlist.updated', payload: { playlistId } };
 }

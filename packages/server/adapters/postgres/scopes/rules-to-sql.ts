@@ -4,7 +4,7 @@ import { getUserPermissions } from '@vp/permissions';
 import { type SQL, sql } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
-import { type AstCondition, getConditionSql } from './condition-sql';
+import { type AstCondition, type DerivedFields, getConditionSql } from './condition-sql';
 
 const FieldConditionSchema = z
   .object({ operator: z.string(), field: z.string(), value: z.unknown() })
@@ -37,7 +37,8 @@ export function rulesToSql<T extends TableConfig>(
   action: AppAction,
   subject: AppSubjects,
   viewer: Viewer,
-  table: PgTableWithColumns<T>
+  table: PgTableWithColumns<T>,
+  derived: DerivedFields = {}
 ): SQL | undefined {
   const ability = getUserPermissions(viewer);
   const ast = rulesToAST(ability, action, subject as Parameters<typeof rulesToAST<AppAbility>>[2]);
@@ -47,5 +48,5 @@ export function rulesToSql<T extends TableConfig>(
     return sql`false`;
   }
 
-  return getConditionSql(AstConditionSchema.parse(ast), table);
+  return getConditionSql(AstConditionSchema.parse(ast), table, derived);
 }

@@ -8,9 +8,11 @@ import type {
 import {
   type OwnedPlaylist,
   type PlaylistDetail,
+  type PlaylistEntry,
   type PublicPlaylist,
   type WatchHistoryEntry,
   type WatchProgress,
+  clampSegment,
   isWatchCompleted,
   resumeAtSeconds,
   watchedPercent,
@@ -18,19 +20,30 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import { type SpriteGeometry, cdnUrl, toVideoSummaryView } from './video-views';
 
-export function toPlaylistView(
-  { playlist, owner, items }: PlaylistDetail,
+export function toPlaylistItemView(
+  { addedAt, video, startMs, endMs, ...item }: PlaylistEntry,
   cdn: CdnBase,
   sprite: SpriteGeometry
-): PlaylistView {
-  const { customThumbnailKey, createdAt, updatedAt, ...fields } = playlist;
-  const entries = items.map(({ addedAt, video, ...item }) => ({
+): PlaylistView['items'][number] {
+  return {
     ...item,
+    ...(video.durationMs === null
+      ? { startMs, endMs }
+      : clampSegment({ startMs, endMs }, video.durationMs)),
     addedAt: addedAt.toISOString(),
     episode: null,
     progress: null,
     video: toVideoSummaryView(video, cdn, sprite, item.channel),
-  }));
+  };
+}
+
+export function toPlaylistView(
+  { playlist, owner, items, sections }: PlaylistDetail,
+  cdn: CdnBase,
+  sprite: SpriteGeometry
+): PlaylistView {
+  const { customThumbnailKey, createdAt, updatedAt, ...fields } = playlist;
+  const entries = items.map((item) => toPlaylistItemView(item, cdn, sprite));
   return {
     ...fields,
     thumbnailUrl: customThumbnailKey
@@ -40,6 +53,7 @@ export function toPlaylistView(
     owner,
     nextEpisodeVideoId: null,
     items: entries,
+    sections: sections.map(({ id, title, position }) => ({ id, title, position })),
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };

@@ -46,7 +46,12 @@ export function notificationTarget({
       return watch(videoId, commentId);
     case 'party_invite':
     case 'party_starting':
+    case 'playlist_invite':
       return undefined;
+    case 'playlist_update':
+      return payload.playlist
+        ? linkOptions({ to: '/playlist', search: { list: payload.playlist.id } })
+        : undefined;
     default:
       return assertNever(kind, 'NotificationKind');
   }

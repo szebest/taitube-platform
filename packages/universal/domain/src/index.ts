@@ -36,6 +36,8 @@ export * from './live-chat';
 export * from './notification';
 export * from './pick';
 export * from './playlist';
+export * from './playlist-activity';
+export * from './playlist-collaboration';
 export * from './playlist-position';
 export * from './public-feed';
 export * from './reaction';

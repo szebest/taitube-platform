@@ -69,10 +69,11 @@ async function seed(repositories: InMemoryRepositories): Promise<void> {
     })
   );
   expectOk(
-    await repositories.playlists.addItem(IDS.playlist, {
-      id: '00000000-0000-7000-8000-0000000047d1',
-      videoId: IDS.course,
-    })
+    await repositories.playlists.addItem(
+      IDS.playlist,
+      { id: '00000000-0000-7000-8000-0000000047d1', videoId: IDS.course, addedBy: null },
+      IDS.playlist
+    )
   );
 }
 
