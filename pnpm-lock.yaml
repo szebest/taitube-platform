@@ -670,6 +670,9 @@ importers:
       '@kit/errors':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/errors
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -2492,6 +2495,9 @@ importers:
 
   packages/platform/universal/intl:
     dependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../di
       '@kit/result':
         specifier: workspace:*
         version: link:../result
@@ -23257,7 +23263,7 @@ snapshots:
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
       acorn: 8.18.0
-      browserslist: 4.29.5
+      browserslist: 4.29.6
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.24.5
       es-module-lexer: 2.3.2

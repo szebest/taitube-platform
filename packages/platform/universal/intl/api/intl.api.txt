@@ -68,6 +68,7 @@ export interface FormatContext {
 export const FormatErrorCodes: { readonly FORMAT_UNSUPPORTED_LOCALE: "FORMAT_UNSUPPORTED_LOCALE"; readonly FORMAT_UNKNOWN_OPTION: "FORMAT_UNKNOWN_OPTION"; readonly FORMAT_WRONG_KIND: "FORMAT_WRONG_KIND"; readonly FORMAT_UNRENDERABLE: "FORMAT_UNRENDERABLE"; }
 export type FormatFailure = UnsupportedLocale | UnknownOption | WrongKind | Unrenderable;
 export type FormatKind = (typeof FORMAT_KINDS)[number];
+export const FormatPresets: Token<Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>>
 export type FormatValue = string | number | TaggedValue;
 export interface IntlBinding {
     readonly context: FormatContext;

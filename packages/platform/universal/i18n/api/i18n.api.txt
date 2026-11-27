@@ -84,7 +84,6 @@ export interface EntryOf<Kind extends string> {
 export interface Fails<Error extends string> {
     readonly typeError: Error;
 }
-export const FormatPresets: Token<Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>>
 export interface I18n<App> {
     createTranslator(intl: IntlBinding, catalogues: CatalogueSet<App>): Translator<App>;
     fromRegistry(registry: Registry, intl: IntlBinding): Result<Translator<App>, MissingProvider>;

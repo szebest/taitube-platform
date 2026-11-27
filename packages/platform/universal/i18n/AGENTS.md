@@ -30,7 +30,7 @@ composition root):
 | Token | Value |
 |---|---|
 | `Catalogues` | `{ locale, source, translations }`: the source locale's catalogue and its translations |
-| `FormatPresets` | the app's `definePresets` table |
+| `FormatPresets` (from `@kit/intl`) | the app's `definePresets` table |
 | `ParamVocabulary` | the app's `defineParams` list |
 
 ## 2. Invariants
@@ -63,7 +63,7 @@ composition root):
 11. **Platform strictness.** No `any`, no type assertion except `as const`, no non-null `!`, no `@ts-ignore`. Every
     public generic has a type-level spec under `src/__tests__/type-fixtures/` (run by `typecheck`), including a second
     engine with its own kinds and presets.
-12. **Universal, T3** (above `@kit/di` and `@kit/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
+12. **Universal, T4** (above `@kit/di` and `@kit/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
     `bun test`.
 
 ## 3. Local Commands

@@ -20,7 +20,7 @@
       "EngineTypes": "@kit/i18n",
       "EntryOf": "@kit/i18n",
       "Fails": "@kit/i18n",
-      "FormatPresets": "@kit/i18n",
+      "FormatPresets": "@kit/intl",
       "I18n": "@kit/i18n",
       "InvalidParamName": "@kit/i18n",
       "IsCamelCase": "@kit/i18n",

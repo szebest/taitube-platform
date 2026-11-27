@@ -32,5 +32,5 @@ t('videos.views', { count: 3 }); // Result<string, MessageFailure>
 ```
 
 A new kind is `defineKind({ name, config, arg, options, render })` in the app, listed in `kinds`; the engine is not
-edited. At the composition root, `i18n.providers(catalogues)` provides `Catalogues`, `FormatPresets` and
-`ParamVocabulary`, and `i18n.fromRegistry(registry, intl)` reads them back.
+edited. At the composition root, `i18n.providers(catalogues)` provides `Catalogues`, `FormatPresets` (owned
+by `@kit/intl`) and `ParamVocabulary`, and `i18n.fromRegistry(registry, intl)` reads them back.

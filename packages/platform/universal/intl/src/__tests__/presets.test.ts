@@ -1,5 +1,6 @@
-import { ok } from '@kit/result';
-import { definePresets, resolveEntry } from '../presets';
+import { createRegistry, provide } from '@kit/di';
+import { err, ok } from '@kit/result';
+import { definePresets, FormatPresets, resolveEntry } from '../presets';
 
 const presets = definePresets({
   number: {
@@ -46,5 +47,20 @@ describe('@kit/intl: presets', () => {
 
   it('freezes the table', () => {
     expect(Object.isFrozen(presets)).toBe(true);
+  });
+
+  it.each([
+    {
+      scenario: 'the table the app provided',
+      registry: createRegistry().provide(provide(FormatPresets, presets)),
+      expected: ok(presets),
+    },
+    {
+      scenario: 'MissingProvider when unprovided',
+      registry: createRegistry(),
+      expected: err(expect.objectContaining({ code: 'MISSING_PROVIDER', token: 'FormatPresets' })),
+    },
+  ])('resolves FormatPresets to $scenario', ({ registry, expected }) => {
+    expect(registry.get(FormatPresets)).toEqual(expected);
   });
 });
