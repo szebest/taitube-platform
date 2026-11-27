@@ -4,7 +4,7 @@ import type {
   ChannelRepositoryPort,
   PlaylistRepositoryPort,
 } from '@vp/core/repositories';
-import { type CropRect, PLAYLIST_COVER_KEPT_WIDTH } from '@vp/domain';
+import { type CropRect, IMAGE_UPLOAD_HAS_VARIANTS, PLAYLIST_COVER_KEPT_WIDTH } from '@vp/domain';
 import {
   type ChannelNotFound,
   type DeletePlaylistFailure,
@@ -85,7 +85,7 @@ export class PlaylistCoverService {
     if (
       found === null ||
       found.kind !== KIND ||
-      found.status !== 'ready' ||
+      !IMAGE_UPLOAD_HAS_VARIANTS[found.status] ||
       found.version === null ||
       found.channelId !== channel.value?.id
     ) {

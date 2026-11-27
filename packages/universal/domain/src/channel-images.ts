@@ -59,6 +59,16 @@ export const IMAGE_UPLOAD_STATUSES = [
 
 export type ImageUploadStatus = (typeof IMAGE_UPLOAD_STATUSES)[number];
 
+/** Whether the job's variants of an upload are in the public bucket: cut, and not purged yet. */
+export const IMAGE_UPLOAD_HAS_VARIANTS: Readonly<Record<ImageUploadStatus, boolean>> = {
+  issued: false,
+  queued: false,
+  ready: true,
+  failed: false,
+  superseded: true,
+  purged: false,
+};
+
 /**
  * Every edge of an upload's status. `CHANNEL_IMAGE_UPLOAD` in `@vp/domain-rules` is the machine
  * over it; the table lives here so the repositories can guard a write with the statuses it leaves.
