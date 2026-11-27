@@ -6,7 +6,12 @@ import {
 import { notificationTarget } from '../notification-target';
 
 const PLAYLIST_ID = '0190c3a0-5e1d-7000-8000-0000000000f1';
-const PLAYLIST = { id: PLAYLIST_ID, title: 'Road trip', invite: null };
+const TOKEN = 'invite-token';
+const PLAYLIST = {
+  id: PLAYLIST_ID,
+  title: 'Road trip',
+  invite: { token: TOKEN, role: 'editor' as const },
+};
 
 describe('apps/client/web: notificationTarget', () => {
   it.each([
@@ -57,10 +62,14 @@ describe('apps/client/web: notificationTarget', () => {
       target: { to: '/feed/you/moderation', search: {} },
     },
     {
-      case: 'a playlist invite opens nothing until it is accepted',
+      case: 'a playlist invite opens the page that answers it',
       overrides: { kind: 'playlist_invite' as const, videoId: null },
       count: 1,
-      target: undefined,
+      target: {
+        to: '/playlist-invite/$token',
+        params: { token: TOKEN },
+        search: { via: 'notification' },
+      },
     },
     {
       case: 'a playlist update opens the playlist',

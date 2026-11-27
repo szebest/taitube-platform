@@ -15,7 +15,8 @@ function watch(videoId: string | null, commentId?: string | null) {
 
 /**
  * Where opening a notification goes, for a `Link` or `navigate`: a group of uploads opens the
- * channel, a comment kind its comment on the video. `undefined` when there is nothing to open.
+ * channel, a comment kind its comment on the video, a playlist invite the page that answers it.
+ * `undefined` when there is nothing to open.
  */
 export function notificationTarget({
   kind,
@@ -46,8 +47,15 @@ export function notificationTarget({
       return watch(videoId, commentId);
     case 'party_invite':
     case 'party_starting':
-    case 'playlist_invite':
       return undefined;
+    case 'playlist_invite':
+      return payload.playlist?.invite
+        ? linkOptions({
+            to: '/playlist-invite/$token',
+            params: { token: payload.playlist.invite.token },
+            search: { via: 'notification' },
+          })
+        : undefined;
     case 'playlist_update':
       return payload.playlist
         ? linkOptions({ to: '/playlist', search: { list: payload.playlist.id } })
