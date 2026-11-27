@@ -22,6 +22,7 @@ export function s3ClientFrom(config: S3ConnectionConfig): S3Client {
     endpoint,
     region,
     forcePathStyle: config.forcePathStyle ?? localEndpoint(endpoint),
+    requestChecksumCalculation: 'WHEN_REQUIRED',
     ...(accessKeyId && secretAccessKey ? { credentials: { accessKeyId, secretAccessKey } } : {}),
   };
 
