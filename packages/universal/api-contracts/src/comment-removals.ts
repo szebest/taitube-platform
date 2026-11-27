@@ -6,7 +6,7 @@ import { KeysetQuerySchema } from './pagination';
 
 const RemovalSchema = z.object({
   id: z.uuid().describe('The id the removed comment had'),
-  videoId: z.uuid(),
+  videoId: z.uuid().nullable().describe('Null for a comment that was on a post'),
   excerpt: z.string().describe('The first 200 characters of the removed comment'),
   reason: z.enum(COMMENT_MODERATION_REASONS),
   note: z.string().nullable(),

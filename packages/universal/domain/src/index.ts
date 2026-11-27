@@ -6,6 +6,7 @@ export * from './channel';
 export * from './channel-restriction';
 export * from './channel-images';
 export * from './channel-localization';
+export * from './channel-post';
 export * from './channel-team';
 export * from './chapters';
 export * from './chapter-suggestions';

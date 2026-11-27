@@ -3,12 +3,18 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { RestrictionActionSchema } from './channel-restrictions';
 import { CommentActionSchema } from './comment-moderation';
-import { CommentSchema } from './comments';
+import { CommentSchema, CommentTargetSchema } from './comments';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
 
 const CreatorInboxCommentSchema = CommentSchema.extend({
-  video: z.object({ id: z.uuid(), title: z.string() }).describe('The video the comment is on'),
+  video: z
+    .object({ id: z.uuid(), title: z.string() })
+    .nullable()
+    .describe('The video the comment is on, null for a comment on a post'),
+  targetSummary: CommentTargetSchema.extend({ title: z.string() }).describe(
+    'What the comment sits under: a video by its title, a post by the start of its text'
+  ),
 });
 
 export const listCreatorComments = defineEndpoint({

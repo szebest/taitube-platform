@@ -3,6 +3,7 @@ import type {
   Category,
   Channel,
   Comment,
+  CommentHost,
   CommentReport,
   EditorPick,
   LiveStream,
@@ -11,6 +12,10 @@ import type {
   Video,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
+
+export function videoHost(video: Video): CommentHost {
+  return { type: 'video', video };
+}
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
 export const STRANGER: UserContext = { id: 'stranger-1', role: 'USER' };
@@ -92,7 +97,8 @@ export const MODERATOR: UserContext = { id: 'moderator-1', role: 'MODERATOR' };
 export function aComment(overrides: Partial<Comment> = {}): Comment {
   return {
     id: 'comment-1',
-    videoId: 'video-1',
+    target: { type: 'video', id: 'video-1' },
+    channelId: 'channel-1',
     authorId: AUTHOR.id,
     authorChannelId: 'author-channel-1',
     parentId: null,

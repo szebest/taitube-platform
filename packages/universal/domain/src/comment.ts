@@ -1,17 +1,36 @@
+import type { ChannelPost } from './channel-post';
 import type {
   CommentModerationFields,
   HeldReason,
   NewCommentModeration,
 } from './comment-moderation';
 import type { Disclosure } from './comment-settings';
+import type { Video } from './video';
 
 export const COMMENT_SORTS = ['top', 'newest'] as const;
 
 export type CommentSort = (typeof COMMENT_SORTS)[number];
 
+export const COMMENT_TARGET_TYPES = ['video', 'post', 'thread'] as const;
+
+/** What a comment sits under; one table holds the comments of every kind. */
+export type CommentTarget = { type: 'video'; id: string } | { type: 'post'; id: string };
+
+/** What a comment sits under, loaded: the rules read its owner, channel and switches from it. */
+export type CommentHost =
+  | { type: 'video'; video: Video }
+  | { type: 'post'; post: ChannelPost; ownerId: string };
+
+/** The video a comment sits under, or null for a comment on anything else. */
+export function commentVideoId(target: CommentTarget): string | null {
+  return target.type === 'video' ? target.id : null;
+}
+
 export interface Comment extends CommentModerationFields {
   id: string;
-  videoId: string;
+  target: CommentTarget;
+  /** The channel of the target, which moderates the comment. */
+  channelId: string;
   authorId: string;
   authorChannelId: string;
   parentId: string | null;
@@ -43,6 +62,13 @@ export interface CommentVideoSummary {
   title: string;
 }
 
+/** The target an inbox row sits under, with the title the row shows. */
+export interface CommentTargetSummary {
+  type: CommentTarget['type'];
+  id: string;
+  title: string;
+}
+
 export const CREATOR_INBOX_FILTERS = [
   'all',
   'unanswered',
@@ -56,12 +82,15 @@ export const CREATOR_INBOX_FILTERS = [
 export type CreatorInboxFilter = (typeof CREATOR_INBOX_FILTERS)[number];
 
 export interface CreatorInboxComment extends CommentThread {
-  video: CommentVideoSummary;
+  /** Null for a comment on anything but a video; `targetSummary` names every kind. */
+  video: CommentVideoSummary | null;
+  targetSummary: CommentTargetSummary;
 }
 
 export interface NewCommentInput {
   id: string;
-  videoId: string;
+  target: CommentTarget;
+  channelId: string;
   authorId: string;
   authorChannelId: string;
   parentId: string | null;

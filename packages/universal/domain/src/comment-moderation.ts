@@ -84,7 +84,7 @@ export function commentModerationAudit(
     channelId: string;
     action: CommentModerationAction['action'];
     commentId: string;
-    videoId: string;
+    videoId: string | null;
     disclosure: Disclosure;
   }
 ): NewChannelAuditEntry {

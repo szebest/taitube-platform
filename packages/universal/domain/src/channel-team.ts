@@ -1,3 +1,4 @@
+import type { PostKind } from './channel-post';
 import type { RestrictionKind } from './channel-restriction';
 import type { CommentSettingsField, Disclosure } from './comment-settings';
 import type { DataExportFormat, DataExportKind } from './data-export';
@@ -12,6 +13,7 @@ export const CHANNEL_CAPABILITIES = [
   'channel.act',
   'comment.pin',
   'content.pin',
+  'post.manage',
   'comment.heart',
   'comment.moderate',
   'comment.settings',
@@ -34,6 +36,7 @@ const CHANNEL_ROLES = {
     'channel.act',
     'comment.pin',
     'content.pin',
+    'post.manage',
     'comment.heart',
     'comment.moderate',
     'comment.settings',
@@ -41,7 +44,14 @@ const CHANNEL_ROLES = {
     'data.export',
     'team.manage',
   ],
-  editor: ['video.read', 'analytics.read', 'video.edit', 'channel.edit', 'content.pin'],
+  editor: [
+    'video.read',
+    'analytics.read',
+    'video.edit',
+    'channel.edit',
+    'content.pin',
+    'post.manage',
+  ],
   moderator: ['video.read', 'comment.pin', 'comment.moderate'],
   analytics: ['video.read', 'analytics.read', 'analytics.export'],
 } as const satisfies Record<string, readonly ChannelCapability[]>;
@@ -177,7 +187,10 @@ type ChannelAuditEvent =
   | { action: 'channel.promoted'; targetType: 'channel'; targetId: string; meta: UserMeta }
   | { action: 'comment.posted'; targetType: 'comment'; targetId: string; meta: PostedMeta }
   | { action: 'channel.subscribed'; targetType: 'channel'; targetId: string; meta: UserMeta }
-  | { action: 'video.uploaded'; targetType: 'video'; targetId: string; meta: UserMeta };
+  | { action: 'video.uploaded'; targetType: 'video'; targetId: string; meta: UserMeta }
+  | { action: 'post.published'; targetType: 'post'; targetId: string; meta: PostMeta }
+  | { action: 'post.updated'; targetType: 'post'; targetId: string; meta: PostMeta }
+  | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -191,13 +204,15 @@ type MemberMeta = {
 
 type ToggledMeta = { enabled: boolean };
 
-type CommentMeta = { videoId: string; disclosure: Disclosure };
+type CommentMeta = { videoId: string | null; disclosure: Disclosure };
 
-type PinnedMeta = { videoId: string; pinned: boolean };
+type PinnedMeta = { videoId: string | null; pinned: boolean };
 
-type PostedMeta = { videoId: string };
+type PostedMeta = { videoId: string | null };
 
 type UserMeta = Record<never, never>;
+
+type PostMeta = { kind: PostKind };
 
 type BanMeta = { expiresAt: string | null };
 
@@ -274,6 +289,9 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'comment.posted': true,
   'channel.subscribed': true,
   'video.uploaded': true,
+  'post.published': true,
+  'post.updated': true,
+  'post.deleted': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
