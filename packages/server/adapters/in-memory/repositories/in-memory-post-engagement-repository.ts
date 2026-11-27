@@ -1,9 +1,7 @@
 import { type Result, ok } from '@kit/result';
 import type { PostEngagementRepositoryPort, PostVoteWritten } from '@vp/core/repositories';
-import type { ChannelPost, PostStats } from '@vp/domain';
+import { POLL_OPTION_SLOTS, type ChannelPost, type PostStats } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-
-const OPTION_SLOTS = 6;
 
 interface Days {
   opens: number;
@@ -14,7 +12,7 @@ export interface InMemoryPostEngagementOptions {
   posts: { posts: ReadonlyMap<string, ChannelPost> };
 }
 
-export class InMemoryPostEngagementRepository implements PostEngagementRepositoryPort {
+export class InMemoryPostEngagement implements PostEngagementRepositoryPort {
   private readonly votes = new Map<string, Map<string, number>>();
   private readonly days = new Map<string, Days>();
 
@@ -26,10 +24,10 @@ export class InMemoryPostEngagementRepository implements PostEngagementRepositor
     optionIndex: number
   ): Promise<Result<PostVoteWritten, DatabaseUnavailable>> {
     if (!this.deps.posts.posts.has(postId)) return ok('missing');
-    const voters = this.votes.get(postId) ?? new Map<string, number>();
-    if (voters.has(userId)) return ok('already_voted');
-    voters.set(userId, optionIndex);
-    this.votes.set(postId, voters);
+    const voters = this.votes.get(postId);
+    if (voters?.has(userId)) return ok('already_voted');
+    if (voters) voters.set(userId, optionIndex);
+    else this.votes.set(postId, new Map([[userId, optionIndex]]));
     return ok('voted');
   }
 
@@ -88,7 +86,7 @@ export class InMemoryPostEngagementRepository implements PostEngagementRepositor
   }
 
   private tally(postId: string): number[] {
-    const counts = new Array<number>(OPTION_SLOTS).fill(0);
+    const counts = new Array<number>(POLL_OPTION_SLOTS).fill(0);
     for (const index of this.votes.get(postId)?.values() ?? [])
       counts[index] = (counts[index] ?? 0) + 1;
     return counts;
@@ -96,8 +94,10 @@ export class InMemoryPostEngagementRepository implements PostEngagementRepositor
 
   private day(postId: string, day: string): Days {
     const key = `${postId}:${day}`;
-    const found = this.days.get(key) ?? { opens: 0, shareClicks: 0 };
-    this.days.set(key, found);
-    return found;
+    const found = this.days.get(key);
+    if (found) return found;
+    const fresh: Days = { opens: 0, shareClicks: 0 };
+    this.days.set(key, fresh);
+    return fresh;
   }
 }

@@ -206,5 +206,7 @@ export type {
   PostPageView,
   PostView,
   PostWriteBody,
-  PostWriteInput,
 } from './post-schemas';
+
+/** @internal */
+export type { PostWriteInput } from './post-schemas';

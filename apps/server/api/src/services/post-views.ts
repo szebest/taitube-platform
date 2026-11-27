@@ -7,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import {
   type Channel,
-  type ChannelCard,
   type ChannelPostEntry,
   type PostImageVariants,
   toChannelCard,

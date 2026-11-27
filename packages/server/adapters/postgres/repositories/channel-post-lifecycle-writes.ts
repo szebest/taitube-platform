@@ -1,21 +1,25 @@
 import type { ChannelPostPlacement } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type {
-  ChannelPost,
-  ManagedPostCursor,
-  NewChannelAuditEntry,
-  NewUnpublishedPostInput,
-  PostPinOutcome,
-  PostStatus,
+import {
+  isPostPublished,
+  type ChannelPost,
+  type ManagedPostCursor,
+  type NewChannelAuditEntry,
+  type NewUnpublishedPostInput,
+  type PostPinOutcome,
+  type PostStatus,
 } from '@vp/domain';
 import { postSubscribersOutbox } from '@vp/job-contracts';
 import { type SQL, and, asc, count, desc, eq, inArray, isNotNull, lte, sql } from 'drizzle-orm';
+import { msTimestamp } from '../scopes/index';
 import { appendChannelAudit } from './channel-audit-writes';
 import { toChannelPost } from './channel-post-queries';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
 const { channelPosts: p } = schema;
+
+const createdAt = msTimestamp(p.createdAt);
 
 export async function countPendingPosts(db: PostgresDatabase, channelId: string): Promise<number> {
   const [row] = await db
@@ -78,7 +82,7 @@ export async function dueScheduledIds(
 
 function managedCursorScope(cursor: ManagedPostCursor | null): SQL | undefined {
   if (!cursor) return undefined;
-  return sql`(${p.createdAt}, ${p.id}) < (${cursor.createdAt.toISOString()}::timestamptz, ${cursor.id}::uuid)`;
+  return sql`(${createdAt}, ${p.id}) < (${cursor.createdAt.toISOString()}::timestamptz, ${cursor.id}::uuid)`;
 }
 
 export async function managedPostsPage(
@@ -96,7 +100,7 @@ export async function managedPostsPage(
         managedCursorScope(options.cursor)
       )
     )
-    .orderBy(desc(p.createdAt), desc(p.id))
+    .orderBy(desc(createdAt), desc(p.id))
     .limit(options.limit + 1);
   return rows.map(toChannelPost);
 }
@@ -113,7 +117,7 @@ export async function setPostPinned(
     .from(p)
     .where(and(eq(p.id, id), eq(p.channelId, channelId)));
   if (!post) return 'missing';
-  if (post.status !== 'published') return 'not_published';
+  if (!isPostPublished(post.status)) return 'not_published';
   if (pinned === (post.pinnedAt !== null)) return pinned ? 'pinned' : 'unpinned';
   if (pinned) {
     const [held] = await tx

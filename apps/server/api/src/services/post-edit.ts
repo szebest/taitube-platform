@@ -1,7 +1,7 @@
 import { type Result, assertNever, err, isErr, ok } from '@kit/result';
 import type { ManagedPostView, PostWriteBody } from '@vp/api-contracts';
 import type { ChannelPostPlacement } from '@vp/core/repositories';
-import type { ActingChannel, ChannelPost } from '@vp/domain';
+import { type ActingChannel, type ChannelPost, isPostPublished } from '@vp/domain';
 import {
   type EditPostFailure,
   type PostPollLocked,
@@ -9,6 +9,7 @@ import {
   decidePollUnlocked,
   decidePostEdit,
   decidePostTiming,
+  isPublishNow,
   postNotFound,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
@@ -87,7 +88,7 @@ export async function editPost(
   if (decision && isErr(decision)) return decision;
   const moved = decision?.value ?? null;
   const placement: ChannelPostPlacement | undefined =
-    moved && moved.status !== 'published' ? moved : undefined;
+    moved && !isPublishNow(moved) ? moved : undefined;
 
   const written = await posts.edit(
     postId,
@@ -107,7 +108,7 @@ export async function editPost(
     case 'stale':
       return err(versionConflict(postId, body.version));
     case 'edited':
-      return finish(deps, user, outcome.post, moved?.status === 'published', now);
+      return finish(deps, user, outcome.post, moved !== null && isPublishNow(moved), now);
     default:
       return assertNever(outcome, 'ChannelPostEdited');
   }
@@ -121,7 +122,7 @@ async function finish(
   now: Date
 ): Promise<Result<ManagedPostView, EditPostServiceFailure>> {
   let post = edited;
-  if (publish && edited.status !== 'published') {
+  if (publish && !isPostPublished(edited.status)) {
     const promoted = await deps.posts.promote(
       edited.id,
       postAuditOf('post.published', user, edited.channelId, edited)

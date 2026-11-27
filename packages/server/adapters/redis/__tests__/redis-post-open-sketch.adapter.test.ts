@@ -1,4 +1,5 @@
 import { expectOk } from '@kit/testing/result';
+import { POST_OPEN_SKETCH_TTL_SECONDS } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 import { RedisPostOpenSketchAdapter } from '../redis-post-open-sketch.adapter';
@@ -6,8 +7,14 @@ import { RedisPostOpenSketchAdapter } from '../redis-post-open-sketch.adapter';
 function redisWith(replies: [Error | null, unknown][] | null) {
   const calls: string[][] = [];
   const chain = {
-    pfadd: (...args: string[]) => (calls.push(['pfadd', ...args]), chain),
-    expire: (...args: (string | number)[]) => (calls.push(['expire', ...args.map(String)]), chain),
+    pfadd: (...args: string[]) => {
+      calls.push(['pfadd', ...args]);
+      return chain;
+    },
+    expire: (...args: (string | number)[]) => {
+      calls.push(['expire', ...args.map(String)]);
+      return chain;
+    },
     exec: async () => replies,
   };
   return { redis: { multi: () => chain } as unknown as Redis, calls };
@@ -30,7 +37,7 @@ describe('RedisPostOpenSketchAdapter', () => {
       expect(expectOk(result)).toBe(counted);
       expect(calls).toEqual([
         ['pfadd', CacheKeys.postOpens('p1', '2026-03-01'), 'u1'],
-        ['expire', CacheKeys.postOpens('p1', '2026-03-01'), String(3 * 24 * 60 * 60)],
+        ['expire', CacheKeys.postOpens('p1', '2026-03-01'), String(POST_OPEN_SKETCH_TTL_SECONDS)],
       ]);
     }
   );

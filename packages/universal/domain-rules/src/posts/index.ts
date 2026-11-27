@@ -12,5 +12,4 @@ export * from './poll-close.rule';
 export * from './poll-lock.rule';
 export * from './post-timing.rule';
 export * from './pending-limit.rule';
-export * from './pin-post.rule';
 export * from './post-images.rule';

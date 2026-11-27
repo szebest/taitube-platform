@@ -11,7 +11,7 @@ const PostImageInputSchema = z.object({
   alt: z.string().describe('Alt text, 1-200 characters after trimming'),
 });
 
-export const PostPayloadSchema = z
+const PostPayloadSchema = z
   .discriminatedUnion('kind', [
     z.object({
       kind: z.literal('text'),
@@ -199,4 +199,5 @@ export type ManagedPostView = z.infer<typeof ManagedPostSchema>;
 export type PostPageView = z.infer<typeof PostPageSchema>;
 export type PostLikeView = z.infer<typeof PostLikeSchema>;
 export type PostWriteBody = z.infer<typeof PostWriteBodySchema>;
+/** @internal */
 export type PostWriteInput = z.input<typeof PostWriteBodySchema>;

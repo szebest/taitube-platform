@@ -8,15 +8,16 @@ import type {
   OutboxRepository,
   PostLikeWritten,
 } from '@vp/core/repositories';
-import type {
-  ChannelPost,
-  ChannelPostCursor,
-  ChannelPostEntry,
-  CommentTarget,
-  NewChannelAuditEntry,
-  NewChannelPostInput,
-  NewUnpublishedPostInput,
-  PostPinOutcome,
+import {
+  isPostPublished,
+  isPostScheduled,
+  type ChannelPost,
+  type ChannelPostEntry,
+  type CommentTarget,
+  type NewChannelAuditEntry,
+  type NewChannelPostInput,
+  type NewUnpublishedPostInput,
+  type PostPinOutcome,
 } from '@vp/domain';
 import { POST_LIFECYCLE } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -115,7 +116,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   async countPending(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok(
       [...this.posts.values()].filter(
-        (post) => post.channelId === channelId && post.status !== 'published'
+        (post) => post.channelId === channelId && !isPostPublished(post.status)
       ).length
     );
   }
@@ -144,7 +145,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
     audit: NewChannelAuditEntry | null
   ): Promise<Result<ChannelPost | null, DatabaseUnavailable>> {
     const post = this.posts.get(id);
-    if (!post || post.status === 'published') return ok(null);
+    if (!post || isPostPublished(post.status)) return ok(null);
     Object.assign(post, { status: 'published', publishedAt: new Date(), publishAt: null });
     if (audit) {
       const audited = await this.deps.auditRepo.append(audit);
@@ -156,7 +157,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
 
   async promoteDue(now: Date, limit: number): Promise<Result<string[], DatabaseUnavailable>> {
     const due = [...this.posts.values()]
-      .filter((post) => post.status === 'scheduled' && post.publishAt && post.publishAt <= now)
+      .filter((post) => isPostScheduled(post.status) && post.publishAt && post.publishAt <= now)
       .sort((a, b) => (a.publishAt?.getTime() ?? 0) - (b.publishAt?.getTime() ?? 0))
       .slice(0, limit);
     const promoted: string[] = [];
@@ -195,7 +196,7 @@ export class InMemoryChannelPostRepository implements ChannelPostRepositoryPort 
   ): Promise<Result<PostPinOutcome, DatabaseUnavailable>> {
     const post = this.posts.get(id);
     if (post?.channelId !== channelId) return ok('missing');
-    if (post.status !== 'published') return ok('not_published');
+    if (!isPostPublished(post.status)) return ok('not_published');
     if (pinned === (post.pinnedAt !== null)) return ok(pinned ? 'pinned' : 'unpinned');
     const held = [...this.posts.values()].filter(
       (other) => other.channelId === channelId && other.pinnedAt !== null

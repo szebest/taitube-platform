@@ -17,6 +17,7 @@ import {
   decidePostCreate,
   decidePostPendingLimit,
   decidePostTiming,
+  isPublishNow,
   postNotFound,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -100,7 +101,7 @@ async function write(
   timing: PostTimingDecision,
   audit: (action: 'post.published' | 'post.updated') => NewChannelAuditEntry
 ): Promise<Result<ChannelPost, PostDraftLimit | DatabaseUnavailable>> {
-  if (timing.status === 'published') return deps.posts.publish(input, audit('post.published'));
+  if (isPublishNow(timing)) return deps.posts.publish(input, audit('post.published'));
   const pending = await deps.posts.countPending(input.channelId);
   if (isErr(pending)) return pending;
   const limit = decidePostPendingLimit(pending.value);

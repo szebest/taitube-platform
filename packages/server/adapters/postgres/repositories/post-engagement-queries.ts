@@ -1,11 +1,9 @@
 import * as schema from '@vp/db';
-import { type PostPayload, type PostStats } from '@vp/domain';
+import { POLL_OPTION_SLOTS, type PostPayload, type PostStats } from '@vp/domain';
 import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
 const { channelPosts: p, postPollVotes: v, postStatsDaily: d } = schema;
-
-const OPTION_SLOTS = 6;
 
 export async function talliesOf(
   db: PostgresDatabase,
@@ -19,9 +17,12 @@ export async function talliesOf(
     .where(inArray(v.postId, [...postIds]))
     .groupBy(v.postId, v.optionIndex);
   for (const { postId, optionIndex, total } of rows) {
-    const counts = found.get(postId) ?? new Array<number>(OPTION_SLOTS).fill(0);
+    let counts = found.get(postId);
+    if (!counts) {
+      counts = Array.from({ length: POLL_OPTION_SLOTS }, () => 0);
+      found.set(postId, counts);
+    }
     counts[optionIndex] = total;
-    found.set(postId, counts);
   }
   return found;
 }
@@ -45,8 +46,7 @@ export async function statsOf(db: PostgresDatabase, postId: string): Promise<Pos
     })
     .from(d)
     .where(eq(d.postId, postId));
-  const votes =
-    (await talliesOf(db, [postId])).get(postId) ?? new Array<number>(OPTION_SLOTS).fill(0);
+  const votes = (await talliesOf(db, [postId])).get(postId) ?? [];
   const options =
     post.payload.kind === 'poll' || post.payload.kind === 'quiz' ? post.payload.options.length : 0;
   return {
@@ -54,7 +54,7 @@ export async function statsOf(db: PostgresDatabase, postId: string): Promise<Pos
     shareClicks: days?.shareClicks ?? 0,
     likes: post.likes,
     replies: post.replies,
-    votesByOption: votes.slice(0, options),
+    votesByOption: Array.from({ length: options }, (_, index) => votes[index] ?? 0),
     quizCorrectShare: correctShare(post.payload, votes),
   };
 }

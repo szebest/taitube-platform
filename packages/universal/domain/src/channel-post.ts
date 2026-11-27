@@ -17,10 +17,17 @@ export const POST_LIFECYCLE_EDGES = {
   publish: { from: ['draft', 'scheduled'], to: 'published' },
 } as const satisfies Record<string, { from: readonly PostStatus[]; to: PostStatus }>;
 
+const PUBLISHED = POST_LIFECYCLE_EDGES.publish.to;
+const SCHEDULED = POST_LIFECYCLE_EDGES.schedule.to;
+
+export const isPostPublished = (status: PostStatus): boolean => status === PUBLISHED;
+export const isPostScheduled = (status: PostStatus): boolean => status === SCHEDULED;
+
 export const POSTS_PER_DAY = 20;
+export const POLL_OPTION_SLOTS = 6;
+export const POST_OPEN_SKETCH_TTL_SECONDS = 3 * 24 * 60 * 60;
 export const POSTS_PENDING_LIMIT = 50;
 export const POSTS_PINNED_LIMIT = 3;
-export const POLL_OPTIONS = { min: 2, max: 6 } as const;
 export const POLL_MAX_OPEN_DAYS = 30;
 
 interface PostImage {

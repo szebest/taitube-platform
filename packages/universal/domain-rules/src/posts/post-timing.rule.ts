@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@kit/result';
-import type { PostStatus } from '@vp/domain';
+import { type PostStatus, isPostPublished } from '@vp/domain';
 import { type PostScheduleInvalid, postScheduleInvalid } from './failures';
 
 export type PostTiming =
@@ -17,6 +17,12 @@ export type PostTimingDecision =
   | { readonly status: 'published' }
   | { readonly status: 'draft'; readonly publishAt: null }
   | { readonly status: 'scheduled'; readonly publishAt: Date };
+
+export type PostPublishNow = Extract<PostTimingDecision, { status: 'published' }>;
+
+export function isPublishNow(decision: PostTimingDecision): decision is PostPublishNow {
+  return isPostPublished(decision.status);
+}
 
 /** What a post becomes when saved with a timing; a published post only ever stays published. */
 export function decidePostTiming(
