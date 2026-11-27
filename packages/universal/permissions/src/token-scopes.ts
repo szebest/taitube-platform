@@ -37,6 +37,11 @@ const SCOPE_ABILITIES: Readonly<Record<ApiScope, readonly ScopeGrant[]>> = {
     ['delete', 'ChannelExport'],
   ],
   'webhooks:manage': [['create', 'Webhook']],
+  'posts:write': [
+    ['create', 'Post'],
+    ['update', 'Post'],
+    ['delete', 'Post'],
+  ],
 };
 
 function covers<T extends string>(granted: T | T[] | undefined, wanted: T, wildcard: T): boolean {
@@ -61,6 +66,7 @@ const CHANNEL_FIELD: Readonly<Partial<Record<SubjectName, string>>> = {
   Analytics: 'channelId',
   ChannelExport: 'channelId',
   ChannelUser: 'channelId',
+  Post: 'channelId',
 };
 
 /**

@@ -21,30 +21,12 @@ import type { FingerprintTools } from '@vp/fingerprint';
 import {
   APPLY_EDITS,
   ApplyEditsJob,
-  ANNOUNCE_COMMENT_HELD,
-  ANNOUNCE_LIVE,
-  AnnounceCommentHeldJob,
-  AnnounceLiveJob,
   CaptionsJob,
   EXPORT_DATA,
   ExportJob,
   HousekeepingJob,
   LiveJob,
-  NOTIFY_COMMENT,
-  NOTIFY_HEART,
-  NOTIFY_MODERATION,
-  NOTIFY_PARTY_INVITE,
-  NOTIFY_TEAM_INVITE,
-  NOTIFY_PROCESSING,
-  NOTIFY_SUBSCRIBERS,
-  NotifyCommentJob,
-  NotifyHeartJob,
-  NotifyModerationJob,
-  NotifyTeamInviteJob,
   NotifyJob,
-  NotifyPartyInviteJob,
-  NotifyProcessingJob,
-  NotifySubscribersJob,
   PackageJob,
   ProbeJob,
   ScreenJob,
@@ -60,15 +42,7 @@ import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createExportProcessor } from './stages/exports/export-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
-import { createAnnounceCommentHeldProcessor } from './stages/notifications/announce-comment-held';
-import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
-import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
-import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
-import { createNotifyModerationProcessor } from './stages/notifications/notify-moderation';
-import { createNotifyPartyInviteProcessor } from './stages/notifications/notify-party-invite';
-import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
-import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
-import { createNotifyTeamInviteProcessor } from './stages/notifications/notify-team-invite';
+import { notificationProcessors } from './stages/notifications/notification-processors';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
@@ -118,24 +92,14 @@ export const notify = (d: StageDeps): StageProcessor => {
       webhookDispatcher: d.webhookDispatcher,
     })
   );
-  const rowDeps = { repositories, logger };
-  const fanOut = { repositories, getQueue: d.getQueue, logger };
   const byName: Record<string, StageProcessor> = {
-    [NOTIFY_SUBSCRIBERS]: consuming(NotifySubscribersJob, createNotifySubscribersProcessor(fanOut)),
-    [ANNOUNCE_LIVE]: consuming(AnnounceLiveJob, createAnnounceLiveProcessor(fanOut)),
-    [ANNOUNCE_COMMENT_HELD]: consuming(
-      AnnounceCommentHeldJob,
-      createAnnounceCommentHeldProcessor({ ...rowDeps, webhookDispatcher: d.webhookDispatcher })
-    ),
-    [NOTIFY_COMMENT]: consuming(NotifyCommentJob, createNotifyCommentProcessor(rowDeps)),
-    [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor(rowDeps)),
-    [NOTIFY_PARTY_INVITE]: consuming(
-      NotifyPartyInviteJob,
-      createNotifyPartyInviteProcessor({ ...rowDeps, now: d.now })
-    ),
-    [NOTIFY_MODERATION]: consuming(NotifyModerationJob, createNotifyModerationProcessor(rowDeps)),
-    [NOTIFY_TEAM_INVITE]: consuming(NotifyTeamInviteJob, createNotifyTeamInviteProcessor(rowDeps)),
-    [NOTIFY_PROCESSING]: consuming(NotifyProcessingJob, createNotifyProcessingProcessor(rowDeps)),
+    ...notificationProcessors({
+      repositories,
+      logger,
+      getQueue: d.getQueue,
+      now: d.now,
+      webhookDispatcher: d.webhookDispatcher,
+    }),
     [EXPORT_DATA]: consuming(
       ExportJob,
       createExportProcessor({

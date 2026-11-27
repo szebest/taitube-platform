@@ -80,7 +80,7 @@ export const prepareChannelImage = defineEndpoint({
   path: '/v1/me/channel/images/:kind/upload',
   channelScoped: true,
   tag: 'Account',
-  summary: 'Presign an avatar or banner upload',
+  summary: 'Presign an avatar, banner or post image upload',
   description:
     'Returns a presigned PUT into the private raw bucket for an image of the acting channel (jpeg, png or webp; 2 MB for an avatar, 6 MB for a banner). PUT the file, then call `completeChannelImage`.',
   params: ImageKindParamSchema,

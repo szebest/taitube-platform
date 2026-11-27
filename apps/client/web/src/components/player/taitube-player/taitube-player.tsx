@@ -15,6 +15,8 @@ export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   attribution?: PlaybackAttribution;
   /** Drawn over the picture inside the element that goes fullscreen, such as a live chat. */
   overlay?: ReactNode;
+  /** Laid over the seek bar of the control bar, such as the thread markers. */
+  markers?: ReactNode;
 }
 
 export function TaitubePlayer({
@@ -22,6 +24,7 @@ export function TaitubePlayer({
   attribution,
   controls = true,
   overlay,
+  markers,
   ...props
 }: TaitubePlayerWithTelemetryProps) {
   const telemetry = usePlaybackTelemetry(videoId, attribution);
@@ -65,6 +68,7 @@ export function TaitubePlayer({
             live={props.live}
             range={props.range}
             chapters={props.chapters}
+            markers={markers}
             onPrevious={props.onPrevious}
             onNext={props.onNext}
           />

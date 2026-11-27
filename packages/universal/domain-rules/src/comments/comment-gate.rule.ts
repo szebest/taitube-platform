@@ -20,7 +20,7 @@ import {
 
 export interface CommentGateContext {
   readonly now: Date;
-  readonly videoId: string;
+  readonly targetId: string;
   readonly channelId: string;
   readonly commentsEnabled: boolean;
   /** A shadow ban takes no part: the write is accepted and stored, which keeps it silent. */
@@ -82,7 +82,7 @@ export function evaluateCommentGate(
   ) {
     return err(commentsBanned(restriction));
   }
-  if (!(context.commentsEnabled || isTeamMember)) return err(commentsDisabled(context.videoId));
+  if (!(context.commentsEnabled || isTeamMember)) return err(commentsDisabled(context.targetId));
   if (settings.subscribersOnly && !(context.isSubscribed || isTeamMember)) {
     return err(commentsSubscribersOnly(context.channelId));
   }

@@ -16,7 +16,7 @@ const created = (comment = NEW): UserEvent => ({
       createdAt: comment.createdAt,
       author: { userId: comment.author.userId, handle: null, displayName: null },
     },
-    video: { id: VIDEO_ID, title: comment.video.title },
+    video: { id: VIDEO_ID, title: comment.targetSummary.title },
   },
 });
 

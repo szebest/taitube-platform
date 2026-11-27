@@ -11,6 +11,8 @@ import {
   publicVideo,
   seedOwners,
   seededChannel,
+  videoTarget,
+  OWNER_CHANNEL_ID,
 } from './fixtures';
 import { SHARED_MILLISECOND } from './keyset-walk';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -163,7 +165,8 @@ export function describeChannelUserRestrictionRepositoryContract(
           expectOk(
             await repositories.comments.create({
               id,
-              videoId: VIDEO_IDS.a,
+              target: videoTarget(VIDEO_IDS.a),
+              channelId: OWNER_CHANNEL_ID,
               authorId: OTHER_OWNER_ID,
               authorChannelId: OTHER_OWNER_CHANNEL_ID,
               parentId: null,
@@ -173,16 +176,16 @@ export function describeChannelUserRestrictionRepositoryContract(
         }
       });
 
-      it('counts again exactly, naming the videos it touched, for a shadow ban and its lift', async () => {
+      it('counts again exactly, naming the targets it touched, for a shadow ban and its lift', async () => {
         const shadowed = await write(shadow(OTHER_OWNER_ID));
         const during = await count();
         const lifted = expectOk(
           await repositories.channelUserRestrictions.lift(channel.id, OTHER_OWNER_ID)
         );
 
-        expect(shadowed.videoIds).toEqual([VIDEO_IDS.a]);
+        expect(shadowed.targets).toEqual([videoTarget(VIDEO_IDS.a)]);
         expect(during).toBe(0);
-        expect(lifted).toEqual({ lifted: true, videoIds: [VIDEO_IDS.a] });
+        expect(lifted).toEqual({ lifted: true, targets: [videoTarget(VIDEO_IDS.a)] });
         expect(await count()).toBe(2);
       });
 
@@ -201,7 +204,7 @@ export function describeChannelUserRestrictionRepositoryContract(
           )
         );
 
-        expect(lifted).toEqual({ lifted: false, videoIds: [] });
+        expect(lifted).toEqual({ lifted: false, targets: [] });
         expect(
           expectOk(await repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 }))
         ).toEqual([]);

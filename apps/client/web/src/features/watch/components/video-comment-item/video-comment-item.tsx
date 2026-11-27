@@ -159,11 +159,11 @@ export function VideoCommentItem({
   const [reportOpened, setReportOpened] = useState(false);
 
   const { data: video } = useSuspenseQuery(
-    videoQueryOptions(api, comment.videoId, useShareToken())
+    videoQueryOptions(api, comment.target.id, useShareToken())
   );
   const editComment = useEditComment(comment.id);
   const deleteComment = useDeleteComment(comment.id);
-  const postReply = usePostComment(comment.videoId);
+  const postReply = usePostComment(comment.target.id);
   const heartComment = useHeartComment();
   const reply = useRequireAccount('reply');
   const canHeart = useCan(canHeartComment, {

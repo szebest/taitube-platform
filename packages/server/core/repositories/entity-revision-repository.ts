@@ -1,15 +1,13 @@
 import type { Result } from '@kit/result';
-import type { EntityRevision, EntityRevisionType, EntitySnapshots } from '@vp/domain';
+import type { EntityRevision, EntityRevisionType } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 
-export interface NewEntityRevision<T extends EntityRevisionType = EntityRevisionType> {
-  entityType: T;
-  entityId: string;
-  version: number;
-  snapshot: EntitySnapshots[T];
-  authorUserId: string | null;
-  restoredFromVersion: number | null;
-}
+export type NewEntityRevision<T extends EntityRevisionType = EntityRevisionType> =
+  EntityRevision<T> extends infer Revision
+    ? Revision extends EntityRevision
+      ? Omit<Revision, 'id' | 'createdAt'>
+      : never
+    : never;
 
 export interface ListRevisionsOptions {
   /** Revisions older than this version only; `null` starts at the newest. */
@@ -25,17 +23,17 @@ export abstract class EntityRevisionRepository {
   /** A version already recorded for the entity is left as it is. */
   abstract append(revision: NewEntityRevision): Promise<Result<void, DatabaseUnavailable>>;
   /** Newest first, `limit + 1` rows. */
-  abstract list(
-    entityType: EntityRevisionType,
+  abstract list<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     options: ListRevisionsOptions
-  ): Promise<Result<EntityRevision[], DatabaseUnavailable>>;
+  ): Promise<Result<EntityRevision<T>[], DatabaseUnavailable>>;
   /** Scoped to the entity, so a revision id of another one is absent. */
-  abstract get(
-    entityType: EntityRevisionType,
+  abstract get<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     revisionId: string
-  ): Promise<Result<EntityRevision | null, DatabaseUnavailable>>;
+  ): Promise<Result<EntityRevision<T> | null, DatabaseUnavailable>>;
   /** Drops all but the newest `keep` revisions of every entity; returns how many went. */
   abstract prune(keep: number): Promise<Result<number, DatabaseUnavailable>>;
 }

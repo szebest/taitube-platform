@@ -64,9 +64,13 @@ export function QueueDetail({ comment }: QueueDetailProps) {
         </Badge>
       </header>
       <p className="m-0 text-body-sm text-fg-muted">
-        <a href={appLink(WEB_URL, `/watch/${comment.video.id}`)}>
-          {tOr('studio.queueOnVideo', { title: comment.video.title }, '')}
-        </a>
+        {comment.targetSummary.type === 'video' ? (
+          <a href={appLink(WEB_URL, `/watch/${comment.targetSummary.id}`)}>
+            {tOr('studio.queueOnVideo', { title: comment.targetSummary.title }, '')}
+          </a>
+        ) : (
+          tOr('studio.queueOnVideo', { title: comment.targetSummary.title }, '')
+        )}
         {comment.parentId !== null && <> · {tOr('studio.queueInThread', {}, '')}</>}
       </p>
       <p className="m-0 whitespace-pre-line text-body">{comment.content}</p>

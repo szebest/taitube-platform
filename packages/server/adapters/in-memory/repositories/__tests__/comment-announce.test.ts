@@ -2,6 +2,7 @@ import { ok } from '@kit/result';
 import type { NewOutboxInput, NewUserEventInput } from '@vp/core/repositories';
 import type { CommentThread, NewCommentInput } from '@vp/domain';
 import { announceCreated } from '../comment-announce';
+import type { TargetOwner } from '../comment-targets';
 import { UNMODERATED } from './stored-comment';
 
 const AUTHOR = 'author';
@@ -10,7 +11,8 @@ const MODERATOR = 'moderator';
 
 const created: CommentThread = {
   id: 'c1',
-  videoId: 'v1',
+  target: { type: 'video', id: 'v1' },
+  channelId: 'owner-channel',
   authorId: AUTHOR,
   authorChannelId: 'author-channel',
   parentId: null,
@@ -32,7 +34,7 @@ const created: CommentThread = {
   replyCount: 0,
 };
 
-const video = { id: 'v1', ownerId: OWNER, title: 'Clip' };
+const owner: TargetOwner = { type: 'video', id: 'v1', ownerId: OWNER, title: 'Clip' };
 
 const held: NewCommentInput['moderation'] = {
   moderationState: 'held',
@@ -93,7 +95,7 @@ describe('adapters/in-memory: announce a created comment', () => {
       expected: [],
     },
   ])('$scenario', async ({ counted, input, expected }) => {
-    await announceCreated(deps, { created, video, input, counted });
+    await announceCreated(deps, { created, owner, input, counted });
 
     expect(told.map(({ userId, type }) => [userId, type])).toEqual(expected);
   });
@@ -101,7 +103,7 @@ describe('adapters/in-memory: announce a created comment', () => {
   it('queues one webhook announcement of a held comment, for the moderators but its author', async () => {
     const input = { authorId: AUTHOR, moderation: held, moderators: [OWNER, MODERATOR, AUTHOR] };
 
-    await announceCreated(deps, { created, video, input, counted: false });
+    await announceCreated(deps, { created, owner, input, counted: false });
 
     expect(queued).toHaveLength(1);
     expect(queued[0]?.payload).toMatchObject({
@@ -115,8 +117,39 @@ describe('adapters/in-memory: announce a created comment', () => {
   it('queues nothing when the only moderator wrote the held comment', async () => {
     const input = { authorId: AUTHOR, moderation: held, moderators: [AUTHOR] };
 
-    await announceCreated(deps, { created, video, input, counted: false });
+    await announceCreated(deps, { created, owner, input, counted: false });
 
     expect([told, queued]).toEqual([[], []]);
+  });
+
+  describe('on a post', () => {
+    const post: TargetOwner = { type: 'post', id: 'p1', ownerId: OWNER };
+    const onPost = { ...created, target: { type: 'post', id: 'p1' } } satisfies CommentThread;
+
+    it('queues the notification job for a public comment but tells no stream', async () => {
+      await announceCreated(deps, {
+        created: onPost,
+        owner: post,
+        input: { authorId: AUTHOR },
+        counted: true,
+      });
+
+      expect(told).toEqual([]);
+      expect(queued).toMatchObject([
+        { payload: { job: { data: { target: { type: 'post', id: 'p1' }, commentId: 'c1' } } } },
+      ]);
+    });
+
+    it('tells the moderators on their stream but queues no webhook for a held comment', async () => {
+      await announceCreated(deps, {
+        created: onPost,
+        owner: post,
+        input: { authorId: AUTHOR, moderation: held, moderators: [OWNER] },
+        counted: false,
+      });
+
+      expect(told.map(({ userId, type }) => [userId, type])).toEqual([[OWNER, 'comment.held']]);
+      expect(queued).toEqual([]);
+    });
   });
 });

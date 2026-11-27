@@ -23,6 +23,7 @@ describe('apps/client/web: en signInPrompt', () => {
     { key: 'signInPrompt.report', expected: 'Sign in to report this' },
     { key: 'signInPrompt.bell', expected: 'Sign in to get notifications' },
     { key: 'signInPrompt.feedback', expected: 'Sign in to tune your recommendations' },
+    { key: 'signInPrompt.vote', expected: 'Sign in to vote' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

@@ -23,6 +23,15 @@ describe('@vp/domain-rules: decideImageCrops', () => {
     expect(expectOk(decideImageCrops(avatar, IMAGE))).toEqual(avatar);
   });
 
+  it('cuts a post image whole, whatever rectangle it came with', () => {
+    const post: ImageCrops = { kind: 'post-image', crop: { x: 5, y: 5, width: 10, height: 10 } };
+
+    expect(expectOk(decideImageCrops(post, IMAGE))).toEqual({
+      kind: 'post-image',
+      crop: { x: 0, y: 0, ...IMAGE },
+    });
+  });
+
   it.each(['desktop', 'mobile', 'tv'] as const)(
     'names the %s crop when it is the wrong shape',
     (target) => {
@@ -51,10 +60,15 @@ describe('@vp/domain-rules: decideImageCrops', () => {
       crop: { x: 0, y: 0, width: 100, height: 100 },
     },
     { kind: 'banner', image: { width: 1000, height: 560 }, crop: null },
+    {
+      kind: 'post-image',
+      image: { width: 600, height: 600 },
+      crop: { x: 0, y: 0, width: 600, height: 600 },
+    },
   ] as const)(
     'refuses a $kind image below the minimum before looking at the crops',
     ({ kind, image, crop }) => {
-      const crops: ImageCrops = kind === 'avatar' && crop ? { kind, crop } : banner;
+      const crops: ImageCrops = kind === 'banner' || !crop ? banner : { kind, crop };
 
       expect(expectErr(decideImageCrops(crops, image)).code).toBe('IMAGE_TOO_SMALL');
     }

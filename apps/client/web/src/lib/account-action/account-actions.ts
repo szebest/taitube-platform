@@ -15,6 +15,7 @@ export const ACCOUNT_ACTIONS = [
   'report',
   'bell',
   'feedback',
+  'vote',
 ] as const;
 
 export type AccountAction = (typeof ACCOUNT_ACTIONS)[number];
@@ -35,4 +36,5 @@ export const ACCOUNT_ACTION_RULES = {
   report: ['report', 'Comment'],
   bell: ['read', 'Notification'],
   feedback: ['create', 'RecommendationFeedback'],
+  vote: ['react', 'Post'],
 } as const satisfies Record<AccountAction, readonly [AppAction, AppSubjects]>;

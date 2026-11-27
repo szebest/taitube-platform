@@ -73,10 +73,14 @@ function RemovedComment({ removal }: { removal: CommentRemovalView }) {
       )}
       <p className="m-0 text-body-sm text-fg-muted">
         <time dateTime={removal.createdAt}>{tOr('library.moderationRemovedAt', { when }, '')}</time>
-        {' · '}
-        <Link to="/watch/$videoId" params={{ videoId: removal.videoId }}>
-          {tOr('library.moderationOpenVideo', {}, '')}
-        </Link>
+        {removal.videoId && (
+          <>
+            {' · '}
+            <Link to="/watch/$videoId" params={{ videoId: removal.videoId }}>
+              {tOr('library.moderationOpenVideo', {}, '')}
+            </Link>
+          </>
+        )}
       </p>
     </li>
   );

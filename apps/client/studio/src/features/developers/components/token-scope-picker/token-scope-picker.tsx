@@ -9,6 +9,7 @@ const SCOPE_GROUPS = [
   { group: 'comments', scopes: ['comments:read', 'comments:moderate'] },
   { group: 'exports', scopes: ['exports:read', 'exports:create'] },
   { group: 'webhooks', scopes: ['webhooks:manage'] },
+  { group: 'posts', scopes: ['posts:write'] },
 ] as const satisfies readonly { group: string; scopes: readonly ApiScope[] }[];
 
 export interface TokenScopePickerProps {

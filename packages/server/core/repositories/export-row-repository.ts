@@ -4,6 +4,7 @@ import type {
   CommentExportRow,
   DataExportParams,
   ExportRowPage,
+  PostExportRow,
   VideoAnalyticsExportRow,
   VideoExportRow,
 } from '@vp/domain';
@@ -37,4 +38,6 @@ export interface ExportRowRepositoryPort {
   ): Page<ChannelAnalyticsExportRow>;
   comments(scope: ExportScope, after: string | null, limit: number): Page<CommentExportRow>;
   videos(scope: ExportScope, after: string | null, limit: number): Page<VideoExportRow>;
+  /** Every post of the channel in any status, oldest first. */
+  posts(scope: ExportScope, after: string | null, limit: number): Page<PostExportRow>;
 }

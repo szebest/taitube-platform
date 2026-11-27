@@ -2,7 +2,11 @@ import { CHANNEL_IMAGE_CONTENT_TYPES, CHANNEL_IMAGE_KINDS } from '../channel-ima
 
 describe('@vp/validation: channel image vocabulary', () => {
   it.each([
-    { name: 'the kinds', actual: CHANNEL_IMAGE_KINDS, expected: ['avatar', 'banner'] },
+    {
+      name: 'the kinds',
+      actual: CHANNEL_IMAGE_KINDS,
+      expected: ['avatar', 'banner', 'post-image'],
+    },
     {
       name: 'the content types',
       actual: CHANNEL_IMAGE_CONTENT_TYPES,

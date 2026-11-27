@@ -8,6 +8,7 @@ import type {
 } from '@vp/core/repositories';
 import {
   type ChannelUserRestriction,
+  type CommentTarget,
   isRestrictionActive,
   type ModerationRecord,
   type NewChannelAuditEntry,
@@ -28,8 +29,8 @@ const keysetOf = ({ createdAt, userId }: ChannelUserRestriction) => ({
 export interface InMemoryChannelUserRestrictionRepositoryOptions {
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
   outboxRepo: Pick<OutboxRepository, 'enqueue'>;
-  /** Counts the user's comments again and answers the videos it touched. */
-  recount: (channelId: string, userId: string) => Promise<string[]>;
+  /** Counts the user's comments again and answers the targets it touched. */
+  recount: (channelId: string, userId: string) => Promise<CommentTarget[]>;
 }
 
 export class InMemoryChannelUserRestrictionRepository implements ChannelUserRestrictionRepositoryPort {
@@ -52,9 +53,9 @@ export class InMemoryChannelUserRestrictionRepository implements ChannelUserRest
   ): Promise<Result<RestrictionWritten, DatabaseUnavailable>> {
     const row = { ...restriction, createdAt: new Date() };
     this.rows.set(keyOf(row.channelId, row.userId), row);
-    const videoIds = await this.deps.recount(row.channelId, row.userId);
+    const targets = await this.deps.recount(row.channelId, row.userId);
     const recorded = await recordModeration(this.deps, record);
-    return isErr(recorded) ? recorded : ok({ restriction: { ...row }, videoIds });
+    return isErr(recorded) ? recorded : ok({ restriction: { ...row }, targets });
   }
 
   async lift(
@@ -62,11 +63,11 @@ export class InMemoryChannelUserRestrictionRepository implements ChannelUserRest
     userId: string,
     audit?: NewChannelAuditEntry
   ): Promise<Result<RestrictionLifted, DatabaseUnavailable>> {
-    if (!this.rows.delete(keyOf(channelId, userId))) return ok({ lifted: false, videoIds: [] });
+    if (!this.rows.delete(keyOf(channelId, userId))) return ok({ lifted: false, targets: [] });
 
-    const videoIds = await this.deps.recount(channelId, userId);
+    const targets = await this.deps.recount(channelId, userId);
     const recorded = await recordModeration(this.deps, audit && { audit });
-    return isErr(recorded) ? recorded : ok({ lifted: true, videoIds });
+    return isErr(recorded) ? recorded : ok({ lifted: true, targets });
   }
 
   async list(

@@ -42,6 +42,8 @@ import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
+import { postStudioRoutes } from './post-studio';
+import { postsRoutes } from './posts';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationFeedbackRoutes } from './recommendation-feedback';
@@ -53,6 +55,7 @@ import { searchHistoryRoutes } from './search-history';
 import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
+import { threadsRoutes } from './threads';
 import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videoAccessRoutes } from './video-access';
@@ -88,6 +91,9 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   videoExperimentsRoutes,
   videoPipelineRoutes,
   commentsRoutes,
+  postsRoutes,
+  threadsRoutes,
+  postStudioRoutes,
   commentReportsRoutes,
   creatorCommentsRoutes,
   feedRoutes,

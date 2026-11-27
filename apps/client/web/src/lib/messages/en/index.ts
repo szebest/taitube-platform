@@ -10,6 +10,7 @@ import { live } from './live';
 import { notifications } from './notifications';
 import { party } from './party';
 import { player } from './player';
+import { posts } from './posts';
 import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
@@ -18,6 +19,7 @@ import { shell } from './shell';
 import { shorts } from './shorts';
 import { signInPrompt } from './sign-in-prompt';
 import { themeBuilder } from './theme-builder';
+import { threads } from './threads';
 import { watch } from './watch';
 
 /** The words only the web app renders. */
@@ -34,6 +36,7 @@ export const en = {
   notifications,
   party,
   player,
+  posts,
   pwa,
   search,
   settings,
@@ -42,5 +45,6 @@ export const en = {
   shorts,
   signInPrompt,
   themeBuilder,
+  threads,
   watch,
 } as const;

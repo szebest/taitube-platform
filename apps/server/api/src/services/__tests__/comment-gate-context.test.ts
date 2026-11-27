@@ -18,7 +18,13 @@ describe('apps/server/api/services: comment gate context', () => {
 
   const load = async (author: UserContext = AUTHOR) =>
     expectOk(
-      await loadCommentGate(commentCreateDeps(repositories), author, AUTHOR_CHANNEL_ID, video, NOW)
+      await loadCommentGate(
+        commentCreateDeps(repositories),
+        author,
+        AUTHOR_CHANNEL_ID,
+        { type: 'video', video },
+        NOW
+      )
     );
 
   beforeEach(async () => {
@@ -59,7 +65,7 @@ describe('apps/server/api/services: comment gate context', () => {
       const gate = await load();
 
       expect(gate.context).toMatchObject({
-        videoId: VIDEO_ID,
+        targetId: VIDEO_ID,
         channelId,
         commentsEnabled: true,
         isSubscribed: true,

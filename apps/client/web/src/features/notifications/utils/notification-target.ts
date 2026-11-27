@@ -2,34 +2,43 @@ import { assertNever } from '@kit/result';
 import { linkOptions } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
 
-function watch(videoId: string | null, commentId?: string | null) {
+function watch(videoId: string | null, commentId?: string | null, threadId?: string) {
   if (!videoId) {
     return undefined;
   }
   return linkOptions({
     to: '/watch/$videoId',
     params: { videoId },
-    search: commentId ? { comment: commentId } : {},
+    search: {
+      ...(threadId && { tab: 'threads' as const, thread: threadId }),
+      ...(commentId && { comment: commentId }),
+    },
   });
+}
+
+function comment({ videoId, commentId, payload }: Notification) {
+  if (payload.postId) {
+    return linkOptions({ to: '/post/$id', params: { id: payload.postId }, search: {} });
+  }
+  return watch(videoId, commentId, payload.threadId);
 }
 
 /**
  * Where opening a notification goes, for a `Link` or `navigate`: a group of uploads opens the
- * channel, a comment kind its comment on the video. `undefined` when there is nothing to open.
+ * channel, a comment kind its comment on the video, the post or the thread. `undefined` when there is nothing to open.
  */
-export function notificationTarget({
-  kind,
-  videoId,
-  commentId,
-  actorChannelId,
-  payload,
-}: Notification) {
+export function notificationTarget(notification: Notification) {
+  const { kind, videoId, actorChannelId, payload } = notification;
   switch (kind) {
     case 'upload':
       if (payload.count > 1 && actorChannelId) {
         return linkOptions({ to: '/channel/$channelId', params: { channelId: actorChannelId } });
       }
       return watch(videoId);
+    case 'post':
+      return actorChannelId
+        ? linkOptions({ to: '/channel/$channelId', params: { channelId: actorChannelId } })
+        : undefined;
     case 'live':
     case 'processing':
     case 'team_invite':
@@ -43,7 +52,7 @@ export function notificationTarget({
     case 'mention':
     case 'comment':
     case 'heart':
-      return watch(videoId, commentId);
+      return comment(notification);
     case 'party_invite':
     case 'party_starting':
       return undefined;

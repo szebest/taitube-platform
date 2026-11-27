@@ -7,7 +7,7 @@ describe('db: notifications schema', () => {
     { column: 'user_id', table: 'users', onDelete: 'cascade' },
     { column: 'actor_channel_id', table: 'channels', onDelete: 'set null' },
     { column: 'video_id', table: 'videos', onDelete: 'cascade' },
-    { column: 'comment_id', table: 'video_comments', onDelete: 'cascade' },
+    { column: 'comment_id', table: 'comments', onDelete: 'cascade' },
   ])('$column follows its $table row with $onDelete', ({ column, table, onDelete }) => {
     expect(referenceFrom(notifications, column)).toEqual({ table, onDelete });
   });

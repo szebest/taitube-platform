@@ -17,8 +17,9 @@ export async function applyHeart(
   if (comment.heartedAt !== null) return ok();
 
   comment.heartedAt = new Date();
+  if (comment.target.type !== 'video') return ok();
   const enqueued = await outbox.enqueue(
-    heartOutbox({ videoId: comment.videoId, commentId: comment.id })
+    heartOutbox({ videoId: comment.target.id, commentId: comment.id })
   );
   return isErr(enqueued) ? enqueued : ok();
 }

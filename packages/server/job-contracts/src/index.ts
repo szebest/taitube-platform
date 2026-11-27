@@ -154,6 +154,7 @@ export const HousekeepingJob = z.object({
     'purge-exports',
     'prune-revisions',
     'purge-generations',
+    'publish-due-posts',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

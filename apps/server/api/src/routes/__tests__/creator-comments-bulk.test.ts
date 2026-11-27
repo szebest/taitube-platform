@@ -75,7 +75,8 @@ describe('POST /v1/creator/comments/bulk', () => {
     const foreign = expectOk(
       await ctx.repositories.comments.create({
         id: '77777777-7777-7777-8777-777777777777',
-        videoId: ELSEWHERE_VIDEO,
+        target: { type: 'video', id: ELSEWHERE_VIDEO },
+        channelId: await seedPrimaryChannel(ctx.repositories, AUTHOR),
         authorId: STRANGER,
         authorChannelId: await seedPrimaryChannel(ctx.repositories, STRANGER),
         parentId: null,

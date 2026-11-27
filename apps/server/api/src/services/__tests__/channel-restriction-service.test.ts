@@ -44,7 +44,8 @@ describe('apps/server/api/services: channel restrictions', () => {
     expectOk(
       await repositories.comments.create({
         id: COMMENT,
-        videoId: VIDEO,
+        target: { type: 'video', id: VIDEO },
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         authorId: AUTHOR,
         authorChannelId: await seedPrimaryChannel(repositories, AUTHOR),
         parentId: null,

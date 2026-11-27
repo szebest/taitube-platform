@@ -6,7 +6,8 @@ import { getHeaderMapping } from '@kit/object-storage';
 import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { ChannelImageUpload, ImageCrops } from '@vp/domain';
+import type { ChannelImageUpload, ImageCrops, PostImageUrls } from '@vp/domain';
+import { POST_IMAGE_WIDTHS } from '@vp/domain';
 import { decideImageCrops, type DecideImageCropsFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import {
@@ -58,6 +59,11 @@ interface QueuedUpload {
   upload: ChannelImageUpload;
   version: number;
   crops: ImageCrops;
+}
+
+function postImageUrls(urlOf: (variant: string) => string): PostImageUrls {
+  const [narrow, wide] = POST_IMAGE_WIDTHS;
+  return { w640: urlOf(String(narrow)), w1280: urlOf(String(wide)) };
 }
 
 /** What the uploader is told; a media failure carries process output that is no business of theirs. */
@@ -133,13 +139,13 @@ export function createChannelImageProcessor(deps: ChannelImageProcessorDeps) {
       if (isErr(uploaded)) return uploaded;
     }
 
-    const defaultKey = channelImageVariantKey(
-      channelId,
-      kind,
-      defaultChannelImageVariant(kind),
-      version
-    );
-    const committed = await images.commit(id, `${cdn}/${defaultKey}`);
+    const urlOf = (variant: string) =>
+      `${cdn}/${channelImageVariantKey(channelId, kind, variant, version)}`;
+    const defaultUrl = urlOf(defaultChannelImageVariant(kind));
+    const committed =
+      kind === 'post-image'
+        ? await images.commit(id, defaultUrl, postImageUrls(urlOf))
+        : await images.commit(id, defaultUrl);
     if (isErr(committed)) return committed;
     return ok({
       type: STAGE,

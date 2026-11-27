@@ -1,5 +1,6 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import {
+  canManagePost,
   canModerateComments,
   canReadAnalytics,
   canReadChannelTeam,
@@ -36,6 +37,13 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
         >
           <Link to="/videos" search={{}}>
             {tOr('studio.navLibrary', {}, '')}
+          </Link>
+        </StudioWorkspace.NavItem>
+      </Can>
+      <Can type="rule" I={canManagePost} this={{ action: 'create', post: { ownerId, channelId } }}>
+        <StudioWorkspace.NavItem asChild icon="chat" active={Boolean(matchRoute({ to: '/posts' }))}>
+          <Link to="/posts" search={{}}>
+            {tOr('studio.postsNav', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
       </Can>

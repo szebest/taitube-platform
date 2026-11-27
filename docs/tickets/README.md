@@ -7,7 +7,6 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
 - [119: Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md)
-- [120: Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
 
 ## How to work a ticket (humans and agents)
@@ -152,7 +151,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 117 | [Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md) | 5 - Developer experience & growth | L | 38, 39, 44, 81, 93, 95, 99 | 113, 114, 115, 116, 118, 120, 121, 122, 129, 144 | done |
 | 118 | [Creator data portability and API - exports, personal access tokens and a developer page](118-creator-data-portability-and-api.md) | 5 - Developer experience & growth | L | 38, 39, 42, 43, 60, 65, 77, 95, 98, 113, 117 | — | done |
 | 119 | [Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 46, 57, 59, 73, 95, 98, 99, 104, 105, 115, 116 | 121, 122 | ready |
-| 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | ready |
+| 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | done |
 | 121 | [Channel page builder - configurable sections, tabs and custom pages with drafts, scheduling and preview](121-channel-page-builder.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 41, 58, 72, 76, 86, 95, 96, 102, 104, 106, 115, 116, 117, 119, 120 | 122 | blocked |
 | 122 | [Linked content - one typed link graph between videos, Shorts, posts, threads, playlists, clips, live and episodes](122-linked-content-graph.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 43, 44, 46, 57, 59, 65, 76, 95, 99, 102, 105, 113, 115, 116, 117, 119, 120, 121 | — | blocked |
 | 123 | [Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md) | 5 - Developer experience & growth | M | 43, 65, 109 | — | done |
