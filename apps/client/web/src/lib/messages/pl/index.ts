@@ -12,6 +12,9 @@ import { live } from './live';
 import { notifications } from './notifications';
 import { party } from './party';
 import { player } from './player';
+import { playlistEdit } from './playlist-edit';
+import { playlistPeople } from './playlist-people';
+import { playlistTools } from './playlist-tools';
 import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
@@ -44,4 +47,7 @@ export const pl = defineCatalogue<typeof en>()({
   signInPrompt,
   themeBuilder,
   watch,
+  playlistEdit,
+  playlistPeople,
+  playlistTools,
 });

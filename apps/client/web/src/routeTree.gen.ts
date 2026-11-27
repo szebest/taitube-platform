@@ -42,6 +42,7 @@ import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedFeedHistoryRouteImport } from './routes/_authed/feed.history';
 import { Route as AuthedFeedPlaylistsRouteImport } from './routes/_authed/feed.playlists';
 import { Route as AuthedFeedYouRouteImport } from './routes/_authed/feed.you';
+import { Route as AuthedPlaylistInviteTokenRouteImport } from './routes/_authed/playlist-invite.$token';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
 import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
@@ -213,6 +214,12 @@ const AuthedFeedYouRoute = AuthedFeedYouRouteImport.update({
   path: '/feed/you',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedPlaylistInviteTokenRoute =
+  AuthedPlaylistInviteTokenRouteImport.update({
+    id: '/playlist-invite/$token',
+    path: '/playlist-invite/$token',
+    getParentRoute: () => AuthedRoute,
+  } as any);
 const AuthedSubscriptionsIndexRoute =
   AuthedSubscriptionsIndexRouteImport.update({
     id: '/subscriptions/',
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/feed/history': typeof AuthedFeedHistoryRoute;
   '/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/feed/you': typeof AuthedFeedYouRoute;
+  '/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -319,6 +327,7 @@ export interface FileRoutesByTo {
   '/feed/history': typeof AuthedFeedHistoryRoute;
   '/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/feed/you': typeof AuthedFeedYouRoute;
+  '/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -361,6 +370,7 @@ export interface FileRoutesById {
   '/_authed/feed/history': typeof AuthedFeedHistoryRoute;
   '/_authed/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/_authed/feed/you': typeof AuthedFeedYouRoute;
+  '/_authed/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/feed/history'
     | '/feed/playlists'
     | '/feed/you'
+    | '/playlist-invite/$token'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/feed/history'
     | '/feed/playlists'
     | '/feed/you'
+    | '/playlist-invite/$token'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -483,6 +495,7 @@ export interface FileRouteTypes {
     | '/_authed/feed/history'
     | '/_authed/feed/playlists'
     | '/_authed/feed/you'
+    | '/_authed/playlist-invite/$token'
     | '/_authed/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -749,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedFeedYouRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/playlist-invite/$token': {
+      id: '/_authed/playlist-invite/$token';
+      path: '/playlist-invite/$token';
+      fullPath: '/playlist-invite/$token';
+      preLoaderRoute: typeof AuthedPlaylistInviteTokenRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/subscriptions/': {
       id: '/_authed/subscriptions/';
       path: '/subscriptions';
@@ -799,6 +819,7 @@ interface AuthedRouteChildren {
   AuthedFeedHistoryRoute: typeof AuthedFeedHistoryRoute;
   AuthedFeedPlaylistsRoute: typeof AuthedFeedPlaylistsRoute;
   AuthedFeedYouRoute: typeof AuthedFeedYouRoute;
+  AuthedPlaylistInviteTokenRoute: typeof AuthedPlaylistInviteTokenRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
   AuthedFeedYouModerationRoute: typeof AuthedFeedYouModerationRoute;
@@ -809,6 +830,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedFeedHistoryRoute: AuthedFeedHistoryRoute,
   AuthedFeedPlaylistsRoute: AuthedFeedPlaylistsRoute,
   AuthedFeedYouRoute: AuthedFeedYouRoute,
+  AuthedPlaylistInviteTokenRoute: AuthedPlaylistInviteTokenRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
   AuthedFeedYouModerationRoute: AuthedFeedYouModerationRoute,
