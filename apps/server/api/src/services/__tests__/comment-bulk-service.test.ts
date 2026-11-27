@@ -15,10 +15,10 @@ describe('apps/server/api/services: comment bulk', () => {
           ok(
             id === 'gone'
               ? null
-              : ({ id, videoId: 'video-1', authorId: `author-of-${id}` } as never)
+              : ({ id, channelId: 'channel-1', authorId: `author-of-${id}` } as never)
           ),
       },
-      videos: { findById: async () => ok({ ownerId: 'owner-1' } as never) },
+      channels: { findById: async () => ok({ userId: 'owner-1' } as never) },
       moderation: { moderate },
       restrictions: { restrict, lift },
     });

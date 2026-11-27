@@ -34,7 +34,11 @@ export async function commentsRoutes(app: FastifyInstance): Promise<void> {
         sendResult(
           reply,
           request,
-          await commentService.listForVideo(request.user ?? null, request.params.id, request.query)
+          await commentService.list(
+            request.user ?? null,
+            { type: 'video', id: request.params.id },
+            request.query
+          )
         )
     );
   }
@@ -54,7 +58,12 @@ export async function commentsRoutes(app: FastifyInstance): Promise<void> {
         return sendResult(
           reply,
           request,
-          await commentService.create(user, acting, request.params.id, request.body),
+          await commentService.create(
+            user,
+            acting,
+            { type: 'video', id: request.params.id },
+            request.body
+          ),
           {
             status: 201,
             present: (failure) => presentCommentFailure(failure, request.url),

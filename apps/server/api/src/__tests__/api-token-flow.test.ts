@@ -191,6 +191,7 @@ describe('personal access tokens, end to end', () => {
       'exports:read',
       'exports:create',
       'webhooks:manage',
+      'posts:write',
     ]);
 
     const res = await call(headers, options);

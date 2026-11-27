@@ -56,15 +56,21 @@ export function CommentInbox({ filter }: CommentInboxProps) {
   const table = useTable({
     features: dataTableFeatures,
     columns: column.columns([
-      column.accessor((comment) => comment.video.title, {
+      column.accessor((comment) => comment.targetSummary.title, {
         id: 'video',
         header: tOr('studio.commentsVideo', {}, ''),
         enableSorting: false,
-        cell: ({ row: { original } }) => (
-          <a href={appLink(WEB_URL, `/watch/${original.video.id}`)} className="line-clamp-2">
-            {original.video.title}
-          </a>
-        ),
+        cell: ({ row: { original } }) =>
+          original.targetSummary.type === 'video' ? (
+            <a
+              href={appLink(WEB_URL, `/watch/${original.targetSummary.id}`)}
+              className="line-clamp-2"
+            >
+              {original.targetSummary.title}
+            </a>
+          ) : (
+            <span className="line-clamp-2">{original.targetSummary.title}</span>
+          ),
       }),
       column.accessor(authorOf, {
         id: 'author',

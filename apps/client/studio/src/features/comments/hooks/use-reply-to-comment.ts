@@ -8,7 +8,7 @@ function replyMutationOptions(api: ApiClient, comment: InboxComment) {
   return mutationOptions({
     mutationFn: (content: string) =>
       api.comments.createComment({
-        params: { id: comment.video.id },
+        params: { id: comment.target.id },
         body: { content, parentId: threadRootId(comment) },
       }),
     onSuccess: (_reply, _content, _snapshot, { client }) =>

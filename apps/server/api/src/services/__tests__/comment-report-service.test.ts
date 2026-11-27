@@ -28,9 +28,9 @@ describe('CommentReportService', () => {
     repositories = new InMemoryRepositories();
     invalidated = [];
     const commentCache: CommentCachePort = {
-      getHot: async (_videoId, fetcher) => fetcher(),
-      invalidate: async (videoId) => {
-        invalidated.push(videoId);
+      getHot: async (_target, fetcher) => fetcher(),
+      invalidate: async (target) => {
+        invalidated.push(target.id);
         return ok();
       },
     };
@@ -44,6 +44,8 @@ describe('CommentReportService', () => {
     service = new CommentReportService({
       comments: repositories.comments,
       videos: repositories.videos,
+      posts: repositories.channelPosts,
+      channels: repositories.channels,
       reports: repositories.commentReports,
       commentService,
       paginator,
@@ -65,7 +67,7 @@ describe('CommentReportService', () => {
       await commentService.create(
         AUTHOR,
         await actingAsPrimary(repositories, AUTHOR.id),
-        VIDEO_ID,
+        { type: 'video', id: VIDEO_ID },
         { content: 'spam' }
       )
     ).id;
@@ -91,7 +93,8 @@ describe('CommentReportService', () => {
     const hidden = expectOk(
       await repositories.comments.create({
         id: '77777777-7777-7777-8777-777777777777',
-        videoId: PRIVATE_ID,
+        target: { type: 'video', id: PRIVATE_ID },
+        channelId: await seedPrimaryChannel(repositories, OWNER.id),
         authorId: OWNER.id,
         authorChannelId: await seedPrimaryChannel(repositories, OWNER.id),
         parentId: null,
