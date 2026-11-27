@@ -1,6 +1,11 @@
 import { type Result, andThen, map } from '@kit/result';
 import type { Video, VideoThread } from '@vp/domain';
-import { type UserContext, canModerateComment, canPinThread } from '@vp/permissions';
+import {
+  type UserContext,
+  canDeleteThread,
+  canModerateComment,
+  canPinThread,
+} from '@vp/permissions';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type ReadThreadFailure, decideThreadRead } from './read-thread.rule';
 
@@ -18,6 +23,12 @@ interface ManagedThread {
 }
 
 export type ManageThreadFailure = AuthorizationFailure | ReadThreadFailure;
+
+const threadResource = (thread: VideoThread, video: Video) => ({
+  ownerId: video.ownerId,
+  channelId: video.channelId,
+  authorId: thread.authorId,
+});
 
 function decideManage(
   input: ManageThreadInput,
@@ -39,8 +50,8 @@ export function decideThreadPin(
 ): Result<ManagedThread, ManageThreadFailure> {
   return decideManage(
     input,
-    (actor, { video }) =>
-      canPinThread({ user: actor, thread: { ownerId: video.ownerId, channelId: video.channelId } }),
+    (actor, { thread, video }) =>
+      canPinThread({ user: actor, thread: threadResource(thread, video) }),
     { action: 'pin', subject: 'Thread' }
   );
 }
@@ -52,7 +63,7 @@ export function decideThreadRemove(
   return decideManage(
     input,
     (actor, { thread, video }) =>
-      actor.id === thread.authorId ||
+      canDeleteThread({ user: actor, thread: threadResource(thread, video) }) ||
       canModerateComment({
         user: actor,
         action: 'remove',

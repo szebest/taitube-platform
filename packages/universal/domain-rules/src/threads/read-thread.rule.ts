@@ -9,14 +9,22 @@ export interface ReadThreadInput {
   readonly thread: VideoThread | null;
   readonly threadId: string;
   readonly video: Video | null;
+  /** The author is shadow banned on the channel: only they read the thread. */
+  readonly authorShadowed?: boolean;
 }
 
 export type ReadThreadFailure = ReadVideoFailure | ThreadNotFound;
 
-/** A held or hidden thread is for its author and for those who moderate its channel. */
-function isThreadVisibleTo(viewer: UserContext | null, thread: VideoThread, video: Video): boolean {
-  if (thread.moderationState === 'published') return true;
+/** A held or hidden thread is for its author and for those who moderate its channel; a shadow banned author's is for them alone. */
+function isThreadVisibleTo(
+  viewer: UserContext | null,
+  thread: VideoThread,
+  video: Video,
+  authorShadowed: boolean
+): boolean {
   if (viewer?.id === thread.authorId) return true;
+  if (authorShadowed) return false;
+  if (thread.moderationState === 'published') return true;
   return canModerateComment({
     user: viewer,
     action: 'hold',
@@ -34,7 +42,7 @@ export function decideThreadRead(
   return andThen(
     decideVideoRead({ viewer, video: input.video, videoId: thread.videoId }),
     (video) =>
-      isThreadVisibleTo(viewer, thread, video)
+      isThreadVisibleTo(viewer, thread, video, input.authorShadowed ?? false)
         ? ok({ thread, video })
         : err(threadNotFound(threadId))
   );

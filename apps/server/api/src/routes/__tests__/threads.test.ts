@@ -166,6 +166,34 @@ describe('thread routes', () => {
     });
   });
 
+  describe('a shadow banned author', () => {
+    it('keeps the thread out of the list, the read and the markers for everyone else', async () => {
+      const id = await started('fan');
+      await reply('stranger', id);
+      await reply('owner', id);
+      expectOk(
+        await ctx.repositories.channelUserRestrictions.apply({
+          channelId: ctx.ownerChannelId,
+          userId: FAN,
+          kind: 'shadow',
+          reason: null,
+          expiresAt: null,
+          createdBy: OWNER,
+        })
+      );
+
+      const others = await list('anonymous');
+      const own = await list('fan');
+      const read = await ctx.call('anonymous', 'GET', `/v1/threads/${id}`);
+      const ownRead = await ctx.call('fan', 'GET', `/v1/threads/${id}`);
+
+      expect(others.json()).toEqual({ items: [], markers: [] });
+      expect(own.json().items).toHaveLength(1);
+      expect(own.json().markers).toEqual([]);
+      expect([read.statusCode, ownRead.statusCode]).toEqual([404, 200]);
+    });
+  });
+
   describe('replies', () => {
     it('lists replies under the thread and counts them', async () => {
       const id = await started();

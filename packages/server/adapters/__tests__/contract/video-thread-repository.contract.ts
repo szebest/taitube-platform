@@ -191,10 +191,32 @@ export function describeVideoThreadRepositoryContract(makeSubject: MakeRepositor
           createdBy: OWNER_ID,
         })
       );
-      const [after] = await listed();
+      const [after] = await listed(OTHER_OWNER_ID);
 
       expect(before).toMatchObject({ replyCount: 3, markerReplies: 3, markerRepliers: 2 });
       expect(after).toMatchObject({ markerReplies: 1, markerRepliers: 1 });
+    });
+
+    it('shows the thread of a shadow banned author to that author alone', async () => {
+      await create(T.a);
+      expectOk(
+        await subject.repositories.channelUserRestrictions.apply({
+          channelId: OWNER_CHANNEL_ID,
+          userId: OTHER_OWNER_ID,
+          kind: 'shadow',
+          reason: null,
+          expiresAt: null,
+          createdBy: OWNER_ID,
+        })
+      );
+
+      const ids = async (viewerId: string | null) =>
+        (await listed(viewerId)).map(({ thread }) => thread.id);
+
+      expect(await ids(null)).toEqual([]);
+      expect(await ids(OWNER_ID)).toEqual([]);
+      expect(await ids(OTHER_OWNER_ID)).toEqual([T.a]);
+      expect(expectOk(await threads.findEntry(T.a))).toMatchObject({ authorShadowed: true });
     });
 
     it('removes a thread with its comments, once, and records why', async () => {

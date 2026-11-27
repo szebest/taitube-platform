@@ -71,6 +71,7 @@ export class ThreadService {
       thread: entry.value?.thread ?? null,
       threadId,
       video: video.value,
+      authorShadowed: entry.value?.authorShadowed ?? false,
     });
     if (isErr(read)) return err(disguised(read.error));
     return entry.value

@@ -2,4 +2,5 @@
 export interface ThreadResource {
   readonly ownerId: string;
   readonly channelId: string;
+  readonly authorId: string;
 }

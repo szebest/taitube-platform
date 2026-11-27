@@ -483,6 +483,7 @@
       "canManagePost": "@vp/permissions",
       "canReactPost": "@vp/permissions",
       "canPinThread": "@vp/permissions",
+      "canDeleteThread": "@vp/permissions",
       "canModerateComment": "@vp/permissions",
       "canModerateComments": "@vp/permissions",
       "canModerateLiveStream": "@vp/permissions",

@@ -25,6 +25,11 @@ const countsTowardMarker = sql`${c.targetType} = 'thread' and ${c.targetId} = ${
 const markerReplies = sql<number>`(select count(*)::int from ${c} where ${countsTowardMarker})`;
 const markerRepliers = sql<number>`(select count(distinct ${c.authorId})::int from ${c} where ${countsTowardMarker})`;
 
+const authorShadowed = sql<boolean>`exists (
+  select 1 from ${r}
+  where ${r.channelId} = ${t.channelId} and ${r.userId} = ${t.authorId} and ${r.kind} = 'shadow'
+)`;
+
 const pinnedRank = sql`coalesce(${msTimestamp(t.pinnedAt)}, '-infinity'::timestamptz)`;
 
 async function entriesWhere(
@@ -40,6 +45,7 @@ async function entriesWhere(
       avatarUrl: ch.avatarUrl,
       markerReplies,
       markerRepliers,
+      authorShadowed,
     })
     .from(t)
     .leftJoin(ch, eq(ch.id, t.authorChannelId))
@@ -47,16 +53,19 @@ async function entriesWhere(
     .orderBy(desc(pinnedRank), asc(t.anchorMs), asc(t.id))
     .limit(limit);
 
-  return rows.map(({ handle, displayName, avatarUrl, markerReplies, markerRepliers, ...row }) => {
-    const thread = toVideoThread(row);
-    return {
-      thread,
-      author: { channelId: thread.authorChannelId, handle, displayName, avatarUrl },
-      replyCount: thread.commentsCount,
-      markerReplies,
-      markerRepliers,
-    };
-  });
+  return rows.map(
+    ({ handle, displayName, avatarUrl, markerReplies, markerRepliers, authorShadowed, ...row }) => {
+      const thread = toVideoThread(row);
+      return {
+        thread,
+        author: { channelId: thread.authorChannelId, handle, displayName, avatarUrl },
+        replyCount: thread.commentsCount,
+        markerReplies,
+        markerRepliers,
+        authorShadowed,
+      };
+    }
+  );
 }
 
 export function threadsOfVideo(
@@ -64,7 +73,8 @@ export function threadsOfVideo(
   videoId: string,
   { viewer, limit }: ListVideoThreadsOptions
 ): Promise<VideoThreadEntry[]> {
-  const published = eq(t.moderationState, 'published');
+  const published =
+    and(eq(t.moderationState, 'published'), sql`not ${authorShadowed}`) ?? sql`true`;
   const visible = viewer ? (or(published, eq(t.authorId, viewer.id)) ?? published) : published;
   return entriesWhere(db, and(eq(t.videoId, videoId), visible), limit);
 }

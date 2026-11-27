@@ -41,7 +41,11 @@ const comment = subject('Comment', {
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
 const post = subject('Post', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
-const thread = subject('Thread', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
+const thread = subject('Thread', {
+  channelId: CHANNEL_ID,
+  ownerId: OWNER_ID,
+  authorId: 'fan-1',
+});
 const channelUser = subject('ChannelUser', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const commentSettings = subject('CommentSettings', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const editor = subject('ChannelMember', {

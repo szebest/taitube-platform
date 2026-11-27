@@ -36,8 +36,21 @@ describe('@vp/domain-rules: decideThreadRead', () => {
       video: aVideo({ visibility: 'private' }),
       code: ErrorCodes.FORBIDDEN,
     },
-  ])('refuses $name', ({ thread, video, code }) => {
-    const result = decideThreadRead({ viewer: STRANGER, thread, threadId: 'thread-1', video });
+    {
+      name: 'a shadow banned author thread to a stranger',
+      thread: aThread(),
+      video: aVideo(),
+      code: ErrorCodes.THREAD_NOT_FOUND,
+      authorShadowed: true,
+    },
+  ])('refuses $name', ({ thread, video, code, authorShadowed }) => {
+    const result = decideThreadRead({
+      viewer: STRANGER,
+      thread,
+      threadId: 'thread-1',
+      video,
+      authorShadowed,
+    });
 
     expect(isErr(result) && result.error.code).toBe(code);
   });

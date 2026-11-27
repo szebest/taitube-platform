@@ -55,6 +55,8 @@ export interface VideoThreadEntry {
   replyCount: number;
   markerReplies: number;
   markerRepliers: number;
+  /** The author is shadow banned on the channel: only they see the thread. */
+  authorShadowed: boolean;
 }
 
 export type ThreadCreated = { type: 'created'; thread: VideoThread } | { type: 'limit' };

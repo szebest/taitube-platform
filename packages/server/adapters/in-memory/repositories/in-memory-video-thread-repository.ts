@@ -27,7 +27,10 @@ export interface InMemoryVideoThreadRepositoryOptions {
   auditRepo: Pick<InMemoryChannelAuditRepository, 'append'>;
   outboxRepo: Pick<OutboxRepository, 'enqueue'>;
   channelsRepo: Pick<InMemoryChannelRepository, 'findById'>;
-  restrictionsRepo: Pick<InMemoryChannelUserRestrictionRepository, 'restrictedUserIds'>;
+  restrictionsRepo: Pick<
+    InMemoryChannelUserRestrictionRepository,
+    'restrictedUserIds' | 'shadowedUserIds'
+  >;
   commentsRepo: {
     readonly comments: ReadonlyMap<string, StoredComment>;
     readonly removals: Map<string, CommentRemoval>;
@@ -60,7 +63,9 @@ export class InMemoryVideoThreadRepository implements VideoThreadRepositoryPort 
       .filter((thread) => thread.videoId === videoId)
       .filter(
         (thread) =>
-          thread.moderationState === 'published' || (viewer && thread.authorId === viewer.id)
+          (viewer && thread.authorId === viewer.id) ||
+          (thread.moderationState === 'published' &&
+            !this.deps.restrictionsRepo.shadowedUserIds(thread.channelId).has(thread.authorId))
       )
       .sort(
         (a, b) =>
@@ -153,6 +158,9 @@ export class InMemoryVideoThreadRepository implements VideoThreadRepositoryPort 
       replyCount: thread.commentsCount,
       markerReplies: counted.length,
       markerRepliers: new Set(counted.map((reply) => reply.authorId)).size,
+      authorShadowed: this.deps.restrictionsRepo
+        .shadowedUserIds(thread.channelId)
+        .has(thread.authorId),
     };
   }
 

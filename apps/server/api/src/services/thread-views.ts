@@ -50,7 +50,9 @@ export function toThreadListView(
 ): ThreadListView {
   const markers = placeThreadMarkers(
     entries
-      .filter(({ thread }) => thread.moderationState === 'published')
+      .filter(
+        ({ thread, authorShadowed }) => thread.moderationState === 'published' && !authorShadowed
+      )
       .map(({ thread, markerReplies, markerRepliers }) => ({
         id: thread.id,
         anchorMs: thread.anchorMs,
