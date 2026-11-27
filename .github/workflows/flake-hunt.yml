@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: flake-hunt
+  group: flake-hunt-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
