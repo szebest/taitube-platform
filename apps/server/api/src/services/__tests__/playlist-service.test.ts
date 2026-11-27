@@ -6,9 +6,13 @@ import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistService } from '../playlist-service';
 import { playlistReading } from './playlist-reading';
+import { TEST_CDN } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000e002';
+const COVER_UPLOAD = '00000000-0000-7000-8000-00000000e003';
+const COVER_KEY = 'channels/c/playlist-cover/v1/1280.webp';
+const COVERS = new Map([[`${OWNER.id}/${COVER_UPLOAD}`, COVER_KEY]]);
 
 describe('PlaylistService', () => {
   let repositories: InMemoryRepositories;
@@ -21,6 +25,10 @@ describe('PlaylistService', () => {
       seats: repositories.playlistCollaborators,
       videos: repositories.videos,
       reader: playlistReading(repositories).reader,
+      covers: {
+        readyCoverKey: async (ownerId, uploadId) =>
+          ok(COVERS.get(`${ownerId}/${uploadId}`) ?? null),
+      },
     });
     await seedVideo(repositories, { id: VIDEO, ownerId: OWNER.id, title: 'Clip' });
   });
@@ -137,6 +145,20 @@ describe('PlaylistService', () => {
       field: 'coverVideoId',
     });
     expect(held.cover).toMatchObject({ mode: 'item', videoId: VIDEO });
+  });
+
+  it('makes a processed cover of the owner the custom cover and refuses any other upload', async () => {
+    const id = await created();
+    const unknown = await service.update(OWNER, id, { coverUploadId: VIDEO });
+
+    const custom = expectOk(await service.update(OWNER, id, { coverUploadId: COVER_UPLOAD }));
+
+    expect(expectErr(unknown)).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'coverUploadId',
+    });
+    expect(custom.cover).toMatchObject({ mode: 'custom', videoId: null });
+    expect(custom.thumbnailUrl).toBe(`${TEST_CDN}/${COVER_KEY}`);
   });
 
   it('refuses to remove watched videos from a list someone else works on', async () => {

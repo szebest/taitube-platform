@@ -194,7 +194,11 @@ export interface PlaylistPatch {
   autoRemoveWatched?: boolean;
   coverMode?: PlaylistCoverMode;
   coverVideoId?: string | null;
+  customThumbnailKey?: string;
 }
+
+/** What a caller asks to change: a custom cover by the upload it came from, never by its key. */
+export type PlaylistChange = Omit<PlaylistPatch, 'customThumbnailKey'> & { coverUploadId?: string };
 
 export type PlaylistReorder =
   | { type: 'move'; itemId: string; index: number }

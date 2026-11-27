@@ -42,6 +42,7 @@ import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
 import { playlistCollaborationRoutes } from './playlist-collaboration';
+import { playlistCoverRoutes } from './playlist-cover';
 import { playlistItemsRoutes } from './playlist-items';
 import { playlistLibraryRoutes } from './playlist-library';
 import { playlistSharingRoutes } from './playlist-sharing';
@@ -111,6 +112,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   notificationsRoutes,
   playlistsRoutes,
   playlistCollaborationRoutes,
+  playlistCoverRoutes,
   playlistItemsRoutes,
   playlistTransferRoutes,
   playlistLibraryRoutes,

@@ -1,4 +1,4 @@
-import { isErr, ok, type Result } from '@kit/result';
+import { assertNever, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
   ChannelImageCommit,
@@ -12,6 +12,7 @@ import {
   CHANNEL_IMAGE_UPLOAD_EDGES,
   channelImageFailed,
   channelImageReady,
+  type ChannelImageKind,
   type ChannelImageUpload,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -83,13 +84,15 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
       return ok(null);
     }
 
-    const applied = this.deps.channels.advanceImageVersion(
-      upload.channelId,
-      upload.kind,
-      upload.version,
-      upload.crops,
-      defaultUrl
-    );
+    const applied =
+      upload.kind === 'playlist-cover' ||
+      this.deps.channels.advanceImageVersion(
+        upload.channelId,
+        upload.kind,
+        upload.version,
+        upload.crops,
+        defaultUrl
+      );
     upload.status = applied ? 'ready' : 'superseded';
     upload.updatedAt = new Date();
     if (applied) {
@@ -155,9 +158,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
   ): Promise<Result<number, DatabaseUnavailable>> {
     const channel = await this.deps.channels.findById(upload.channelId);
     if (isErr(channel)) return channel;
-    const held =
-      upload.kind === 'avatar' ? channel.value?.avatarVersion : channel.value?.bannerVersion;
-    return ok(held ?? 0);
+    return ok(heldVersion(upload.kind, channel.value) ?? 0);
   }
 
   private async nextVersion(
@@ -186,15 +187,17 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     upload: ChannelImageUpload,
     version: number
   ): Promise<Result<unknown, DatabaseUnavailable>> {
-    const audited = await this.deps.audit.append({
-      channelId: upload.channelId,
-      actorUserId: upload.uploadedBy,
-      action: 'channel.updated',
-      targetType: 'channel',
-      targetId: upload.channelId,
-      meta: { fields: [upload.kind] },
-    });
-    if (isErr(audited)) return audited;
+    if (upload.kind !== 'playlist-cover') {
+      const audited = await this.deps.audit.append({
+        channelId: upload.channelId,
+        actorUserId: upload.uploadedBy,
+        action: 'channel.updated',
+        targetType: 'channel',
+        targetId: upload.channelId,
+        meta: { fields: [upload.kind] },
+      });
+      if (isErr(audited)) return audited;
+    }
     return this.deps.userEvents.append({
       userId: upload.uploadedBy,
       ...channelImageReady({
@@ -204,5 +207,21 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
         version,
       }),
     });
+  }
+}
+
+function heldVersion(
+  kind: ChannelImageKind,
+  channel: { avatarVersion: number; bannerVersion: number } | null
+): number | undefined {
+  switch (kind) {
+    case 'avatar':
+      return channel?.avatarVersion;
+    case 'banner':
+      return channel?.bannerVersion;
+    case 'playlist-cover':
+      return 0;
+    default:
+      return assertNever(kind, 'ChannelImageKind');
   }
 }

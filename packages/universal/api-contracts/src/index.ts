@@ -40,6 +40,7 @@ import * as picks from './picks';
 import * as playback from './playback';
 import * as playlistActivity from './playlist-activity';
 import * as playlistCollaboration from './playlist-collaboration';
+import * as playlistCover from './playlist-cover';
 import * as playlistItems from './playlist-items';
 import * as playlistLibrary from './playlist-library';
 import * as playlistSharing from './playlist-sharing';
@@ -121,6 +122,7 @@ export * from './picks';
 export * from './playback';
 export * from './playlist-activity';
 export * from './playlist-collaboration';
+export * from './playlist-cover';
 export * from './playlist-items';
 export * from './playlist-library';
 export * from './playlist-resource';
@@ -207,6 +209,7 @@ export const contracts = {
   playlists,
   playlistActivity,
   playlistCollaboration,
+  playlistCover,
   playlistItems,
   playlistTransfer,
   preferences,

@@ -68,6 +68,7 @@ export function registerServiceSet(c: Container): Container {
     bootstrapService: c.get(Services.BootstrapService),
     playlistService: c.get(Services.PlaylistService),
     playlistCollaborationService: c.get(Services.PlaylistCollaborationService),
+    playlistCoverService: c.get(Services.PlaylistCoverService),
     playlistActivityService: c.get(Services.PlaylistActivityService),
     playlistItemService: c.get(Services.PlaylistItemService),
     playlistTransferService: c.get(Services.PlaylistTransferService),

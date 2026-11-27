@@ -2,7 +2,7 @@ import { useAppForm } from '@kit/forms';
 import { isErr } from '@kit/result';
 import {
   CHANNEL_IMAGE_CONTENT_TYPES,
-  type ChannelImageKind,
+  type ChannelPageImageKind,
   validateChannelImageDimensions,
 } from '@vp/validation';
 import { useState } from 'react';
@@ -42,7 +42,7 @@ interface Chosen {
 }
 
 interface ChannelImageEditorProps {
-  kind: ChannelImageKind;
+  kind: ChannelPageImageKind;
   currentUrl: string | null;
 }
 

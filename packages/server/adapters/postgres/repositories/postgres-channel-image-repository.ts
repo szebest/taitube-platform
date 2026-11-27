@@ -28,7 +28,7 @@ const isPurgeable = () =>
     inArray(up.status, UNUSED_STATUSES),
     and(
       eq(up.status, 'ready'),
-      sql`${up.version} < (select case ${up.kind} when 'avatar' then ${channels.avatarVersion} else ${channels.bannerVersion} end from ${channels} where ${channels.id} = ${up.channelId})`
+      sql`${up.version} < (select case ${up.kind} when 'avatar' then ${channels.avatarVersion} when 'banner' then ${channels.bannerVersion} else 0 end from ${channels} where ${channels.id} = ${up.channelId})`
     )
   );
 

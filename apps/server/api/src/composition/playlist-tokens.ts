@@ -2,6 +2,7 @@ import { token } from '@kit/composition';
 import type {
   PlaylistActivityService,
   PlaylistCollaborationService,
+  PlaylistCoverService,
   PlaylistItemService,
   PlaylistLibraryService,
   PlaylistPortabilityService,
@@ -14,6 +15,7 @@ import type {
 
 export interface PlaylistServiceSet {
   playlistCollaborationService: PlaylistCollaborationService;
+  playlistCoverService: PlaylistCoverService;
   playlistActivityService: PlaylistActivityService;
   playlistItemService: PlaylistItemService;
   playlistTransferService: PlaylistTransferService;
@@ -24,6 +26,7 @@ export interface PlaylistServiceSet {
 
 export const PlaylistServices = {
   PlaylistCollaborationService: token<PlaylistCollaborationService>('PlaylistCollaborationService'),
+  PlaylistCoverService: token<PlaylistCoverService>('PlaylistCoverService'),
   PlaylistActivityService: token<PlaylistActivityService>('PlaylistActivityService'),
   PlaylistItemService: token<PlaylistItemService>('PlaylistItemService'),
   PlaylistTransferService: token<PlaylistTransferService>('PlaylistTransferService'),

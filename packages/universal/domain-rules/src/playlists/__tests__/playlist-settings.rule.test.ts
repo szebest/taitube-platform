@@ -1,5 +1,5 @@
 import { err, ok } from '@kit/result';
-import type { PlaylistPatch, SmartPlaylistRules } from '@vp/domain';
+import type { PlaylistChange, PlaylistPatch, SmartPlaylistRules } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { aPlaylist } from '../../__tests__/entities';
 import {
@@ -9,13 +9,18 @@ import {
 } from '../playlist-settings.rule';
 
 const RULES: SmartPlaylistRules = { match: 'any', conditions: [], sort: 'popular', limit: 10 };
-const ALONE: PlaylistSettingsContext = { seated: 0, holdsCoverVideo: true };
+const COVER_KEY = 'channels/c/playlist-cover/v1/1280.webp';
+const ALONE: PlaylistSettingsContext = {
+  seated: 0,
+  holdsCoverVideo: true,
+  coverImageKey: COVER_KEY,
+};
 
 describe('@vp/domain-rules: decidePlaylistSettings', () => {
   it.each<{
     scenario: string;
     playlist: ReturnType<typeof aPlaylist>;
-    patch: PlaylistPatch;
+    patch: PlaylistChange;
     context?: PlaylistSettingsContext;
     code: string;
   }>([
@@ -41,14 +46,14 @@ describe('@vp/domain-rules: decidePlaylistSettings', () => {
       scenario: 'removing watched videos with a collaborator',
       playlist: aPlaylist(),
       patch: { autoRemoveWatched: true },
-      context: { seated: 1, holdsCoverVideo: false },
+      context: { ...ALONE, seated: 1, holdsCoverVideo: false },
       code: ErrorCodes.PLAYLIST_HAS_COLLABORATORS,
     },
     {
       scenario: 'an item cover of a video it does not hold',
       playlist: aPlaylist(),
       patch: { coverVideoId: 'video-9' },
-      context: { seated: 0, holdsCoverVideo: false },
+      context: { ...ALONE, holdsCoverVideo: false },
       code: ErrorCodes.VALIDATION_FAILED,
     },
     {
@@ -63,6 +68,13 @@ describe('@vp/domain-rules: decidePlaylistSettings', () => {
       patch: { coverMode: 'custom' },
       code: ErrorCodes.VALIDATION_FAILED,
     },
+    {
+      scenario: 'an upload that is no processed cover of the owner',
+      playlist: aPlaylist(),
+      patch: { coverUploadId: 'upload-1' },
+      context: { ...ALONE, coverImageKey: null },
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
   ])('refuses $scenario with $code', ({ playlist, patch, context = ALONE, code }) => {
     expect(decidePlaylistSettings(playlist, patch, context)).toMatchObject(err({ code }));
   });
@@ -70,7 +82,7 @@ describe('@vp/domain-rules: decidePlaylistSettings', () => {
   it.each<{
     scenario: string;
     playlist: ReturnType<typeof aPlaylist>;
-    patch: PlaylistPatch;
+    patch: PlaylistChange;
     settings: PlaylistPatch;
   }>([
     { scenario: 'nothing', playlist: aPlaylist(), patch: { title: 'x' }, settings: {} },
@@ -115,6 +127,12 @@ describe('@vp/domain-rules: decidePlaylistSettings', () => {
       playlist: aPlaylist({ customThumbnailKey: 'playlists/p/cover.webp' }),
       patch: { coverMode: 'custom' },
       settings: { coverMode: 'custom', coverVideoId: null },
+    },
+    {
+      scenario: 'an uploaded cover, which picks the custom mode and keeps its image',
+      playlist: aPlaylist({ coverMode: 'item', coverVideoId: 'video-2' }),
+      patch: { coverUploadId: 'upload-1' },
+      settings: { coverMode: 'custom', coverVideoId: null, customThumbnailKey: COVER_KEY },
     },
   ])('decides $scenario', ({ playlist, patch, settings }) => {
     expect(decidePlaylistSettings(playlist, patch, ALONE)).toEqual(ok(settings));

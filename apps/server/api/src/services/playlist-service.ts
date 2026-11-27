@@ -7,6 +7,7 @@ import type {
 } from '@vp/core/repositories';
 import {
   type Playlist,
+  type PlaylistChange,
   type PlaylistKind,
   type SeatedPlaylist,
   type PlaylistPatch,
@@ -18,6 +19,7 @@ import {
   type CreatePlaylistFailure,
   type DeletePlaylistFailure,
   type ManagePlaylistFailure,
+  type PlaylistSettingsContext,
   type ReorderPlaylistFailure,
   type SeriesVideoNotOwned,
   type ShareLinkExpired,
@@ -39,6 +41,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { toOwnedPlaylistView } from './library-views';
+import type { PlaylistCoverService } from './playlist-cover-service';
 import type { PlaylistAccess, PlaylistReader, ReadPlaylistFailure } from './playlist-reader';
 
 export interface PlaylistServiceDeps {
@@ -46,6 +49,7 @@ export interface PlaylistServiceDeps {
   seats: Pick<PlaylistCollaboratorRepositoryPort, 'seats'>;
   videos: VideoRepository;
   reader: Pick<PlaylistReader, 'get' | 'open'>;
+  covers: Pick<PlaylistCoverService, 'readyCoverKey'>;
 }
 type CreatePlaylistServiceFailure = CreatePlaylistFailure | ReadPlaylistFailure;
 type ItemsFailure = ManagePlaylistFailure | DatabaseUnavailable;
@@ -115,7 +119,7 @@ export class PlaylistService {
   async update(
     actor: UserContext,
     playlistId: string,
-    patch: PlaylistPatch
+    patch: PlaylistChange
   ): Promise<
     Result<PlaylistView, UpdatePlaylistFailure | SeriesVideoNotOwned | DatabaseUnavailable>
   > {
@@ -247,12 +251,12 @@ export class PlaylistService {
     return decidePlaylistAction({ actor, playlist: playlist.value, playlistId }, action);
   }
 
-  /** The seats and the cover video a settings change is decided against, read only when it asks. */
+  /** The seats and the cover a settings change is decided against, read only when it asks. */
   private async settingsContext(
     playlist: Playlist | null,
-    patch: PlaylistPatch
-  ): Promise<Result<{ seated: number; holdsCoverVideo: boolean }, DatabaseUnavailable>> {
-    if (!playlist) return ok({ seated: 0, holdsCoverVideo: false });
+    patch: PlaylistChange
+  ): Promise<Result<PlaylistSettingsContext, DatabaseUnavailable>> {
+    if (!playlist) return ok({ seated: 0, holdsCoverVideo: false, coverImageKey: null });
     const seats =
       patch.autoRemoveWatched === true
         ? await this.deps.seats.seats(playlist.id, null)
@@ -260,9 +264,16 @@ export class PlaylistService {
     if (isErr(seats)) return seats;
     const coverVideoId = coverVideoOf(playlist, patch);
     const held = coverVideoId === null ? ok([]) : await this.deps.playlists.findItems(playlist.id);
-    return map(held, (items) => ({
+    if (isErr(held)) return held;
+    const { coverUploadId } = patch;
+    const coverImageKey =
+      coverUploadId === undefined
+        ? ok(null)
+        : await this.deps.covers.readyCoverKey(playlist.ownerId, coverUploadId);
+    return map(coverImageKey, (key) => ({
       seated: seats.value.seated,
-      holdsCoverVideo: items.some((item) => item.videoId === coverVideoId),
+      holdsCoverVideo: held.value.some((item) => item.videoId === coverVideoId),
+      coverImageKey: key,
     }));
   }
 

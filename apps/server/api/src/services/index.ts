@@ -56,6 +56,7 @@ export * from './playlist-stats-recorder';
 export * from './smart-playlist-reader';
 export * from './playlist-portability-service';
 export * from './playlist-reader';
+export * from './playlist-cover-service';
 export * from './playlist-service';
 export * from './playlist-transfer-service';
 export * from './watch-history-service';

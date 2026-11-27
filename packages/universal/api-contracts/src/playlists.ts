@@ -94,6 +94,12 @@ export const updatePlaylist = defineEndpoint({
       .nullable()
       .optional()
       .describe('A video the playlist holds; naming one alone picks the item mode'),
+    coverUploadId: z
+      .uuid()
+      .optional()
+      .describe(
+        'A cover the owner uploaded whose job is done (`channel.image.ready`); it becomes the custom cover and picks the custom mode'
+      ),
   }),
   status: 200,
   result: PlaylistSchema,

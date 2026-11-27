@@ -1,44 +1,22 @@
 import { ErrorCodes } from '@vp/errors';
-import { CHANNEL_IMAGE_KINDS } from '@vp/validation';
+import { CHANNEL_PAGE_IMAGE_KINDS } from '@vp/validation';
 import { z } from 'zod';
-import { CropRectSchema } from './channel-images';
+import {
+  CropRectSchema,
+  PrepareImageBodySchema,
+  PreparedImageSchema,
+  QueuedImageSchema,
+  UploadedImageSchema,
+} from './channel-images';
 import { BannerCropsSchema, ChannelHandleParamSchema, ChannelIdParamSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { VideoSummarySchema } from './video-resource';
 
-const ImageKindParamSchema = z.object({ kind: z.enum(CHANNEL_IMAGE_KINDS) });
+const ImageKindParamSchema = z.object({ kind: z.enum(CHANNEL_PAGE_IMAGE_KINDS) });
 
-const PrepareImageBodySchema = z.object({
-  contentType: z.string().min(1).describe('image/jpeg, image/png or image/webp'),
-  sizeBytes: z.number().int().positive().describe('At most 2 MB for an avatar, 6 MB for a banner'),
-});
-
-const PreparedImageSchema = z.object({
-  uploadId: z.uuid().describe('What `completeChannelImage` is given once the file is uploaded'),
-  uploadUrl: z.url(),
-  headers: z.record(z.string(), z.string()).describe('Sent with the PUT, exactly as given'),
-  expiresAt: z.iso.datetime(),
-});
-
-const CompleteImageBodySchema = z.object({
-  uploadId: z.uuid(),
-  width: z
-    .number()
-    .int()
-    .positive()
-    .describe('Pixels of the uploaded file, as the browser decoded it; the job reads it again'),
-  height: z.number().int().positive(),
+const CompleteImageBodySchema = UploadedImageSchema.extend({
   crop: CropRectSchema.optional().describe('An avatar: the square, in pixels of the uploaded file'),
   crops: BannerCropsSchema.optional().describe('A banner: one rectangle per target'),
-});
-
-const QueuedImageSchema = z.object({
-  uploadId: z.uuid(),
-  version: z
-    .number()
-    .int()
-    .positive()
-    .describe('What the channel serves once the job is done, announced as `channel.image.ready`'),
 });
 
 const SpotlightVideoSchema = VideoSummarySchema.nullable();

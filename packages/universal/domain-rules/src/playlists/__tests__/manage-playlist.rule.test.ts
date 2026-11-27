@@ -6,6 +6,7 @@ import { ADMIN, OWNER, STRANGER, aPlaylist } from '../../__tests__/entities';
 import {
   type PlaylistAction,
   decidePlaylistAction,
+  decidePlaylistCoverUpload,
   decidePlaylistDelete,
   decidePlaylistUpdate,
 } from '../manage-playlist.rule';
@@ -13,14 +14,14 @@ import {
 const playlist = aPlaylist();
 const watchLater = aPlaylist({ id: 'wl-1', title: 'Watch Later', isSystem: true });
 const smart = aPlaylist({ rules: { match: 'all', conditions: [], sort: 'newest', limit: 50 } });
-const context = { seated: 0, holdsCoverVideo: false };
+const context = { seated: 0, holdsCoverVideo: false, coverImageKey: null };
 
 type Decide = (
   actor: UserContext | null,
   target?: SeatedPlaylist | null
 ) => Result<unknown, { code: string }>;
 
-const DECISIONS: Record<'update' | 'delete' | 'items', Decide> = {
+const DECISIONS: Record<'update' | 'delete' | 'items' | 'cover', Decide> = {
   update: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
     decidePlaylistUpdate({
       actor,
@@ -36,6 +37,8 @@ const DECISIONS: Record<'update' | 'delete' | 'items', Decide> = {
       { actor, playlist: target, playlistId: target?.id ?? playlist.id },
       'manageItems'
     ),
+  cover: (actor: UserContext | null, target: SeatedPlaylist | null = playlist) =>
+    decidePlaylistCoverUpload({ actor, playlist: target, playlistId: target?.id ?? playlist.id }),
 };
 
 type Decision = keyof typeof DECISIONS;
@@ -94,7 +97,7 @@ describe('@vp/domain-rules: playlist management', () => {
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.PLAYLIST_NOT_FOUND);
   });
 
-  it.each<Decision>(['update', 'delete'])(
+  it.each<Decision>(['update', 'delete', 'cover'])(
     'refuses to %s the system playlist, even for its owner',
     (decision) => {
       const result = DECISIONS[decision](OWNER, watchLater);
@@ -224,6 +227,11 @@ describe('@vp/domain-rules: playlist management', () => {
     },
     { role: 'editor' as const, patch: { kind: 'series' as const }, code: ErrorCodes.FORBIDDEN },
     { role: 'contributor' as const, patch: { title: 'New' }, code: ErrorCodes.FORBIDDEN },
+    {
+      role: 'editor' as const,
+      patch: { coverUploadId: 'upload-1' },
+      code: ErrorCodes.FORBIDDEN,
+    },
   ])('lets an $role change $patch: $code', ({ role, patch, code }) => {
     const target = seated(role);
     const result = decidePlaylistUpdate({

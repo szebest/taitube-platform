@@ -1,35 +1,15 @@
 import { expectOk } from '@kit/testing/result';
-import type {
-  ChannelImageCompletion,
-  ChannelImageRepositoryPort,
-  Repositories,
-} from '@vp/core/repositories';
-import type { BannerCrops, ChannelImageKind } from '@vp/domain';
+import type { ChannelImageRepositoryPort, Repositories } from '@vp/core/repositories';
+import type { ChannelImageKind } from '@vp/domain';
+import { BANNER_CROPS, DONE } from './channel-image-fixtures';
 import { OTHER_OWNER_ID, OWNER_CHANNEL_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const UPLOADS = [1, 2, 3].map((n) => `00000000-0000-7000-8000-0000000004${n}0`);
 const [FIRST, SECOND, THIRD] = UPLOADS as [string, string, string];
 
-const CROP = { x: 0, y: 0, width: 400, height: 400 };
-const BANNER_CROPS: BannerCrops = {
-  desktop: { x: 0, y: 0, width: 2400, height: 400 },
-  mobile: { x: 0, y: 0, width: 1500, height: 500 },
-  tv: { x: 0, y: 0, width: 1600, height: 900 },
-};
-const AVATAR_DONE: ChannelImageCompletion = {
-  width: 800,
-  height: 800,
-  crops: { kind: 'avatar', crop: CROP },
-};
-const BANNER_DONE: ChannelImageCompletion = {
-  width: 2560,
-  height: 1440,
-  crops: { kind: 'banner', crops: BANNER_CROPS },
-};
-
 const DAY_MS = 86_400_000;
-const DEFAULT_URL = 'https://cdn.example/c/banner/v1/desktop-1280.webp';
+const DEFAULT_URL = 'https://cdn.example/c/v1/1280.webp';
 
 export function describeChannelImageRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
   describe('ChannelImageRepository contract', () => {
@@ -51,7 +31,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
       );
     const queue = async (id: string, kind: ChannelImageKind = 'banner') => {
       await issue(id, kind);
-      return expectOk(await images.queue(id, kind === 'banner' ? BANNER_DONE : AVATAR_DONE));
+      return expectOk(await images.queue(id, DONE[kind]));
     };
     const channel = async () => expectOk(await repositories.channels.findById(channelId));
     const eventTypes = async () =>
@@ -107,43 +87,50 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
       it('repeats the version for a second call, and answers null once moved on or missing', async () => {
         await queue(FIRST);
 
-        const again = expectOk(await images.queue(FIRST, { ...BANNER_DONE, width: 9999 }));
+        const again = expectOk(await images.queue(FIRST, { ...DONE.banner, width: 9999 }));
 
         expect(again).toMatchObject({ status: 'queued', version: 1, width: 2560 });
 
         expectOk(await images.commit(FIRST, DEFAULT_URL));
 
-        expect(expectOk(await images.queue(SECOND, BANNER_DONE))).toBeNull();
-        expect(expectOk(await images.queue(FIRST, BANNER_DONE))).toBeNull();
+        expect(expectOk(await images.queue(SECOND, DONE.banner))).toBeNull();
+        expect(expectOk(await images.queue(FIRST, DONE.banner))).toBeNull();
       });
     });
 
     describe('commit', () => {
-      it('moves the channel to the version, announces it and audits it', async () => {
-        await queue(FIRST);
+      it.each([
+        {
+          kind: 'banner',
+          moved: { bannerVersion: 1, bannerCrops: BANNER_CROPS, avatarVersion: 0 },
+        },
+        { kind: 'avatar', moved: { avatarVersion: 1, bannerVersion: 0, bannerCrops: null } },
+      ] as const)(
+        'moves the channel to the $kind version alone, announcing and auditing it',
+        async ({ kind, moved }) => {
+          await queue(FIRST, kind);
 
-        const commit = expectOk(await images.commit(FIRST, DEFAULT_URL));
+          const commit = expectOk(await images.commit(FIRST, DEFAULT_URL));
 
-        expect(commit).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
-        expect(await channel()).toMatchObject({
-          bannerVersion: 1,
-          bannerCrops: BANNER_CROPS,
-          avatarVersion: 0,
-        });
-        expect(await eventTypes()).toEqual(['channel.image.ready']);
-        expect(await auditActions()).toEqual(['channel.updated']);
-      });
+          expect(commit).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
+          expect(await channel()).toMatchObject(moved);
+          expect(await eventTypes()).toEqual(['channel.image.ready']);
+          expect(await auditActions()).toEqual(['channel.updated']);
+        }
+      );
 
-      it('moves an avatar without touching the banner', async () => {
-        await queue(FIRST, 'avatar');
+      it('readies every playlist cover beside the others, moving and auditing nothing', async () => {
+        await queue(FIRST, 'playlist-cover');
+        await queue(SECOND, 'playlist-cover');
 
-        expectOk(await images.commit(FIRST, DEFAULT_URL));
+        expectOk(await images.commit(SECOND, DEFAULT_URL));
+        const earlier = expectOk(await images.commit(FIRST, DEFAULT_URL));
 
-        expect(await channel()).toMatchObject({
-          avatarVersion: 1,
-          bannerVersion: 0,
-          bannerCrops: null,
-        });
+        expect(earlier).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
+        expect(await channel()).toMatchObject({ avatarVersion: 0, bannerVersion: 0 });
+        expect(await eventTypes()).toEqual(['channel.image.ready', 'channel.image.ready']);
+        expect(await auditActions()).toEqual([]);
+        expect(expectOk(await images.listPurgeable(new Date(Date.now() + DAY_MS), 10))).toEqual([]);
       });
 
       it('repeats its outcome for a committed upload and announces nothing more', async () => {
@@ -194,7 +181,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         expect(await eventTypes()).toEqual(['channel.image.failed']);
       });
 
-      it('leaves an upload that already settled as it is,, and null for an unknown one', async () => {
+      it('leaves an upload that already settled as it is, and null for an unknown one', async () => {
         await queue(FIRST);
         expectOk(await images.commit(FIRST, DEFAULT_URL));
 
@@ -248,7 +235,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
         await issue(FIRST);
         await queue(SECOND);
         expectOk(await images.commit(SECOND, DEFAULT_URL));
-        await images.queue(FIRST, BANNER_DONE);
+        await images.queue(FIRST, DONE.banner);
 
         expectOk(await images.markPurged([FIRST, SECOND]));
 
@@ -260,7 +247,7 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     it('keeps a team uploader apart from the owner', async () => {
       await repositories.users.upsert({ id: OTHER_OWNER_ID, email: 'other@video-pipeline.local' });
       await issue(FIRST, 'avatar', OTHER_OWNER_ID);
-      expectOk(await images.queue(FIRST, AVATAR_DONE));
+      expectOk(await images.queue(FIRST, DONE.avatar));
 
       expectOk(await images.commit(FIRST, DEFAULT_URL));
 

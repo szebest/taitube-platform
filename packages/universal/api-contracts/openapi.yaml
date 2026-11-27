@@ -31742,7 +31742,7 @@ paths:
                   type: integer
                   exclusiveMinimum: 0
                   maximum: 9007199254740991
-                  description: At most 2 MB for an avatar, 6 MB for a banner
+                  description: At most 2 MB for an avatar or a playlist cover, 6 MB for a banner
               required:
                 - contentType
                 - sizeBytes
@@ -31776,7 +31776,7 @@ paths:
                     type: string
                     format: uuid
                     pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                    description: What `completeChannelImage` is given once the file is uploaded
+                    description: What the completion is given once the file is uploaded
                   uploadUrl:
                     type: string
                     format: uri
@@ -32168,7 +32168,7 @@ paths:
                     type: integer
                     exclusiveMinimum: 0
                     maximum: 9007199254740991
-                    description: What the channel serves once the job is done, announced as `channel.image.ready`
+                    description: The version the job writes, announced as `channel.image.ready`
                 required:
                   - uploadId
                   - version
@@ -39369,6 +39369,11 @@ paths:
                       format: uuid
                       pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                     - type: 'null'
+                coverUploadId:
+                  description: A cover the owner uploaded whose job is done (`channel.image.ready`); it becomes the custom cover and picks the custom mode
+                  type: string
+                  format: uuid
+                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
       parameters:
         - schema:
             type: string
@@ -45064,6 +45069,566 @@ paths:
                     type: string
                     enum:
                       - PLAYLIST_INVITE_INVALID
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}/cover/upload:
+    post:
+      summary: Presign a custom cover upload
+      tags:
+        - Playlists
+      description: The owner gets a presigned PUT into the private raw bucket for a cover image (jpeg, png or webp, at most 2 MB), kept under their primary channel's images. PUT the file, then call `completePlaylistCover`. Watch Later takes no cover.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentType:
+                  type: string
+                  minLength: 1
+                  description: image/jpeg, image/png or image/webp
+                sizeBytes:
+                  type: integer
+                  exclusiveMinimum: 0
+                  maximum: 9007199254740991
+                  description: At most 2 MB for an avatar or a playlist cover, 6 MB for a banner
+              required:
+                - contentType
+                - sizeBytes
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadId:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: What the completion is given once the file is uploaded
+                  uploadUrl:
+                    type: string
+                    format: uri
+                  headers:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties:
+                      type: string
+                    description: Sent with the PUT, exactly as given
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                required:
+                  - uploadId
+                  - uploadUrl
+                  - headers
+                  - expiresAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - SYSTEM_PLAYLIST_IMMUTABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UPLOAD_TOO_LARGE
+                      - UNSUPPORTED_CONTENT_TYPE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}/cover/complete:
+    post:
+      summary: Crop an uploaded cover and start processing it
+      tags:
+        - Playlists
+      description: Checks the uploaded file (type, size, at least 640 x 360) and its 16:9 `crop`, then queues the job that writes the WebP variants. Answers 202; once `channel.image.ready` arrives on `GET /v1/me/events`, `PATCH /v1/playlists/:id` with `coverUploadId` makes it the cover. Completing the same upload again answers the same version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uploadId:
+                  type: string
+                  format: uuid
+                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                width:
+                  type: integer
+                  exclusiveMinimum: 0
+                  maximum: 9007199254740991
+                  description: Pixels of the uploaded file, as the browser decoded it; the job reads it again
+                height:
+                  type: integer
+                  exclusiveMinimum: 0
+                  maximum: 9007199254740991
+                crop:
+                  type: object
+                  properties:
+                    x:
+                      type: integer
+                      minimum: 0
+                      maximum: 9007199254740991
+                    'y':
+                      type: integer
+                      minimum: 0
+                      maximum: 9007199254740991
+                    width:
+                      type: integer
+                      exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                    height:
+                      type: integer
+                      exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                  required:
+                    - x
+                    - 'y'
+                    - width
+                    - height
+                  description: 16:9, in pixels of the uploaded file
+              required:
+                - uploadId
+                - width
+                - height
+                - crop
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '202':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadId:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  version:
+                    type: integer
+                    exclusiveMinimum: 0
+                    maximum: 9007199254740991
+                    description: The version the job writes, announced as `channel.image.ready`
+                required:
+                  - uploadId
+                  - version
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - SYSTEM_PLAYLIST_IMMUTABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                      - CHANNEL_NOT_FOUND
+                      - IMAGE_UPLOAD_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - UPLOAD_SIZE_MISMATCH
+                      - UNSUPPORTED_CONTENT_TYPE
+                      - IMAGE_TOO_SMALL
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -71749,6 +72314,7 @@ paths:
                             enum:
                               - avatar
                               - banner
+                              - playlist-cover
                           version:
                             type: integer
                             exclusiveMinimum: 0
@@ -71785,6 +72351,7 @@ paths:
                             enum:
                               - avatar
                               - banner
+                              - playlist-cover
                           reason:
                             type: string
                         required:

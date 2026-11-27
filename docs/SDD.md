@@ -1124,7 +1124,7 @@ erDiagram
     channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
     channels ||--o{ channel_handle_history : "retired handles"
-    channels ||--o{ channel_image_uploads : "avatar and banner uploads"
+    channels ||--o{ channel_image_uploads : "avatar, banner and playlist cover uploads"
     channels ||--o| channel_page_settings : "trailer and returning video"
     channels ||--o{ channel_localizations : "per language"
     videos ||--o{ channel_featured_videos : "is pinned in"
@@ -2167,13 +2167,13 @@ CREATE TABLE channel_image_uploads (
   id           uuid PRIMARY KEY,                                        -- the upload id; also the channel-image job id
   channel_id   uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
   uploaded_by  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  kind         text NOT NULL,                                           -- avatar|banner
+  kind         text NOT NULL,                                           -- avatar|banner|playlist-cover (CHECK, 0048)
   content_type text NOT NULL,
   size_bytes   bigint NOT NULL,
   status       text NOT NULL DEFAULT 'issued',                          -- issued|queued|ready|failed|superseded|purged
   width        integer,
   height       integer,
-  crops        jsonb,                                                   -- { kind: 'avatar', crop } | { kind: 'banner', crops: { desktop, mobile, tv } }
+  crops        jsonb,                                                   -- { kind: 'avatar' | 'playlist-cover', crop } | { kind: 'banner', crops: { desktop, mobile, tv } }
   version      integer,                                                 -- assigned when queued
   failure      text,
   created_at   timestamptz NOT NULL DEFAULT now(),
@@ -2511,7 +2511,9 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
 | `POST /playlists` | Create playlist | `{ title, description?, visibility?, kind? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
 | `GET /playlists/:id?s=` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`, `cover { mode, videoId, mosaicUrls }`, `rules`, `autoRemoveWatched`, `pinnedAt`, `forkedFromPlaylistId`, `viewer { role, following }`) / `404 PLAYLIST_NOT_FOUND` / `410 SHARE_LINK_EXPIRED` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent, unless `s` carries a live share link of it, which adds `read` on that playlist alone to the rules the scope compiles. A read by anyone but the owner counts one open per viewer (account or session key) and day, and a link's own open. A smart playlist's `items` are what its rules compute now (below), up to `limit`; `cover.mosaicUrls` holds the first four posters for the `auto` mosaic, nothing stored. Items the viewer may not watch are hidden and keep their place. `kind` is `playlist` or `series`; a series holds only its owner's own videos (`decideSeriesMembership`, `SERIES_VIDEO_NOT_OWNED`). For a signed-in viewer a series carries each item's `episode` (its position from 1) and `progress` (percent from `watch_history`, §5.2) and `nextEpisodeVideoId`: the first item after the last one watched that is below 92 percent, else the first unfinished one, else `null`. `viewer` is where the caller stands, read in the same query: `role` is `owner`, their collaborator role or `null`, `following` whether they follow it; a guest gets `{ role: null, following: false }`. Every response carrying a `Playlist` has it. |
-| `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility?, kind?, rules?, autoRemoveWatched?, coverMode?, coverVideoId? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` / `409 PLAYLIST_IS_SMART \| PLAYLIST_NOT_SMART \| PLAYLIST_HAS_COLLABORATORS` / `422` | `update Playlist`, field by field: an editor retitles and redescribes, the owner changes the rest. `rules` only on a smart playlist; `autoRemoveWatched` only while nobody else works on it, and never on a smart one; Watch Later takes `autoRemoveWatched` and nothing else. `coverVideoId` names a video the playlist holds and picks the `item` mode; `custom` needs the playlist's `custom_thumbnail_key`. |
+| `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility?, kind?, rules?, autoRemoveWatched?, coverMode?, coverVideoId?, coverUploadId? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` / `409 PLAYLIST_IS_SMART \| PLAYLIST_NOT_SMART \| PLAYLIST_HAS_COLLABORATORS` / `422` | `update Playlist`, field by field: an editor retitles and redescribes, the owner changes the rest. `rules` only on a smart playlist; `autoRemoveWatched` only while nobody else works on it, and never on a smart one; Watch Later takes `autoRemoveWatched` and nothing else. `coverVideoId` names a video the playlist holds and picks the `item` mode; `custom` needs the playlist's `custom_thumbnail_key`. `coverUploadId` names a cover upload of the owner's whose job is done (`ready`): its 1280 px variant becomes `custom_thumbnail_key` and the mode `custom`; anything else is `422 VALIDATION_FAILED` on `coverUploadId`. |
+| `POST /playlists/:id/cover/upload` | Presign a custom cover | `{ contentType, sizeBytes }` | `201 { uploadId, uploadUrl, headers, expiresAt }` / `400 SYSTEM_PLAYLIST_IMMUTABLE` / `422 UPLOAD_TOO_LARGE \| UNSUPPORTED_CONTENT_TYPE` | Owner only (`update Playlist`, field `coverUploadId`); Watch Later takes none. The channel image pipeline (`POST /v1/me/channel/images/:kind/upload`) with kind `playlist-cover`, recorded under the owner's primary channel: jpeg, png or webp, at most 2 MB. |
+| `POST /playlists/:id/cover/complete` | Queue a custom cover | `{ uploadId, width, height, crop }` | `202 { uploadId, version }` / `404 IMAGE_UPLOAD_NOT_FOUND` / `422 IMAGE_TOO_SMALL \| UPLOAD_SIZE_MISMATCH \| VALIDATION_FAILED` | Owner only, as above. At least 640 x 360, `crop` 16:9 inside the image; the `channel-image` job cuts 640 and 1280 px WebP variants and announces `channel.image.ready`. A ready cover moves no channel version and writes no channel audit; nothing changes on the playlist until a `PATCH` names it. |
 | `DELETE /playlists/:id` | Delete playlist | — | `204` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:delete`). Items go with it. |
 | `POST /playlists` with `rules` | Smart playlist | `{ title, rules }` | `201 Playlist` | `rules` is `{ match: all \| any, conditions (up to 8), sort: newest \| oldest \| popular \| shortest \| longest, limit (up to 200) }`, a condition a tagged union on `field`: `channel` (up to 20), `tag` (up to 5), `category`, `duration` (`under`, `over`, `between`, seconds), `format` (`long`, `short`), `newer_than` (days), `unwatched`. One query computes it over the public feed (`publicFeedScope`): the rules become its predicate, `row_number()` over the rules' sort keeps the first `limit`, and a page is keyset on that sort key. `unwatched` joins the viewer's `watch_history` below 92 percent and matches everything for a guest. A result that reads no viewer is cached for 60 s under the rules. Every item action on it is `409 PLAYLIST_IS_SMART`; a series is never smart. |
 | `POST /playlists/:id/items` | Add video | `{ videoId }` | `201 Playlist` / `409 PLAYLIST_IS_SMART` | The owner, an editor or a contributor (`addItem Playlist`). Appends after the last item with `added_by` set to the caller; a video already there changes nothing; a video the caller may not watch is `VIDEO_NOT_FOUND`. |
@@ -2800,12 +2802,13 @@ evidence/{videoId}/frame-{n}.jpg       ← small JPEGs of the frames that held o
 exports/{channelId}/{exportId}.{csv|json}   ← a channel export; private, handed out by presigned GET, purged by `purge-exports` 7 days after it was written
 tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
-raw/channel-images/{channelId}/{kind}/{uploadId}    ← an avatar or banner file until the channel-image job has cut it (7-day lifecycle)
+raw/channel-images/{channelId}/{kind}/{uploadId}    ← an avatar, banner or playlist cover file until the channel-image job has cut it (7-day lifecycle)
 
 public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
-└── channel-images/{channelId}/{kind}/v{version}/      (kind: avatar | banner; written by the `channel-image` job)
+└── channel-images/{channelId}/{kind}/v{version}/      (kind: avatar | banner | playlist-cover; written by the `channel-image` job)
     ├── 48.webp 72.webp 128.webp 256.webp              ← avatar, square, metadata stripped
-    └── desktop-1280.webp desktop-2560.webp mobile-1280.webp mobile-2560.webp tv-1280.webp tv-2560.webp   ← banner, one crop per target
+    ├── desktop-1280.webp desktop-2560.webp mobile-1280.webp mobile-2560.webp tv-1280.webp tv-2560.webp   ← banner, one crop per target
+    └── 640.webp 1280.webp                             ← playlist cover, one 16:9 crop; 1280 becomes the playlist's custom_thumbnail_key
 └── videos/{videoId}/
     ├── hls/
     │   ├── master.m3u8                ← written last by `package`; presence == READY

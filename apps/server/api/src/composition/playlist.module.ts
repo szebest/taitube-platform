@@ -4,6 +4,7 @@ import { uuidv7 } from 'uuidv7';
 import {
   PlaylistActivityService,
   PlaylistCollaborationService,
+  PlaylistCoverService,
   PlaylistItemService,
   PlaylistLibraryService,
   PlaylistPortabilityService,
@@ -74,6 +75,17 @@ export function registerPlaylistServices(c: Container): Container {
           seats: repositories().playlistCollaborators,
           videos: repositories().videos,
           reader: c.get(Services.PlaylistReader),
+          covers: c.get(Services.PlaylistCoverService),
+        })
+    )
+    .provide(
+      Services.PlaylistCoverService,
+      (c) =>
+        new PlaylistCoverService({
+          playlists: repositories().playlists,
+          channels: repositories().channels,
+          images: repositories().channelImages,
+          pipeline: c.get(Services.ChannelImagePipelineService),
         })
     )
     .provide(

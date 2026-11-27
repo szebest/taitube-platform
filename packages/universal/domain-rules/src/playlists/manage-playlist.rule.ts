@@ -1,5 +1,5 @@
 import { type Result, andThen, err, map, ok } from '@kit/result';
-import type { PlaylistPatch, SeatedPlaylist } from '@vp/domain';
+import type { PlaylistChange, PlaylistPatch, SeatedPlaylist } from '@vp/domain';
 import {
   type ShareGrant,
   type UserContext,
@@ -38,7 +38,7 @@ export interface ManagePlaylistInput {
 }
 
 export interface UpdatePlaylistInput extends ManagePlaylistInput {
-  readonly patch: PlaylistPatch;
+  readonly patch: PlaylistChange;
   readonly context: PlaylistSettingsContext;
 }
 
@@ -160,4 +160,20 @@ export function decidePlaylistDelete(
   input: ManagePlaylistInput
 ): Result<SeatedPlaylist, DeletePlaylistFailure> {
   return andThen(decidePlaylistAction(input, 'delete'), userEditable);
+}
+
+/** Uploading a custom cover is changing the cover, the owner's alone; Watch Later never takes one. */
+export function decidePlaylistCoverUpload(
+  input: ManagePlaylistInput
+): Result<SeatedPlaylist, DeletePlaylistFailure> {
+  return andThen(decidePlaylistRead(input), (playlist) =>
+    andThen(
+      authorize(
+        input.actor,
+        canUpdatePlaylist({ user: input.actor, playlist, field: 'coverUploadId' }),
+        { action: 'update', subject: 'Playlist' }
+      ),
+      () => userEditable(playlist)
+    )
+  );
 }
