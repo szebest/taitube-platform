@@ -21,5 +21,11 @@
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["tests/load", "tests/playwright", "tests/fixtures/second-app"]
+  "exclude": [
+    "tests/load",
+    "tests/playwright",
+    "tests/fixtures/second-app",
+    "scripts/__tests__/lint-fixtures",
+    "scripts/__tests__/typecheck-fixtures"
+  ]
 }

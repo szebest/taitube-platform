@@ -36,7 +36,56 @@ const useNoMemoReason = defineRule({
   },
 });
 
+/** An API the browser floor lacks may be used only in a file that checks `typeof` of it. */
+const guardNewerApis = defineRule({
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Require a `typeof` check in the file for each API listed as newer than the browser floor.',
+    },
+    messages: {
+      unguarded:
+        '`{{api}}` is newer than the browser floor: guard it with `typeof {{api}} !== "function"` in this file, or leave it out',
+    },
+    schema: [
+      {
+        type: 'object',
+        properties: { apis: { type: 'array', items: { type: 'string' } } },
+        additionalProperties: false,
+      },
+    ],
+  },
+  create(context) {
+    const [options] = context.options;
+    const apis: unknown =
+      typeof options === 'object' && options !== null && !Array.isArray(options)
+        ? options.apis
+        : [];
+    const apiNames = Array.isArray(apis) ? apis : [];
+    const guarded = new Set<string>();
+    const uses: {
+      node: NonNullable<Parameters<typeof context.sourceCode.getText>[0]>;
+      api: string;
+    }[] = [];
+    return {
+      MemberExpression(node) {
+        const api = context.sourceCode.getText(node);
+        if (!apiNames.includes(api)) return;
+        const { parent } = node;
+        if (parent.type === 'UnaryExpression' && parent.operator === 'typeof') guarded.add(api);
+        else uses.push({ node, api });
+      },
+      'Program:exit'() {
+        for (const { node, api } of uses) {
+          if (!guarded.has(api)) context.report({ node, messageId: 'unguarded', data: { api } });
+        }
+      },
+    };
+  },
+});
+
 export default definePlugin({
   meta: { name: 'house' },
-  rules: { 'use-no-memo-reason': useNoMemoReason },
+  rules: { 'use-no-memo-reason': useNoMemoReason, 'guard-newer-apis': guardNewerApis },
 });

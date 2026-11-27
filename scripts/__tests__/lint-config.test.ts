@@ -23,11 +23,16 @@ describe('lint.config', () => {
     ['unused-import.ts', 'eslint(no-unused-vars)'],
     ['use-no-memo-without-reason.tsx', 'house(use-no-memo-reason)'],
     ['use-no-memo-placeholder-reason.tsx', 'house(use-no-memo-reason)'],
+    ['view-transition-unguarded.ts', 'house(guard-newer-apis)'],
   ])('reports %s as %s', (fixture, code) => {
     expect(codesFor(fixture)).toContain(code);
   });
 
   it('lets a "use no memo" stand under a real `// no-memo:` reason', () => {
     expect(codesFor('use-no-memo-with-reason.tsx')).not.toContain('house(use-no-memo-reason)');
+  });
+
+  it('lets an API newer than the browser floor stand under a `typeof` check of it', () => {
+    expect(codesFor('view-transition-guarded.ts')).not.toContain('house(guard-newer-apis)');
   });
 });
