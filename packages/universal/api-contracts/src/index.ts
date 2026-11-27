@@ -39,6 +39,7 @@ import * as oembed from './oembed';
 import * as picks from './picks';
 import * as playback from './playback';
 import * as playlists from './playlists';
+import * as posts from './posts';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendationFeedback from './recommendation-feedback';
@@ -114,6 +115,7 @@ export * from './pagination';
 export * from './picks';
 export * from './playback';
 export * from './playlists';
+export * from './posts';
 export * from './preferences';
 export * from './problem';
 export * from './problem-for';
@@ -191,6 +193,7 @@ export const contracts = {
   picks,
   playback,
   playlists,
+  posts,
   preferences,
   reactions,
   recommendationFeedback,

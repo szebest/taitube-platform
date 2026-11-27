@@ -13,12 +13,13 @@ import {
   SavedReplyService,
   TrustedCommenterService,
 } from '../services/index';
+import { registerPostServices } from './post.module';
 import { Services } from './service-tokens';
 
 export function registerCommentServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
-  return c
+  return registerPostServices(c)
     .provide(
       Services.CommentService,
       (c) =>

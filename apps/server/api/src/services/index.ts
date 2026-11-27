@@ -48,6 +48,7 @@ export * from './playback-telemetry-service';
 export * from './analytics-service';
 export * from './bootstrap-service';
 export * from './playlist-service';
+export * from './post-service';
 export * from './watch-history-service';
 export * from './search-history-service';
 export * from './recommendation-feedback-service';
