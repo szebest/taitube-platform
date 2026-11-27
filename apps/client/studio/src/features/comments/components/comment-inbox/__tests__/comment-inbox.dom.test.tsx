@@ -9,6 +9,15 @@ const OLDER = inboxComment({
   author: { ...FIRST.author, displayName: 'Marta' },
 });
 
+const POST_ID = '0190c3a0-5e1d-7000-8000-00000000d00b';
+const POST_COMMENT = inboxComment({
+  id: '0190c3a0-5e1d-7000-8000-00000000d00c',
+  content: 'On a post',
+  target: { type: 'post', id: POST_ID },
+  videoId: null,
+  targetSummary: { type: 'post', id: POST_ID, title: 'Which topic next?' },
+});
+
 const rowOf = (text: string) => screen.getByText(text).closest('tr') as HTMLElement;
 
 describe('apps/client/studio: CommentInbox', () => {
@@ -22,6 +31,38 @@ describe('apps/client/studio: CommentInbox', () => {
       `http://localhost:5173/watch/${VIDEO_ID}`
     );
     expect(row.getByText('Ines Carvalho')).toBeInTheDocument();
+  });
+
+  it.each([
+    { target: 'a video', comment: FIRST, chip: 'Video', title: 'Alfama at 5 a.m.' },
+    {
+      target: 'a post',
+      comment: inboxComment({
+        id: '0190c3a0-5e1d-7000-8000-00000000d00a',
+        content: 'Count me in',
+        target: { type: 'post', id: POST_ID },
+        videoId: null,
+        targetSummary: { type: 'post', id: POST_ID, title: 'Which topic next?' },
+      }),
+      chip: 'Post',
+      title: 'Which topic next?',
+    },
+  ])(
+    'marks a comment on $target with a $chip chip over its title',
+    async ({ comment, chip, title }) => {
+      await renderInbox('/comments', [[comment]]);
+
+      const row = within(rowOf(comment.content));
+
+      expect(row.getByText(chip)).toBeInTheDocument();
+      expect(row.getByText(title)).toBeInTheDocument();
+    }
+  );
+
+  it('links only a video, never a post', async () => {
+    await renderInbox('/comments', [[POST_COMMENT]]);
+
+    expect(within(rowOf(POST_COMMENT.content)).queryByRole('link')).toBeNull();
   });
 
   it('loads the next page on request', async () => {

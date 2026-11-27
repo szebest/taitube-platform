@@ -1,5 +1,6 @@
 import { EmptyState, SectionError } from '@kit/components';
 import { Format } from '@kit/intl-react';
+import { Badge } from '@kit/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
@@ -60,17 +61,23 @@ export function CommentInbox({ filter }: CommentInboxProps) {
         id: 'video',
         header: tOr('studio.commentsVideo', {}, ''),
         enableSorting: false,
-        cell: ({ row: { original } }) =>
-          original.targetSummary.type === 'video' ? (
-            <a
-              href={appLink(WEB_URL, `/watch/${original.targetSummary.id}`)}
-              className="line-clamp-2"
-            >
-              {original.targetSummary.title}
-            </a>
-          ) : (
-            <span className="line-clamp-2">{original.targetSummary.title}</span>
-          ),
+        cell: ({ row: { original } }) => (
+          <span className="flex flex-col items-start gap-inline">
+            <Badge size="sm" variant="soft">
+              {tOr('studio.commentsTargetChip', { type: original.targetSummary.type }, '')}
+            </Badge>
+            {original.targetSummary.type === 'video' ? (
+              <a
+                href={appLink(WEB_URL, `/watch/${original.targetSummary.id}`)}
+                className="line-clamp-2"
+              >
+                {original.targetSummary.title}
+              </a>
+            ) : (
+              <span className="line-clamp-2">{original.targetSummary.title}</span>
+            )}
+          </span>
+        ),
       }),
       column.accessor(authorOf, {
         id: 'author',
