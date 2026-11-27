@@ -9,13 +9,13 @@ export type ExitingOverlay = Readonly<{
   width?: number;
 }>;
 
-type Exit = { closing: boolean; gone: boolean };
+type Exit = { closing: boolean; animated: boolean; gone: boolean };
 
 /**
  * Watches `selector` in the page and settles `window.overlayExit` once the surface has closed and its exit has
- * run: `closing` when it was in the document with `data-state="closed"` at the end of a task, `gone` when it
- * left the document two frames after its exit animations finished. A surface removed as it closes, with no
- * exit, is never `closing`. The page's own animation clock ends the wait, so a busy main thread delays the
+ * run: `closing` when it was in the document with `data-state="closed"` at the end of a task, `animated` when
+ * it then had an animation running, `gone` when it left the document two frames after its animations settled
+ * (finished or cancelled by the removal). A surface removed as it closes, with no exit, is never `closing`. The page's own animation clock ends the wait, so a busy main thread delays the
  * close and its removal without failing the spec.
  */
 function watchExit(page: Page, selector: string) {
@@ -26,15 +26,18 @@ function watchExit(page: Page, selector: string) {
         const surface = document.querySelector(watched);
         if (!surface) {
           observer.disconnect();
-          resolve({ closing: false, gone: true });
+          resolve({ closing: false, animated: false, gone: true });
           return;
         }
         if (surface.getAttribute('data-state') !== 'closed') return;
         observer.disconnect();
-        Promise.all(surface.getAnimations().map((animation) => animation.finished))
+        const animations = surface.getAnimations();
+        Promise.allSettled(animations.map((animation) => animation.finished))
           .then(nextFrame)
           .then(nextFrame)
-          .then(() => resolve({ closing: true, gone: !surface.isConnected }));
+          .then(() =>
+            resolve({ closing: true, animated: animations.length > 0, gone: !surface.isConnected })
+          );
       });
       observer.observe(document.documentElement, {
         subtree: true,
@@ -69,7 +72,7 @@ export function describeOverlayExit(
 
         await overlay.close(page);
 
-        expect(await readExit(page)).toEqual({ closing: true, gone: true });
+        expect(await readExit(page)).toEqual({ closing: true, animated: true, gone: true });
       });
     }
   });
