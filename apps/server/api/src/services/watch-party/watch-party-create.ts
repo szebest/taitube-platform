@@ -34,6 +34,7 @@ import { resolvePeople } from './watch-party-names';
 import { toNewSeat } from './watch-party-principals';
 import { checkRoomInput, type InvalidRoomInput } from './watch-party-room-input';
 import { presentRoom } from './watch-party-room-views';
+import { refreshSearchText } from './watch-party-search-text';
 import { resolveSource } from './watch-party-sources';
 
 export type CreateFailure =
@@ -228,5 +229,7 @@ export async function createRoom(
   if (isErr(created)) return created;
 
   logger.info({ roomId, ownerKey }, 'watch party created');
+  await refreshSearchText(deps, created.value);
+  await deps.discovery.opened(created.value);
   return presentRoom(deps, created.value);
 }

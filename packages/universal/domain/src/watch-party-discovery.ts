@@ -3,16 +3,16 @@ import type { SearchMode } from './search';
 import type { WatchPartyRoom } from './watch-party';
 
 export const WATCH_PARTY_DISCOVERY_STATUSES = ['all', 'now', 'lobby', 'scheduled'] as const;
-export type WatchPartyDiscoveryStatus = (typeof WATCH_PARTY_DISCOVERY_STATUSES)[number];
+type WatchPartyDiscoveryStatus = (typeof WATCH_PARTY_DISCOVERY_STATUSES)[number];
 
 export const WATCH_PARTY_DISCOVERY_ACCESS = ['any', 'open', 'password'] as const;
-export type WatchPartyDiscoveryAccess = (typeof WATCH_PARTY_DISCOVERY_ACCESS)[number];
+type WatchPartyDiscoveryAccess = (typeof WATCH_PARTY_DISCOVERY_ACCESS)[number];
 
 export const WATCH_PARTY_DISCOVERY_SIZES = ['any', 'small', 'medium', 'large'] as const;
-export type WatchPartyDiscoverySize = (typeof WATCH_PARTY_DISCOVERY_SIZES)[number];
+type WatchPartyDiscoverySize = (typeof WATCH_PARTY_DISCOVERY_SIZES)[number];
 
 export const WATCH_PARTY_DISCOVERY_KINDS = ['any', 'single', 'playlist'] as const;
-export type WatchPartyDiscoveryKind = (typeof WATCH_PARTY_DISCOVERY_KINDS)[number];
+type WatchPartyDiscoveryKind = (typeof WATCH_PARTY_DISCOVERY_KINDS)[number];
 
 export const WATCH_PARTY_DISCOVERY_SORTS = [
   'members',

@@ -207,7 +207,7 @@ export async function discoverableRooms(
   return ok(
     page.map(({ room, video, trendScore }) => ({
       room: { ...room, playback: { ...room.playback } },
-      categoryId: video?.categoryId ?? null,
+      video,
       trendScore,
     }))
   );

@@ -1,5 +1,6 @@
 import type { Result } from '@kit/result';
 import type {
+  Video,
   WatchPartyCloseReason,
   WatchPartyDiscoveryQuery,
   WatchPartyMember,
@@ -77,11 +78,16 @@ export interface OwnerTransfer {
   readonly at: Date;
 }
 
-/** A room discovery lists, with the columns its filters and sorts read that the room itself leaves out. */
+/** The current video as a card shows it, with the category its filter reads. */
+type DiscoverableVideo = Pick<
+  Video,
+  'id' | 'title' | 'durationMs' | 'customThumbnailKey' | 'posterKey' | 'categoryId'
+>;
+
+/** A room discovery lists, with what its cards, filters and sorts read that the room itself leaves out. */
 export interface DiscoverableRoom {
   readonly room: WatchPartyRoom;
-  /** The current video's category. */
-  readonly categoryId: string | null;
+  readonly video: DiscoverableVideo | null;
   readonly trendScore: number;
 }
 

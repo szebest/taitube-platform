@@ -15,6 +15,8 @@ import {
   WatchPartyContextLoader,
   WatchPartyControlsService,
   type WatchPartyDeps,
+  WatchPartyDiscoveryFeed,
+  WatchPartyDiscoveryService,
   WatchPartyGuestService,
   WatchPartyInviteService,
   WatchPartyMemberService,
@@ -57,6 +59,7 @@ export function registerWatchPartyServices(c: Container): Container {
       guestSessions: c.get(Adapters.PartyGuestSessions),
       hasher: c.get(Adapters.PasswordHasher),
       broadcaster: c.get(Services.WatchPartyBroadcaster),
+      discovery: c.get(Services.WatchPartyDiscoveryFeed),
       context: c.get(Services.WatchPartyContextLoader),
       config: config.watchParties,
       secrets: secrets(config.watchParties.guestSalt),
@@ -82,6 +85,33 @@ export function registerWatchPartyServices(c: Container): Container {
         new WatchPartyContextLoader({
           repositories: c.get(Adapters.Repositories),
           now: () => new Date(),
+        })
+    )
+    .provide(
+      Services.WatchPartyDiscoveryFeed,
+      (c) =>
+        new WatchPartyDiscoveryFeed({
+          repositories: c.get(Adapters.Repositories),
+          presence: c.get(Adapters.WatchPartyPresence),
+          config: c.get(Adapters.Config).watchParties,
+          cdn: c.get(Adapters.Config).cdn,
+          now: () => new Date(),
+          cache: c.get(Adapters.Cache),
+          logger: c.get(Services.Logger),
+        }),
+      { dispose: (feed) => feed.close() }
+    )
+    .provide(
+      Services.WatchPartyDiscoveryService,
+      (c) =>
+        new WatchPartyDiscoveryService({
+          repositories: c.get(Adapters.Repositories),
+          presence: c.get(Adapters.WatchPartyPresence),
+          config: c.get(Adapters.Config).watchParties,
+          cdn: c.get(Adapters.Config).cdn,
+          now: () => new Date(),
+          cache: c.get(Adapters.Cache),
+          paginator: c.get(Services.Paginator),
         })
     )
     .provide(Services.WatchPartyService, (c) => new WatchPartyService(deps(c)))

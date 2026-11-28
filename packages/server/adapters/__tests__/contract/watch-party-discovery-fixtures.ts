@@ -21,7 +21,7 @@ import type { RepositoriesSubject } from './subjects';
 import { AT, later, OTHER_KEY, OWNER_KEY, roomSeed } from './watch-party-fixtures';
 
 export const NOW = later(10);
-export const CEILING = 200;
+const CEILING = 200;
 
 export const room = (n: number) => `00000000-0000-7000-8000-0000000d${String(n).padStart(4, '0')}`;
 const item = (roomNumber: number, index: number) =>
@@ -238,7 +238,7 @@ export async function follow(subject: RepositoriesSubject): Promise<void> {
   );
 }
 
-export const NO_FILTERS: WatchPartyDiscoveryFilters = {
+const NO_FILTERS: WatchPartyDiscoveryFilters = {
   text: null,
   status: 'all',
   categoryId: null,

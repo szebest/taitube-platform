@@ -92,5 +92,6 @@ export function registerServiceSet(c: Container): Container {
     watchPartyInviteService: c.get(Services.WatchPartyInviteService),
     watchPartyControlsService: c.get(Services.WatchPartyControlsService),
     watchPartySocketService: c.get(Services.WatchPartySocketService),
+    watchPartyDiscoveryService: c.get(Services.WatchPartyDiscoveryService),
   }));
 }

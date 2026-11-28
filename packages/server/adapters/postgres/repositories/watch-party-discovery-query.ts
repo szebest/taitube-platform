@@ -175,7 +175,17 @@ export async function discoverableRooms(
   query: WatchPartyDiscoveryQuery
 ): Promise<DiscoverableRoom[]> {
   const rows = await db
-    .select({ room: getTableColumns(rooms), categoryId: videos.categoryId })
+    .select({
+      room: getTableColumns(rooms),
+      video: {
+        id: videos.id,
+        title: videos.title,
+        durationMs: videos.durationMs,
+        customThumbnailKey: videos.customThumbnailKey,
+        posterKey: videos.posterKey,
+        categoryId: videos.categoryId,
+      },
+    })
     .from(rooms)
     .leftJoin(videos, eq(videos.id, rooms.currentVideoId))
     .where(
@@ -188,8 +198,8 @@ export async function discoverableRooms(
     )
     .orderBy(...orderOf(query.sort))
     .limit(query.limit + 1);
-  return rows.map(({ room, categoryId }) => {
+  return rows.map(({ room, video }) => {
     const { trendScore, searchText: _searchText, ...rest } = room;
-    return { room: rest, categoryId, trendScore };
+    return { room: rest, video, trendScore };
   });
 }

@@ -10,9 +10,14 @@ import {
   InMemoryWatchPartyGate,
   InMemoryWatchPartyPresence,
 } from '@vp/adapters/in-memory';
-import type { CreateWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
+import type {
+  CreateWatchPartyBody,
+  WatchPartyDiscoveryEvent,
+  WatchPartyView,
+} from '@vp/api-contracts';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { type AppConfigOverrides, asCdnBase, inProcessAppConfig } from '@vp/env-schema';
+import { partiesChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import { seedPrimaryChannel } from '../../../__tests__/test-app';
@@ -20,6 +25,7 @@ import type { PartyCaller } from '../party-caller';
 import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
 import type { WatchPartyDeps, WatchPartySecrets } from '../watch-party-deps';
+import { WatchPartyDiscoveryFeed } from '../watch-party-discovery-feed';
 import { WatchPartyService } from '../watch-party-service';
 
 const TEST_SCRYPT = { N: 16, r: 8, p: 1, keyLength: 32, saltLength: 16 } as const;
@@ -91,6 +97,23 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   const log = captureLog();
   const metrics = createWatchPartyMetrics(createPipelineMetrics().registry);
 
+  const logger = createLogger({
+    service: 'watch-party-test',
+    level: 'info',
+    format: 'json',
+    destination: log.destination,
+  });
+  const cdn = asCdnBase('http://localhost:9000/public');
+  const discovery = new WatchPartyDiscoveryFeed({
+    repositories,
+    presence,
+    config: appConfig.watchParties,
+    cdn,
+    now,
+    cache,
+    logger,
+  });
+
   const deps: WatchPartyDeps = {
     repositories,
     gate,
@@ -98,26 +121,24 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
     guestSessions,
     hasher: new ScryptPasswordHasher(appConfig.watchParties.scrypt),
     broadcaster: new WatchPartyBroadcaster(cache, () => clock.nowMs),
+    discovery,
     context: new WatchPartyContextLoader({ repositories, now }),
     config: appConfig.watchParties,
     secrets: { ...deterministicSecrets(appConfig.watchParties.guestSalt), ...secrets },
     webUrl: 'http://localhost:5173',
-    cdn: asCdnBase('http://localhost:9000/public'),
-    logger: createLogger({
-      service: 'watch-party-test',
-      level: 'info',
-      format: 'json',
-      destination: log.destination,
-    }),
+    cdn,
+    logger,
     metrics,
     now,
   };
 
   const everyFrame = (): PublishedFrame[] =>
-    cache.publishedMessages.map(({ channel, message }) => {
-      const { sentAt: _sentAt, ...envelope } = JSON.parse(message) as RoomEnvelope;
-      return { channel, ...envelope };
-    });
+    cache.publishedMessages
+      .filter(({ channel }) => channel.startsWith('watch-party:'))
+      .map(({ channel, message }) => {
+        const { sentAt: _sentAt, ...envelope } = JSON.parse(message) as RoomEnvelope;
+        return { channel, ...envelope };
+      });
 
   const isSystemLine = ({ frame }: PublishedFrame) =>
     frame.type === 'chat.message' && frame.message.kind === 'system';
@@ -128,6 +149,12 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
     everyFrame().flatMap((sent) =>
       sent.frame.type === 'chat.message' && isSystemLine(sent) ? [sent.frame.message.system] : []
     );
+
+  /** What discovery's stream was sent, in order. */
+  const discoveryEvents = (): WatchPartyDiscoveryEvent[] =>
+    cache.publishedMessages
+      .filter(({ channel }) => channel === partiesChannel())
+      .map(({ message }) => JSON.parse(message) as WatchPartyDiscoveryEvent);
 
   return {
     deps,
@@ -141,6 +168,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
     metrics,
     frames,
     everyFrame,
+    discoveryEvents,
     systemLines,
   };
 }

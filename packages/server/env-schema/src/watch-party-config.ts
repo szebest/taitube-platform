@@ -28,6 +28,16 @@ interface WatchPartyTuning {
   inviteCandidates: number;
   reactionsFoldMs: number;
   rosterBatchMs: number;
+  /**
+   * Discovery: list requests a caller may make a minute, how long a signed-out first page is kept,
+   * the window `party.counts` are batched in, and the anonymous streams one IP may hold.
+   */
+  discovery: {
+    listPerMinute: number;
+    firstPageCacheSeconds: number;
+    countsBatchMs: number;
+    streamsPerIp: number;
+  };
   buffering: { waitAfterMs: number; maxWaitMs: number; maxRoomSize: number };
   scrypt: { N: number; r: number; p: number; keyLength: number; saltLength: number };
   messageRetentionDays: number;
