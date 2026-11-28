@@ -99,6 +99,9 @@ export const WATCH_PARTY_LIMITS = {
   capacityMin: 2,
 } as const;
 
+/** How long past its scheduled time a room may wait for someone to start it before it closes as not started. */
+export const WATCH_PARTY_START_GRACE_MS = MS_PER_HOUR;
+
 /** How long a room with nobody present stays open; `null` keeps a persistent room until closed by hand. */
 export const IDLE_CLOSE_MS: Readonly<Record<WatchPartyIdleClose, number | null>> = {
   '15m': 15 * MS_PER_MINUTE,

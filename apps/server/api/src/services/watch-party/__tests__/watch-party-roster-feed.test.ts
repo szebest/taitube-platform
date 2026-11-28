@@ -1,7 +1,7 @@
 import type { RosterEntry } from '@vp/domain';
 import { flushRoster, rosterPatchFor } from '../watch-party-roster-feed';
 import { GUEST_KEY, ROOM_ID, seatGuest } from './watch-party-moderation-fixture';
-import { socketRoom } from './watch-party-socket-fixture';
+import { elapse, fakeTimers, socketRoom } from './watch-party-socket-fixture';
 
 const entry = (
   memberKey: string,
@@ -40,6 +40,28 @@ describe('the roster feed', () => {
         guests: 1,
       },
     ]);
+  });
+
+  it('batches joins, leaves and changes inside the 500 ms window into one patch', async () => {
+    fakeTimers();
+    try {
+      const party = await socketRoom();
+      const { roster } = party.socketDeps;
+
+      roster.add(ROOM_ID, { type: 'upsert', entry: entry('user:a') });
+      roster.add(ROOM_ID, { type: 'upsert', entry: entry('user:b') });
+      await elapse(party.deps.config.rosterBatchMs - 1);
+      expect(party.published('roster.patch')).toEqual([]);
+      roster.add(ROOM_ID, { type: 'removal', memberKey: 'user:b' });
+      await elapse(1);
+
+      expect(party.deps.config.rosterBatchMs).toBeLessThanOrEqual(500);
+      expect(party.published('roster.patch')).toEqual([
+        expect.objectContaining({ upserts: [entry('user:a')], removals: ['user:b'] }),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each([

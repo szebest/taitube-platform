@@ -3,6 +3,7 @@ import { all, err, isErr, map, ok, type Result } from '@kit/result';
 import type {
   CreateWatchPartyBody,
   PatchWatchPartyBody,
+  ReportWatchPartyBody,
   WatchPartyPreviewView,
   WatchPartyView,
 } from '@vp/api-contracts';
@@ -19,9 +20,11 @@ import {
   watchPartyNotFound,
 } from '@vp/errors';
 import type { PartyCaller } from './party-caller';
+import { adminCloseRoom, adminRestoreRoom } from './watch-party-admin';
 import { isRoomMember } from './watch-party-admission';
 import { createRoom } from './watch-party-create';
 import type { WatchPartyDeps } from './watch-party-deps';
+import { interestedRooms, setInterest } from './watch-party-interest';
 import { type JoinWatchPartyInput, joinRoom, leaveRoom } from './watch-party-join';
 import {
   type PreviewFailure,
@@ -30,6 +33,7 @@ import {
   rosterPreviewOf,
 } from './watch-party-preview';
 import { ipHashOf, requirePrincipal, type Unauthenticated } from './watch-party-principals';
+import { reportRoom } from './watch-party-reports';
 import { seatedRoster } from './watch-party-room-snapshot';
 import { presentRooms } from './watch-party-room-views';
 import { closeRoom, updateRoom } from './watch-party-settings';
@@ -78,6 +82,22 @@ export class WatchPartyService {
 
   leave(roomId: string, caller: PartyCaller) {
     return leaveRoom(this.deps, roomId, caller);
+  }
+
+  setInterest(roomId: string, caller: PartyCaller, interested: boolean) {
+    return setInterest(this.deps, roomId, caller, interested);
+  }
+
+  report(roomId: string, caller: PartyCaller, body: ReportWatchPartyBody) {
+    return reportRoom(this.deps, roomId, caller, body);
+  }
+
+  adminClose(roomId: string, caller: PartyCaller) {
+    return adminCloseRoom(this.deps, roomId, caller);
+  }
+
+  adminRestore(roomId: string, caller: PartyCaller) {
+    return adminRestoreRoom(this.deps, roomId, caller);
   }
 
   async get(
@@ -139,7 +159,14 @@ export class WatchPartyService {
       found.value.flatMap((room) => room ?? [])
     );
     if (isErr(joined)) return joined;
-    return ok({ owning: owning.value, joined: joined.value, interested: [] });
+    const interested = await interestedRooms(
+      deps,
+      caller,
+      actor.value.id,
+      new Set([...ownedIds, ...seated.value])
+    );
+    if (isErr(interested)) return interested;
+    return ok({ owning: owning.value, joined: joined.value, interested: interested.value });
   }
 
   async socketTicket(

@@ -1,4 +1,5 @@
 import { expectErr, expectOk } from '@kit/testing/result';
+import { BUILT_IN_ROLE_KEYS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { popcorn, setUpRoles, STRANGER } from './watch-party-role-party';
@@ -121,6 +122,26 @@ describe('update', () => {
     expect(updated).toMatchObject({ id: ids.dj, name: 'Selector', key: 'dj' });
     expect(frames()).toHaveLength(1);
   });
+
+  it.each(BUILT_IN_ROLE_KEYS.map((key) => ({ key })))(
+    'renames and recolours the built-in $key role',
+    async ({ key }) => {
+      const { service, owner, ids, roles } = await setUpRoles();
+      const { updatedAt } = (await roles()).items.find((role) => role.id === ids[key]) ?? {
+        updatedAt: '',
+      };
+
+      const updated = expectOk(
+        await service.update(ROOM_ID, owner, ids[key], {
+          name: 'Renamed',
+          colour: '#112233',
+          updatedAt,
+        })
+      );
+
+      expect(updated).toMatchObject({ id: ids[key], key, name: 'Renamed', colour: '#112233' });
+    }
+  );
 
   it.each([
     {

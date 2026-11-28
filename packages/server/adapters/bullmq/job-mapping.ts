@@ -3,12 +3,13 @@ import type { FlowJobNode as BullFlowJobNode, Job, JobsOptions } from 'bullmq';
 
 export type PortJobsOptions = Pick<
   JobsOptions,
-  'jobId' | 'attempts' | 'priority' | 'backoff' | 'removeOnComplete' | 'removeOnFail'
+  'jobId' | 'delay' | 'attempts' | 'priority' | 'backoff' | 'removeOnComplete' | 'removeOnFail'
 >;
 
 export function toJobsOptions(options: QueueJobOptions | undefined): PortJobsOptions {
   return {
     jobId: options?.jobId,
+    delay: options?.delay,
     attempts: options?.attempts,
     priority: options?.priority,
     backoff: options?.backoff as JobsOptions['backoff'],

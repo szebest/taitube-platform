@@ -24,6 +24,7 @@ import {
   systemLineFor,
 } from './watch-party-moderation-effects';
 import { flushRoster } from './watch-party-roster-feed';
+import { refreshSearchText } from './watch-party-search-text';
 
 export type BanInput = z.output<typeof banWatchPartyMember.body>;
 export type TransferInput = z.output<typeof transferWatchPartyOwnership.body>;
@@ -228,6 +229,8 @@ export class WatchPartyMemberService {
     });
     if (written.ok && written.value.type === 'applied') {
       await announceLine(this.deps, room.id, line);
+      await refreshSearchText(this.deps, written.value.room);
+      await this.deps.discovery.updated(written.value.room);
     }
     return written;
   }

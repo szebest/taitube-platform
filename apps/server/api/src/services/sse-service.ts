@@ -15,9 +15,10 @@ import type {
 import { VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
-import { userChannel, videoChannel } from '@vp/events';
+import { partiesChannel, userChannel, videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import type { SseFrame, SseLogRead } from './sse-connection';
+import type { StreamLimit } from './sse-failures';
 import { helloFrame, userFrame } from './sse-frames';
 import type { GatedReadFailure, VideoAccess, VideoAccessGate } from './video-access-gate';
 import { playbackUrl } from './video-views';
@@ -35,6 +36,8 @@ interface SseOpening {
 export interface SseSession {
   channel: string;
   userId?: string;
+  /** Replaces the per-account stream budget: an anonymous stream is counted by address instead. */
+  limit?: StreamLimit;
   /** The broadcast this stream counts a viewer of, while its video is live. */
   live?: { liveStreamId: string; videoId: string };
   open(afterId: number | null): Promise<Result<SseOpening, DatabaseUnavailable>>;
@@ -173,7 +176,16 @@ export class SseService {
     });
   }
 
-  openUserStream(user: UserContext): Required<Omit<SseSession, 'live'>> {
+  /** Discovery's stream is anonymous and opens empty: the page it sits on has already read the list. */
+  openPartiesStream(ip: string, perIp: number): Pick<SseSession, 'channel' | 'limit' | 'open'> {
+    return {
+      channel: partiesChannel(),
+      limit: { subject: 'ip', key: ip, max: perIp },
+      open: async () => ok({ frames: [], lastEventId: 0 }),
+    };
+  }
+
+  openUserStream(user: UserContext): Required<Omit<SseSession, 'live' | 'limit'>> {
     const { userEvents, notifications, replayLimit } = this.deps;
     const openAtLatest = async (resume: StreamResume) => {
       const lastEventId = await userEvents.latestId(user.id);

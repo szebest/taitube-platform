@@ -383,6 +383,7 @@
   "errors.watchPartyCredentialInvalid": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyFull": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyGuestsOff": ["@vp/shared-messages", "@vp/studio"],
+  "errors.watchPartyAlreadyReported": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyInviteInvalid": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyLimitReached": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyNotFound": ["@vp/shared-messages", "@vp/studio"],

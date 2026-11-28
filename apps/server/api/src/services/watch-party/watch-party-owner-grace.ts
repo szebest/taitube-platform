@@ -8,12 +8,21 @@ import {
   announceMemberRoles,
   logChange,
 } from './watch-party-moderation-effects';
+import { refreshSearchText } from './watch-party-search-text';
 
 type HandOver = 'kept' | 'waiting' | 'transferred';
 
 type GraceDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'presence' | 'broadcaster' | 'logger' | 'metrics' | 'config' | 'now' | 'secrets'
+  | 'repositories'
+  | 'presence'
+  | 'broadcaster'
+  | 'logger'
+  | 'metrics'
+  | 'config'
+  | 'now'
+  | 'secrets'
+  | 'discovery'
 >;
 
 /**
@@ -88,6 +97,8 @@ export async function handOverAbsentOwner(
     targetKey: heir.memberKey,
   });
   await announceLine(deps, roomId, line);
+  await refreshSearchText(deps, written.value.room);
+  await deps.discovery.updated(written.value.room);
   await announce(deps, roomId, { type: 'owner', memberKey: heir.memberKey, rolesVersion });
   await announceMemberRoles(deps, roomId, room.ownerKey, rolesVersion);
   return ok('transferred');

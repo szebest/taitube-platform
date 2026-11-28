@@ -2,8 +2,9 @@ const VIDEO_PREFIX = 'video:';
 const USER_PREFIX = 'user:';
 const LIVE_CHAT_PREFIX = 'live-chat:';
 const WATCH_PARTY_PREFIX = 'watch-party:';
+const PARTIES_PREFIX = 'parties:';
 
-export type ChannelType = 'video' | 'user';
+export type ChannelType = 'video' | 'user' | 'parties';
 
 export function videoChannel(videoId: string): string {
   return `${VIDEO_PREFIX}${videoId}`;
@@ -31,11 +32,18 @@ export function roomIdOfWatchParty(channel: string): string | null {
   return channel.startsWith(WATCH_PARTY_PREFIX) ? channel.slice(WATCH_PARTY_PREFIX.length) : null;
 }
 
+/** What discovery's anonymous stream listens to: rooms opening, changing, closing and their counts. */
+export function partiesChannel(): string {
+  return `${PARTIES_PREFIX}discovery`;
+}
+
+export const PARTIES_WILDCARD_CHANNEL = `${PARTIES_PREFIX}*`;
 export const LIVE_CHAT_WILDCARD_CHANNEL = `${LIVE_CHAT_PREFIX}*`;
 export const WATCH_PARTY_WILDCARD_CHANNEL = `${WATCH_PARTY_PREFIX}*`;
 export const VIDEO_WILDCARD_CHANNEL = `${VIDEO_PREFIX}*`;
 export const USER_WILDCARD_CHANNEL = `${USER_PREFIX}*`;
 
 export function channelType(channel: string): ChannelType {
-  return channel.startsWith(VIDEO_PREFIX) ? 'video' : 'user';
+  if (channel.startsWith(VIDEO_PREFIX)) return 'video';
+  return channel.startsWith(PARTIES_PREFIX) ? 'parties' : 'user';
 }

@@ -2,6 +2,8 @@ import { expectOk } from '@kit/testing/result';
 import { dropUnavailable } from '../watch-party-availability';
 import { ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
+
+type Party = Awaited<ReturnType<typeof socketRoom>>;
 import { deleteVideo, VIDEO_A, VIDEO_B } from './watch-party-test-deps';
 
 describe('dropUnavailable', () => {
@@ -15,14 +17,25 @@ describe('dropUnavailable', () => {
     expect(party.systemLines()).toEqual([]);
   });
 
+  const makePrivate = async ({ repositories }: Pick<Party, 'repositories'>, videoId: string) => {
+    const video = expectOk(await repositories.videos.findById(videoId));
+    Object.assign(video ?? {}, { visibility: 'private' });
+  };
+
   it.each([
-    { scenario: 'the current one', gone: VIDEO_A, kept: VIDEO_B },
-    { scenario: 'a queued one', gone: VIDEO_B, kept: VIDEO_A },
+    { scenario: 'the current one', gone: VIDEO_A, kept: VIDEO_B, change: deleteVideo },
+    { scenario: 'a queued one', gone: VIDEO_B, kept: VIDEO_A, change: deleteVideo },
+    {
+      scenario: 'a queued one that turns private',
+      gone: VIDEO_B,
+      kept: VIDEO_A,
+      change: makePrivate,
+    },
   ])(
-    'takes $scenario off the queue with a system line when it is deleted',
-    async ({ gone, kept }) => {
+    'takes $scenario off the queue with a system line when it goes',
+    async ({ gone, kept, change }) => {
       const party = await socketRoom();
-      await deleteVideo(party, gone);
+      await change(party, gone);
 
       const checked = expectOk(await dropUnavailable(party.deps, await party.room()));
 

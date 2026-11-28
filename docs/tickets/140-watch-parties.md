@@ -1034,6 +1034,21 @@ One stack, `feat/140-watch-parties`, three slices (`slice/140a-…` to `slice/14
    with interest and reminders, reports and the moderator close, the dashboard, alerts and runbooks, S8 and its results,
    the 78 hand-off check, and the ticket set to `done`.
 
+The first stack landed as #310 with 140a and part of 140b. The rest ships as a second stack,
+`feat/140-watch-parties-completion`, three slices:
+
+- **140d: engine proofs and the discovery API.** The 140a criteria main has no spec for (guest refusals, the version 2
+  upgrade on load, stale then missing permission after a revoke, the cross-pod mute, the 200-member reaction fold, the
+  invite rollback and `notification.created`, purging room-scoped controls and guest ban hashes, the escalation rows),
+  then the server half of 140c: discovery with its scope, search, keysets and SSE stream, `search_text` and
+  `trend_score` writers, interest, reminders, `auto_start`, reports with the auto-hide and the moderator close.
+- **140e: the rest of the party page.** The share dialog with QR and Web Share and every entry point, the invite row
+  with Decline and the invite settings, the role editor and the queue add, the mute scope, personal controls and
+  `/settings/party-controls`, `ReactionOverlay`, the `party` preferences section and layout persistence, the room accent,
+  the design docs, the stories and the two-browser e2e.
+- **140f: discovery UI and operations.** `/parties`, `PartyCard`, the nav entries and states, the dashboard, alerts,
+  runbooks, S8 and its results, SDD §13.5 and §14.2, the 78 check and the ticket set to `done`.
+
 ## Acceptance criteria
 
 ### 140a: Rooms, roles and identities engine

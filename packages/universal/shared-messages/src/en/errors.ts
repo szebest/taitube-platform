@@ -111,6 +111,7 @@ export const errors = {
   watchPartyPasswordRequired: dt('This party needs a password.'),
   watchPartyPasswordInvalid: dt('That password is not right.'),
   watchPartyPasswordLocked: dt('Too many wrong passwords. Try again later.'),
+  watchPartyAlreadyReported: dt('You already reported this.'),
   watchPartyInviteInvalid: dt('This invite is no longer valid.'),
   watchPartyLimitReached: dt('You already host as many open parties as you can. Close one first.'),
   watchPartyVideoNotShareable: dt("This video can't be watched in this party."),

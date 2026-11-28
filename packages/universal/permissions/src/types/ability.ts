@@ -46,6 +46,8 @@ export type AppAction =
   | 'approve'
   | 'hide'
   | 'unhide'
+  | 'close'
+  | 'restore'
   | 'remove'
   | 'restrict'
   | 'addItem'
