@@ -22,6 +22,8 @@ export * from './postgres-event-repository';
 export * from './postgres-notification-repository';
 export * from './postgres-outbox-repository';
 export * from './postgres-pick-repository';
+export * from './postgres-playlist-activity-repository';
+export * from './postgres-playlist-collaborator-repository';
 export * from './postgres-playlist-repository';
 export * from './postgres-recommendation-feedback-repository';
 export * from './postgres-related-videos-repository';

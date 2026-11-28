@@ -70,7 +70,13 @@ describe('ChannelService.listPlaylists', () => {
     await seedPlaylist(PRIVATE, 'private');
     await seedPlaylist(FOREIGN, 'public', OTHER_USER_ID);
     for (const videoId of [HIDDEN, VISIBLE]) {
-      expectOk(await repositories.playlists.addItem(NEWER, { id: randomUUID(), videoId }));
+      expectOk(
+        await repositories.playlists.addItem(
+          NEWER,
+          { id: randomUUID(), videoId, addedBy: null },
+          NEWER
+        )
+      );
     }
   });
 

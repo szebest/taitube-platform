@@ -56,3 +56,15 @@ export function provideChannels(container: Container, now: Clock): Container {
     )
     .provide(Repo.channelPages, (c) => new InMemoryChannelPageRepository(c.get(Repo.videos)));
 }
+
+export function channelContentOf(c: Container) {
+  return {
+    channelFeatured: c.get(Repo.channelFeatured),
+    channelImages: c.get(Repo.channelImages),
+    channelPages: c.get(Repo.channelPages),
+    channelPosts: c.get(Repo.channelPosts),
+    postEngagement: c.get(Repo.postEngagement),
+  };
+}
+
+export type ChannelContentRepositories = ReturnType<typeof channelContentOf>;

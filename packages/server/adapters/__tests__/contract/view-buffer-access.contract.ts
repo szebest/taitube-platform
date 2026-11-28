@@ -50,7 +50,7 @@ export function describeViewBufferAccessContract(makeSubject: MakeViewBufferSubj
     });
 
     const open = (overrides: Partial<ShareLinkOpen> = {}): ShareLinkOpen => ({
-      videoId,
+      targetId: videoId,
       linkId,
       viewerKey: randomUUID(),
       viewDate: ACCESS_DAY,
@@ -78,6 +78,7 @@ export function describeViewBufferAccessContract(makeSubject: MakeViewBufferSubj
         counts: [{ videoId, viewDate: ACCESS_DAY, views: 1, watchSeconds: 10 }],
         shareLinks: [{ linkId, viewDate: ACCESS_DAY, opens: 0, views: 1, watchSeconds: 10 }],
         experiments: [],
+        playlists: [],
       });
     });
 

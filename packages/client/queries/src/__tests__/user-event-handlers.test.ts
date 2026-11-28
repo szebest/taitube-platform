@@ -266,18 +266,26 @@ describe('@vp/queries: user event handlers', () => {
     expect(queryClient.getQueryState(['watch-party-controls'])?.isInvalidated).toBe(true);
   });
 
-  it('refetches the creator stats and the retention of the video the event names, no other', () => {
+  it.each([
+    {
+      event: { type: 'video.stats.updated', payload: { videoId: VIDEO_ID } } as const,
+      refetched: [videoKeys.creatorStats(VIDEO_ID), videoKeys.retention(VIDEO_ID)],
+      kept: videoKeys.creatorStats(OTHER_VIDEO_ID),
+    },
+    {
+      event: { type: 'playlist.updated', payload: { playlistId: VIDEO_ID } } as const,
+      refetched: [['library', 'playlist', VIDEO_ID]],
+      kept: ['library', 'playlist', OTHER_VIDEO_ID],
+    },
+  ])('refetches what $event.type names, no other', ({ event, refetched, kept }) => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(videoKeys.creatorStats(VIDEO_ID), {});
-    queryClient.setQueryData(videoKeys.creatorStats(OTHER_VIDEO_ID), {});
-    queryClient.setQueryData(videoKeys.retention(VIDEO_ID), {});
+    for (const key of [...refetched, kept]) queryClient.setQueryData(key, {});
 
-    applyUserEvent(queryClient, { type: 'video.stats.updated', payload: { videoId: VIDEO_ID } });
+    applyUserEvent(queryClient, event);
 
-    expect(queryClient.getQueryState(videoKeys.creatorStats(VIDEO_ID))?.isInvalidated).toBe(true);
-    expect(queryClient.getQueryState(videoKeys.retention(VIDEO_ID))?.isInvalidated).toBe(true);
-    expect(queryClient.getQueryState(videoKeys.creatorStats(OTHER_VIDEO_ID))?.isInvalidated).toBe(
-      false
+    expect(refetched.map((key) => queryClient.getQueryState(key)?.isInvalidated)).toEqual(
+      refetched.map(() => true)
     );
+    expect(queryClient.getQueryState(kept)?.isInvalidated).toBe(false);
   });
 });

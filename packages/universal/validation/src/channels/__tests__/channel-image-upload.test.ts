@@ -11,6 +11,7 @@ describe('@vp/validation: channel image upload', () => {
     { kind: 'avatar', contentType: 'image/webp', sizeBytes: 2 * MB },
     { kind: 'banner', contentType: 'image/jpeg', sizeBytes: 6 * MB },
     { kind: 'banner', contentType: 'image/png', sizeBytes: 1 },
+    { kind: 'playlist-cover', contentType: 'image/jpeg', sizeBytes: 2 * MB },
     { kind: 'post-image', contentType: 'image/png', sizeBytes: 5 * MB },
   ] as const)('accepts a $kind of $sizeBytes bytes as $contentType', (input) => {
     expect(expectOk(validateChannelImageUploadRequest(input))).toEqual(input);
@@ -19,6 +20,12 @@ describe('@vp/validation: channel image upload', () => {
   it.each([
     { kind: 'avatar', contentType: 'image/png', sizeBytes: 2 * MB + 1, code: 'UPLOAD_TOO_LARGE' },
     { kind: 'banner', contentType: 'image/png', sizeBytes: 6 * MB + 1, code: 'UPLOAD_TOO_LARGE' },
+    {
+      kind: 'playlist-cover',
+      contentType: 'image/png',
+      sizeBytes: 2 * MB + 1,
+      code: 'UPLOAD_TOO_LARGE',
+    },
     {
       kind: 'post-image',
       contentType: 'image/png',
@@ -43,6 +50,7 @@ describe('@vp/validation: channel image upload', () => {
     { kind: 'avatar', width: 200, height: 200 },
     { kind: 'avatar', width: 4000, height: 300 },
     { kind: 'banner', width: 1024, height: 576 },
+    { kind: 'playlist-cover', width: 640, height: 360 },
     { kind: 'post-image', width: 640, height: 64 },
     { kind: 'post-image', width: 4000, height: 3000 },
   ] as const)('accepts a $kind of $width x $height', ({ kind, ...size }) => {
@@ -54,6 +62,8 @@ describe('@vp/validation: channel image upload', () => {
     { kind: 'avatar', width: 400, height: 199 },
     { kind: 'banner', width: 1023, height: 2000 },
     { kind: 'banner', width: 2000, height: 575 },
+    { kind: 'playlist-cover', width: 639, height: 2000 },
+    { kind: 'playlist-cover', width: 2000, height: 359 },
     { kind: 'post-image', width: 639, height: 400 },
     { kind: 'post-image', width: 1000, height: 63 },
   ] as const)('refuses a $kind of $width x $height as too small', ({ kind, ...size }) => {

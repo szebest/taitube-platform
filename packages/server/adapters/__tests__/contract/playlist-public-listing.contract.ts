@@ -35,7 +35,13 @@ export function describePlaylistPublicListingContract(ctx: PlaylistContractConte
       );
 
     const add = async (playlistId: string, videoId: string) =>
-      expectOk(await ctx.playlists.addItem(playlistId, { id: randomUUID(), videoId }));
+      expectOk(
+        await ctx.playlists.addItem(
+          playlistId,
+          { id: randomUUID(), videoId, addedBy: OWNER_ID },
+          OWNER_ID
+        )
+      );
 
     const walk = async (limit: number) => {
       const ids: string[] = [];

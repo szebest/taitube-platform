@@ -138,6 +138,16 @@ function applyGenerationUpdated(
   void queryClient.invalidateQueries({ queryKey: videoKeys.detail(videoId) });
 }
 
+/** Every cached read of the playlist, whichever app keyed it, holds the playlist id in its key. */
+function applyPlaylistUpdated(
+  { playlistId }: UserEventPayloads['playlist.updated'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({
+    predicate: ({ queryKey }) => queryKey.includes(playlistId),
+  });
+}
+
 const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
@@ -155,6 +165,7 @@ const userEventHandlers: UserEventHandlers = {
   'export.ready': ignoreExportChange,
   'export.failed': ignoreExportChange,
   'video.generation.updated': applyGenerationUpdated,
+  'playlist.updated': applyPlaylistUpdated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

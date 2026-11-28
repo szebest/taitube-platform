@@ -13,5 +13,6 @@ export * from './start-here-shelf';
 export * from './states/empty-state';
 export * from './states/error-state';
 export * from './states/section-error';
+export * from './timeline-range-editor';
 export * from './video-card';
 export * from './video-thumbnail';

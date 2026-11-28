@@ -4,7 +4,8 @@ import { ErrorCodes } from '@vp/errors';
 import { decideShareLink, decideShareLinkUse } from '../decide-share-link.rule';
 
 const NOW = new Date('2026-11-19T12:00:00.000Z');
-const CONTEXT = { videoId: 'video-1', active: 0, now: NOW };
+const VIDEO = { targetType: 'video', targetId: 'video-1' } as const;
+const CONTEXT = { target: VIDEO, active: 0, now: NOW };
 
 function aLink(overrides: Partial<ShareLink> = {}): ShareLink {
   return {
@@ -55,10 +56,15 @@ describe('@vp/domain-rules: decideShareLink', () => {
 });
 
 describe('@vp/domain-rules: decideShareLinkUse', () => {
-  it('grants read on its video while live', () => {
-    expect(decideShareLinkUse(aLink(), { videoId: 'video-1', now: NOW })).toEqual(
-      ok({ targetType: 'video', targetId: 'video-1' })
-    );
+  it.each([
+    { name: 'its video', link: aLink(), target: VIDEO },
+    {
+      name: 'its playlist',
+      link: aLink({ targetType: 'playlist', targetId: 'pl-1' }),
+      target: { targetType: 'playlist', targetId: 'pl-1' } as const,
+    },
+  ])('grants read on $name while live', ({ link, target }) => {
+    expect(decideShareLinkUse(link, { target, now: NOW })).toEqual(ok(target));
   });
 
   it.each([
@@ -68,16 +74,17 @@ describe('@vp/domain-rules: decideShareLinkUse', () => {
       name: 'a dead link of another video',
       link: aLink({ targetId: 'video-2', revokedAt: NOW }),
     },
+    { name: 'a playlist link of the same id', link: aLink({ targetType: 'playlist' }) },
   ])('proves nothing with $name', ({ link }) => {
-    expect(decideShareLinkUse(link, { videoId: 'video-1', now: NOW })).toEqual(ok(null));
+    expect(decideShareLinkUse(link, { target: VIDEO, now: NOW })).toEqual(ok(null));
   });
 
   it.each([
     { name: 'expired', link: aLink({ expiresAt: NOW }) },
     { name: 'revoked', link: aLink({ revokedAt: new Date('2026-11-19T11:59:00.000Z') }) },
   ])('answers SHARE_LINK_EXPIRED for an $name link', ({ link }) => {
-    expect(decideShareLinkUse(link, { videoId: 'video-1', now: NOW })).toMatchObject(
-      err({ code: ErrorCodes.SHARE_LINK_EXPIRED, videoId: 'video-1' })
+    expect(decideShareLinkUse(link, { target: VIDEO, now: NOW })).toMatchObject(
+      err({ code: ErrorCodes.SHARE_LINK_EXPIRED, ...VIDEO })
     );
   });
 });

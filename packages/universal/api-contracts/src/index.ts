@@ -38,6 +38,13 @@ import * as notifications from './notifications';
 import * as oembed from './oembed';
 import * as picks from './picks';
 import * as playback from './playback';
+import * as playlistActivity from './playlist-activity';
+import * as playlistCollaboration from './playlist-collaboration';
+import * as playlistCover from './playlist-cover';
+import * as playlistItems from './playlist-items';
+import * as playlistLibrary from './playlist-library';
+import * as playlistSharing from './playlist-sharing';
+import * as playlistTransfer from './playlist-transfer';
 import * as playlists from './playlists';
 import * as postRevisions from './post-revisions';
 import * as postStudio from './post-studio';
@@ -118,6 +125,15 @@ export * from './oembed';
 export * from './pagination';
 export * from './picks';
 export * from './playback';
+export * from './playlist-activity';
+export * from './playlist-collaboration';
+export * from './playlist-cover';
+export * from './playlist-items';
+export * from './playlist-library';
+export * from './playlist-resource';
+export * from './playlist-rules';
+export * from './playlist-sharing';
+export * from './playlist-transfer';
 export * from './playlists';
 export * from './post-revisions';
 export * from './post-studio';
@@ -201,6 +217,11 @@ export const contracts = {
   picks,
   playback,
   playlists,
+  playlistActivity,
+  playlistCollaboration,
+  playlistCover,
+  playlistItems,
+  playlistTransfer,
   postRevisions,
   postStudio,
   posts,
@@ -236,6 +257,8 @@ export const contracts = {
   watchPartySocket,
   watchPartyVoice,
   webhooks,
+  playlistLibrary,
+  playlistSharing,
 } as const;
 
 export function endpointKey(method: string, path: string): string {

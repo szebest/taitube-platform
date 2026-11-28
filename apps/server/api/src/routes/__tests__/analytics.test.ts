@@ -35,6 +35,7 @@ describe('analytics routes', () => {
         devices: [{ videoId: PUBLIC_VIDEO, viewDate: today, device: 'mobile', views: 3 }],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
   });
@@ -64,6 +65,7 @@ describe('analytics routes', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
 

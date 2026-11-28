@@ -36,6 +36,8 @@ function coalesceKey(event: UserEventFrame): string | undefined {
       return undefined;
     case 'video.stats.updated':
       return `stats:${event.payload.videoId}`;
+    case 'playlist.updated':
+      return `playlist:${event.payload.playlistId}`;
     default:
       return assertNever(event, 'UserEventFrame');
   }

@@ -12,6 +12,7 @@ export * from './exports';
 export * from './ladder';
 export * from './live';
 export * from './notifications';
+export * from './playlist-notifications';
 export * from './policies';
 
 export const QUEUES = [
@@ -154,6 +155,7 @@ export const HousekeepingJob = z.object({
     'purge-exports',
     'prune-revisions',
     'purge-generations',
+    'purge-playlist-activity',
     'publish-due-posts',
   ]),
 });

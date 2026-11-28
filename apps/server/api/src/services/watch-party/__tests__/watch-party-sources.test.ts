@@ -34,7 +34,11 @@ async function setUpSources() {
     );
     for (const videoId of videoIds) {
       expectOk(
-        await test.repositories.playlists.addItem(id, { id: test.deps.secrets.newId(), videoId })
+        await test.repositories.playlists.addItem(
+          id,
+          { id: test.deps.secrets.newId(), videoId, addedBy: null },
+          id
+        )
       );
     }
     return id;
@@ -129,7 +133,7 @@ describe('apps/server/api/services: resolveSource', () => {
   it('reads a playlist as the caller does: another account’s private playlist is nothing', async () => {
     const world = await setUpSources();
     const id = await world.playlist([VIDEO_A]);
-    expectOk(await world.repositories.playlists.update(id, { visibility: 'private' }));
+    expectOk(await world.repositories.playlists.update(id, { visibility: 'private' }, id));
 
     expect(expectErr(await world.resolve({ playlistId: id }, { actor: OTHER })).code).toBe(
       ErrorCodes.WATCH_PARTY_VIDEO_NOT_SHAREABLE
