@@ -15,6 +15,8 @@ import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
 import { channelExportRoutes } from './channel-exports';
 import { channelFeaturedRoutes } from './channel-featured';
+import { channelPageRoutes } from './channel-page';
+import { channelPageStudioRoutes } from './channel-page-studio';
 import { channelRestrictionsRoutes } from './channel-restrictions';
 import { channelTeamRoutes } from './channel-team';
 import { channelsRoutes } from './channels';
@@ -137,6 +139,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   liveCompanionRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
+  channelPageRoutes,
+  channelPageStudioRoutes,
   channelTeamRoutes,
   channelExportRoutes,
   apiTokenRoutes,

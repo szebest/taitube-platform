@@ -3,7 +3,7 @@ import type { Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import {
-  type ChannelRepositories,
+  type ChannelRepositories as Channels,
   createChannelRepositories,
 } from './postgres-channel-repositories';
 import { PostgresClipRepository } from './postgres-clip-repository';
@@ -65,17 +65,20 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   readonly dlq: PostgresDlqRepository;
   readonly outbox: PostgresOutboxRepository;
   readonly categories: PostgresCategoryRepository;
-  declare readonly channels: ChannelRepositories['channels'];
-  declare readonly channelMembers: ChannelRepositories['channelMembers'];
-  declare readonly channelInvites: ChannelRepositories['channelInvites'];
-  declare readonly channelAudit: ChannelRepositories['channelAudit'];
-  declare readonly channelFeatured: ChannelRepositories['channelFeatured'];
-  declare readonly channelHandleHistory: ChannelRepositories['channelHandleHistory'];
-  declare readonly channelImages: ChannelRepositories['channelImages'];
-  declare readonly channelPages: ChannelRepositories['channelPages'];
-  declare readonly channelPosts: ChannelRepositories['channelPosts'];
-  declare readonly postEngagement: ChannelRepositories['postEngagement'];
-  declare readonly videoThreads: ChannelRepositories['videoThreads'];
+  declare readonly channels: Channels['channels'];
+  declare readonly channelMembers: Channels['channelMembers'];
+  declare readonly channelInvites: Channels['channelInvites'];
+  declare readonly channelAudit: Channels['channelAudit'];
+  declare readonly channelFeatured: Channels['channelFeatured'];
+  declare readonly channelHandleHistory: Channels['channelHandleHistory'];
+  declare readonly channelImages: Channels['channelImages'];
+  declare readonly channelPages: Channels['channelPages'];
+  declare readonly channelLayouts: Channels['channelLayouts'];
+  declare readonly channelLayoutSchedules: Channels['channelLayoutSchedules'];
+  declare readonly channelPageSources: Channels['channelPageSources'];
+  declare readonly channelPosts: Channels['channelPosts'];
+  declare readonly postEngagement: Channels['postEngagement'];
+  declare readonly videoThreads: Channels['videoThreads'];
   declare readonly dataExports: CreatorDataRepositories['dataExports'];
   declare readonly exportRows: CreatorDataRepositories['exportRows'];
   declare readonly apiTokens: CreatorDataRepositories['apiTokens'];

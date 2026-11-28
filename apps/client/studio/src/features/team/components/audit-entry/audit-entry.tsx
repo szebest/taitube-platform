@@ -119,6 +119,11 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
     case 'post.published':
     case 'post.updated':
     case 'post.deleted':
+    case 'page.draft_saved':
+    case 'page.published':
+    case 'page.scheduled':
+    case 'page.schedule_cancelled':
+    case 'page.restored':
       return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');

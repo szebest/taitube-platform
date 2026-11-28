@@ -351,6 +351,13 @@
       "when": 1795701077047,
       "tag": "0048_playlists_collaboration",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795813206841,
+      "tag": "0050_channel_page_builder",
+      "breakpoints": true
     }
   ]
 }

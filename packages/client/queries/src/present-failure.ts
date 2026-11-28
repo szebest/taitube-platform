@@ -193,6 +193,13 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.THREAD_LIMIT:
     case ErrorCodes.THREAD_PIN_LIMIT:
     case ErrorCodes.THREAD_ANCHOR_INVALID:
+    case ErrorCodes.LAYOUT_LIMIT_EXCEEDED:
+    case ErrorCodes.LAYOUT_MARKDOWN_INVALID:
+    case ErrorCodes.LAYOUT_SLUG_INVALID:
+    case ErrorCodes.LAYOUT_REFERENCE_INVALID:
+    case ErrorCodes.LAYOUT_STRUCTURE_INVALID:
+    case ErrorCodes.LAYOUT_SCHEDULE_INVALID:
+    case ErrorCodes.LAYOUT_SCHEDULE_NOT_FOUND:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');
