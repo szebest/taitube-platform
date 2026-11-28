@@ -148,3 +148,58 @@ groups:
           summary: "Upload screening holds more than 20% of videos over 24 h ({{ $value | humanizePercentage }})"
           description: "A miscalibrated threshold floods the moderation queue. Compare screening_outcomes_total by reason, then the thresholds in packages/server/env-schema/src/tuning.ts."
           runbook_url: "docs/runbooks/screening-hold-rate.md"
+
+      # 13. WatchPartyDriftHigh
+      - alert: WatchPartyDriftHigh
+        expr: histogram_quantile(0.95, sum(rate(watch_party_drift_seconds_bucket[5m])) by (le)) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Watch party drift p95 exceeds 1 s ({{ $value | humanizeDuration }})"
+          description: "Members report being more than a second off the room clock at the 95th percentile. Check the clock skew between pods and Postgres, fan-out latency and API CPU."
+          runbook_url: "docs/runbooks/watch-party-drift.md"
+
+      # 14. WatchPartyFanoutSlow
+      - alert: WatchPartyFanoutSlow
+        expr: histogram_quantile(0.95, sum(rate(watch_party_fanout_seconds_bucket[5m])) by (le)) > 0.25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Watch party fan-out p95 exceeds 250 ms ({{ $value | humanizeDuration }})"
+          description: "Room frames take over 250 ms from publish to the socket write on a pod. Check Redis pub/sub latency and the pods' event loop."
+          runbook_url: "docs/runbooks/watch-party-fanout.md"
+
+      # 15. WatchPartyPasswordBruteForce
+      - alert: WatchPartyPasswordBruteForce
+        expr: sum(rate(watch_party_joins_total{outcome=~"password_invalid|locked"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Watch party password failures exceed 1 per second ({{ $value | humanize }}/s)"
+          description: "Wrong or locked password joins are sustained. Someone may be guessing room passwords."
+          runbook_url: "docs/runbooks/watch-party-password-abuse.md"
+
+      # 16. WatchPartyGuestFlood
+      - alert: WatchPartyGuestFlood
+        expr: sum(rate(watch_party_joins_total{kind="guest"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Watch party guest joins exceed 10 per second ({{ $value | humanize }}/s)"
+          description: "Guest join attempts are sustained well above normal. Check where they come from and whether the per-IP and per-room limits hold."
+          runbook_url: "docs/runbooks/watch-party-guest-flood.md"
+
+      # 17. WatchPartyClockSkew
+      - alert: WatchPartyClockSkew
+        expr: max(abs(watch_party_clock_skew_seconds)) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "A pod clock is more than 100 ms off Postgres ({{ $value | humanizeDuration }})"
+          description: "The room clock is the pod's wall clock, so skewed pods give members different positions."
+          runbook_url: "docs/runbooks/watch-party-clock-skew.md"

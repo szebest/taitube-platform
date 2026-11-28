@@ -23,6 +23,7 @@ const METRICS_MODULES = [
   `${PIPELINE_METRICS}/src/playback-metrics.ts`,
   `${PIPELINE_METRICS}/src/captions-metrics.ts`,
   `${PIPELINE_METRICS}/src/screening-metrics.ts`,
+  `${PIPELINE_METRICS}/src/watch-party-metrics.ts`,
 ];
 const HISTOGRAM_SERIES = ['_bucket', '_count', '_sum'];
 const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);
@@ -30,6 +31,29 @@ const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);
 /** Every metric `createPipelineMetrics` builds, read from `new Kind({ name })` in its modules. */
 export function registeredMetrics(): RegisteredMetric[] {
   return METRICS_MODULES.flatMap(metricsDeclaredIn);
+}
+
+/** The metric a registry field is built as: `counter('name', ...)`, `gauge('name', ...)` or `new Histogram({ name })`. */
+function declaredName(expression: ts.Expression): string | undefined {
+  if (ts.isCallExpression(expression) && ts.isIdentifier(expression.expression)) {
+    const [first] = expression.arguments;
+    const helper = expression.expression.text;
+    return (helper === 'counter' || helper === 'gauge') && first && ts.isStringLiteral(first)
+      ? first.text
+      : undefined;
+  }
+  if (ts.isNewExpression(expression) && expression.expression.getText() === 'Histogram') {
+    const [options] = expression.arguments ?? [];
+    const name =
+      options && ts.isObjectLiteralExpression(options)
+        ? options.properties.find(
+            (p): p is ts.PropertyAssignment =>
+              ts.isPropertyAssignment(p) && p.name.getText() === 'name'
+          )?.initializer
+        : undefined;
+    return name && ts.isStringLiteral(name) ? name.text : undefined;
+  }
+  return undefined;
 }
 
 function metricsDeclaredIn(module: string): RegisteredMetric[] {
@@ -55,6 +79,16 @@ function metricsDeclaredIn(module: string): RegisteredMetric[] {
         found.push({
           field: node.name.text,
           series: histogram ? HISTOGRAM_SERIES.map((s) => name.text + s) : [name.text],
+        });
+      }
+    }
+    if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
+      const name = declaredName(node.initializer);
+      if (name) {
+        const histogram = ts.isNewExpression(node.initializer);
+        found.push({
+          field: node.name.text,
+          series: histogram ? HISTOGRAM_SERIES.map((s) => name + s) : [name],
         });
       }
     }

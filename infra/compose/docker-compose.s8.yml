@@ -1,0 +1,11 @@
+# infra/compose/docker-compose.s8.yml - the second API replica S8 (make load-s8) spreads room sockets over.
+# It shares Postgres, Redis and MinIO with `api`, so frames cross pods through Redis as they do in a cluster.
+
+services:
+  api-2:
+    extends:
+      file: docker-compose.yml
+      service: api
+    ports: !override
+      - "3001:3000"
+      - "9465:9464"

@@ -10,7 +10,7 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
     expect(content).toContain('name: video_pipeline_alerts');
   });
 
-  it('defines all 12 alerts specified in SDD §13.5', () => {
+  it('defines all 17 alerts specified in SDD §13.5', () => {
     const rules = loadAlertRules();
 
     expect(rules.map((r) => r.alert)).toEqual([
@@ -26,8 +26,13 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
       'WorkerTmpDiskHigh',
       'CaptionsQueueStale',
       'ScreeningHoldRateHigh',
+      'WatchPartyDriftHigh',
+      'WatchPartyFanoutSlow',
+      'WatchPartyPasswordBruteForce',
+      'WatchPartyGuestFlood',
+      'WatchPartyClockSkew',
     ]);
-    expect(rules.length).toBe(12);
+    expect(rules.length).toBe(17);
   });
 
   it('verifies every alert carries a valid runbook_url annotation pointing to an existing runbook', () => {

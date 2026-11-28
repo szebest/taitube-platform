@@ -8,7 +8,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help demo demo-seed demo-reset demo-down demo-status demo-login up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7 deploy deploy-list deploy-plan deploy-status deploy-rollback deploy-logs deploy-preflight deploy-expire-previews secrets-check new-environment
+.PHONY: help demo demo-seed demo-reset demo-down demo-status demo-login up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-s8 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7 deploy deploy-list deploy-plan deploy-status deploy-rollback deploy-logs deploy-preflight deploy-expire-previews secrets-check new-environment
 
 # `make up web`, `make up worker:thumbnail`: the words after up, down or status are its targets, not goals.
 ifneq ($(filter up down status,$(firstword $(MAKECMDGOALS))),)
@@ -240,6 +240,17 @@ chaos-s5: ## Run S5 Dependency Outage chaos test
 
 chaos-s6: ## Run S6 SSE Fan-out load & reconnect test
 	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s6-sse-fanout.js
+
+load-s8: ## Run S8 watch parties over 2 API replicas (make up api observability first; mints 5200 member tokens into tmp/)
+	@mkdir -p tmp/s8-tokens
+	@for first in $$(seq 1 100 5200); do \
+		for n in $$(seq $$first $$((first + 99))); do \
+			( $(DEV_TOKEN) --ttl 4h --sub 00000000-0000-7000-8000-$$(printf '%012d' $$n); echo ) > tmp/s8-tokens/$$(printf '%05d' $$n) & \
+		done; wait; \
+	done
+	@cat tmp/s8-tokens/* | jq -Rsc 'split("\n") | map(select(length > 0))' > tmp/s8-tokens.json
+	docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.s8.yml --profile api up -d api-2
+	@API_URLS="http://localhost:3000,http://localhost:3001" PROM_URL="http://localhost:9090" TOKENS_FILE="$(CURDIR)/tmp/s8-tokens.json" k6 run tests/load/s8-watch-parties.js
 
 chaos-s7: ## Run S7 Soak test (4h duration, configurable with SOAK_DURATION)
 	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s7-soak.js

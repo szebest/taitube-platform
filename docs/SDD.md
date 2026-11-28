@@ -3466,7 +3466,7 @@ flowchart LR
 | `watch_party_invites_total` | counter | `outcome` (`sent`, `folded`, `refused`) | API |
 | `watch_party_clock_skew_seconds` | gauge | none | sweep (pod clock minus Postgres `clock_timestamp()`) |
 
-`watch_party.join`, `watch_party.command`, `watch_party.roles` and `watch_party.seat_upgrade` spans carry the room, the action and the result. A create, close, ownership transfer, seat upgrade, role change or moderation action logs one line with the room and actor keys; refusals count in the metrics and are not logged one by one, and personal controls are never logged. The dashboard, alerts and S8 land with 140c.
+`watch_party.join`, `watch_party.command`, `watch_party.roles` and `watch_party.seat_upgrade` spans carry the room, the action and the result. A create, close, ownership transfer, seat upgrade, role change or moderation action logs one line with the room and actor keys; refusals count in the metrics and are not logged one by one, and personal controls are never logged. The dashboard (`infra/observability/dashboards/watch-parties.json`), the five alerts in §13.5 with a runbook each under `docs/runbooks/` and S8 (§14.2) came with 140c.
 
 #### Open items after 140a
 
@@ -3851,7 +3851,7 @@ One `createLogger` in `@kit/logger` (`packages/platform/server/logger`, pino) wi
 
 ### 13.5 Dashboards & alerts (committed under `infra/observability/`)
 
-The files live under `infra/observability/`. Dashboards (`infra/observability/dashboards/*.json`, provisioned into the compose Grafana, and copied into `infra/k8s/base/dashboards-configmaps.yaml`, which `dashboards.test.ts` holds equal): **Pipeline Overview** (videos by status, throughput in jobs/min, time-to-ready p50/p95 and by duration bucket), **Queues** (per-queue jobs by state, replicas vs outstanding backlog - the autoscaling proof graph, oldest waiting age, wait p95), **Workers** (job duration p50/p95, realtime factor, ffmpeg exits by stage and code, tmp bytes, DLQ entries), **API** (RED, SSE connections and events published, requests in flight, and a Core Web Vitals row: LCP, INP, CLS and TTFB p75 by app and route), **Storage & Cost** (Class A/B ops per hour, projected monthly Class A ops, output bytes, storage op p95, Grafana Cloud active series).
+The files live under `infra/observability/`. Dashboards (`infra/observability/dashboards/*.json`, provisioned into the compose Grafana, and copied into `infra/k8s/base/dashboards-configmaps.yaml`, which `dashboards.test.ts` holds equal): **Pipeline Overview** (videos by status, throughput in jobs/min, time-to-ready p50/p95 and by duration bucket), **Queues** (per-queue jobs by state, replicas vs outstanding backlog - the autoscaling proof graph, oldest waiting age, wait p95), **Workers** (job duration p50/p95, realtime factor, ffmpeg exits by stage and code, tmp bytes, DLQ entries), **API** (RED, SSE connections and events published, requests in flight, and a Core Web Vitals row: LCP, INP, CLS and TTFB p75 by app and route), **Storage & Cost** (Class A/B ops per hour, projected monthly Class A ops, output bytes, storage op p95, Grafana Cloud active series), **Watch parties** (rooms by phase, present members by kind, sockets per pod, joins by outcome, drift and fan-out p50 and p95, commands by result, denials, escalation attempts, chat, clock skew, reports and scheduled starts).
 
 Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Prometheus rule file the compose Prometheus loads; the k8s manifests carry no `PrometheusRule`). Each rule names a runbook under `docs/runbooks/`:
 
@@ -3868,6 +3868,11 @@ Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Promethe
 | `APILatencyHigh` | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.2` | 10m | warning |
 | `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
 | `ScreeningHoldRateHigh` | `sum(increase(screening_outcomes_total{outcome="HOLD"}[24h])) / sum(increase(screening_outcomes_total[24h])) > 0.2`, with at least 20 screened | 1h | warning |
+| `WatchPartyDriftHigh` | `histogram_quantile(0.95, sum(rate(watch_party_drift_seconds_bucket[5m])) by (le)) > 1` | 10m | warning |
+| `WatchPartyFanoutSlow` | `histogram_quantile(0.95, sum(rate(watch_party_fanout_seconds_bucket[5m])) by (le)) > 0.25` | 10m | warning |
+| `WatchPartyPasswordBruteForce` | `sum(rate(watch_party_joins_total{outcome=~"password_invalid\|locked"}[5m])) > 1` | 5m | warning |
+| `WatchPartyGuestFlood` | `sum(rate(watch_party_joins_total{kind="guest"}[5m])) > 10` | 5m | warning |
+| `WatchPartyClockSkew` | `max(abs(watch_party_clock_skew_seconds)) > 0.1` | 5m | warning |
 
 The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes by severity to placeholder webhooks on `http://localhost:5001`; no chat or paging receiver is configured, locally or in cloud.
 
@@ -3893,6 +3898,7 @@ The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes 
 | S5 | **Dependency outage** | Backoff, DLQ, circuit runbook | 30 videos in flight | Storage 503 for 60 s → all videos READY (retries visible); storage down 15 min → jobs land in DLQ after 4 attempts, `SystemicFailure` fires, **replay** from DLQ succeeds; Redis restart → no lost videos (reconciler) | `toxiproxy` in front of MinIO (latency 2 s, 503 injection); `docker restart redis`; `iptables` drop for Neon in cloud |
 | S6 | **SSE fan-out** | Real-time path scales | 5 000 VUs open `/videos/:id/events` across 200 videos while S3 runs | `sse_connections=5000` on one API pod, RSS < 512 MB; publish→receive p95 < 2 s (k6 measures timestamp in event payload); reconnect with `Last-Event-ID` yields no gaps | API pod restart mid-test (clients must reconnect and receive snapshot) |
 | S7 | **Soak** | Leaks, disk hygiene, scheduler drift | 4 h at 1 upload/10 s (60 s source) | Flat RSS trend (< 5 %/h) on API and workers; `/tmp/vp` empty between jobs; `videos_by_status{PROCESSING}` returns to 0; Neon autosuspends between reconciler runs | none |
+| S8 | **Watch parties** | The room socket fans state, chat and role changes out across pods | 200 rooms of 25 members (a fifth guests, 5 000 sockets) over 2 API replicas plus one room of 200; clock ping and chat every 30 s, reaction bursts, a command every 20 s and one `playback.control` flip per room per minute | command to every member's `state` p95 < 250 ms; role change to every member's `roles` p95 < 250 ms; `watch_party_fanout_seconds` p95 < 150 ms; socket errors < 0.1 %; API RSS < 768 MB per pod; no `superseded` or `kicked` frame the script did not cause | none |
 
 ### 14.3 k6 sketch (S1 core)
 
