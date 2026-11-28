@@ -63,6 +63,7 @@ describe('AnalyticsService', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
   });
@@ -152,6 +153,7 @@ describe('AnalyticsService', () => {
           devices: [],
           shareLinks: [],
           experiments: [],
+          playlists: [],
         })
       );
 

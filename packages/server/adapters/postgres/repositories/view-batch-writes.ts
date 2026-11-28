@@ -11,6 +11,7 @@ import {
 } from '@vp/domain';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { applyAccessStats } from './access-stats-writes';
+import { applyPlaylistStats } from './playlist-stats-writes';
 import type { PostgresDatabase } from './types';
 
 const {
@@ -44,6 +45,7 @@ export async function applyViewBatch(
   ];
 
   await applyAccessStats(tx, linkCounts, experimentCounts);
+  await applyPlaylistStats(tx, batch.playlists);
   if (videoIds.length === 0) return { type: 'applied', views: 0 };
 
   const known = await tx.select({ id: v.id }).from(v).where(inArray(v.id, videoIds));

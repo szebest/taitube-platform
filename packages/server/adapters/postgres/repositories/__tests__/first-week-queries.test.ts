@@ -37,6 +37,7 @@ describe('first week queries', () => {
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
 

@@ -199,7 +199,11 @@ describe('apps/client/web: playback session reducer', () => {
     {
       scenario: 'loads the playlist it was opened from',
       state: playing(a),
-      action: open({ video: b, list: 'pl', playlist: { id: 'pl', videos: [other, b] } }),
+      action: open({
+        video: b,
+        list: 'pl',
+        playlist: { id: 'pl', videos: [other, b], segments: {} },
+      }),
       queue: ['other', 'b'],
       current: 'b',
       paused: true,
@@ -207,7 +211,7 @@ describe('apps/client/web: playback session reducer', () => {
     {
       scenario: 'reloads a playlist whose videos changed since it was loaded',
       state: playing(a, { playlistId: 'pl', source: [a.id, b.id, c.id] }),
-      action: open({ video: a, list: 'pl', playlist: { id: 'pl', videos: [a, c] } }),
+      action: open({ video: a, list: 'pl', playlist: { id: 'pl', videos: [a, c], segments: {} } }),
       queue: ['a', 'c'],
       current: 'a',
       paused: true,
@@ -219,7 +223,11 @@ describe('apps/client/web: playback session reducer', () => {
         source: [a.id, b.id, c.id],
         videos: [c, b, a],
       }),
-      action: open({ video: a, list: 'pl', playlist: { id: 'pl', videos: [a, b, c] } }),
+      action: open({
+        video: a,
+        list: 'pl',
+        playlist: { id: 'pl', videos: [a, b, c], segments: {} },
+      }),
       queue: ['c', 'b', 'a'],
       current: 'a',
       paused: true,

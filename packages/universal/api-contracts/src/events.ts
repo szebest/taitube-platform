@@ -169,6 +169,10 @@ const UserEventSchema = z.discriminatedUnion('type', [
       reason: z.string(),
     }),
   }),
+  z.object({
+    type: z.literal('playlist.updated'),
+    payload: z.object({ playlistId: z.uuid() }),
+  }),
 ]) satisfies z.ZodType<UserEvent>;
 
 export type { UserEvent };

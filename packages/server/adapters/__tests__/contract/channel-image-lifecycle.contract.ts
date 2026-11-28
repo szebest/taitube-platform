@@ -81,7 +81,7 @@ export function describeChannelImageLifecycleContract(makeSubject: MakeRepositor
         expect(await eventTypes()).toEqual(['channel.image.failed']);
       });
 
-      it('leaves an upload that already settled as it is,, and null for an unknown one', async () => {
+      it('leaves an upload that already settled as it is, and null for an unknown one', async () => {
         await queue(FIRST);
         expectOk(await ctx.images.commit(FIRST, DEFAULT_URL));
 

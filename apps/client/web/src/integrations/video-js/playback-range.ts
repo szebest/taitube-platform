@@ -7,9 +7,10 @@ export function rangeStartSeconds(range: PlaybackRange): number {
   return range.startMs / MS_PER_SECOND;
 }
 
-export function isOutside(range: PlaybackRange, currentTime: number): boolean {
-  const endSeconds = range.endMs / MS_PER_SECOND;
-  return (
-    currentTime >= endSeconds || currentTime < rangeStartSeconds(range) - SEEK_TOLERANCE_SECONDS
-  );
+export function isBeforeRange(range: PlaybackRange, currentTime: number): boolean {
+  return currentTime < rangeStartSeconds(range) - SEEK_TOLERANCE_SECONDS;
+}
+
+export function isPastRange(range: PlaybackRange, currentTime: number): boolean {
+  return currentTime >= range.endMs / MS_PER_SECOND;
 }

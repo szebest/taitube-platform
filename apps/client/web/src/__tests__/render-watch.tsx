@@ -107,6 +107,17 @@ const watchFromList = (detail: PlaylistView) =>
 /** The watch page of the video, opened from a playlist of it and two more, `Queued <id>` by title. */
 export const renderPlaylistWatch = () => watchFromList(playlistDetail(LIST, PLAYLIST_VIDEOS));
 
+/** The same, where the items at `segmented` (by position) play 0:30 to 1:45 only. */
+export const renderSegmentedPlaylistWatch = (segmented: readonly number[]) => {
+  const detail = playlistDetail(LIST, PLAYLIST_VIDEOS);
+  return watchFromList({
+    ...detail,
+    items: detail.items.map((item, index) =>
+      segmented.includes(index) ? { ...item, startMs: 30_000, endMs: 105_000 } : item
+    ),
+  });
+};
+
 /** The same, opened from a series of the three. */
 export const renderSeriesWatch = () =>
   watchFromList(seriesDetail(LIST, PLAYLIST_VIDEOS, [null, null, null], null));

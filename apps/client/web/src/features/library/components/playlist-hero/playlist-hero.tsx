@@ -1,41 +1,40 @@
-import { VideoThumbnail } from '@kit/components';
 import { Button, Icon } from '@kit/ui';
-import { Link, useNavigate, useRouter } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import type { PlaylistView } from '@vp/api-contracts';
 import { useState } from 'react';
+import { PlaylistCover } from '#app/components/playlist/playlist-cover';
+import { usePlaylistAbilities } from '#app/features/library/hooks/use-playlist-abilities';
+import { coverImages } from '#app/features/library/utils/cover-images';
 import { useCopyLink } from '#app/hooks/use-copy-link';
-import { useDurationText } from '#app/hooks/use-duration-text';
 import { usePlaybackQueue } from '#app/hooks/use-playback-queue';
 import { useT } from '#app/lib/messages';
-import { urlModals } from '#app/lib/url-modal/registry';
 import { PlaylistDetailsForm } from '../playlist-details-form/playlist-details-form';
-
-const STACK_DEPTH = 3;
+import { PlaylistDialogs } from '../playlist-dialogs/playlist-dialogs';
+import { PlaylistHeroActions } from './components/playlist-hero-actions/playlist-hero-actions';
+import { PlaylistHeroSummary } from './components/playlist-hero-summary/playlist-hero-summary';
+import { PlaylistMoreMenu } from './components/playlist-more-menu/playlist-more-menu';
 
 export interface PlaylistHeroProps {
   playlist: PlaylistView;
-  /** The owner's controls: edit the details, change privacy, delete. */
+  /** Whoever may retitle and redescribe it: the owner and its editors. */
   editable: boolean;
 }
 
-function totalDurationMs(playlist: PlaylistView): number {
-  return playlist.items.reduce((total, { video }) => total + (video.durationMs ?? 0), 0);
-}
-
-/** The playlist's cover and summary, with Play all, Shuffle and Share; the owner also gets the edit and delete controls. */
+/**
+ * The playlist's cover and summary, with Play all, Shuffle, Share, Follow, Fork and Pin, and a menu
+ * of everything else the viewer may do with it.
+ */
 export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
+  const [editing, setEditing] = useState(false);
   const { tOr } = useT();
   const router = useRouter();
   const navigate = useNavigate();
   const copyLink = useCopyLink();
   const { repeat, setModes } = usePlaybackQueue();
-  const { open } = urlModals.useUrlModal('delete-playlist');
-  const [editing, setEditing] = useState(false);
-  const { spoken } = useDurationText(totalDurationMs(playlist));
+  const abilities = usePlaylistAbilities(playlist);
 
-  const { id, title, description, visibility, owner, items, nextEpisodeVideoId } = playlist;
+  const { id, items, nextEpisodeVideoId } = playlist;
   const continueIndex = items.findIndex(({ videoId }) => videoId === nextEpisodeVideoId);
-  const cover = items.slice(0, STACK_DEPTH);
   const empty = items.length === 0;
 
   const play = (index: number, shuffle: boolean) => {
@@ -54,50 +53,12 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
 
   return (
     <header className="flex flex-col gap-stack expanded:flex-row">
-      <div aria-hidden="true" className="relative aspect-video w-full max-w-96 shrink-0">
-        {cover
-          .map(({ id: itemId, video }, depth) => (
-            <VideoThumbnail.Root
-              key={itemId}
-              className="absolute inset-x-0 bottom-0 w-full"
-              style={{ transform: `translateY(${-depth * 0.75}rem) scale(${1 - depth * 0.05})` }}
-            >
-              <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
-            </VideoThumbnail.Root>
-          ))
-          .reverse()}
-        {empty && (
-          <VideoThumbnail.Root className="w-full">
-            <VideoThumbnail.Image src={playlist.thumbnailUrl ?? undefined} />
-          </VideoThumbnail.Root>
-        )}
-      </div>
+      <PlaylistCover images={coverImages(playlist)} className="max-w-96 shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col gap-stack">
         {editing ? (
           <PlaylistDetailsForm playlist={playlist} onDone={() => setEditing(false)} />
         ) : (
-          <>
-            <h1 className="m-0 text-headline">{title}</h1>
-            {owner && (
-              <Link
-                to="/channel/$channelId"
-                params={{ channelId: owner.id }}
-                className="text-label"
-              >
-                {tOr('library.playlistOwner', { name: owner.displayName }, '')}
-              </Link>
-            )}
-            <p className="m-0 text-caption text-fg-muted">
-              {tOr(
-                'library.playlistDuration',
-                { count: playlist.videoCount, duration: spoken ?? '' },
-                ''
-              )}
-              {' · '}
-              {tOr('videos.visibility', { visibility }, '')}
-            </p>
-            {description && <p className="m-0 whitespace-pre-line text-body">{description}</p>}
-          </>
+          <PlaylistHeroSummary playlist={playlist} seesCollaborators={abilities.seeCollaborators} />
         )}
         <div className="flex flex-wrap gap-inline">
           {continueIndex >= 0 && (
@@ -129,20 +90,15 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
             <Icon name="share" />
             {tOr('library.sharePlaylist', {}, '')}
           </Button>
-          {editable && !editing && (
-            <>
-              <Button variant="ghost" onClick={() => setEditing(true)}>
-                <Icon name="edit" />
-                {tOr('library.editPlaylist', {}, '')}
-              </Button>
-              <Button variant="ghost" tone="danger" onClick={() => open({ playlistId: id })}>
-                <Icon name="trash" />
-                {tOr('library.deletePlaylist', {}, '')}
-              </Button>
-            </>
-          )}
+          <PlaylistHeroActions playlist={playlist} abilities={abilities} />
+          <PlaylistMoreMenu
+            playlist={playlist}
+            abilities={abilities}
+            onEdit={editable && !editing ? () => setEditing(true) : undefined}
+          />
         </div>
       </div>
+      <PlaylistDialogs playlist={playlist} abilities={abilities} />
     </header>
   );
 }

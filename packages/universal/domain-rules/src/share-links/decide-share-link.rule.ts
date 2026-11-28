@@ -5,6 +5,7 @@ import {
   SHARE_LINK_LABEL_MAX_LENGTH,
   type ShareLink,
   type ShareLinkExpiry,
+  type ShareLinkTargetType,
   shareLinkExpiresAt,
   shareLinkState,
 } from '@vp/domain';
@@ -23,8 +24,14 @@ export interface ShareLinkInput {
   readonly expiresIn: ShareLinkExpiry;
 }
 
+/** What a link opens: one video or one playlist. */
+export interface ShareLinkTarget {
+  readonly targetType: ShareLinkTargetType;
+  readonly targetId: string;
+}
+
 export interface ShareLinkContext {
-  readonly videoId: string;
+  readonly target: ShareLinkTarget;
   readonly active: number;
   readonly now: Date;
 }
@@ -43,7 +50,7 @@ export function decideShareLink(
   if (!withinLength(label, { minLength: 0, maxLength: SHARE_LINK_LABEL_MAX_LENGTH })) {
     return err(invalidShareLink(`A label is at most ${SHARE_LINK_LABEL_MAX_LENGTH} characters`));
   }
-  if (context.active >= MAX_ACTIVE_SHARE_LINKS) return err(shareLinkLimit(context.videoId));
+  if (context.active >= MAX_ACTIVE_SHARE_LINKS) return err(shareLinkLimit(context.target));
   return ok({
     label: label === '' ? null : label,
     expiresAt: shareLinkExpiresAt(input.expiresIn, context.now),
@@ -51,15 +58,18 @@ export function decideShareLink(
 }
 
 /**
- * What a token proves about one video. A token that names nothing, or names another video, proves
+ * What a token proves about one target. A token that names nothing, or names another target, proves
  * nothing and is not an error: the read decides as it would without it, so a guessed token learns
- * nothing. A dead link of this video is `SHARE_LINK_EXPIRED`, which the page says in words.
+ * nothing. A dead link of this target is `SHARE_LINK_EXPIRED`, which the page says in words.
  */
 export function decideShareLinkUse(
   link: ShareLink | null,
-  context: { readonly videoId: string; readonly now: Date }
+  context: { readonly target: ShareLinkTarget; readonly now: Date }
 ): Result<ShareGrant | null, ShareLinkExpired> {
-  if (!link || link.targetType !== 'video' || link.targetId !== context.videoId) return ok(null);
-  if (shareLinkState(link, context.now) !== 'active') return err(shareLinkExpired(context.videoId));
-  return ok({ targetType: 'video', targetId: link.targetId });
+  const { target, now } = context;
+  if (!link || link.targetType !== target.targetType || link.targetId !== target.targetId) {
+    return ok(null);
+  }
+  if (shareLinkState(link, now) !== 'active') return err(shareLinkExpired(target));
+  return ok({ targetType: link.targetType, targetId: link.targetId });
 }

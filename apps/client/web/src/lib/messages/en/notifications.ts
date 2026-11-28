@@ -60,4 +60,6 @@ export const notifications = {
   }),
   levelLabel: dt('Notifications from {name}'),
   levelFailed: dt('Could not save the notifications from this channel'),
+  playlistInvite: dt('{name} invited you to work on the playlist {title}'),
+  playlistUpdate: dt('{name} changed your playlist {title}'),
 } as const;

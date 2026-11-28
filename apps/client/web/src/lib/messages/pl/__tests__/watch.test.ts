@@ -18,6 +18,7 @@ describe('apps/client/web: pl watch', () => {
   it.each([
     { key: 'watch.shareStartAt', args: { time: '1:30' }, expected: 'Zacznij od 1:30' },
     { key: 'watch.queuePosition', args: { position: 2, count: 12 }, expected: '2 / 12' },
+    { key: 'watch.queueSegment', args: { start: '0:30', end: '1:45' }, expected: '0:30 do 1:45' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });

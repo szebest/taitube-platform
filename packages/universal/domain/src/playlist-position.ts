@@ -2,6 +2,7 @@
  * Items keep a sparse integer sort key, a gap apart, so a drag-and-drop move rewrites the moved
  * row alone: it takes the midpoint between its new neighbours. Only when two neighbours sit
  * adjacent, or a key would leave the integer column, is the whole playlist respaced.
+ * @internal
  */
 export const POSITION_GAP = 1024;
 
@@ -27,7 +28,10 @@ function inRange(position: number): boolean {
   return position >= MIN_POSITION && position <= MAX_POSITION;
 }
 
-/** Null when the slot after `last` would overflow; renumber first, then append. */
+/**
+ * Null when the slot after `last` would overflow; renumber first, then append.
+ * @internal
+ */
 export function appendPosition(last: number | null): number | null {
   if (last === null) return 0;
   const next = last + POSITION_GAP;

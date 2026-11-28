@@ -32,7 +32,7 @@ export function PlaybackHost() {
   const watching = useIsWatching();
   const ownsPlayer = useOwnsPlayer();
   const { next, previous, hasNext, hasPrevious } = useQueueNavigation();
-  const { current, paused, repeat } = session;
+  const { current, paused, repeat, segments } = session;
 
   useEffect(() => store.track(slot), [store, slot]);
 
@@ -56,6 +56,7 @@ export function PlaybackHost() {
   }
 
   const { video, startTime, shareToken } = current;
+  const range = segments[video.id];
   const state = rect === undefined ? 'hidden' : watching ? 'docked' : 'mini';
 
   return (
@@ -79,6 +80,7 @@ export function PlaybackHost() {
             posterUrl={video.posterUrl}
             title={video.title}
             startTime={startTime}
+            range={range}
             control={{ paused, muted: false }}
             loop={repeat === 'one'}
             layout={watching ? 'landscape' : 'fill'}

@@ -1,29 +1,62 @@
 import { EmptyLibraryIllustration, EmptyState } from '@kit/components';
-import { DropdownMenu, Icon, Progress, SortableList } from '@kit/ui';
+import { Callout, SortableList } from '@kit/ui';
 import type { PlaylistView } from '@vp/api-contracts';
-import { useRemovePlaylistItem } from '#app/features/library/hooks/use-remove-playlist-item';
+import { canManagePlaylistItems, type PlaylistResource } from '@vp/permissions';
+import { useCan } from '@vp/permissions-react';
+import { useState } from 'react';
+import { useHasCollaborators } from '#app/features/library/hooks/use-has-collaborators';
 import { useReorderPlaylist } from '#app/features/library/hooks/use-reorder-playlist';
-import { type PlaylistEdge, moveToEdge } from '#app/features/library/utils/playlist-order';
+import {
+  buildPlaylistRows,
+  expandFoldedOrder,
+  unfoldedRows,
+} from '#app/features/library/utils/playlist-rows';
 import { useT } from '#app/lib/messages';
-import { LibraryVideoRow } from '../library-video-row/library-video-row';
+import { PlaylistSectionEntry } from './components/playlist-section-entry/playlist-section-entry';
+import { PlaylistVideoEntry } from './components/playlist-video-entry/playlist-video-entry';
 
 export interface PlaylistItemsProps {
   playlist: PlaylistView;
-  /** Drag, reorder and the item menu are the owner's. */
-  editable: boolean;
+  /** The playlist with the viewer's seat on it, for the permission rules. */
+  access: PlaylistResource;
+  /** The item ids picked for a bulk action, or null while not selecting. */
+  selection: readonly string[] | null;
+  onSelectionChange: (selection: readonly string[]) => void;
 }
 
-/** The playlist's videos in order; the owner drags them, or moves them from the item menu. */
-export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
+/** The playlist's videos and sections in order: a manager drags them, and a section folds the videos under it. */
+export function PlaylistItems({
+  playlist,
+  access,
+  selection,
+  onSelectionChange,
+}: PlaylistItemsProps) {
   const { tOr } = useT();
+  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const reorder = useReorderPlaylist(playlist.id);
-  const remove = useRemovePlaylistItem(playlist.id);
+  const showAdder = useHasCollaborators(playlist);
+  const smart = playlist.rules !== null;
+  const arrangeable = useCan(canManagePlaylistItems, { playlist: access }) && !smart;
 
-  const ids = playlist.items.map(({ id }) => id);
-  const series = playlist.kind === 'series';
-  const moveTo = (id: string, edge: PlaylistEdge) => reorder.mutate(moveToEdge(ids, id, edge));
+  const rows = buildPlaylistRows(playlist);
+  const shown = unfoldedRows(rows, folded);
+  const order = rows.map(({ id }) => id);
 
-  if (ids.length === 0) {
+  const fold = (sectionId: string, next: boolean) =>
+    setFolded((current) =>
+      next
+        ? new Set([...current, sectionId])
+        : new Set([...current].filter((id) => id !== sectionId))
+    );
+
+  const select = (itemId: string, selected: boolean) =>
+    onSelectionChange(
+      selected
+        ? [...(selection ?? []), itemId]
+        : (selection ?? []).filter((candidate) => candidate !== itemId)
+    );
+
+  if (rows.length === 0) {
     return (
       <EmptyState.Root size="section" role="status">
         <EmptyState.Illustration>
@@ -35,60 +68,50 @@ export function PlaylistItems({ playlist, editable }: PlaylistItemsProps) {
   }
 
   return (
-    <SortableList.Root
-      items={ids}
-      onReorder={(next) => reorder.mutate([...next])}
-      aria-label={tOr('library.playlistItems', { title: playlist.title }, '')}
-      aria-disabled={!editable || undefined}
-      className="gap-stack"
-    >
-      {playlist.items.map(({ id, videoId, video, addedAt, episode, progress }, index) => (
-        <SortableList.Item
-          key={id}
-          id={id}
-          aria-label={video.title ?? tOr('browse.untitled', {}, '')}
-          className="items-start"
-        >
-          <SortableList.Handle />
-          <div className="min-w-0 flex-1">
-            {series && episode !== null && (
-              <p className="m-0 text-overline text-fg-muted uppercase">
-                {tOr('library.episode', { number: episode }, '')}
-              </p>
-            )}
-            <LibraryVideoRow
-              video={video}
-              at={addedAt}
-              playlist={{ id: playlist.id, index }}
-              actions={
-                editable ? (
-                  <>
-                    <DropdownMenu.Item onSelect={() => moveTo(id, 'top')}>
-                      <Icon name="sort" />
-                      {tOr('library.moveToTop', {}, '')}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => moveTo(id, 'bottom')}>
-                      <Icon name="sort" />
-                      {tOr('library.moveToBottom', {}, '')}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => remove.mutate(videoId)}>
-                      <Icon name="trash" />
-                      {tOr('library.removeFromPlaylist', {}, '')}
-                    </DropdownMenu.Item>
-                  </>
-                ) : undefined
+    <div className="flex flex-col gap-stack">
+      {smart && (
+        <Callout.Root tone="info">
+          <Callout.Body>{tOr('playlistEdit.smartReadOnly', {}, '')}</Callout.Body>
+        </Callout.Root>
+      )}
+      <SortableList.Root
+        items={shown.map(({ id }) => id)}
+        onReorder={(next) => reorder.mutate(expandFoldedOrder(next, rows, folded))}
+        aria-label={tOr('library.playlistItems', { title: playlist.title }, '')}
+        aria-disabled={!arrangeable || selection !== null || undefined}
+        className="gap-stack"
+      >
+        {shown.map((row) =>
+          row.kind === 'section' ? (
+            <PlaylistSectionEntry
+              key={row.id}
+              playlistId={playlist.id}
+              access={access}
+              section={row.section}
+              count={row.count}
+              folded={folded.has(row.id)}
+              onFoldedChange={(next) => fold(row.id, next)}
+              editable={!smart}
+            />
+          ) : (
+            <PlaylistVideoEntry
+              key={row.id}
+              playlist={playlist}
+              access={access}
+              item={row.item}
+              order={order}
+              arrangeable={arrangeable}
+              showAdder={showAdder}
+              selection={
+                selection && {
+                  selected: selection.includes(row.id),
+                  onSelectedChange: (selected) => select(row.id, selected),
+                }
               }
             />
-            {series && progress !== null && (
-              <Progress
-                size="sm"
-                value={progress}
-                aria-label={tOr('library.episodeWatched', { percent: progress }, '')}
-              />
-            )}
-          </div>
-        </SortableList.Item>
-      ))}
-    </SortableList.Root>
+          )
+        )}
+      </SortableList.Root>
+    </div>
   );
 }

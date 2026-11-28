@@ -52,7 +52,11 @@ describe('public channel route', () => {
         visibility,
       });
     }
-    await repositories.playlists.addItem(PUBLIC_PLAYLIST, { id: VIDEO_ITEM, videoId: VIDEO });
+    await repositories.playlists.addItem(
+      PUBLIC_PLAYLIST,
+      { id: VIDEO_ITEM, videoId: VIDEO, addedBy: CREATOR },
+      CREATOR
+    );
   });
 
   afterEach(async () => {

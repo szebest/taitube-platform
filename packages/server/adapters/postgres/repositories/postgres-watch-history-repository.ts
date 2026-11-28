@@ -7,6 +7,7 @@ import type { UserContext } from '@vp/permissions';
 import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
+import { removeWatched } from './auto-remove-watched';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -22,24 +23,28 @@ const progressColumns = {
 export class PostgresWatchHistoryRepository implements WatchHistoryRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
 
+  /** A write that lands watched takes the video out of the owner's lists that ask, in its transaction. */
   async record(progress: NewWatchProgress): Promise<Result<void, DatabaseUnavailable>> {
-    const written = await fromPromise(
+    return await fromPromise(
       () =>
-        this.db
-          .insert(wh)
-          .values(progress)
-          .onConflictDoUpdate({
-            target: [wh.userId, wh.videoId],
-            set: {
-              progressSeconds: sql`excluded.progress_seconds`,
-              durationSeconds: sql`excluded.duration_seconds`,
-              watchedAt: sql`excluded.watched_at`,
-            },
-            setWhere: sql`${wh.watchedAt} <= excluded.watched_at`,
-          }),
+        this.db.transaction(async (tx) => {
+          const [landed] = await tx
+            .insert(wh)
+            .values(progress)
+            .onConflictDoUpdate({
+              target: [wh.userId, wh.videoId],
+              set: {
+                progressSeconds: sql`excluded.progress_seconds`,
+                durationSeconds: sql`excluded.duration_seconds`,
+                watchedAt: sql`excluded.watched_at`,
+              },
+              setWhere: sql`${wh.watchedAt} <= excluded.watched_at`,
+            })
+            .returning(progressColumns);
+          if (landed) await removeWatched(tx, progress.userId, landed);
+        }),
       databaseUnavailable.during('recordWatchProgress')
     );
-    return map(written, () => undefined);
   }
 
   async find(

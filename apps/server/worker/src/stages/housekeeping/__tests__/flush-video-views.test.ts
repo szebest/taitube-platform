@@ -102,7 +102,7 @@ describe('housekeeping: flush-video-views', () => {
       createdAt: new Date(now),
     };
     expectOk(await repositories.shareLinks.create(link, 50));
-    await viewBuffer.recordShareLinkOpen({ videoId, linkId, viewerKey: 'viewer-1', viewDate: DAY });
+    await viewBuffer.recordShareLinkOpen({ ...link, linkId, viewerKey: 'viewer-1', viewDate: DAY });
     await viewBuffer.recordPlayback({
       videoId,
       sessionId: 'viewer-1',

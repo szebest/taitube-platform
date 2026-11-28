@@ -28,7 +28,11 @@ import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PickRepositoryPort } from './pick-repository';
+import type { PlaylistActivityRepositoryPort } from './playlist-activity-repository';
+import type { PlaylistCollaboratorRepositoryPort } from './playlist-collaborator-repository';
+import type { PlaylistLibraryRepositoryPort } from './playlist-library-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
+import type { PlaylistStatsRepositoryPort } from './playlist-stats-repository';
 import type { PostEngagementRepositoryPort } from './post-engagement-repository';
 import type { RecommendationFeedbackRepositoryPort } from './recommendation-feedback-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
@@ -39,6 +43,7 @@ import type { ScreeningRepository } from './screening-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { ShareLinkRepository } from './share-link-repository';
+import type { SmartPlaylistRepositoryPort } from './smart-playlist-repository';
 import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { TrustedCommenterRepositoryPort } from './trusted-commenter-repository';
@@ -99,6 +104,8 @@ export interface Repositories {
   trustedCommenters: TrustedCommenterRepositoryPort;
   savedReplies: SavedReplyRepositoryPort;
   playlists: PlaylistRepositoryPort;
+  playlistCollaborators: PlaylistCollaboratorRepositoryPort;
+  playlistActivity: PlaylistActivityRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;
   notifications: NotificationRepositoryPort;
@@ -138,4 +145,7 @@ export interface Repositories {
   watchPartyInviteLinks: WatchPartyInviteLinkRepositoryPort;
   watchPartyControls: WatchPartyPersonalControlRepositoryPort;
   watchPartyHousekeeping: WatchPartyHousekeepingRepositoryPort;
+  smartPlaylists: SmartPlaylistRepositoryPort;
+  playlistLibrary: PlaylistLibraryRepositoryPort;
+  playlistStats: PlaylistStatsRepositoryPort;
 }

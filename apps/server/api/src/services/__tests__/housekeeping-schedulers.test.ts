@@ -37,6 +37,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'purge-exports',
       'purge-generations',
       'purge-handle-history',
+      'purge-playlist-activity',
       'purge-screening-evidence',
       'purge-search-history',
       'reconcile-captions',

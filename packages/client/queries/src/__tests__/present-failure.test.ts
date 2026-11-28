@@ -18,6 +18,8 @@ describe('@vp/queries: present', () => {
     { code: ErrorCodes.MODERATION_NOT_APPLICABLE, kind: 'generic' },
     { code: ErrorCodes.SAVED_REPLY_NOT_FOUND, kind: 'not-found' },
     { code: ErrorCodes.SAVED_REPLY_LIMIT, kind: 'generic' },
+    { code: ErrorCodes.PLAYLIST_INVITE_INVALID, kind: 'forbidden' },
+    { code: ErrorCodes.PLAYLIST_COLLABORATOR_NOT_FOUND, kind: 'not-found' },
   ])('shows $code as a $kind failure', ({ code, kind }) => {
     expect(present({ code }).kind).toBe(kind);
   });

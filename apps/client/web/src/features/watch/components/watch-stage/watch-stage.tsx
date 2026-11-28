@@ -35,6 +35,7 @@ export function WatchStage({ video, range }: WatchStageProps) {
                   posterUrl={posterUrl}
                   title={title}
                   range={range}
+                  loop
                 />
               ) : (
                 <PlayerSlot />

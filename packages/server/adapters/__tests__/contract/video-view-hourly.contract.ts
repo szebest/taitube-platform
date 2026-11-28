@@ -45,6 +45,7 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
           devices: [],
           shareLinks: [],
           experiments: [],
+          playlists: [],
         })
       );
 
@@ -67,6 +68,7 @@ export function describeVideoViewHourlyContract(makeSubject: MakeRepositoriesSub
         devices: [],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       };
       expectOk(await views.applyBatch(batch));
       expectOk(await views.applyBatch(batch));

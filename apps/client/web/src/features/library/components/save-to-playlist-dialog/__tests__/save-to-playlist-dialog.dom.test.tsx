@@ -114,6 +114,17 @@ describe('apps/client/web: SaveToPlaylistDialog', () => {
     expect(within(dialog).getByRole('checkbox', { name: 'Road trips' })).not.toBeChecked();
   });
 
+  it('holds a smart playlist out, since it picks its own videos', async () => {
+    const { dialog } = await openDialog(new Set(), [
+      mockEndpoint(listMyPlaylists, () =>
+        HttpResponse.json({ items: [ownedPlaylist(2, { title: 'Fresh', isSmart: true })] })
+      ),
+    ]);
+
+    expect(await within(dialog).findByRole('checkbox', { name: /Fresh/ })).toBeDisabled();
+    expect(within(dialog).getByText('Smart: it picks its own videos')).toBeInTheDocument();
+  });
+
   it('creates a playlist that holds the video, from the dialog', async () => {
     const bodies: unknown[] = [];
     const held = new Set<string>();

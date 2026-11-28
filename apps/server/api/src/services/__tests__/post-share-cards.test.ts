@@ -118,7 +118,13 @@ describe('apps/server/api/services: post share cards', () => {
   it('counts the videos of a public playlist', async () => {
     const { shareDeps, repositories, playlist, video } = await deps();
     const id = await playlist();
-    expectOk(await repositories.playlists.addItem(id, { id: ABSENT, videoId: await video() }));
+    expectOk(
+      await repositories.playlists.addItem(
+        id,
+        { id: ABSENT, videoId: await video(), addedBy: null },
+        ABSENT
+      )
+    );
     const source = expectOk(await loadShareSource(shareDeps, { type: 'playlist', id }));
 
     expect(shareCardOf(PLAYLIST_SHARE(id), source, CDN)).toEqual({

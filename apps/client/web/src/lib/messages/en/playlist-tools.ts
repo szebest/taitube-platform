@@ -1,0 +1,141 @@
+import { dt } from '@vp/shared-messages';
+
+export const playlistTools = {
+  shareLinksTitle: dt('Share links'),
+  shareLinksDescription: dt(
+    'A share link lets whoever holds it open this playlist, whatever its visibility. Each video still needs its own right to be watched.'
+  ),
+  label: dt('Label'),
+  labelHint: dt('Optional, up to {max:number} characters. Only you see it.'),
+  labelTooLong: dt('Use a label of up to {max:number} characters'),
+  expiresAfter: dt('Expires after'),
+  expiry: dt('{expiry:enum}', {
+    enum: {
+      expiry: {
+        '1h': '1 hour',
+        '24h': '24 hours',
+        '7d': '7 days',
+        '30d': '30 days',
+        never: 'Never',
+      },
+    },
+  }),
+  createLink: dt('Create link'),
+  linkCreated: dt('Share link created'),
+  linksLabel: dt('Share links of this playlist'),
+  linksEmpty: dt('No share links yet'),
+  linksLoadFailed: dt('The share links could not be loaded'),
+  noLabel: dt('No label'),
+  linkState: dt('{state:enum}', {
+    enum: { state: { active: 'Active', expired: 'Expired', revoked: 'Revoked' } },
+  }),
+  opens: dt('{count:plural}', { plural: { count: { one: '{?} open', other: '{?} opens' } } }),
+  neverExpires: dt('Never expires'),
+  expires: dt('Expires {date}'),
+  copyFor: dt('Copy the link {label}'),
+  copy: dt('Copy link'),
+  revokeFor: dt('Revoke the link {label}'),
+  revoke: dt('Revoke'),
+  linkRevoked: dt('Share link revoked'),
+  statsTitle: dt('Playlist stats'),
+  statsDescription: dt('Only you see these. The last few minutes show after the next count.'),
+  rangeLabel: dt('Range'),
+  range: dt('{range:enum}', {
+    enum: { range: { '7d': '7 days', '30d': '30 days', '90d': '90 days' } },
+  }),
+  measure: dt('{metric:enum}', {
+    enum: { metric: { opens: 'Page opens', plays: 'Plays', follows: 'Follows', forks: 'Forks' } },
+  }),
+  topTitle: dt('Most played'),
+  topEmpty: dt('No plays from this playlist yet'),
+  plays: dt('{count:plural}', { plural: { count: { one: '{?} play', other: '{?} plays' } } }),
+  settingsTitle: dt('Playlist settings'),
+  autoRemove: dt('Remove videos once watched'),
+  autoRemoveHint: dt('A video you finish leaves this list. The activity can put it back.'),
+  autoRemoveBlocked: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        collaborators: 'Not available while others work on this playlist',
+        smart: 'A smart playlist picks its videos, so nothing is removed',
+      },
+    },
+  }),
+  coverLabel: dt('Cover'),
+  coverMode: dt('{mode:enum}', {
+    enum: {
+      mode: { auto: 'The first videos', item: 'One of its videos', custom: 'Custom image' },
+    },
+  }),
+  coverVideo: dt('Cover video'),
+  coverDrop: dt('Drop a JPEG, PNG or WebP image here, or choose one'),
+  coverHint: dt('At least 640 x 360 px and 2 MB at most; the middle 16:9 of it becomes the cover.'),
+  coverSelected: dt('{count:plural}', {
+    plural: { count: { one: 'Selected image:', other: 'Selected images:' } },
+  }),
+  coverTooSmall: dt('This image is too small: it must be at least {minWidth} x {minHeight} px.'),
+  coverUnreadable: dt('This file could not be read as an image.'),
+  coverUploading: dt('Preparing your cover'),
+  coverUploadFailed: dt('That image could not become the cover. Try another one.'),
+  saved: dt('Settings saved'),
+  rulesTitle: dt('Edit rules'),
+  rulesDescription: dt('The playlist picks its videos from these rules every time it is opened.'),
+  rulesLabel: dt('Rules'),
+  rulesSaved: dt('Rules saved'),
+  saveRules: dt('Save rules'),
+  kindLabel: dt('Type'),
+  kind: dt('{kind:enum}', { enum: { kind: { playlist: 'Playlist', smart: 'Smart playlist' } } }),
+  matchLabel: dt('Match'),
+  match: dt('{mode:enum}', {
+    enum: { mode: { all: 'All conditions', any: 'Any condition' } },
+  }),
+  noConditions: dt('With no conditions it holds the newest public videos.'),
+  addCondition: dt('Add condition'),
+  conditionLabel: dt('Condition {position:number}'),
+  removeCondition: dt('Remove condition {position:number}'),
+  fieldLabel: dt('Field of condition {position:number}'),
+  field: dt('{field:enum}', {
+    enum: {
+      field: {
+        channel: 'Channel',
+        tag: 'Tag',
+        category: 'Category',
+        duration: 'Duration',
+        format: 'Format',
+        newer_than: 'Newer than',
+        unwatched: 'Unwatched',
+      },
+    },
+  }),
+  channelsLabel: dt('Channels, up to {max:number}'),
+  removeChannel: dt('Remove {name}'),
+  tagsLabel: dt('Tags, up to {max:number}'),
+  categoryLabel: dt('Category'),
+  durationOpLabel: dt('Duration is'),
+  durationOp: dt('{mode:enum}', {
+    enum: { mode: { under: 'Under', over: 'Over', between: 'Between' } },
+  }),
+  minutesLabel: dt('Minutes'),
+  minutes: dt('{count:plural}', {
+    plural: { count: { one: '{?} minute', other: '{?} minutes' } },
+  }),
+  minutesRange: dt('{min:number} to {max:number} minutes'),
+  formatLabel: dt('Format'),
+  format: dt('{format:enum}', { enum: { format: { long: 'Long videos', short: 'Shorts' } } }),
+  daysLabel: dt('Days'),
+  days: dt('{count:plural}', { plural: { count: { one: '{?} day', other: '{?} days' } } }),
+  unwatchedHint: dt('Videos you have not finished'),
+  sortLabel: dt('Sort'),
+  sort: dt('{sort:enum}', {
+    enum: {
+      sort: {
+        newest: 'Newest first',
+        oldest: 'Oldest first',
+        popular: 'Most viewed',
+        shortest: 'Shortest first',
+        longest: 'Longest first',
+      },
+    },
+  }),
+  limitLabel: dt('Most videos'),
+  limit: dt('{count:plural}', { plural: { count: { one: '{?} video', other: '{?} videos' } } }),
+} as const;

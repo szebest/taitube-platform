@@ -9,7 +9,7 @@ import { PlaybackSync } from './components/playback-sync';
 import { QualityReport } from './components/quality-report';
 import { StartAtDefaultQuality } from './components/start-at-default-quality';
 import { CaptionsContext, useCaptions } from './hooks/use-captions';
-import { isOutside, rangeStartSeconds } from './playback-range';
+import { useRangePlayback } from './hooks/use-range-playback';
 import { VideoPlayer } from './player';
 
 export { LiveEdgeButton } from './components/live-edge-button';
@@ -46,12 +46,10 @@ export function VideoJsEngine({
   const channel = useOfferedPlayerChannel();
   const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);
 
-  const startAt = range ? rangeStartSeconds(range) : startTime;
+  const rangePlayback = useRangePlayback({ range, loop, startTime, onEnded });
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (startAt) {
-      currentTarget.currentTime = startAt;
-    }
+    rangePlayback.onLoadedMetadata(currentTarget);
 
     const speed = control?.speed ?? defaults?.speed;
     if (speed !== undefined) {
@@ -68,18 +66,15 @@ export function VideoJsEngine({
 
   const handleTimeUpdate = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     const { currentTime, duration } = currentTarget;
-    if (range && isOutside(range, currentTime)) {
-      currentTarget.currentTime = rangeStartSeconds(range);
-    }
+    rangePlayback.onTimeUpdate(currentTarget);
     onTimeUpdate?.({ currentTime, duration });
   };
 
   const handleEnded = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (range) {
-      currentTarget.currentTime = rangeStartSeconds(range);
-      void currentTarget.play();
+    if (rangePlayback.onVideoEnded(currentTarget)) {
       return;
     }
+
     onEnded?.({ duration: currentTarget.duration });
     channel?.end();
   };
@@ -121,9 +116,13 @@ export function VideoJsEngine({
             autoPlay={control && !control.paused}
             className={vertical ? 'size-full object-cover' : 'size-full object-contain'}
             onLoadedMetadata={handleLoadedMetadata}
-            onPlaying={({ currentTarget: { currentTime, duration } }) =>
-              onPlay?.({ currentTime, duration })
-            }
+            onPlaying={({ currentTarget }) => {
+              rangePlayback.onPlaying(currentTarget);
+              onPlay?.({
+                currentTime: currentTarget.currentTime,
+                duration: currentTarget.duration,
+              });
+            }}
             onPause={({ currentTarget: { currentTime, duration } }) =>
               onPause?.({ currentTime, duration })
             }

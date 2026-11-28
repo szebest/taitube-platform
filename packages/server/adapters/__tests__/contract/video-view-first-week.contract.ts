@@ -50,6 +50,7 @@ export function describeVideoViewFirstWeekContract(makeSubject: MakeRepositories
           devices: [],
           shareLinks: [],
           experiments: [],
+          playlists: [],
         })
       );
 

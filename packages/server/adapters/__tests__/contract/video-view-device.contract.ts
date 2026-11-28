@@ -50,6 +50,7 @@ export function describeVideoViewDeviceContract(makeSubject: MakeRepositoriesSub
           devices,
           shareLinks: [],
           experiments: [],
+          playlists: [],
         })
       );
 
@@ -85,6 +86,7 @@ export function describeVideoViewDeviceContract(makeSubject: MakeRepositoriesSub
         devices: [device(VIDEO_IDS.a, DAY, 'mobile', 2)],
         shareLinks: [],
         experiments: [],
+        playlists: [],
       };
 
       expectOk(await views.applyBatch(batch));

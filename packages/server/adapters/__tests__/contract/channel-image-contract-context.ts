@@ -28,9 +28,15 @@ const POST_DONE: ChannelImageCompletion = {
   height: 2000,
   crops: { kind: 'post-image', crop: { x: 0, y: 0, width: 3000, height: 2000 } },
 };
+const PLAYLIST_COVER_DONE: ChannelImageCompletion = {
+  width: 1600,
+  height: 900,
+  crops: { kind: 'playlist-cover', crop: { x: 0, y: 0, width: 1600, height: 900 } },
+};
 const COMPLETIONS: Record<ChannelImageKind, ChannelImageCompletion> = {
   avatar: AVATAR_DONE,
   banner: BANNER_DONE,
+  'playlist-cover': PLAYLIST_COVER_DONE,
   'post-image': POST_DONE,
 };
 

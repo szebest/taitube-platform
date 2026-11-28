@@ -27,7 +27,11 @@ import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repos
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
+import type { InMemoryPlaylistActivityRepository } from './in-memory-playlist-activity-repository';
+import type { InMemoryPlaylistCollaboratorRepository } from './in-memory-playlist-collaborator-repository';
+import type { InMemoryPlaylistLibraryRepository } from './in-memory-playlist-library-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import type { InMemoryPlaylistStatsRepository } from './in-memory-playlist-stats-repository';
 import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
@@ -38,6 +42,7 @@ import type { InMemoryScreeningRepository } from './in-memory-screening-reposito
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';
 import type { InMemoryShareLinkRepository } from './in-memory-share-link-repository';
+import type { InMemorySmartPlaylistRepository } from './in-memory-smart-playlist-repository';
 import type { InMemoryStepRepository } from './in-memory-step-repository';
 import type { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 import type { InMemoryTrustedCommenterRepository } from './in-memory-trusted-commenter-repository';
@@ -90,6 +95,8 @@ export const Repo = {
   commentModeration: token<InMemoryCommentModerationRepository>('commentModeration'),
   commentReports: token<InMemoryCommentReportRepository>('commentReports'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
+  playlistCollaborators: token<InMemoryPlaylistCollaboratorRepository>('playlistCollaborators'),
+  playlistActivity: token<InMemoryPlaylistActivityRepository>('playlistActivity'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
   userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
   notifications: token<InMemoryNotificationRepository>('notifications'),
@@ -119,4 +126,7 @@ export const Repo = {
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),
   liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),
+  smartPlaylists: token<InMemorySmartPlaylistRepository>('smartPlaylists'),
+  playlistLibrary: token<InMemoryPlaylistLibraryRepository>('playlistLibrary'),
+  playlistStats: token<InMemoryPlaylistStatsRepository>('playlistStats'),
 } as const;

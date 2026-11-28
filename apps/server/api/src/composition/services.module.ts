@@ -10,7 +10,6 @@ import {
   AnalyticsService,
   CategoryService,
   DlqService,
-  PlaylistService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -35,6 +34,7 @@ import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
+import { registerPlaylistServices } from './playlist.module';
 import { registerScreeningServices } from './screening.module';
 import { registerSearchServices } from './search.module';
 import { registerServiceSet } from './service-set.module';
@@ -67,20 +67,22 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  registerTelemetryServices(
-    registerDiscoveryServices(
-      registerActivityServices(
-        registerClipServices(
-          registerChannelServices(
-            registerSearchServices(
-              registerCaptionServices(
-                registerNotificationServices(
-                  registerStudioServices(
-                    registerVideoAccessServices(
-                      registerScreeningServices(
-                        registerCommentServices(
-                          registerSseServices(
-                            registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+  registerPlaylistServices(
+    registerTelemetryServices(
+      registerDiscoveryServices(
+        registerActivityServices(
+          registerClipServices(
+            registerChannelServices(
+              registerSearchServices(
+                registerCaptionServices(
+                  registerNotificationServices(
+                    registerStudioServices(
+                      registerVideoAccessServices(
+                        registerScreeningServices(
+                          registerCommentServices(
+                            registerSseServices(
+                              registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                            )
                           )
                         )
                       )
@@ -188,17 +190,6 @@ export function registerServices(c: Container): Container {
           videoViews: repositories().videoViews,
           subscriptions: repositories().subscriptions,
           now: Date.now,
-        })
-    )
-    .provide(
-      Services.PlaylistService,
-      (c) =>
-        new PlaylistService({
-          playlists: repositories().playlists,
-          videos: repositories().videos,
-          viewerProgress: c.get(Services.ViewerProgress),
-          cdn: config().cdn,
-          sprite: config().sprite,
         })
     )
     .provide(

@@ -75,6 +75,10 @@ describe('db: library schema', () => {
 
   it.each([
     { table: playlists, name: 'playlists_visibility_check' },
+    { table: playlists, name: 'playlists_cover_mode_check' },
+    { table: playlistItems, name: 'playlist_items_shape_check' },
+    { table: playlistItems, name: 'playlist_items_segment_check' },
+    { table: playlistItems, name: 'playlist_items_note_check' },
     { table: watchHistory, name: 'watch_history_progress_check' },
   ])('guards $name in the database', ({ table, name }) => {
     expect(getTableConfig(table).checks.map((constraint) => constraint.name)).toContain(name);

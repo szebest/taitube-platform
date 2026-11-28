@@ -23,6 +23,7 @@ const CRON_SCHEDULERS = [
   { id: 'purge-exports', pattern: '30 * * * *' },
   { id: 'prune-revisions', pattern: '30 4 * * *' },
   { id: 'purge-generations', pattern: '45 * * * *' },
+  { id: 'purge-playlist-activity', pattern: '45 4 * * *' },
   { id: 'publish-due-posts', pattern: '* * * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
