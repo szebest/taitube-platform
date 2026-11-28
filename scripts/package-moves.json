@@ -1045,7 +1045,6 @@
       "PAGE_IMAGE_REFERENCE": "@vp/validation",
       "RichTextBlock": "@vp/validation",
       "RichTextInline": "@vp/validation",
-      "RichTextListItem": "@vp/validation",
       "richTextImageIds": "@vp/validation",
       "richTextTree": "@vp/validation",
       "viewTooShort": "@vp/validation",

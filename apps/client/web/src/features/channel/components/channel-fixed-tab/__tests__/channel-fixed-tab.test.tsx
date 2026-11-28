@@ -1,4 +1,3 @@
-import type { InfiniteData } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
@@ -9,13 +8,14 @@ import {
 } from '#app/lib/query-keys/channel-page-keys';
 import { ChannelFixedTab } from '../channel-fixed-tab';
 
-const videos = (
-  titles: string[]
-): InfiniteData<
-  { items: ReturnType<typeof videoSummary>[]; nextCursor: null },
-  string | undefined
-> => ({
-  pages: [{ items: titles.map((title) => videoSummary({ title })), nextCursor: null }],
+const videos = (titles: string[]) => ({
+  pages: [
+    {
+      items: titles.map((title) => videoSummary({ title })),
+      nextCursor: null,
+      total: titles.length,
+    },
+  ],
   pageParams: [undefined],
 });
 

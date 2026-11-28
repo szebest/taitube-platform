@@ -51,9 +51,9 @@ describe('apps/client/web: ContentSection', () => {
   );
 
   it('has no accessibility violations in a grid', async () => {
-    const { container } = renderSection({ type: 'grid', columns: 4 });
+    renderSection({ type: 'grid', columns: 4 });
 
-    expect(await axeViolations(container)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 
   it('names a part used outside the root', () => {

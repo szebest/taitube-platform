@@ -3,7 +3,13 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { Channel } from '@vp/api-contracts';
 import { canUpdateChannel } from '@vp/permissions';
-import { membershipGrantsOf, membershipsQueryOptions, type Session, viewerOf } from '@vp/queries';
+import {
+  accountOf,
+  membershipGrantsOf,
+  membershipsQueryOptions,
+  type Session,
+  viewerOf,
+} from '@vp/queries';
 
 export interface PreviewContext {
   queryClient: QueryClient;
@@ -21,8 +27,9 @@ export async function canPreviewDraft(
   channel: Pick<Channel, 'id' | 'userId'>
 ): Promise<boolean> {
   const viewer = viewerOf(auth);
-  if (auth.status !== 'signed-in' || viewer === null) return false;
-  if ((auth.actingChannelId ?? auth.account.channel.id) !== channel.id) return false;
+  const account = accountOf(auth);
+  if (viewer === null || account === undefined) return false;
+  if ((auth.actingChannelId ?? account.channel.id) !== channel.id) return false;
 
   const memberships = await fromPromise(
     () => queryClient.fetchQuery(membershipsQueryOptions(api)),

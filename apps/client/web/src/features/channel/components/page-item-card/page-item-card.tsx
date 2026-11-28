@@ -11,6 +11,13 @@ import { useT } from '#app/lib/messages';
 
 type Presentation = ResolvedSectionView['presentation'];
 type VideoItem = Extract<PageItemView, { kind: 'video' }>;
+type LiveItem = Extract<PageItemView, { kind: 'live' }>;
+
+const LIVE_CARD_STATE: Readonly<Record<LiveItem['status'], 'live' | 'rest'>> = {
+  IDLE: 'rest',
+  LIVE: 'live',
+  ENDED: 'rest',
+};
 
 export interface PageItemCardProps {
   item: PageItemView;
@@ -115,11 +122,11 @@ export function PageItemCard(props: PageItemCardProps) {
           <VideoCard.Root
             variant="shelf"
             expandOnHover={false}
-            state={item.status === 'LIVE' ? 'live' : 'rest'}
+            state={LIVE_CARD_STATE[item.status]}
           >
             <VideoCard.Thumb src={item.thumbnailUrl ?? undefined} alt="" />
             <VideoCard.Title asChild>
-              {item.videoId && item.status === 'ENDED' ? (
+              {item.videoId ? (
                 <Link to="/watch/$videoId" params={{ videoId: item.videoId }}>
                   {item.title}
                 </Link>
@@ -131,7 +138,7 @@ export function PageItemCard(props: PageItemCardProps) {
             </VideoCard.Title>
             <VideoCard.Meta>
               {tOr('channelPage.liveStatus', { status: item.status }, '')}
-              {show.views && item.status === 'LIVE' && (
+              {show.views && LIVE_CARD_STATE[item.status] === 'live' && (
                 <>
                   {' · '}
                   {tOr('channelPage.liveViewers', { count: item.viewers }, '')}

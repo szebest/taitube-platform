@@ -19,7 +19,7 @@ export type RichTextInline = Keyed &
     | { readonly type: 'image'; readonly imageId: string; readonly alt: string }
   );
 
-export interface RichTextListItem extends Keyed {
+interface RichTextListItem extends Keyed {
   readonly blocks: readonly RichTextBlock[];
 }
 

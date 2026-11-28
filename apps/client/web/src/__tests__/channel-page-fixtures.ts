@@ -79,10 +79,13 @@ export function channelPageApi(
   reply: (query: URLSearchParams, authorization: string | null) => ChannelPageView,
   asked: string[] = []
 ): HttpHandler[] {
-  const answer = ({ request }: { request: Request }) => {
+  const answer = (request: Request) => {
     const { pathname, searchParams } = new URL(request.url);
     asked.push(`${pathname}?${searchParams}`);
-    return HttpResponse.json(reply(searchParams, request.headers.get('authorization')));
+    return reply(searchParams, request.headers.get('authorization'));
   };
-  return [mockEndpoint(getChannelPage, answer), mockEndpoint(previewChannelPage, answer)];
+  return [
+    mockEndpoint(getChannelPage, ({ request }) => HttpResponse.json(answer(request))),
+    mockEndpoint(previewChannelPage, ({ request }) => HttpResponse.json(answer(request))),
+  ];
 }
