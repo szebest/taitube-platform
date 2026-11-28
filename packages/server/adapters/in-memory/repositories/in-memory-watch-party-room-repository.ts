@@ -177,12 +177,15 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
     id: string,
     reason: WatchPartyCloseReason,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    onlyAtPlaybackVersion?: number
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     return ok(
       this.apply(
         id,
-        (room) => room.status === 'open',
+        (room) =>
+          room.status === 'open' &&
+          (onlyAtPlaybackVersion === undefined || room.playbackVersion === onlyAtPlaybackVersion),
         (room) => ({
           ...room,
           status: 'closed',

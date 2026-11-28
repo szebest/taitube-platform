@@ -3343,7 +3343,7 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   nothing, so a retried job never counts twice.
   Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
   `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`, `party_invite:<roomId>`,
-  `party_starting:<roomId>`. A read row is never folded into.
+  `party_starting:<roomId>:<before|start>`. A read row is never folded into.
 - **Party invites.** `notify-party-invite` tells one invitee while the invite still stands: a revoked, declined or
   expired invite, a closed room and an invitee who switched `preferences.notifications.watchParties` off say nothing.
   `watchPartyInvites` (`everyone`, `subscriptions`, `nobody`) and the invitee's `block_invites` control are applied
@@ -3354,7 +3354,7 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   unexpired invitees when the room is about to start. It reads both lists when it runs, and does nothing for a job whose
   `scheduledFor` no longer matches the room's `scheduled_for` (a reschedule), for a closed room, and for an account whose
   `watchParties` switch is off. The row carries `payload.party` with `inviteId` set for an invitee and `null` for an account that
-  was only interested, and groups under `party_starting:<roomId>`, so a retried job records nothing twice.
+  was only interested, and groups under `party_starting:<roomId>:<before|start>`, so a retried job records nothing twice.
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).

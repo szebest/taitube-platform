@@ -141,8 +141,12 @@ export class WatchPartySweep {
     const available = await this.skipUnavailable(room);
     if (isErr(available)) return available;
 
-    const scheduled = await startOrExpire(this.deps, room, present.value.length, nowMs, (reason) =>
-      this.close(room.id, reason)
+    const scheduled = await startOrExpire(
+      this.deps,
+      room,
+      present.value.length,
+      nowMs,
+      (reason, version) => this.close(room.id, reason, version)
     );
     if (isErr(scheduled)) return scheduled;
     if (scheduled.value === 'closed') return ok('closed');
@@ -184,13 +188,15 @@ export class WatchPartySweep {
 
   private async close(
     roomId: string,
-    reason: WatchPartyCloseReason
+    reason: WatchPartyCloseReason,
+    onlyAtPlaybackVersion?: number
   ): Promise<Result<'kept' | 'closed', SweepFailure>> {
     const written = await this.deps.repositories.watchPartyRooms.close(
       roomId,
       reason,
       null,
-      this.deps.now()
+      this.deps.now(),
+      onlyAtPlaybackVersion
     );
     if (isErr(written)) return written;
     if (written.value.type !== 'applied') return ok('kept');

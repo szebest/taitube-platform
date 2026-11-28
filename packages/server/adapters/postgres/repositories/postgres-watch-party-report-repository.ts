@@ -5,6 +5,7 @@ import type { WatchPartyReport } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
+import { lockRoom } from './watch-party-writes';
 
 const { watchPartyReports: reports, watchPartyRooms: rooms } = schema;
 
@@ -19,6 +20,7 @@ export class PostgresWatchPartyReportRepository implements WatchPartyReportRepos
     return await fromPromise(
       () =>
         this.db.transaction(async (tx): Promise<ReportFiling> => {
+          await lockRoom(tx, report.roomId);
           const inserted = await tx
             .insert(reports)
             .values(report)

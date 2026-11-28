@@ -200,13 +200,22 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     id: string,
     reason: WatchPartyCloseReason,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    onlyAtPlaybackVersion?: number
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     return writeRoom(this.db, 'closeWatchPartyRoom', id, line, (tx) =>
       tx
         .update(rooms)
         .set({ status: 'closed', closedReason: reason, closedAt: at, updatedAt: at })
-        .where(and(eq(rooms.id, id), eq(rooms.status, 'open')))
+        .where(
+          and(
+            eq(rooms.id, id),
+            eq(rooms.status, 'open'),
+            onlyAtPlaybackVersion === undefined
+              ? undefined
+              : eq(rooms.playbackVersion, onlyAtPlaybackVersion)
+          )
+        )
         .returning()
     );
   }

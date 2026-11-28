@@ -24,7 +24,7 @@ import { adminCloseRoom, adminRestoreRoom } from './watch-party-admin';
 import { isRoomMember } from './watch-party-admission';
 import { createRoom } from './watch-party-create';
 import type { WatchPartyDeps } from './watch-party-deps';
-import { setInterest } from './watch-party-interest';
+import { interestedRooms, setInterest } from './watch-party-interest';
 import { type JoinWatchPartyInput, joinRoom, leaveRoom } from './watch-party-join';
 import {
   type PreviewFailure,
@@ -159,33 +159,14 @@ export class WatchPartyService {
       found.value.flatMap((room) => room ?? [])
     );
     if (isErr(joined)) return joined;
-    const interested = await this.interestedRooms(
+    const interested = await interestedRooms(
+      deps,
+      caller,
       actor.value.id,
       new Set([...ownedIds, ...seated.value])
     );
     if (isErr(interested)) return interested;
     return ok({ owning: owning.value, joined: joined.value, interested: interested.value });
-  }
-
-  private async interestedRooms(
-    userId: string,
-    alreadyListed: ReadonlySet<string>
-  ): Promise<Result<WatchPartyView[], DatabaseUnavailable>> {
-    const { repositories } = this.deps;
-    const ids = await repositories.watchPartyInterest.openRoomIdsOf(userId);
-    if (isErr(ids)) return ids;
-    const found = all(
-      await Promise.all(
-        ids.value
-          .filter((id) => !alreadyListed.has(id))
-          .map((id) => repositories.watchPartyRooms.findById(id))
-      )
-    );
-    if (isErr(found)) return found;
-    return presentRooms(
-      this.deps,
-      found.value.flatMap((room) => room ?? [])
-    );
   }
 
   async socketTicket(

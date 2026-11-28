@@ -84,6 +84,15 @@ describe('watch party interest, reports and the moderator close', () => {
       expect([res.statusCode, res.json().code]).toEqual([status, code]);
     });
 
+    it('leaves a room out of interested once it turned private', async () => {
+      await schedule();
+      const viewer = await ctx.account(3);
+      await ctx.call(viewer, 'PUT', `${ROOM}/interest`);
+      await ctx.roomIs('private');
+
+      expect((await ctx.call(viewer, 'GET', '/v1/me/watch-parties')).json().interested).toEqual([]);
+    });
+
     it('answers 404 for a private room the account cannot see', async () => {
       await schedule();
       await ctx.roomIs('private');

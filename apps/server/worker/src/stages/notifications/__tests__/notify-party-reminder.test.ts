@@ -132,13 +132,57 @@ describe('apps/server/worker/stages: notify-party-reminder', () => {
       {
         kind: 'party_starting',
         watchPartyId: ROOM,
-        groupKey: `party_starting:${ROOM}`,
+        groupKey: `party_starting:${ROOM}:before`,
         payload: { party: { roomId: ROOM, inviteId: null, scheduledFor: SCHEDULED.toISOString() } },
       },
     ]);
     expect(await notificationsOf(repositories, INVITEE)).toMatchObject([
       { payload: { party: { inviteId: INVITE } } },
     ]);
+  });
+
+  it('sends the reminder before the start and the one at the start as two rows', async () => {
+    await setUp();
+    await interested(FAN);
+
+    expect([await remind(SCHEDULED, 'before'), await remind(SCHEDULED, 'start')]).toEqual([1, 1]);
+    expect(await notificationsOf(repositories, FAN)).toHaveLength(2);
+  });
+
+  it('tells nobody who was banned from the room or cannot get into it now that it is private', async () => {
+    await setUp();
+    await interested(FAN, INVITEE);
+    const room = expectOk(await repositories.watchPartyRooms.findById(ROOM));
+    expectOk(
+      await repositories.watchPartyRooms.updateSettings(
+        ROOM,
+        { visibility: 'private' },
+        room?.version ?? 1,
+        null,
+        AT
+      )
+    );
+    expectOk(
+      await repositories.watchPartyMembers.ban(
+        {
+          roomId: ROOM,
+          memberKey: `user:${INVITEE}`,
+          ipHash: null,
+          bannedBy: `user:${CREATOR_ID}`,
+          reason: null,
+          createdAt: AT,
+        },
+        {
+          id: uuidv7(),
+          line: { event: 'banned', actorKey: null, targetKey: `user:${INVITEE}`, detail: null },
+          videoId: null,
+          positionMs: null,
+          createdAt: AT,
+        }
+      )
+    );
+
+    expect(await remind()).toBe(0);
   });
 
   it('says nothing twice when the job runs again', async () => {

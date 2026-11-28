@@ -1,6 +1,7 @@
 import { MS_PER_MINUTE } from '@kit/primitives';
+import { ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
-import { dueToAutoStart, missedStart } from '../watch-party-scheduled-start';
+import { dueToAutoStart, missedStart, startOrExpire } from '../watch-party-scheduled-start';
 import { WatchPartySweep } from '../watch-party-sweep';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
@@ -88,6 +89,27 @@ describe('scheduled rooms', () => {
 
       expect((await party.room()).phase).toBe(phase);
       expect(party.published('state')).toHaveLength(phase === 'playing' ? 1 : 0);
+    });
+
+    it('lets an edit made after the sweep read the room win over the page it holds', async () => {
+      const party = await setUp(true);
+      const page = await party.room();
+      expectOk(
+        await party.deps.repositories.watchPartyRooms.updateSettings(
+          ROOM_ID,
+          { autoStart: false },
+          page.version,
+          null,
+          party.deps.now()
+        )
+      );
+      party.clock.advance(TEN_MINUTES);
+      const close = async () => ok('kept' as const);
+
+      const outcome = await startOrExpire(party.deps, page, 1, party.deps.now().getTime(), close);
+
+      expect(expectOk(outcome)).toBe('kept');
+      expect((await party.room()).phase).toBe('lobby');
     });
 
     it('closes a room nobody started within the hour, with people waiting in it', async () => {

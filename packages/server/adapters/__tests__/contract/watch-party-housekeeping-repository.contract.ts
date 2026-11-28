@@ -155,6 +155,35 @@ export function describeWatchPartyHousekeepingRepositoryContract(
         expect(await controlsOf(OTHER_ROOM_ID)).toHaveLength(1);
         expect(await controlsOf(THIRD_ROOM_ID)).toHaveLength(2);
       });
+
+      it('takes the interest and the reports of a purged room with it', async () => {
+        await closeAt(OTHER_ROOM_ID, new Date(AT.getTime() - 40 * DAY_MS));
+        const { watchPartyInterest, watchPartyReports } = subject.repositories;
+        expectOk(await watchPartyInterest.add(OTHER_ROOM_ID, OWNER_ID, AT));
+        expectOk(await watchPartyInterest.add(THIRD_ROOM_ID, OWNER_ID, AT));
+        expectOk(
+          await watchPartyReports.file(
+            {
+              id: numberedId(13, 1),
+              roomId: OTHER_ROOM_ID,
+              reporterId: OWNER_ID,
+              targetKey: null,
+              context: 'room',
+              reason: 'spam',
+              details: null,
+              createdAt: AT,
+            },
+            3,
+            AT
+          )
+        );
+
+        expectOk(await housekeeping().purgeClosedBefore(new Date(AT.getTime() - 30 * DAY_MS)));
+
+        expect(expectOk(await watchPartyInterest.userIdsOf(OTHER_ROOM_ID))).toEqual([]);
+        expect(expectOk(await watchPartyInterest.userIdsOf(THIRD_ROOM_ID))).toEqual([OWNER_ID]);
+        expect(expectOk(await watchPartyReports.restore(OTHER_ROOM_ID, AT))).toBe(false);
+      });
     });
 
     describe('purgeMessagesBefore', () => {

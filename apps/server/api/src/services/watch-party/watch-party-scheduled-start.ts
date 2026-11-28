@@ -58,24 +58,33 @@ export async function startOrExpire(
   present: number,
   nowMs: number,
   close: (
-    reason: WatchPartyCloseReason
+    reason: WatchPartyCloseReason,
+    onlyAtPlaybackVersion: number
   ) => Promise<Result<'kept' | 'closed', DatabaseUnavailable | CacheUnavailable>>
 ): Promise<Result<'kept' | 'closed', DatabaseUnavailable | CacheUnavailable>> {
   const { metrics, config, repositories, now } = deps;
-  if (missedStart(room, nowMs, config.sweep.scheduledStartGraceMs)) {
-    const closed = await close('not_started');
-    if (isErr(closed)) return closed;
-    if (closed.value === 'closed')
-      metrics.watchPartyScheduledStartsTotal.inc({ outcome: 'expired' });
-    return closed;
-  }
-  if (present === 0 || !dueToAutoStart(room, nowMs)) return ok('kept');
+  const { scheduledStartGraceMs } = config.sweep;
+  const candidate =
+    missedStart(room, nowMs, scheduledStartGraceMs) || (present > 0 && dueToAutoStart(room, nowMs));
+  if (!candidate) return ok('kept');
 
   const fresh = await repositories.watchPartyRooms.findById(room.id);
   if (isErr(fresh)) return fresh;
-  if (fresh.value === null || fresh.value.phase !== 'lobby') return ok('kept');
-  const started = await commitState(deps, fresh.value, {
-    playback: applyPlaybackCommand(fresh.value.playback, { type: 'start' }, now().getTime()),
+  const current = fresh.value;
+  if (current === null || current.status !== 'open') return ok('kept');
+
+  if (missedStart(current, nowMs, scheduledStartGraceMs)) {
+    const closed = await close('not_started', current.playbackVersion);
+    if (isErr(closed)) return closed;
+    if (closed.value === 'closed') {
+      metrics.watchPartyScheduledStartsTotal.inc({ outcome: 'expired' });
+    }
+    return closed;
+  }
+  if (present === 0 || !dueToAutoStart(current, nowMs)) return ok('kept');
+
+  const started = await commitState(deps, current, {
+    playback: applyPlaybackCommand(current.playback, { type: 'start' }, now().getTime()),
     by: null,
     reason: 'system',
   });

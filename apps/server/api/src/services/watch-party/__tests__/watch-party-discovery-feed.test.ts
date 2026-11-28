@@ -73,6 +73,20 @@ describe('apps/server/api/services: the discovery feed', () => {
     });
   });
 
+  it('sends closed when a listed room moves onto a video the list would not show', async () => {
+    const test = await setUp();
+    const room = await startParty(test, { visibility: 'public', source: { videoId: VIDEO_A } });
+    const stored = expectOk(await test.repositories.watchPartyRooms.findById(room.id));
+    if (stored === null) throw new Error('the room is gone');
+
+    await test.deps.discovery.updated({ ...stored, currentVideoId: VIDEO_UNLISTED });
+
+    expect(test.discoveryEvents().at(-1)).toEqual({
+      type: 'party.closed',
+      payload: { id: room.id },
+    });
+  });
+
   it('never announces the count of a room the list would not show', async () => {
     const test = await setUp();
     const room = await startParty(test, {

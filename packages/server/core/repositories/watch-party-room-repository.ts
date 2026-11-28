@@ -115,12 +115,13 @@ export interface WatchPartyRoomRepositoryPort {
     id: string,
     change: PlaybackChange
   ): Promise<Result<RoomWrite, DatabaseUnavailable>>;
-  /** `stale` when it was already closed. */
+  /** `stale` when it was already closed, or when `onlyAtPlaybackVersion` is given and the clock has moved since. */
   close(
     id: string,
     reason: WatchPartyCloseReason,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    onlyAtPlaybackVersion?: number
   ): Promise<Result<RoomWrite, DatabaseUnavailable>>;
   /**
    * Discovery's page: the open, public, visible rooms that match the filters, in the sort's order

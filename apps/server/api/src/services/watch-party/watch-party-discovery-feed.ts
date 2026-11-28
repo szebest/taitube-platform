@@ -67,7 +67,10 @@ export class WatchPartyDiscoveryFeed {
   ): Promise<void> {
     const listed = await this.listed(room);
     if (isErr(listed)) return this.warn(listed.error, room.id, type);
-    if (listed.value === null) return;
+    if (listed.value === null) {
+      if (type === 'party.updated') await this.closed(room.id);
+      return;
+    }
     const cards = await presentCards(this.deps, [listed.value]);
     if (isErr(cards)) return this.warn(cards.error, room.id, type);
     const [card] = cards.value;

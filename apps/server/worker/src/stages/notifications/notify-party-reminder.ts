@@ -2,7 +2,12 @@ import type { Logger } from '@kit/logger';
 import { isErr, ok, type Result } from '@kit/result';
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { mayHearAbout, WATCH_PARTY_START_GRACE_MS } from '@vp/domain';
+import {
+  mayHearAbout,
+  memberKeyOf,
+  WATCH_PARTY_START_GRACE_MS,
+  type WatchPartyRoom,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyPartyReminderJob } from '@vp/job-contracts';
 import { usersSwitchedOn } from './notification-switches';
@@ -16,6 +21,22 @@ export interface NotifyPartyReminderDeps {
 export interface NotifyPartyReminderResult {
   roomId: string;
   recorded: number;
+}
+
+/** An account banned from the room, or without a way into a private one, is told nothing. */
+async function mayStillJoin(
+  repositories: Repositories,
+  room: Pick<WatchPartyRoom, 'id' | 'visibility'>,
+  userId: string,
+  invited: boolean
+): Promise<Result<boolean, DatabaseUnavailable>> {
+  const memberKey = memberKeyOf({ kind: 'user', userId });
+  const banned = await repositories.watchPartyMembers.isBanned(room.id, memberKey, null);
+  if (isErr(banned)) return banned;
+  if (banned.value) return ok(false);
+  if (room.visibility !== 'private' || invited) return ok(true);
+  const seat = await repositories.watchPartyMembers.find(room.id, memberKey);
+  return isErr(seat) ? seat : ok(seat.value !== null && seat.value.leftAt === null);
 }
 
 /**
@@ -47,7 +68,13 @@ export function createNotifyPartyReminderProcessor(deps: NotifyPartyReminderDeps
         .filter(({ status, expiresAt }) => status === 'pending' && expiresAt.getTime() > now())
         .map((invite) => [invite.inviteeId, invite])
     );
-    const recipients = [...new Set([...interested.value, ...pending.keys()])];
+    const candidates = [...new Set([...interested.value, ...pending.keys()])];
+    const recipients: string[] = [];
+    for (const userId of candidates) {
+      const mayJoin = await mayStillJoin(repositories, current, userId, pending.has(userId));
+      if (isErr(mayJoin)) return mayJoin;
+      if (mayJoin.value) recipients.push(userId);
+    }
     if (recipients.length === 0) return skipped;
 
     const switchedOn = await usersSwitchedOn(repositories, recipients, 'party_starting');
@@ -70,7 +97,7 @@ export function createNotifyPartyReminderProcessor(deps: NotifyPartyReminderDeps
         videoId: null,
         commentId: null,
         watchPartyId: roomId,
-        groupKey: `party_starting:${roomId}`,
+        groupKey: `party_starting:${roomId}:${lead}`,
         payload: {
           actor: null,
           videoTitle,

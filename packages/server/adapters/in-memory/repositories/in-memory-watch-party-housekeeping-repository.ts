@@ -59,6 +59,12 @@ export class InMemoryWatchPartyHousekeepingRepository implements WatchPartyHouse
       this.store.searchTexts.delete(id);
       this.store.trendScores.delete(id);
     }
+    for (const [id, row] of this.store.reports) {
+      if (gone.has(row.report.roomId)) this.store.reports.delete(id);
+    }
+    for (const [key, row] of this.store.interest) {
+      if (gone.has(row.roomId)) this.store.interest.delete(key);
+    }
     for (const table of [
       this.store.members,
       this.store.roles,
