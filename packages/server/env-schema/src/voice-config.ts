@@ -1,3 +1,4 @@
+import type { AppEnv } from './app-env';
 import { VOICE } from './tuning';
 
 export interface VoiceConfig {
@@ -12,10 +13,28 @@ export interface VoiceConfig {
   maxSpeakers: number;
   tokenTtlSeconds: number;
   gatewayTimeoutMs: number;
+  /** How long past a mute's expiry the grants are recomputed, so the clock has passed it. */
+  expirySlackMs: number;
 }
 
-export function voiceConfig(
-  keys: Pick<VoiceConfig, 'enabled' | 'url' | 'apiUrl' | 'apiKey' | 'apiSecret' | 'maxSpeakers'>
-): VoiceConfig {
-  return { ...keys, ...VOICE };
+type VoiceEnv = Pick<
+  AppEnv,
+  | 'WATCH_PARTY_VOICE_ENABLED'
+  | 'LIVEKIT_URL'
+  | 'LIVEKIT_API_URL'
+  | 'LIVEKIT_API_KEY'
+  | 'LIVEKIT_API_SECRET'
+  | 'WATCH_PARTY_VOICE_MAX_SPEAKERS'
+>;
+
+export function voiceConfig(env: VoiceEnv): VoiceConfig {
+  return {
+    enabled: env.WATCH_PARTY_VOICE_ENABLED,
+    url: env.LIVEKIT_URL,
+    apiUrl: env.LIVEKIT_API_URL,
+    apiKey: env.LIVEKIT_API_KEY,
+    apiSecret: env.LIVEKIT_API_SECRET,
+    maxSpeakers: env.WATCH_PARTY_VOICE_MAX_SPEAKERS,
+    ...VOICE,
+  };
 }

@@ -193,6 +193,7 @@ export const LIVE_CHAT = {
 export const VOICE = {
   tokenTtlSeconds: 10 * SECONDS_PER_MINUTE,
   gatewayTimeoutMs: 2 * MS_PER_SECOND,
+  expirySlackMs: 250,
 } as const;
 
 /**

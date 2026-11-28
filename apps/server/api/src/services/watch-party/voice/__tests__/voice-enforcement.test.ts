@@ -18,14 +18,19 @@ async function inVoice(room: VoiceRoom, user = MEMBER) {
 const grantsOf = (room: VoiceRoom, user = MEMBER) =>
   room.gateway.grantsOf(`party:${ROOM_ID}`, keyOf(user));
 
-async function assign(room: VoiceRoom, roleKey: 'voice_muted' | 'chat_muted', expiresIn?: '10m') {
+async function assign(
+  room: VoiceRoom,
+  roleKey: 'voice_muted' | 'chat_muted',
+  expiresIn?: '10m',
+  user = MEMBER
+) {
   const ids = expectOk(await room.repositories.watchPartyRoles.list(ROOM_ID, room.deps.now()));
   const roleId = ids.find(({ key }) => key === roleKey)?.id ?? '';
   expectOk(
     await new WatchPartyRoleService(room.deps).assign(
       ROOM_ID,
       userCaller(OWNER),
-      keyOf(MEMBER),
+      keyOf(user),
       roleId,
       {
         expiresIn,
@@ -107,9 +112,25 @@ describe('apps/api: VoiceEnforcement', () => {
     expect(grantsOf(room)).toEqual({ canSubscribe: true, canPublish: false });
   });
 
-  it('never raises the publishers past the cap when a role change would give a listener the mic back', async () => {
+  it('never raises the publishers past the cap when a lifted mute would give the mic back', async () => {
     const room = await voiceRoom({ config: { voice: { maxSpeakers: 1 } } });
+    await inVoice(room);
+    const muted = await assign(room, 'voice_muted');
     await inVoice(room, OWNER);
+
+    await new WatchPartyRoleService(room.deps).revoke(
+      ROOM_ID,
+      userCaller(OWNER),
+      keyOf(MEMBER),
+      muted
+    );
+    await drainMicrotasks();
+
+    expect(grantsOf(room)).toEqual({ canSubscribe: true, canPublish: false });
+  });
+
+  it('leaves a member who only asked to listen a listener when a role change would let them speak', async () => {
+    const room = await voiceRoom();
     const listener = expectOk(await mintVoiceToken(room.voice, ROOM_ID, userCaller(MEMBER), true));
     room.gateway.join(listener.token);
     room.enforcement.watch(ROOM_ID);
@@ -117,6 +138,21 @@ describe('apps/api: VoiceEnforcement', () => {
     await assign(room, 'chat_muted');
 
     expect(grantsOf(room)).toEqual({ canSubscribe: true, canPublish: false });
+  });
+
+  it("keeps every member's mute expiry when a pass looks at one member only", async () => {
+    fakeTimers();
+    const room = await voiceRoom();
+    await inVoice(room);
+    await inVoice(room, OTHER);
+    await assign(room, 'voice_muted', '10m');
+    await assign(room, 'chat_muted', undefined, OTHER);
+    expect(grantsOf(room)?.canPublish).toBe(false);
+
+    room.clock.advance(10 * MINUTE_MS + 1_000);
+    await elapse(10 * MINUTE_MS + 1_000);
+
+    expect(grantsOf(room)).toEqual({ canSubscribe: true, canPublish: true });
   });
 
   it('disconnects a member who left the room, and every participant when the room closes', async () => {

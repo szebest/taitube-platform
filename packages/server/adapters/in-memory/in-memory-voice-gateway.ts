@@ -18,6 +18,7 @@ import { toVoiceWebhookEvent } from '../livekit/voice-webhook-event';
 
 interface Seat {
   grants: VoiceGrants;
+  wantsToSpeak: boolean;
   muted: boolean;
   publishing: boolean;
 }
@@ -49,7 +50,7 @@ export class InMemoryVoiceGateway extends VoiceGatewayPort {
   private readonly rooms = new Map<string, Map<string, Seat>>();
   private unavailable = false;
 
-  constructor(private readonly secret = 'in-memory-voice-secret') {
+  constructor(private readonly secret: string) {
     super();
   }
 
@@ -60,7 +61,12 @@ export class InMemoryVoiceGateway extends VoiceGatewayPort {
   join(token: string): boolean {
     const claims = JSON.parse(token.slice(TOKEN_PREFIX.length)) as VoiceTokenRequest;
     const seats = this.rooms.get(claims.room) ?? new Map<string, Seat>();
-    seats.set(claims.identity, { grants: claims.grants, muted: false, publishing: false });
+    seats.set(claims.identity, {
+      grants: claims.grants,
+      wantsToSpeak: claims.grants.canPublish,
+      muted: false,
+      publishing: false,
+    });
     this.rooms.set(claims.room, seats);
     return true;
   }
@@ -137,6 +143,7 @@ export class InMemoryVoiceGateway extends VoiceGatewayPort {
         identity,
         grants: seat.grants,
         publishing: seat.publishing,
+        wantsToSpeak: seat.wantsToSpeak,
       }))
     );
   }

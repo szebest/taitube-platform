@@ -19,6 +19,7 @@ adapters/
 ├── composition/   # Adapter tokens and registerAdapters: the one in-memory/external switch
 ├── in-memory/     # In-memory test doubles for zero-dependency unit tests
 ├── metered/       # MeteredStorageClient & MeteredMultipartStorage (storage op metrics)
+├── livekit/       # LiveKitVoiceGateway (VoiceGatewayPort over livekit-server-sdk: tokens, grants, mute, remove, signed webhooks)
 ├── onnx/          # OnnxFrameClassifier (FrameClassifier over onnxruntime-node, the pinned model checked at start)
 ├── postgres/      # PostgresDatabaseClient, Drizzle repositories, mappers, CASL-to-SQL scopes
 ├── redis/         # RedisCacheClient, pub/sub, category, reaction, subscription, comment and playhead caches, view buffer, search suggestion index

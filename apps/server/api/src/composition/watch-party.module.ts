@@ -148,7 +148,7 @@ export function registerWatchPartyServices(c: Container): Container {
           now: () => new Date(),
           gateway: c.get(Adapters.VoiceGateway),
           hub: c.get(Services.WatchPartyHub),
-          maxSpeakers: c.get(Adapters.Config).voice.maxSpeakers,
+          voice: c.get(Adapters.Config).voice,
         }),
       { dispose: (enforcement) => enforcement.close() }
     )

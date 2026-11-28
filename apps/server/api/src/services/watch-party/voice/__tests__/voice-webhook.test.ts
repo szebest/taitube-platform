@@ -28,6 +28,28 @@ describe('apps/api: receiveVoiceWebhook', () => {
     expect(room.published('voice')).toEqual([{ type: 'voice', state }]);
   });
 
+  it('drops the mic of a joiner whose token was minted before the speakers filled up', async () => {
+    const room = await voiceRoom({ config: { voice: { maxSpeakers: 1 } } });
+    const early = expectOk(await mintVoiceToken(room.voice, ROOM_ID, userCaller(MEMBER), false));
+    const owner = expectOk(await mintVoiceToken(room.voice, ROOM_ID, userCaller(OWNER), false));
+    room.gateway.join(owner.token);
+    room.gateway.join(early.token);
+    const signed = room.gateway.sign({
+      type: 'participant_joined',
+      room: ROOM,
+      identity: keyOf(MEMBER),
+      canPublish: true,
+    });
+
+    expectOk(await receiveVoiceWebhook(room.voice, signed.body, signed.authorization));
+
+    expect(room.gateway.grantsOf(ROOM, keyOf(MEMBER))).toEqual({
+      canSubscribe: true,
+      canPublish: false,
+    });
+    expect(room.published('voice')).toEqual([{ type: 'voice', state: 'listening' }]);
+  });
+
   it('tells a leaving member `off`, and stops watching an empty room', async () => {
     const room = await voiceRoom();
     const watch = vi.spyOn(room.enforcement, 'unwatch');

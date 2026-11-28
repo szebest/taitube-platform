@@ -2,6 +2,7 @@ import type { Logger } from '@kit/logger';
 import { isErr, ok, type Result } from '@kit/result';
 import type { VoiceGatewayPort, VoiceParticipant } from '@vp/core/ports';
 import { effectivePermissions, parseMemberKey } from '@vp/domain';
+import type { VoiceConfig } from '@vp/env-schema';
 import type { DatabaseUnavailable, VoiceUnavailable } from '@vp/errors';
 import type { PatternHub } from '../../pattern-hub';
 import type { RoomEnvelope } from '../watch-party-broadcaster';
@@ -10,16 +11,14 @@ import { announce } from '../watch-party-moderation-effects';
 import { isServerMuted, voiceGrantsOf, voiceStateOf } from './voice-grants';
 import { voiceRoomOf } from './voice-room';
 
-const EXPIRY_SLACK_MS = 250;
-
 export interface VoiceEnforcementDeps extends Pick<
   WatchPartyDeps,
   'repositories' | 'broadcaster' | 'logger' | 'now'
 > {
   readonly gateway: VoiceGatewayPort;
   readonly hub: PatternHub<RoomEnvelope>;
-  /** `WATCH_PARTY_VOICE_MAX_SPEAKERS`: a role change never raises the publishers past it. */
-  readonly maxSpeakers: number;
+  /** The speaker cap no pass lets the publishers exceed, and the slack a mute expiry is recomputed after. */
+  readonly voice: Pick<VoiceConfig, 'maxSpeakers' | 'expirySlackMs'>;
 }
 
 export interface SyncOptions {
@@ -98,18 +97,27 @@ export class VoiceEnforcement {
 
     const seats = new Map(seated.value.map((seat) => [seat.memberKey, seat]));
     const at = now();
+    const { maxSpeakers } = this.deps.voice;
     let nextExpiry: number | null = null;
     let publishers = participants.value.filter(({ grants }) => grants.canPublish).length;
     for (const participant of participants.value) {
-      if (options.only !== undefined && participant.identity !== options.only) continue;
       const seat = seats.get(participant.identity);
       const kind = parseMemberKey(participant.identity)?.kind;
+      const mine = options.only === undefined || participant.identity === options.only;
       if (seat === undefined || kind === undefined) {
+        if (!mine) continue;
         const removed = await gateway.removeParticipant(voiceRoomOf(roomId), participant.identity);
         if (isErr(removed)) return removed;
         continue;
       }
       const held = assignments.value.filter((row) => row.memberKey === participant.identity);
+      for (const { expiresAt } of held) {
+        if (expiresAt !== null && expiresAt > at) {
+          nextExpiry = Math.min(nextExpiry ?? Infinity, expiresAt.getTime());
+        }
+      }
+      if (!mine) continue;
+
       const allowed = voiceGrantsOf(
         effectivePermissions({
           kind,
@@ -119,12 +127,15 @@ export class VoiceEnforcement {
           now: at,
         })
       );
-      const raises = options.raise === true && !participant.grants.canPublish;
-      const mayRaise = raises && allowed.canPublish && publishers < this.deps.maxSpeakers;
+      const raises = options.raise === true && participant.wantsToSpeak;
+      const mayRaise =
+        raises && !participant.grants.canPublish && allowed.canPublish && publishers < maxSpeakers;
+      const keeps =
+        allowed.canPublish && participant.grants.canPublish && publishers <= maxSpeakers;
       const grants = {
         canSubscribe:
           allowed.canSubscribe && (options.raise === true || participant.grants.canSubscribe),
-        canPublish: mayRaise || (allowed.canPublish && participant.grants.canPublish),
+        canPublish: mayRaise || keeps,
       };
       if (mayRaise) publishers += 1;
       if (!grants.canPublish && participant.grants.canPublish) publishers -= 1;
@@ -145,11 +156,6 @@ export class VoiceEnforcement {
           participant.identity
         );
       }
-      for (const { expiresAt } of held) {
-        if (expiresAt !== null && expiresAt > at) {
-          nextExpiry = Math.min(nextExpiry ?? Infinity, expiresAt.getTime());
-        }
-      }
     }
     this.scheduleExpiry(roomId, nextExpiry, at);
     return ok();
@@ -161,7 +167,7 @@ export class VoiceEnforcement {
     if (expiresAt === null || !this.leaves.has(roomId)) return;
     const timer = setTimeout(
       () => void this.run(roomId, { raise: true }),
-      expiresAt - at.getTime() + EXPIRY_SLACK_MS
+      expiresAt - at.getTime() + this.deps.voice.expirySlackMs
     );
     this.expiries.set(roomId, timer);
   }

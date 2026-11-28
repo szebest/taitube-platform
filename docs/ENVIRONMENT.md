@@ -235,6 +235,9 @@ Handed to something other than this repo code. platform-env.json names the consu
 | `GRAFANA_OTLP_ENDPOINT` | no | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | Alloy's upstream OTLP endpoint in the cloud. The apps never read it; they export to Alloy through OTEL_EXPORTER_OTLP_ENDPOINT. | `https://otlp-gateway-<region>.grafana.net/otlp` |
 | `GRAFANA_OTLP_HEADERS` | yes | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | The Authorization=Basic header Alloy sends to GRAFANA_OTLP_ENDPOINT, built from the base64 of instanceId:token. Wrong credentials drop all cloud telemetry. | `Authorization=Basic <base64 instanceId:token>` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | yes | cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml | The token cloudflared uses to attach the cluster to its Cloudflare tunnel. Without it the cloud overlay has no public ingress. | `<tunnel token>` |
+| `LIVEKIT_KEYS` | yes | the LiveKit server, infra/k8s/base/livekit.yaml: the key and secret pair it signs and verifies tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET | The key and secret pair the LiveKit server signs and verifies voice tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET in the k8s manifest. The API never reads it. | `<key>: <secret>` |
+| `LIVEKIT_CONFIG` | no | the LiveKit server, infra/k8s/base/livekit.yaml: its whole configuration as YAML | The LiveKit server's whole configuration as YAML, set in the k8s manifest. Compose mounts a file instead. | `port: 7880` |
+| `NODE_IP` | no | the LiveKit server, infra/k8s/base/livekit.yaml: the address it advertises to clients, set per environment instead of discovered through a public STUN server | The address the LiveKit server advertises to clients. It is set per environment because the server must never discover it through a public STUN server. | `203.0.113.10` |
 
 ## Tooling and cloud-only keys
 

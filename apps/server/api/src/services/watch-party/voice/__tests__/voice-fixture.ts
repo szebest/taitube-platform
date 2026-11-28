@@ -13,7 +13,7 @@ type Party = Awaited<ReturnType<typeof socketRoom>>;
 
 /** The media server, its enforcement and the service deps, over a room that already exists. */
 export async function voiceOn(party: Party, config?: AppConfigOverrides) {
-  const gateway = new InMemoryVoiceGateway();
+  const gateway = new InMemoryVoiceGateway(watchPartyTestConfig(config).voice.apiSecret ?? '');
   const enforcement = new VoiceEnforcement({
     repositories: party.deps.repositories,
     broadcaster: party.deps.broadcaster,
@@ -21,7 +21,7 @@ export async function voiceOn(party: Party, config?: AppConfigOverrides) {
     now: party.deps.now,
     gateway,
     hub: party.socketDeps.hub,
-    maxSpeakers: watchPartyTestConfig(config).voice.maxSpeakers,
+    voice: watchPartyTestConfig(config).voice,
   });
   const voice: VoiceServiceDeps = {
     ...party.deps,

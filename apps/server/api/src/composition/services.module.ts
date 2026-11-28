@@ -23,7 +23,6 @@ import {
 } from '../services/index';
 import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
-import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerActivityServices } from './activity.module';
 import { registerBootstrap } from './bootstrap.module';
@@ -35,6 +34,7 @@ import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
+import { registerReadiness } from './readiness.module';
 import { registerScreeningServices } from './screening.module';
 import { registerSearchServices } from './search.module';
 import { registerServiceSet } from './service-set.module';
@@ -80,7 +80,9 @@ export function registerServices(c: Container): Container {
                       registerScreeningServices(
                         registerCommentServices(
                           registerSseServices(
-                            registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+                            registerLiveServices(
+                              registerWatchPartyServices(registerReadiness(registerBootstrap(c)))
+                            )
                           )
                         )
                       )
@@ -237,16 +239,6 @@ export function registerServices(c: Container): Container {
           events: repositories().events,
           queues: c.get(Adapters.Queues),
           paginator: c.get(Services.Paginator),
-        })
-    )
-    .provide(
-      Services.Readiness,
-      (c) =>
-        new ReadinessService({
-          postgres: c.get(Adapters.DbClient),
-          redis: c.get(Adapters.Cache),
-          s3: c.get(Adapters.Storage),
-          ...(config().voice.enabled ? { voice: c.get(Adapters.VoiceGateway) } : {}),
         })
     )
     .provide(

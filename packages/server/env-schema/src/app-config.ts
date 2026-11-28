@@ -282,19 +282,8 @@ export function toAppConfig(env: AppEnv): AppConfig {
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
     }),
-    watchParties: watchPartyConfig({
-      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
-      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
-      guestSalt: env.WATCH_PARTY_GUEST_SALT,
-    }),
-    voice: voiceConfig({
-      enabled: env.WATCH_PARTY_VOICE_ENABLED,
-      url: env.LIVEKIT_URL,
-      apiUrl: env.LIVEKIT_API_URL,
-      apiKey: env.LIVEKIT_API_KEY,
-      apiSecret: env.LIVEKIT_API_SECRET,
-      maxSpeakers: env.WATCH_PARTY_VOICE_MAX_SPEAKERS,
-    }),
+    watchParties: watchPartyConfig(env),
+    voice: voiceConfig(env),
     worker: {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,

@@ -8,7 +8,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help demo demo-seed demo-reset demo-down demo-status demo-login up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7 deploy deploy-list deploy-plan deploy-status deploy-rollback deploy-logs deploy-preflight deploy-expire-previews secrets-check new-environment
+.PHONY: help demo demo-seed demo-reset demo-down demo-status demo-login up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline smoke-voice live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7 deploy deploy-list deploy-plan deploy-status deploy-rollback deploy-logs deploy-preflight deploy-expire-previews secrets-check new-environment
 
 # `make up web`, `make up worker:thumbnail`: the words after up, down or status are its targets, not goals.
 ifneq ($(filter up down status,$(firstword $(MAKECMDGOALS))),)
@@ -120,6 +120,9 @@ smoke: ## Run end-to-end smoke tests against running stack
 
 smoke-fast: ## Run smoke tests against active containers in under 5 seconds
 	API_URL=http://127.0.0.1:3000 TIMEOUT_SEC=5 bash scripts/e2e-smoke.sh
+
+smoke-voice: ## Prove voice against make up api voice on the offline files (the API with WATCH_PARTY_VOICE_ENABLED=true): off by default, no LiveKit egress, grants follow the roles, a mute is enforced in the SFU
+	bash scripts/voice-smoke.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
 
 live-smoke: ## Broadcast a test pattern through MediaMTX and check the LL-HLS playlist, then the archive, against make up api worker:live worker:housekeeping
 	pnpm --silent test:live

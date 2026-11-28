@@ -1,3 +1,4 @@
+import type { AppEnv } from './app-env';
 import { WATCH_PARTY } from './tuning';
 
 interface Budget {
@@ -44,9 +45,17 @@ export interface WatchPartyConfig extends WatchPartyTuning {
   guestSalt: string | undefined;
 }
 
-/** The watch party keys as `toAppConfig` read them, given the tuning. */
+/** The watch party keys as `toAppConfig` reads them, given the tuning. */
 export function watchPartyConfig(
-  keys: Pick<WatchPartyConfig, 'maxMembers' | 'maxOpenPerUser' | 'guestSalt'>
+  env: Pick<
+    AppEnv,
+    'WATCH_PARTY_MAX_MEMBERS' | 'WATCH_PARTY_MAX_OPEN_PER_USER' | 'WATCH_PARTY_GUEST_SALT'
+  >
 ): WatchPartyConfig {
-  return { ...keys, ...WATCH_PARTY };
+  return {
+    maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
+    maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
+    guestSalt: env.WATCH_PARTY_GUEST_SALT,
+    ...WATCH_PARTY,
+  };
 }

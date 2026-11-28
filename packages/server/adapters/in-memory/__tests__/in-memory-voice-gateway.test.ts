@@ -7,6 +7,7 @@ import { InMemoryVoiceGateway } from '../in-memory-voice-gateway';
 describeVoiceGatewayContract(inMemoryVoiceGatewaySubject);
 
 const ROOM = 'party:1';
+const SECRET = 'twin-secret';
 const SPEAKER = { canSubscribe: true, canPublish: true };
 
 async function joined(gateway: InMemoryVoiceGateway, grants = SPEAKER) {
@@ -24,7 +25,7 @@ async function joined(gateway: InMemoryVoiceGateway, grants = SPEAKER) {
 
 describe('adapters/in-memory: InMemoryVoiceGateway', () => {
   it('lets a participant publish until the server drops the grant', async () => {
-    const gateway = new InMemoryVoiceGateway();
+    const gateway = new InMemoryVoiceGateway(SECRET);
     await joined(gateway);
 
     expect(gateway.publish(ROOM, 'user:a')).toBe(true);
@@ -32,19 +33,24 @@ describe('adapters/in-memory: InMemoryVoiceGateway', () => {
 
     expect(gateway.publish(ROOM, 'user:a')).toBe(false);
     expect(expectOk(await gateway.listParticipants(ROOM))).toEqual([
-      { identity: 'user:a', grants: { canSubscribe: true, canPublish: false }, publishing: false },
+      {
+        identity: 'user:a',
+        grants: { canSubscribe: true, canPublish: false },
+        publishing: false,
+        wantsToSpeak: true,
+      },
     ]);
   });
 
   it('refuses a forged publish from a listener', async () => {
-    const gateway = new InMemoryVoiceGateway();
+    const gateway = new InMemoryVoiceGateway(SECRET);
     await joined(gateway, { canSubscribe: true, canPublish: false });
 
     expect(gateway.publish(ROOM, 'user:a')).toBe(false);
   });
 
   it('mutes a publishing track and disconnects a removed participant', async () => {
-    const gateway = new InMemoryVoiceGateway();
+    const gateway = new InMemoryVoiceGateway(SECRET);
     await joined(gateway);
     gateway.publish(ROOM, 'user:a');
 
@@ -57,7 +63,7 @@ describe('adapters/in-memory: InMemoryVoiceGateway', () => {
   });
 
   it('reads the events it signed', async () => {
-    const gateway = new InMemoryVoiceGateway();
+    const gateway = new InMemoryVoiceGateway(SECRET);
     const { body, authorization } = gateway.sign({
       type: 'participant_left',
       room: ROOM,
@@ -75,7 +81,7 @@ describe('adapters/in-memory: InMemoryVoiceGateway', () => {
   });
 
   it('answers unavailable while told to, and forgets everything on clear', async () => {
-    const gateway = new InMemoryVoiceGateway();
+    const gateway = new InMemoryVoiceGateway(SECRET);
     await joined(gateway);
     gateway.setUnavailable(true);
 

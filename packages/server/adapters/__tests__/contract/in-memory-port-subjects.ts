@@ -126,7 +126,7 @@ export async function inMemoryPartyGuestSessionsSubject(): Promise<PartyGuestSes
 }
 
 export async function inMemoryVoiceGatewaySubject(): Promise<VoiceGatewaySubject> {
-  const gateway = new InMemoryVoiceGateway();
+  const gateway = new InMemoryVoiceGateway('twin-secret');
   return {
     gateway,
     sign: async (body) => gateway.signBody(body),

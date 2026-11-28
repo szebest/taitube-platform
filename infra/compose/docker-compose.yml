@@ -370,6 +370,18 @@ services:
         condition: service_healthy
     restart: on-failure
 
+  lk:
+    image: livekit/livekit-cli:v2.20.1@sha256:3955b4e52a4c73acc2cf2b039b7bc68d8a40e3fd4ffbdca6ec6a5cb93073eaed
+    profiles:
+      - voice-smoke
+    network_mode: service:livekit
+    environment:
+      LIVEKIT_URL: ws://127.0.0.1:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-change-me-livekit-key}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-change-me-livekit-secret-0123456789abcdef}
+    depends_on:
+      - livekit
+
   hls-test-page:
     image: nginx:1.31.6-alpine
     profiles:

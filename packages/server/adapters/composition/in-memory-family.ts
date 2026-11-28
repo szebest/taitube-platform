@@ -78,7 +78,7 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
     .provide(
       Adapters.VoiceGateway,
-      (c) => new InMemoryVoiceGateway(c.get(Adapters.Config).voice.apiSecret)
+      (c) => new InMemoryVoiceGateway(c.get(Adapters.Config).voice.apiSecret ?? '')
     )
     .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
     .provide(Adapters.PostOpenSketch, () => new InMemoryPostOpenSketch())

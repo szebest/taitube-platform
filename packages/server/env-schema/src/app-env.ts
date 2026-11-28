@@ -1,18 +1,10 @@
 import type { TraceSamplerName } from '@kit/observability';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { z } from 'zod';
+import { secret } from './env-fields';
 import { heldLocalCredentials } from './local-credentials';
 import { SECRET_KEYS } from './secret-keys';
-
-/**
- * A secret has no default: an unset one is absent, and `AppEnvSchema` refuses a production boot
- * without it. An empty value reads as unset, which is what `KEY=` in a `.env` file means.
- */
-const secret = () =>
-  z
-    .string()
-    .optional()
-    .transform((value) => value || undefined);
+import { VoiceEnvSchema } from './voice-env';
 
 const optionalUrl = () =>
   z.preprocess((value) => (value === '' ? undefined : value), z.url().optional());
@@ -174,18 +166,6 @@ const WatchPartyEnvSchema = z.object({
   WATCH_PARTY_MAX_MEMBERS: z.coerce.number().int().min(2).default(200),
   WATCH_PARTY_MAX_OPEN_PER_USER: z.coerce.number().int().min(1).default(3),
   WATCH_PARTY_GUEST_SALT: secret(),
-});
-
-const VoiceEnvSchema = z.object({
-  WATCH_PARTY_VOICE_ENABLED: z
-    .enum(['true', 'false'])
-    .default('false')
-    .transform((val) => val === 'true'),
-  LIVEKIT_URL: z.url().default('ws://localhost:7880'),
-  LIVEKIT_API_URL: z.url().default('http://localhost:7880'),
-  LIVEKIT_API_KEY: secret(),
-  LIVEKIT_API_SECRET: secret(),
-  WATCH_PARTY_VOICE_MAX_SPEAKERS: z.coerce.number().int().min(1).default(12),
 });
 
 const TRACE_SAMPLERS = [

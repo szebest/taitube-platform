@@ -1,4 +1,4 @@
-import { assertNever, err, fromPromise, ok, type Result } from '@kit/result';
+import { assertNever, err, fromPromise, ok, parseJson, type Result } from '@kit/result';
 import {
   type VoiceGrants,
   VoiceGatewayPort,
@@ -21,6 +21,7 @@ import {
   TrackType,
   WebhookReceiver,
 } from 'livekit-server-sdk';
+import { z } from 'zod';
 import { toVoiceWebhookEvent } from './voice-webhook-event';
 
 /** The slice of `RoomServiceClient` this adapter calls, so a spec can hand it a fake. */
@@ -79,6 +80,14 @@ const grantsOf = (info: ParticipantInfo): VoiceGrants => ({
   canPublish: info.permission?.canPublish ?? false,
 });
 
+const MetadataSchema = z.object({ speak: z.boolean() });
+
+function wantsToSpeak({ metadata }: ParticipantInfo): boolean {
+  const parsed = parseJson(metadata);
+  const read = parsed.ok ? MetadataSchema.safeParse(parsed.value) : undefined;
+  return read?.success === true && read.data.speak;
+}
+
 const audioTracks = (info: ParticipantInfo) =>
   info.tracks.filter((track) => track.type === TrackType.AUDIO);
 
@@ -104,6 +113,7 @@ export class LiveKitVoiceGateway extends VoiceGatewayPort {
         identity,
         name,
         ttl: ttlSeconds,
+        metadata: JSON.stringify({ speak: grants.canPublish }),
       });
       token.addGrant({
         roomJoin: true,
@@ -165,6 +175,7 @@ export class LiveKitVoiceGateway extends VoiceGatewayPort {
         identity: info.identity,
         grants: grantsOf(info),
         publishing: audioTracks(info).length > 0,
+        wantsToSpeak: wantsToSpeak(info),
       }))
     );
   }
@@ -175,7 +186,7 @@ export class LiveKitVoiceGateway extends VoiceGatewayPort {
   ): Promise<Result<VoiceWebhookEvent, VoiceWebhookRejected>> {
     const received = await fromPromise(
       () => this.receiver.receive(body, authorization),
-      (cause) => voiceWebhookRejected(cause instanceof Error ? cause.message : 'unreadable')
+      () => voiceWebhookRejected('signature')
     );
     if (!received.ok) return received;
 

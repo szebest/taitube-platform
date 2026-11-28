@@ -62,6 +62,7 @@ describe('adapters/livekit: LiveKitVoiceGateway', () => {
     expect(claims).toMatchObject({
       sub: 'user:a',
       name: 'Ana',
+      metadata: JSON.stringify({ speak: false }),
       video: {
         room: ROOM,
         roomJoin: true,
@@ -126,6 +127,7 @@ describe('adapters/livekit: LiveKitVoiceGateway', () => {
           [
             {
               identity: 'user:a',
+              metadata: JSON.stringify({ speak: true }),
               permission: { canSubscribe: true, canPublish: true },
               tracks: [{ sid: 'TR_a', type: TrackType.AUDIO }],
             },
@@ -135,8 +137,18 @@ describe('adapters/livekit: LiveKitVoiceGateway', () => {
     );
 
     expect(expectOk(await gateway.listParticipants(ROOM))).toEqual([
-      { identity: 'user:a', grants: { canSubscribe: true, canPublish: true }, publishing: true },
-      { identity: 'user:b', grants: { canSubscribe: false, canPublish: false }, publishing: false },
+      {
+        identity: 'user:a',
+        grants: { canSubscribe: true, canPublish: true },
+        publishing: true,
+        wantsToSpeak: true,
+      },
+      {
+        identity: 'user:b',
+        grants: { canSubscribe: false, canPublish: false },
+        publishing: false,
+        wantsToSpeak: false,
+      },
     ]);
   });
 

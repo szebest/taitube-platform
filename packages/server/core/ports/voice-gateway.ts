@@ -21,6 +21,8 @@ export interface VoiceParticipant {
   readonly grants: VoiceGrants;
   /** An audio track is being sent, muted or not. */
   readonly publishing: boolean;
+  /** The token it joined with asked to speak: only such a participant is given the mic back by a role change. */
+  readonly wantsToSpeak: boolean;
 }
 
 export type VoiceWebhookEvent =
