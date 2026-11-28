@@ -189,6 +189,13 @@ export const LIVE_CHAT = {
   presenceWindowMs: 40 * MS_PER_SECOND,
 } as const;
 
+/** A voice token is only needed to join, so ten minutes; a control call to the media server gets two seconds. */
+export const VOICE = {
+  tokenTtlSeconds: 10 * SECONDS_PER_MINUTE,
+  gatewayTimeoutMs: 2 * MS_PER_SECOND,
+  expirySlackMs: 250,
+} as const;
+
 /**
  * Watch parties. A socket token only has to outlive the upgrade right after it is fetched, and a
  * member is counted until it misses three keepalives, so a dead pod frees its seats.

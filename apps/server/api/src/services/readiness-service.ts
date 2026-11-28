@@ -1,7 +1,11 @@
-import { isOk } from '@kit/result';
-import type { HealthCheckable } from '@vp/core/ports';
+import { isOk, type Result } from '@kit/result';
 
 type DependencyCheck = 'ok' | 'failed';
+
+/** What readiness reads of a dependency: whether it answered, whichever port's failure it names. */
+interface Probe {
+  checkHealth(): Promise<Result<void, unknown>>;
+}
 
 export interface ReadinessReport {
   ready: boolean;
@@ -15,7 +19,7 @@ export interface ReadinessReport {
 export class ReadinessService {
   private draining = false;
 
-  constructor(private readonly dependencies: Readonly<Record<string, HealthCheckable>>) {}
+  constructor(private readonly dependencies: Readonly<Record<string, Probe>>) {}
 
   beginDrain(): void {
     this.draining = true;

@@ -1,18 +1,10 @@
 import type { TraceSamplerName } from '@kit/observability';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@kit/pagination';
 import { z } from 'zod';
+import { secret } from './env-fields';
 import { heldLocalCredentials } from './local-credentials';
 import { SECRET_KEYS } from './secret-keys';
-
-/**
- * A secret has no default: an unset one is absent, and `AppEnvSchema` refuses a production boot
- * without it. An empty value reads as unset, which is what `KEY=` in a `.env` file means.
- */
-const secret = () =>
-  z
-    .string()
-    .optional()
-    .transform((value) => value || undefined);
+import { VoiceEnvSchema } from './voice-env';
 
 const optionalUrl = () =>
   z.preprocess((value) => (value === '' ? undefined : value), z.url().optional());
@@ -201,6 +193,7 @@ const AppEnvShape = z.object({
   ...PipelineEnvSchema.shape,
   ...LiveEnvSchema.shape,
   ...WatchPartyEnvSchema.shape,
+  ...VoiceEnvSchema.shape,
   ...OtelEnvSchema.shape,
 });
 
@@ -215,6 +208,8 @@ const FEATURE_SECRET_KEYS = [
   'LIVE_HOOK_SECRET',
   'WATCH_PARTY_GUEST_SALT',
   'VIDEO_ACCESS_SECRET',
+  'LIVEKIT_API_KEY',
+  'LIVEKIT_API_SECRET',
 ] as const satisfies readonly (keyof ParsedEnv)[];
 
 function productionIssues(env: ParsedEnv): { key: string; message: string }[] {

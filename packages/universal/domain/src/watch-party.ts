@@ -1,5 +1,6 @@
 import { MS_PER_HOUR, MS_PER_MINUTE } from '@kit/primitives';
 import type { WatchPartyPlayback } from './watch-party-clock';
+import type { WatchPartyPreset } from './watch-party-roles';
 
 export const WATCH_PARTY_VISIBILITIES = ['public', 'unlisted', 'private'] as const;
 export type WatchPartyVisibility = (typeof WATCH_PARTY_VISIBILITIES)[number];
@@ -21,6 +22,9 @@ export type WatchPartyIdleClose = (typeof WATCH_PARTY_IDLE_CLOSE)[number];
 
 export const WATCH_PARTY_SLOW_MODE_SECONDS = [0, 5, 10, 30, 60] as const;
 export type WatchPartySlowModeSeconds = (typeof WATCH_PARTY_SLOW_MODE_SECONDS)[number];
+
+export const WATCH_PARTY_VOICE_MODES = ['open', 'push_to_talk'] as const;
+export type WatchPartyVoiceMode = (typeof WATCH_PARTY_VOICE_MODES)[number];
 
 export const WATCH_PARTY_JOIN_PATHS = [
   'link',
@@ -78,7 +82,7 @@ export type WatchPartyJoinState = (typeof WATCH_PARTY_JOIN_STATES)[number];
 export const WATCH_PARTY_PREVIEW_ACTIONS = ['guest', 'discord', 'sign_in'] as const;
 export type WatchPartyPreviewAction = (typeof WATCH_PARTY_PREVIEW_ACTIONS)[number];
 
-export const WATCH_PARTY_REQUEST_KINDS = ['seek', 'skip', 'start'] as const;
+export const WATCH_PARTY_REQUEST_KINDS = ['seek', 'skip', 'start', 'speak'] as const;
 
 const WATCH_PARTY_INVITE_STATUSES = ['pending', 'joined', 'declined', 'revoked'] as const;
 export type WatchPartyInviteStatus = (typeof WATCH_PARTY_INVITE_STATUSES)[number];
@@ -113,6 +117,12 @@ export const INVITE_LINK_TTL_MS: Readonly<Record<WatchPartyInviteLinkTtl, number
   '7d': 7 * 24 * MS_PER_HOUR,
 };
 
+/** A room made for friends opens the mic; a public one makes everyone hold a key to talk. */
+export const VOICE_MODE_BY_PRESET: Readonly<Record<WatchPartyPreset, WatchPartyVoiceMode>> = {
+  friends: 'open',
+  public: 'push_to_talk',
+};
+
 /** Guests are welcome where the link is the access, and kept out of a room meant for invitees. */
 export function defaultAllowGuests(visibility: WatchPartyVisibility): boolean {
   return visibility !== 'private';
@@ -129,6 +139,7 @@ export interface WatchPartySettings {
   readonly autoplay: boolean;
   readonly skipVotePercent: number;
   readonly idleClose: WatchPartyIdleClose;
+  readonly voiceMode: WatchPartyVoiceMode;
   readonly language: string | null;
   readonly accent: string | null;
   readonly scheduledFor: Date | null;
@@ -146,6 +157,7 @@ export const QUICK_PARTY_SETTINGS = {
   autoplay: true,
   skipVotePercent: WATCH_PARTY_LIMITS.skipVotePercent.default,
   idleClose: '15m',
+  voiceMode: 'open',
   language: null,
   accent: null,
   scheduledFor: null,

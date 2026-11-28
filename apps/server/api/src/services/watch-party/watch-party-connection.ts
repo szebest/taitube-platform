@@ -128,6 +128,10 @@ export class RoomConnection {
       this.io.send(rosterPatchFor(frame, canInRoom(this.context.ability, 'members.kick')));
       return;
     }
+    if (frame.type === 'voice') {
+      this.entry = { ...this.entry, voice: frame.state };
+      this.deps.roster.add(this.roomId, { type: 'upsert', entry: this.entry });
+    }
     if (frame.type === 'you') this.becomes(frame.memberKey);
     this.io.send(frame);
     if (ENDING.has(frame.type)) this.io.end();
@@ -147,6 +151,12 @@ export class RoomConnection {
       direct: io.send,
       patch: (change) => {
         this.entry = { ...this.entry, ...change };
+        deps.roster.add(roomId, { type: 'upsert', entry: this.entry });
+      },
+      selfMute: (muted) => {
+        const { voice } = this.entry;
+        if (muted ? voice !== 'live' : voice !== 'self_muted') return;
+        this.entry = { ...this.entry, voice: muted ? 'self_muted' : 'live' };
         deps.roster.add(roomId, { type: 'upsert', entry: this.entry });
       },
     };

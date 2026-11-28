@@ -51,6 +51,8 @@ ADMIN_TOKEN=change-me-32-bytes-random
 VIDEO_ACCESS_SECRET=change-me-video-access
 LIVE_HOOK_SECRET=change-me-live-hook
 WATCH_PARTY_GUEST_SALT=change-me-party-salt
+LIVEKIT_API_KEY=change-me-livekit-key
+LIVEKIT_API_SECRET=change-me-livekit-secret-0123456789abcdef
 ```
 
 ## Core
@@ -186,6 +188,12 @@ Room limits and guest hashing.
 | `WATCH_PARTY_MAX_MEMBERS` | integer >= 2 | `200` | - | no | api | The ceiling on a room capacity; a room with none set holds this many. At least 2. | `200` |
 | `WATCH_PARTY_MAX_OPEN_PER_USER` | integer >= 1 | `3` | - | no | api | How many open rooms one owner holds before creating another is refused. | `3` |
 | `WATCH_PARTY_GUEST_SALT` | string | *unset* | - | yes | api | Keys the guest IP hash kept for a ban. Unset, guest joins are switched off; production refuses the local value. | `<random 32 bytes>` |
+| `WATCH_PARTY_VOICE_ENABLED` | true \| false | `false` | - | no | api | Switches watch party voice on: the voice routes, the room feature flag and the readiness check of the media server. Off, no media server is needed. | `true` |
+| `LIVEKIT_URL` | url | `ws://localhost:7880` | - | no | api | The WebSocket URL browsers use to reach the media server. It must be reachable from the viewer, not only from the cluster. | `wss://voice.taitube.local` |
+| `LIVEKIT_API_URL` | url | `http://localhost:7880` | - | no | api | The media server API origin the API calls server to server. Unreachable, voice tokens are refused and readiness fails while voice is on. | `http://livekit:7880` |
+| `LIVEKIT_API_KEY` | string | *unset* | - | yes | api, infra | The key that signs voice tokens and webhooks, as the media server knows it. Unset, voice is unavailable; production refuses the local value. | `<random key>` |
+| `LIVEKIT_API_SECRET` | string | *unset* | - | yes | api, infra | The secret paired with LIVEKIT_API_KEY. Unset, voice is unavailable; production refuses the local value. | `<random 32 bytes>` |
+| `WATCH_PARTY_VOICE_MAX_SPEAKERS` | integer >= 1 | `12` | - | no | api | How many members may publish audio in one room; the next speaker joins as a listener and can request to speak. At least 1. | `12` |
 
 ## Observability
 
@@ -227,6 +235,9 @@ Handed to something other than this repo code. platform-env.json names the consu
 | `GRAFANA_OTLP_ENDPOINT` | no | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | Alloy's upstream OTLP endpoint in the cloud. The apps never read it; they export to Alloy through OTEL_EXPORTER_OTLP_ENDPOINT. | `https://otlp-gateway-<region>.grafana.net/otlp` |
 | `GRAFANA_OTLP_HEADERS` | yes | Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml | The Authorization=Basic header Alloy sends to GRAFANA_OTLP_ENDPOINT, built from the base64 of instanceId:token. Wrong credentials drop all cloud telemetry. | `Authorization=Basic <base64 instanceId:token>` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | yes | cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml | The token cloudflared uses to attach the cluster to its Cloudflare tunnel. Without it the cloud overlay has no public ingress. | `<tunnel token>` |
+| `LIVEKIT_KEYS` | yes | the LiveKit server, infra/k8s/base/livekit.yaml: the key and secret pair it signs and verifies tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET | The key and secret pair the LiveKit server signs and verifies voice tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET in the k8s manifest. The API never reads it. | `<key>: <secret>` |
+| `LIVEKIT_CONFIG` | no | the LiveKit server, infra/k8s/base/livekit.yaml: its whole configuration as YAML | The LiveKit server's whole configuration as YAML, set in the k8s manifest. Compose mounts a file instead. | `port: 7880` |
+| `NODE_IP` | no | the LiveKit server, infra/k8s/base/livekit.yaml: the address it advertises to clients, set per environment instead of discovered through a public STUN server | The address the LiveKit server advertises to clients. It is set per environment because the server must never discover it through a public STUN server. | `203.0.113.10` |
 
 ## Tooling and cloud-only keys
 

@@ -25,6 +25,7 @@ Secret from a `ClusterSecretStore` named `vp-secret-store`, and the overlay dele
 - `VIDEO_ACCESS_SECRET` (signs the video password unlock cookies; without it video passwords are off)
 - `LIVE_HOOK_SECRET` (what MediaMTX sends on every auth and event call; unset, every publisher is refused)
 - `WATCH_PARTY_GUEST_SALT` (keys the guest IP hash kept for a ban; unset, guest joins are off)
+- `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` (sign voice tokens and webhooks; only read when `WATCH_PARTY_VOICE_ENABLED=true`)
 
 There is no `ADMIN_TOKEN` in the cloud: production refuses one, and an admin is a token whose verified role
 claim says so. Set `AUTH_JWKS_URL`, `AUTH_ISSUER` and `AUTH_AUDIENCE` in `kustomization.yaml` to your IdP.

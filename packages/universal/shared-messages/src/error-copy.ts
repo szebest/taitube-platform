@@ -150,6 +150,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   [ErrorCodes.WATCH_PARTY_ROLE_LIMIT]: 'errors.watchPartyRoleLimit',
   [ErrorCodes.WATCH_PARTY_SLOW_MODE]: 'errors.watchPartySlowMode',
   [ErrorCodes.WATCH_PARTY_CHAT_OFF]: 'errors.watchPartyChatOff',
+  [ErrorCodes.WATCH_PARTY_VOICE_SPEAKERS_FULL]: 'errors.watchPartyVoiceSpeakersFull',
+  [ErrorCodes.WATCH_PARTY_VOICE_UNAVAILABLE]: 'errors.watchPartyVoiceUnavailable',
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'errors.watchPartyTicketInvalid',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'errors.watchPartyCredentialInvalid',
   ...CHANNEL_ERROR_COPY,

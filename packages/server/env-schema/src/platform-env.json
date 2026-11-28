@@ -8,5 +8,8 @@
   "SSR_API_BASE_URL": "apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config",
   "ACCOUNTS_MAX": "apps/client/web and apps/client/studio's SSR servers, parsed by @vp/queries' parseClientEnv from their src/lib/config: how many accounts one browser holds at once",
   "SSR_DEV_TOKEN_URL": "apps/client/web and apps/client/studio's SSR servers, parsed by their own schemas in src/lib/config, and demo/start.sh: where the server reaches dev-token serve for the demo personas",
+  "LIVEKIT_KEYS": "the LiveKit server, infra/k8s/base/livekit.yaml: the key and secret pair it signs and verifies tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET",
+  "LIVEKIT_CONFIG": "the LiveKit server, infra/k8s/base/livekit.yaml: its whole configuration as YAML",
+  "NODE_IP": "the LiveKit server, infra/k8s/base/livekit.yaml: the address it advertises to clients, set per environment instead of discovered through a public STUN server",
   "VITE_WEB_URL": "apps/client/web and apps/client/studio at build time: the web app's public origin, the same value the API reads as WEB_URL"
 }

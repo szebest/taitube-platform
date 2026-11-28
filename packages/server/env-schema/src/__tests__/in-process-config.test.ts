@@ -30,6 +30,11 @@ describe('packages/env-schema: inProcessAppConfig', () => {
     expect(inProcessAppConfig({ cdn: 'http://cdn.local///' }).cdn).toBe('http://cdn.local');
   });
 
+  it('mounts voice with a key of its own, and lets an override switch it off', () => {
+    expect(inProcessAppConfig().voice).toMatchObject({ enabled: true, apiKey: expect.any(String) });
+    expect(inProcessAppConfig({ voice: { enabled: false } }).voice.enabled).toBe(false);
+  });
+
   it('takes a different adapter family as plain configuration', () => {
     expect(inProcessAppConfig({ kind: 'external' }).kind).toBe('external');
   });

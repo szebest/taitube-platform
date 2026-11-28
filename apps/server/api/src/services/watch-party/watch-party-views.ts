@@ -58,6 +58,7 @@ export function toWatchPartyView({
     autoplay: room.autoplay,
     skipVotePercent: room.skipVotePercent,
     idleClose: room.idleClose,
+    voiceMode: room.voiceMode,
     language: room.language,
     accent: room.accent,
     scheduledFor: room.scheduledFor?.toISOString() ?? null,

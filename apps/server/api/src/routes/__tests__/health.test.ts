@@ -3,6 +3,7 @@ import {
   InMemoryDatabaseClient,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
+import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
 
@@ -38,6 +39,20 @@ describe('health routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
       status: 'ok',
+      checks: { postgres: 'ok', redis: 'ok', s3: 'ok', voice: 'ok' },
+    });
+  });
+
+  it('leaves the media server out of readiness while voice is off', async () => {
+    const { app: quiet } = await buildTestApp({
+      config: inProcessAppConfig({ voice: { enabled: false } }),
+    });
+
+    const res = await quiet.inject({ method: 'GET', url: '/readyz' });
+    await quiet.close();
+
+    expect(res.json()).toEqual({
+      status: 'ok',
       checks: { postgres: 'ok', redis: 'ok', s3: 'ok' },
     });
   });
@@ -52,7 +67,7 @@ describe('health routes', () => {
       expect(res.statusCode).toBe(503);
       expect(res.json()).toEqual({
         status: 'degraded',
-        checks: { postgres: 'ok', redis: 'ok', s3: 'ok', [name]: 'failed' },
+        checks: { postgres: 'ok', redis: 'ok', s3: 'ok', voice: 'ok', [name]: 'failed' },
       });
     }
   );

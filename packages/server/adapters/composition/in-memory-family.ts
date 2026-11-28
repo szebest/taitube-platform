@@ -19,6 +19,7 @@ import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-sug
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
+import { InMemoryVoiceGateway } from '../in-memory/in-memory-voice-gateway';
 import { InMemoryWatchPartyGate } from '../in-memory/in-memory-watch-party-gate';
 import { InMemoryWatchPartyPresence } from '../in-memory/in-memory-watch-party-presence';
 import { InMemoryWebhookDispatcher } from '../in-memory/in-memory-webhook-dispatcher';
@@ -75,6 +76,10 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
+    .provide(
+      Adapters.VoiceGateway,
+      (c) => new InMemoryVoiceGateway(c.get(Adapters.Config).voice.apiSecret ?? '')
+    )
     .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
     .provide(Adapters.PostOpenSketch, () => new InMemoryPostOpenSketch())
     .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())

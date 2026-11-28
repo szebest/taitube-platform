@@ -20,6 +20,7 @@ import type {
   WatchPartyInviteService,
   WatchPartyControlsService,
 } from '../services/watch-party/index';
+import type { VoiceEnforcement, WatchPartyVoiceService } from '../services/watch-party/voice/index';
 
 export interface WatchPartyServiceSet {
   watchPartyService: WatchPartyService;
@@ -30,6 +31,8 @@ export interface WatchPartyServiceSet {
   watchPartyInviteService: WatchPartyInviteService;
   watchPartyControlsService: WatchPartyControlsService;
   watchPartySocketService: WatchPartySocketService;
+  /** `null` while `WATCH_PARTY_VOICE_ENABLED` is off: the voice routes are not registered. */
+  watchPartyVoiceService: WatchPartyVoiceService | null;
 }
 
 export const WatchPartyServices = {
@@ -50,4 +53,6 @@ export const WatchPartyServices = {
   WatchPartyBuffering: token<BufferingWait>('WatchPartyBuffering'),
   WatchPartyOwnerGrace: token<OwnerGrace>('WatchPartyOwnerGrace'),
   WatchPartySocketService: token<WatchPartySocketService>('WatchPartySocketService'),
+  WatchPartyVoiceEnforcement: token<VoiceEnforcement>('WatchPartyVoiceEnforcement'),
+  WatchPartyVoiceService: token<WatchPartyVoiceService>('WatchPartyVoiceService'),
 };

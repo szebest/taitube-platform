@@ -153,6 +153,27 @@ const PLATFORM = extraDocs('platform', {
     visibility: 'secret',
     readBy: ['infra'],
   },
+  LIVEKIT_KEYS: {
+    description:
+      'The key and secret pair the LiveKit server signs and verifies voice tokens with, built from LIVEKIT_API_KEY and LIVEKIT_API_SECRET in the k8s manifest. The API never reads it.',
+    example: '<key>: <secret>',
+    visibility: 'secret',
+    readBy: ['infra'],
+  },
+  LIVEKIT_CONFIG: {
+    description:
+      "The LiveKit server's whole configuration as YAML, set in the k8s manifest. Compose mounts a file instead.",
+    example: 'port: 7880',
+    visibility: 'public',
+    readBy: ['infra'],
+  },
+  NODE_IP: {
+    description:
+      'The address the LiveKit server advertises to clients. It is set per environment because the server must never discover it through a public STUN server.',
+    example: '203.0.113.10',
+    visibility: 'public',
+    readBy: ['infra'],
+  },
 });
 
 const TOOLING = extraDocs('tooling', {

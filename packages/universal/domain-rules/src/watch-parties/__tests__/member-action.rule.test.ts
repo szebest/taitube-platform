@@ -69,6 +69,20 @@ describe('@vp/domain-rules: decideMemberAction', () => {
       code: ErrorCodes.WATCH_PARTY_ROLE_ESCALATION,
     },
     {
+      scenario: 'a moderator removes a guest from voice',
+      holder: 'moderator',
+      action: 'voice',
+      target: memberAt(0, { kind: 'guest' }),
+      code: null,
+    },
+    {
+      scenario: 'a member removes a member from voice',
+      holder: 'member',
+      action: 'voice',
+      target: memberAt(0),
+      code: ErrorCodes.WATCH_PARTY_PERMISSION_MISSING,
+    },
+    {
       scenario: 'a member moderates a member',
       holder: 'member',
       action: 'moderate',

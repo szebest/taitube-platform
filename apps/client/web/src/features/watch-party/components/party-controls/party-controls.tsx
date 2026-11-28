@@ -13,7 +13,12 @@ interface PartyControlsProps {
 
 type Versioned = { version: number; rolesVersion: number };
 
-function acceptFrame(request: PartyRequest, versions: Versioned): WatchPartyClientFrame {
+type PlaybackRequest = PartyRequest & { kind: Exclude<PartyRequest['kind'], 'speak'> };
+
+const isPlaybackRequest = (request: PartyRequest): request is PlaybackRequest =>
+  request.kind !== 'speak';
+
+function acceptFrame(request: PlaybackRequest, versions: Versioned): WatchPartyClientFrame {
   switch (request.kind) {
     case 'seek':
       return { type: 'seek', positionMs: request.positionMs ?? 0, ...versions };
@@ -45,7 +50,7 @@ export function PartyControls({ socket }: PartyControlsProps) {
         : { type: 'play', ...versions }
     );
 
-  const requestText = (request: PartyRequest) => {
+  const requestText = (request: PlaybackRequest) => {
     const name = nameOf(request.from);
     switch (request.kind) {
       case 'seek':
@@ -87,7 +92,7 @@ export function PartyControls({ socket }: PartyControlsProps) {
       </div>
       {canControl && (
         <ul className="m-0 flex list-none flex-col gap-inline p-0" aria-live="polite">
-          {state.requests.map((request) => (
+          {state.requests.filter(isPlaybackRequest).map((request) => (
             <li key={request.key} className="flex flex-wrap items-center gap-inline text-body-sm">
               <span>{requestText(request)}</span>
               <Button

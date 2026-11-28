@@ -6,6 +6,9 @@ import {
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { PartyCaller } from '../party-caller';
+import { voiceOn } from '../voice/__tests__/voice-fixture';
+import { removeFromVoice } from '../voice/voice-moderation';
+import { mintVoiceToken } from '../voice/voice-token';
 import { pinChat, removeChat, sendChat } from '../watch-party-chat';
 import { runCommand } from '../watch-party-commands';
 import { WatchPartyInviteService } from '../watch-party-invite-service';
@@ -15,10 +18,12 @@ import { WatchPartyQueueService } from '../watch-party-queue-service';
 import { WatchPartyRoleService } from '../watch-party-role-service';
 import { closeRoom, updateRoom } from '../watch-party-settings';
 import { react, requestPlayback, voteSkip } from '../watch-party-signals';
-import { assignRoleId, createRole, fillPresence } from './watch-party-access-fixture';
+import { createRole, fillPresence } from './watch-party-access-fixture';
+import { holding, stripMember } from './watch-party-enforcement-fixture';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
 import { MEMBER, OTHER, OWNER, userCaller, VIDEO_B } from './watch-party-test-deps';
+import { VOICE_ENFORCEMENT } from './watch-party-voice-enforcement';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 type Attempt = (party: Party, caller: PartyCaller) => Promise<{ ok: boolean; error?: unknown }>;
@@ -37,7 +42,6 @@ interface Enforcement {
   readonly refusal?: Refusal;
 }
 
-const POSITION = 450;
 const MISSING = ErrorCodes.WATCH_PARTY_PERMISSION_MISSING;
 
 const outcomeOf = (result: { ok: boolean }) => result as { ok: boolean; error?: unknown };
@@ -184,6 +188,7 @@ const ENFORCEMENT: Readonly<Partial<Record<WatchPartyPermission, Enforcement>>> 
       outcomeOf(await sendChat(party.deps, ROOM_ID, caller, 'second')),
     refusal: { code: ErrorCodes.WATCH_PARTY_SLOW_MODE },
   },
+  ...VOICE_ENFORCEMENT,
   'members.invite': {
     attempt: async (party, caller) =>
       outcomeOf(
@@ -258,35 +263,6 @@ const ENFORCEMENT: Readonly<Partial<Record<WatchPartyPermission, Enforcement>>> 
       ),
   },
 };
-
-async function stripMember(party: Party): Promise<void> {
-  const at = party.deps.now();
-  expectOk(
-    await party.repositories.watchPartyRoles.resetBuiltIns(
-      ROOM_ID,
-      [{ key: 'member', permissions: [] }],
-      {
-        at,
-        line: {
-          id: party.deps.secrets.newId(),
-          line: { event: 'roles_changed', actorKey: keyOf(OWNER), targetKey: null, detail: null },
-          videoId: null,
-          positionMs: null,
-          createdAt: at,
-        },
-      }
-    )
-  );
-}
-
-async function holding(party: Party, permissions: readonly WatchPartyPermission[]) {
-  const role = await createRole(party, ROOM_ID, {
-    name: `Holds ${permissions.join()}`,
-    position: POSITION,
-    permissions: [...permissions],
-  });
-  await assignRoleId(party, ROOM_ID, keyOf(MEMBER), role);
-}
 
 describe('each permission is enforced on the server', () => {
   it.each(WATCH_PARTY_PERMISSIONS.map(({ id }) => ({ id })))(

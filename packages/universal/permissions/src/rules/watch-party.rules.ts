@@ -58,6 +58,7 @@ export function defineWatchPartyRoomRules(
   }
   if (held.has('voice.moderate')) {
     can(['assign', 'revoke'], 'WatchPartyRole', { key: 'voice_muted', position: below });
+    can('voice', 'WatchPartyMember', memberBelow);
   }
   if (held.has('chat.moderate') || held.has('voice.moderate')) {
     can('mute', 'WatchPartyMember', memberBelow);
@@ -73,7 +74,7 @@ export function defineWatchPartyRoomRules(
 
   if (isPlatformStaff(user)) {
     for (const permission of PLATFORM_STAFF_PERMISSIONS) can(permission, 'WatchParty');
-    can(['kick', 'ban', 'mute', 'moderate'], 'WatchPartyMember', { isOwner: false });
+    can(['kick', 'ban', 'mute', 'moderate', 'voice'], 'WatchPartyMember', { isOwner: false });
     can(['assign', 'revoke'], 'WatchPartyRole', { key: { $in: [...MUTE_ROLES] } });
   }
 

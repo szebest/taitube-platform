@@ -399,6 +399,8 @@
   "errors.watchPartyStateStale": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyTicketInvalid": ["@vp/shared-messages", "@vp/studio"],
   "errors.watchPartyVideoNotShareable": ["@vp/shared-messages", "@vp/studio"],
+  "errors.watchPartyVoiceSpeakersFull": ["@vp/shared-messages", "@vp/studio"],
+  "errors.watchPartyVoiceUnavailable": ["@vp/shared-messages", "@vp/studio"],
   "errors.webhookDeliveryFailed": ["@vp/shared-messages", "@vp/studio"],
   "errors.webhookDeliveryRejected": ["@vp/shared-messages", "@vp/studio"],
   "errors.webhookLimitReached": ["@vp/shared-messages", "@vp/studio"],

@@ -13,6 +13,7 @@ import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
+import { InMemoryVoiceGateway } from '../../in-memory/in-memory-voice-gateway';
 import { InMemoryWatchPartyGate } from '../../in-memory/in-memory-watch-party-gate';
 import { InMemoryWatchPartyPresence } from '../../in-memory/in-memory-watch-party-presence';
 import type { CategoryCacheSubject } from './category-cache.contract';
@@ -25,6 +26,7 @@ import {
 import type { StorageClientSubject } from './storage-client.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
+import type { VoiceGatewaySubject } from './voice-gateway.contract';
 import type { WatchPartyGateSubject } from './watch-party-gate.contract';
 import type { WatchPartyPresenceSubject } from './watch-party-presence.contract';
 
@@ -121,4 +123,13 @@ export async function inMemoryWatchPartyPresenceSubject(): Promise<WatchPartyPre
 
 export async function inMemoryPartyGuestSessionsSubject(): Promise<PartyGuestSessionsSubject> {
   return { sessions: new InMemoryPartyGuestSessions(), close: async () => {} };
+}
+
+export async function inMemoryVoiceGatewaySubject(): Promise<VoiceGatewaySubject> {
+  const gateway = new InMemoryVoiceGateway('twin-secret');
+  return {
+    gateway,
+    sign: async (body) => gateway.signBody(body),
+    close: async () => gateway.clear(),
+  };
 }

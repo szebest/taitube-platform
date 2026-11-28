@@ -6,6 +6,7 @@ import {
   type WatchPartyServerFrame,
 } from '@vp/api-contracts';
 import { parseMemberKey, type RosterEntry } from '@vp/domain';
+import { requireRoomPermission } from '@vp/domain-rules';
 import type { WatchPartyAbility } from '@vp/permissions';
 import { type InvalidField, invalidField } from '@vp/validation';
 import type { PartyCaller } from './party-caller';
@@ -40,6 +41,8 @@ export interface FrameSender {
   readonly ability: WatchPartyAbility;
   direct(frame: WatchPartyServerFrame): void;
   patch(change: Partial<RosterEntry>): void;
+  /** Flips the member's own voice state between live and self-muted, leaving every other state alone. */
+  selfMute(muted: boolean): void;
 }
 
 /** A frame past the size limit, not JSON or outside the contract is refused, never thrown. */
@@ -134,6 +137,12 @@ async function answer(
       return map(await voteSkip(deps, roomId, caller, frame.itemId), ack);
     case 'request':
       return map(await requestPlayback(deps, roomId, caller, frame), ack);
+    case 'voice.mute': {
+      const held = requireRoomPermission(sender.ability, 'voice.join');
+      if (isErr(held)) return held;
+      sender.selfMute(frame.muted);
+      return ok(ack());
+    }
     case 'chat.send': {
       const sent = await sendChat(deps, roomId, caller, frame.message);
       deps.metrics.watchPartyChatMessagesTotal.inc({

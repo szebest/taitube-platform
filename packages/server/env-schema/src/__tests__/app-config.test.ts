@@ -56,6 +56,13 @@ describe('packages/env-schema: toAppConfig', () => {
         guestSalt: 'change-me-party-salt',
         ticketTtlSeconds: 30,
       },
+      voice: {
+        enabled: false,
+        url: 'ws://localhost:7880',
+        apiUrl: 'http://localhost:7880',
+        apiKey: 'change-me-livekit-key',
+        maxSpeakers: 12,
+      },
     });
   });
 

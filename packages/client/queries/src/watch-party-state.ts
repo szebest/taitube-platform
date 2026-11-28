@@ -203,6 +203,7 @@ function applyFrame(state: WatchPartyState, frame: WatchPartyServerFrame): Watch
         ],
       };
     case 'reactions':
+    case 'voice':
     case 'clock':
     case 'ack':
       return state;
