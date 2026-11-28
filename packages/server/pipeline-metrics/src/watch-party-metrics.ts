@@ -15,6 +15,8 @@ export interface WatchPartyMetrics {
   watchPartyFanoutSeconds: Histogram<string>;
   watchPartyChatMessagesTotal: Counter<string>;
   watchPartyInvitesTotal: Counter<string>;
+  watchPartyReportsTotal: Counter<string>;
+  watchPartyScheduledStartsTotal: Counter<string>;
   watchPartyClockSkewSeconds: Gauge<string>;
 }
 
@@ -79,6 +81,16 @@ export function createWatchPartyMetrics(registry: Registry): WatchPartyMetrics {
       ['source', 'outcome']
     ),
     watchPartyInvitesTotal: counter('watch_party_invites_total', 'Invites by outcome', ['outcome']),
+    watchPartyReportsTotal: counter(
+      'watch_party_reports_total',
+      'Reports by outcome: filed, duplicate, or filed and hid the room',
+      ['outcome']
+    ),
+    watchPartyScheduledStartsTotal: counter(
+      'watch_party_scheduled_starts_total',
+      'Scheduled rooms by outcome: started by auto start, or closed because nobody started them',
+      ['outcome']
+    ),
     watchPartyClockSkewSeconds: gauge(
       'watch_party_clock_skew_seconds',
       'This pod clock minus the database clock'
