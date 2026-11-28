@@ -21,6 +21,7 @@ import type { InMemoryCommentSettingsRepository } from './in-memory-comment-sett
 import type { InMemoryContentLinkDismissalRepository } from './in-memory-content-link-dismissal-repository';
 import type { InMemoryContentLinkRepository } from './in-memory-content-link-repository';
 import type { InMemoryContentLinkStatsRepository } from './in-memory-content-link-stats-repository';
+import type { InMemoryContentRefDirectory } from './in-memory-content-ref-directory';
 import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEntityRevisionRepository } from './in-memory-entity-revision-repository';
@@ -122,6 +123,7 @@ export const Repo = {
   videoGenerations: token<InMemoryVideoGenerationRepository>('videoGenerations'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   contentLinks: token<InMemoryContentLinkRepository>('contentLinks'),
+  contentRefs: token<InMemoryContentRefDirectory>('contentRefs'),
   contentLinkDismissals: token<InMemoryContentLinkDismissalRepository>('contentLinkDismissals'),
   contentLinkStats: token<InMemoryContentLinkStatsRepository>('contentLinkStats'),
   videoEndScreens: token<InMemoryVideoEndScreenRepository>('videoEndScreens'),

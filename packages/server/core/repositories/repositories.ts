@@ -20,6 +20,7 @@ import type { CommentSettingsRepositoryPort } from './comment-settings-repositor
 import type { ContentLinkDismissalRepositoryPort } from './content-link-dismissal-repository';
 import type { ContentLinkRepositoryPort } from './content-link-repository';
 import type { ContentLinkStatsRepositoryPort } from './content-link-stats-repository';
+import type { ContentRefDirectoryPort } from './content-ref-directory';
 import type { DataExportRepositoryPort } from './data-export-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EntityRevisionRepository } from './entity-revision-repository';
@@ -131,6 +132,7 @@ export interface Repositories {
   videoGenerations: VideoGenerationRepository;
   channelFeatured: ChannelFeaturedRepositoryPort;
   contentLinks: ContentLinkRepositoryPort;
+  contentRefs: ContentRefDirectoryPort;
   contentLinkDismissals: ContentLinkDismissalRepositoryPort;
   contentLinkStats: ContentLinkStatsRepositoryPort;
   videoEndScreens: VideoEndScreenRepositoryPort;

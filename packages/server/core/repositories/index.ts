@@ -52,6 +52,7 @@ export * from './screening-repository';
 export * from './fingerprint-repository';
 export * from './channel-featured-repository';
 export * from './content-link-repository';
+export * from './content-ref-directory';
 export * from './content-link-dismissal-repository';
 export * from './content-link-stats-repository';
 export * from './video-end-screen-repository';

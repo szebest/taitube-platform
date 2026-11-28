@@ -1,4 +1,11 @@
-import { POST_KINDS, POST_LIFECYCLE_EDGES, POST_STATUSES, POSTS_PER_DAY } from '../channel-post';
+import {
+  POST_KINDS,
+  POST_LIFECYCLE_EDGES,
+  POST_STATUSES,
+  POSTS_PER_DAY,
+  type PostPayload,
+  postTitleOf,
+} from '../channel-post';
 
 describe('@vp/domain: channel post', () => {
   it('limits posts per day to 20', () => {
@@ -22,4 +29,20 @@ describe('@vp/domain: channel post', () => {
 
     expect(sources).not.toContain('published');
   });
+
+  it.each([
+    { payload: { kind: 'text', text: 'Hello' }, title: 'Hello' },
+    { payload: { kind: 'images', images: [], caption: null }, title: '' },
+    { payload: { kind: 'poll', question: 'Which?', options: [], closesAt: null }, title: 'Which?' },
+    {
+      payload: { kind: 'video_share', videoId: 'v', comment: 'Look', startMs: null },
+      title: 'Look',
+    },
+    { payload: { kind: 'playlist_share', playlistId: 'p', comment: null }, title: '' },
+  ] as { payload: PostPayload; title: string }[])(
+    'names a $payload.kind post $title',
+    ({ payload, title }) => {
+      expect(postTitleOf(payload)).toBe(title);
+    }
+  );
 });

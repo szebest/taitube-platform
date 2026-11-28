@@ -109,6 +109,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly clips: InMemoryClipRepository;
   declare readonly channelFeatured: ChannelContent['channelFeatured'];
   declare readonly contentLinks: ContentLinks['contentLinks'];
+  declare readonly contentRefs: ContentLinks['contentRefs'];
   declare readonly contentLinkDismissals: ContentLinks['contentLinkDismissals'];
   declare readonly contentLinkStats: ContentLinks['contentLinkStats'];
   declare readonly videoEndScreens: ContentLinks['videoEndScreens'];

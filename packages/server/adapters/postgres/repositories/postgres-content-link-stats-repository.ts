@@ -39,7 +39,7 @@ export class PostgresContentLinkStatsRepository implements ContentLinkStatsRepos
         .from(links)
         .where(inArray(links.id, [...new Set(counts.map(({ linkId }) => linkId))]));
       const live = new Set(existing.map(({ id }) => id));
-      const rows = counts.filter(({ linkId }) => live.has(linkId));
+      const rows = mergeDays(counts.filter(({ linkId }) => live.has(linkId)));
       if (rows.length === 0) return;
       await this.db
         .insert(stats)

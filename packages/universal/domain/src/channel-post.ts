@@ -53,6 +53,22 @@ export type PostPayload =
 
 export type PostKind = PostPayload['kind'];
 
+/** The line a post is named by where it is listed as a link target. */
+export function postTitleOf(payload: PostPayload): string {
+  switch (payload.kind) {
+    case 'text':
+      return payload.text;
+    case 'images':
+      return payload.caption ?? '';
+    case 'poll':
+    case 'quiz':
+      return payload.question;
+    case 'video_share':
+    case 'playlist_share':
+      return payload.comment ?? '';
+  }
+}
+
 export interface ChannelPost {
   id: string;
   channelId: string;

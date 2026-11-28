@@ -75,6 +75,7 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly channelAudit: ChannelRepositories['channelAudit'];
   declare readonly channelFeatured: ChannelRepositories['channelFeatured'];
   declare readonly contentLinks: ContentLinkRepositories['contentLinks'];
+  declare readonly contentRefs: ContentLinkRepositories['contentRefs'];
   declare readonly contentLinkDismissals: ContentLinkRepositories['contentLinkDismissals'];
   declare readonly contentLinkStats: ContentLinkRepositories['contentLinkStats'];
   declare readonly videoEndScreens: ContentLinkRepositories['videoEndScreens'];
