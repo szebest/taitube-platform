@@ -57,5 +57,6 @@ export function mergePreferences(stored: Preferences | null, patch: PreferencesP
       stored?.notifications ?? null,
       patch.notifications
     ),
+    party: mergeSection('party', stored?.party ?? null, patch.party),
   };
 }

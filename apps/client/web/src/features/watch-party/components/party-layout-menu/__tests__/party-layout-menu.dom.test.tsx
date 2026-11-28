@@ -1,22 +1,26 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import type { PartyPreferences } from '@vp/domain/settings';
 import { AppProviders } from '#app/__tests__/providers';
 import { PartyLayoutMenu } from '../party-layout-menu';
 
-function renderMenu(layout: 'side' | 'below' | 'theater' | 'focus' = 'side') {
-  const onLayoutChange = vi.fn();
+function renderMenu(preferences: Partial<PartyPreferences> = {}) {
+  const onChange = vi.fn();
   render(
     <AppProviders>
-      <PartyLayoutMenu layout={layout} onLayoutChange={onLayoutChange} />
+      <PartyLayoutMenu
+        preferences={{ layout: 'side', reactionOverlay: true, systemLines: true, ...preferences }}
+        onChange={onChange}
+      />
     </AppProviders>
   );
 
-  return { onLayoutChange };
+  return { onChange };
 }
 
 describe('apps/client/web: PartyLayoutMenu', () => {
   it('offers the four layouts and marks the current one', async () => {
-    renderMenu('theater');
+    renderMenu({ layout: 'theater' });
 
     await userEvent.click(screen.getByRole('button', { name: 'Layout' }));
 
@@ -29,12 +33,16 @@ describe('apps/client/web: PartyLayoutMenu', () => {
     expect(screen.getByRole('menuitemradio', { name: 'Theater' })).toBeChecked();
   });
 
-  it('reports the layout the viewer picked', async () => {
-    const { onLayoutChange } = renderMenu();
+  it.each([
+    { pick: 'menuitemradio', name: 'Focus', patch: { layout: 'focus' } },
+    { pick: 'menuitemcheckbox', name: 'Show reactions', patch: { reactionOverlay: false } },
+    { pick: 'menuitemcheckbox', name: 'Show system lines in chat', patch: { systemLines: false } },
+  ] as const)('reports $name as $patch', async ({ pick, name, patch }) => {
+    const { onChange } = renderMenu();
 
     await userEvent.click(screen.getByRole('button', { name: 'Layout' }));
-    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Focus' }));
+    await userEvent.click(screen.getByRole(pick, { name }));
 
-    expect(onLayoutChange).toHaveBeenCalledWith('focus');
+    expect(onChange).toHaveBeenCalledWith(patch);
   });
 });

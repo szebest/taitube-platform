@@ -87,6 +87,9 @@ export const WATCH_PARTY_INVITE_LINK_TTLS = ['1h', '24h', '7d'] as const;
 export type WatchPartyInviteLinkTtl = (typeof WATCH_PARTY_INVITE_LINK_TTLS)[number];
 
 /** The fixed reaction palette: a reaction names one of these, never free text. */
+/** Where the panel sits, or whether it shows at all: the viewer's pick, not the room's. */
+export const PARTY_ROOM_LAYOUTS = ['side', 'below', 'theater', 'focus'] as const;
+
 export const WATCH_PARTY_REACTIONS = ['😂', '😮', '😍', '👏', '🔥', '😢', '😱', '🎉'] as const;
 
 export const WATCH_PARTY_LIMITS = {

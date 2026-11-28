@@ -32,6 +32,7 @@ describe('PreferencesService', () => {
       playback: DEFAULT_PREFERENCES.playback,
       privacy: null,
       notifications: null,
+      party: null,
     };
     vi.spyOn(repositories.userPreferences, 'save').mockImplementationOnce(async () => {
       await repositories.userPreferences.save({

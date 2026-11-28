@@ -16,6 +16,7 @@ export function toPreferencesView(stored: UserPreferences | null): PreferencesVi
       playback: null,
       privacy: null,
       notifications: null,
+      party: null,
       version: 0,
       updatedAt: null,
     };
@@ -26,6 +27,7 @@ export function toPreferencesView(stored: UserPreferences | null): PreferencesVi
     playback: withDefaults('playback', sections.playback),
     privacy: withDefaults('privacy', sections.privacy),
     notifications: withDefaults('notifications', sections.notifications),
+    party: withDefaults('party', sections.party),
     version,
     updatedAt: updatedAt.toISOString(),
   };

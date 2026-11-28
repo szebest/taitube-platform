@@ -41,6 +41,7 @@ describe('preferences routes', () => {
       playback: null,
       privacy: null,
       notifications: null,
+      party: null,
       version: 0,
       updatedAt: null,
     });
@@ -81,6 +82,7 @@ describe('preferences routes', () => {
           playback: null,
           privacy: null,
           notifications: null,
+          party: null,
         },
         expectedVersion: 0,
         sections: ['appearance'],

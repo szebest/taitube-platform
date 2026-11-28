@@ -105,6 +105,7 @@ export function signInBrowser(
         playback: null,
         privacy: null,
         notifications: null,
+        party: null,
         version: 0,
         updatedAt: null,
       })

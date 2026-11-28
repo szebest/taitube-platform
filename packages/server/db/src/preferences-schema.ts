@@ -1,6 +1,7 @@
 import type {
   AppearancePreferences,
   NotificationPreferences,
+  PartyPreferences,
   PlaybackPreferences,
   PrivacyPreferences,
 } from '@vp/domain/settings';
@@ -16,6 +17,7 @@ export const userPreferences = pgTable('user_preferences', {
   playback: jsonb('playback').$type<PlaybackPreferences>(),
   privacy: jsonb('privacy').$type<PrivacyPreferences>(),
   notifications: jsonb('notifications').$type<NotificationPreferences>(),
+  party: jsonb('party').$type<PartyPreferences>(),
   version: integer('version').notNull().default(1),
   updatedAt: timestamptz('updated_at').notNull().defaultNow(),
 });

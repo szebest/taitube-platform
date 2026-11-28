@@ -33,6 +33,8 @@ interface PartyPanelProps {
   onSignIn: () => void;
   /** Voice is on in the room, so "Mute in voice" is offered. */
   voice?: boolean;
+  /** The viewer's choice to see the room's own lines (joined, left, role changes) in chat. */
+  systemLines?: boolean;
 }
 
 /** Chat, People and Queue of the room: what the socket's state says, and what the viewer's ability allows. */
@@ -43,6 +45,7 @@ export function PartyPanel({
   onTabChange,
   onSignIn,
   voice = false,
+  systemLines = true,
 }: PartyPanelProps) {
   const { state, send } = socket;
   const { tOr } = useT();
@@ -73,6 +76,42 @@ export function PartyPanel({
       roles
     ).map((badge) => <Roster.RoleBadge key={badge.id} name={badge.name} colour={badge.colour} />);
 
+  const menuOf = (person: (typeof roster)[number] | undefined) =>
+    !person || person.memberKey === you?.memberKey ? null : (
+      <MemberMenu
+        name={person.name}
+        member={getMemberSubject(person, roles, ownerKey)}
+        roles={assignable.map((role) => ({
+          id: role.id,
+          name: role.name,
+          key: role.key,
+          position: role.position,
+          assigned: person.roleIds.includes(role.id),
+        }))}
+        voice={voice}
+        canTransfer={viewerOwns}
+        personalControls={
+          <MemberPersonalControls
+            room={controls.scoped(person.memberKey, 'room')}
+            everywhere={controls.scoped(person.memberKey, 'everywhere')}
+            everywhereAllowed={controls.everywhereAllowed}
+            onChange={(scope, patch) => controls.set(person.memberKey, scope, patch)}
+          />
+        }
+        onToggleRole={(roleId, assigned) =>
+          moderation.mutate({
+            type: assigned ? 'assign' : 'revoke',
+            memberKey: person.memberKey,
+            roleId,
+          })
+        }
+        onMute={(scope, duration) => mute(person.memberKey, scope, duration)}
+        onKick={() => moderation.mutate({ type: 'kick', memberKey: person.memberKey })}
+        onBan={() => moderation.mutate({ type: 'ban', memberKey: person.memberKey })}
+        onTransfer={() => moderation.mutate({ type: 'transfer', memberKey: person.memberKey })}
+      />
+    );
+
   const lineOf = (line: PartyChatLine) => {
     const author = line.author && controls.resolved(line.author.memberKey);
 
@@ -83,6 +122,7 @@ export function PartyPanel({
         avatarUrl={author?.hideAvatar ? null : line.author?.avatarUrl}
         badges={line.author && badgesOf(line.author.memberKey)}
         system={line.kind === 'system'}
+        menu={menuOf(roster.find((person) => person.memberKey === line.author?.memberKey))}
         hidden={Boolean(author?.hideMessages) && !shown.has(line.id)}
         onShow={() => setShown((current) => new Set(current).add(line.id))}
       >
@@ -133,44 +173,7 @@ export function PartyPanel({
             />
           )
         }
-        menu={
-          person.memberKey === you?.memberKey ? null : (
-            <MemberMenu
-              name={person.name}
-              member={getMemberSubject(person, roles, ownerKey)}
-              roles={assignable.map((role) => ({
-                id: role.id,
-                name: role.name,
-                key: role.key,
-                position: role.position,
-                assigned: person.roleIds.includes(role.id),
-              }))}
-              voice={voice}
-              canTransfer={viewerOwns}
-              personalControls={
-                <MemberPersonalControls
-                  room={controls.scoped(person.memberKey, 'room')}
-                  everywhere={controls.scoped(person.memberKey, 'everywhere')}
-                  everywhereAllowed={controls.everywhereAllowed}
-                  onChange={(scope, patch) => controls.set(person.memberKey, scope, patch)}
-                />
-              }
-              onToggleRole={(roleId, assigned) =>
-                moderation.mutate({
-                  type: assigned ? 'assign' : 'revoke',
-                  memberKey: person.memberKey,
-                  roleId,
-                })
-              }
-              onMute={(scope, duration) => mute(person.memberKey, scope, duration)}
-              onKick={() => moderation.mutate({ type: 'kick', memberKey: person.memberKey })}
-              onBan={() => moderation.mutate({ type: 'ban', memberKey: person.memberKey })}
-              onTransfer={() =>
-                moderation.mutate({ type: 'transfer', memberKey: person.memberKey })
-              }
-            />
-          )
-        }
+        menu={menuOf(person)}
       />
     );
   };
@@ -181,7 +184,9 @@ export function PartyPanel({
       <PartyRoom.TabPanel value="chat">
         <PartyChat.Root onSend={(message) => send({ type: 'chat.send', message })}>
           {state.pinned && <PartyChat.Pinned>{state.pinned.body}</PartyChat.Pinned>}
-          <PartyChat.List>{state.lines.map(lineOf)}</PartyChat.List>
+          <PartyChat.List>
+            {state.lines.filter((line) => systemLines || line.kind !== 'system').map(lineOf)}
+          </PartyChat.List>
           <PartyChat.Composer
             state={composer}
             mutedUntil={

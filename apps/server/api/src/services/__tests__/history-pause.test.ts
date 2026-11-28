@@ -20,6 +20,7 @@ describe('apps/server/api/services: HistoryPause', () => {
           playback: null,
           privacy: { ...DEFAULT_PREFERENCES.privacy, historyPaused },
           notifications: null,
+          party: null,
         },
         expectedVersion: 0,
         sections: ['privacy'],

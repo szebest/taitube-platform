@@ -35,6 +35,7 @@ export function mergeChanges(base: PreferencesChange, next: PreferencesChange): 
     playback: mergeSection(base.playback, next.playback),
     privacy: mergeSection(base.privacy, next.privacy),
     notifications: mergeSection(base.notifications, next.notifications),
+    party: mergeSection(base.party, next.party),
   };
 }
 
@@ -77,6 +78,7 @@ export function applyChange(view: PreferencesView, change: PreferencesChange): P
       change.notifications,
       DEFAULT_PREFERENCES.notifications
     ),
+    party: applySection(view.party, change.party, DEFAULT_PREFERENCES.party),
   };
 }
 

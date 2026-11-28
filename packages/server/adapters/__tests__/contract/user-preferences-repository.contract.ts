@@ -16,6 +16,7 @@ const PREFERENCES: Preferences = {
   playback: { ...DEFAULT_PREFERENCES.playback, speed: 1.5, autoplayNext: false },
   privacy: { ...DEFAULT_PREFERENCES.privacy, historyPaused: true },
   notifications: null,
+  party: null,
 };
 
 export function describeUserPreferencesRepositoryContract(

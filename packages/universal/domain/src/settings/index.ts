@@ -2,6 +2,7 @@ import { APPEARANCE_SETTINGS } from './appearance';
 import { type SectionValues, sectionDefaults } from './define';
 import type { MergePatch } from './merge-patch';
 import { NOTIFICATION_SETTINGS } from './notifications';
+import { PARTY_SETTINGS } from './party';
 import { PLAYBACK_SETTINGS } from './playback';
 import { PRIVACY_SETTINGS } from './privacy';
 
@@ -9,6 +10,7 @@ export * from './appearance';
 export * from './define';
 export * from './merge-patch';
 export * from './notifications';
+export * from './party';
 export * from './playback';
 export * from './privacy';
 
@@ -18,6 +20,7 @@ export const PREFERENCE_SECTIONS = {
   playback: PLAYBACK_SETTINGS,
   privacy: PRIVACY_SETTINGS,
   notifications: NOTIFICATION_SETTINGS,
+  party: PARTY_SETTINGS,
 } as const;
 
 export type PreferenceSection = keyof typeof PREFERENCE_SECTIONS;
@@ -33,6 +36,7 @@ export const DEFAULT_PREFERENCES: { readonly [S in PreferenceSection]: SectionOf
   playback: sectionDefaults(PLAYBACK_SETTINGS),
   privacy: sectionDefaults(PRIVACY_SETTINGS),
   notifications: sectionDefaults(NOTIFICATION_SETTINGS),
+  party: sectionDefaults(PARTY_SETTINGS),
 };
 
 /** A section set to `null` is cleared back to unset. */

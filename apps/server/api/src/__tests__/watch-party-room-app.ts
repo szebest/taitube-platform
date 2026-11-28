@@ -134,6 +134,7 @@ export async function buildRoomApp(): Promise<RoomApp> {
             playback: null,
             privacy: null,
             notifications: { ...DEFAULT_PREFERENCES.notifications, ...notifications },
+            party: null,
           },
           expectedVersion: 0,
           sections: ['notifications'],

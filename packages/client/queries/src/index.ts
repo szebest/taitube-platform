@@ -52,6 +52,7 @@ export * from './watch-party-controls-queries';
 export * from './watch-party-queries';
 export {
   type PartyChatLine,
+  type PartyReaction,
   type PartyRequest,
   type PartyRole,
   type PartyRosterEntry,

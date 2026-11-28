@@ -7,6 +7,7 @@ const view = (overrides: Partial<PreferencesView> = {}): PreferencesView => ({
   playback: null,
   privacy: null,
   notifications: null,
+  party: null,
   version: 3,
   updatedAt: null,
   ...overrides,

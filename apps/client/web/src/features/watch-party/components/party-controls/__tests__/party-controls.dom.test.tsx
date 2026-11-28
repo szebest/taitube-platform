@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import type { PersonalControlView } from '@vp/api-contracts';
 import type { WatchPartyViewer } from '@vp/permissions';
 import type { PartyRequest, WatchPartyState } from '@vp/queries';
-import { PARTY_OWNER_KEY } from '@vp/web-testing';
+import { PARTY_ID, PARTY_OWNER_KEY } from '@vp/web-testing';
 import { partyState } from '#app/features/watch-party/__tests__/party-state';
 import { partyViewer, renderParty } from '#app/features/watch-party/__tests__/render-party';
 import { PartyControls } from '../party-controls';
@@ -19,11 +20,16 @@ const PLAYING = {
   anchorAt: 1_000,
 } as const;
 
-function renderControls(viewer: WatchPartyViewer, state: Partial<WatchPartyState> = {}) {
+function renderControls(
+  viewer: WatchPartyViewer,
+  state: Partial<WatchPartyState> = {},
+  controls: PersonalControlView[] = []
+) {
   const send = vi.fn(() => true);
   const dismissRequest = vi.fn();
   renderParty(
     <PartyControls
+      roomId={PARTY_ID}
       socket={{
         state: partyState({ version: 4, rolesVersion: 2, ...state }),
         serverNow: () => 6_000,
@@ -31,7 +37,8 @@ function renderControls(viewer: WatchPartyViewer, state: Partial<WatchPartyState
         dismissRequest,
       }}
     />,
-    viewer
+    viewer,
+    controls
   );
 
   return { send, dismissRequest };
@@ -129,5 +136,26 @@ describe('apps/client/web: PartyControls', () => {
 
     expect(dismissRequest).toHaveBeenCalledWith(request.key);
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it('leaves out the requests of a member whose requests the viewer hid', async () => {
+    renderControls(DJ, { requests: [REQUEST('skip')] }, [
+      {
+        targetKey: PARTY_OWNER_KEY,
+        roomId: PARTY_ID,
+        voiceMuted: false,
+        volume: 100,
+        hideMessages: false,
+        hideReactions: false,
+        hideAvatar: false,
+        hideRequests: true,
+        blockInvites: false,
+        favourite: false,
+      },
+    ]);
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Accept' })).not.toBeInTheDocument()
+    );
   });
 });

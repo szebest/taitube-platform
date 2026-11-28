@@ -27,6 +27,7 @@ export function partyState(overrides: Partial<WatchPartyState> = {}): WatchParty
     pinned: hello.chat.pinned,
     chatMode: hello.chat.mode,
     requests: [],
+    reactions: [],
     refusal: null,
     ...overrides,
   };

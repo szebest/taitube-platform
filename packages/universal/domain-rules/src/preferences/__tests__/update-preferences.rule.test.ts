@@ -14,6 +14,7 @@ const STORED: UserPreferences = {
   playback: null,
   privacy: null,
   notifications: null,
+  party: null,
   version: 3,
   updatedAt: new Date('2026-10-01T00:00:00.000Z'),
 };

@@ -221,6 +221,19 @@ describe('packages/queries: watchPartyReducer', () => {
     ).toEqual([]);
   });
 
+  it('numbers folded reactions in order and keeps the latest 40', () => {
+    const burst = (count: number): WatchPartyServerFrame => ({
+      type: 'reactions',
+      counts: {},
+      from: Array.from({ length: count }, () => ({ memberKey: OTHER, emoji: '🔥', count: 1 })),
+    });
+    const state = fold(frame(HELLO), frame(burst(30)), frame(burst(30)));
+
+    expect(state.reactions).toHaveLength(40);
+    expect(state.reactions.at(-1)?.id).toBe(60);
+    expect(state.reactions.at(0)?.id).toBe(21);
+  });
+
   it('records an error frame as the latest refusal', () => {
     const state = fold(
       frame(HELLO),

@@ -18,6 +18,7 @@ const STORED: Preferences = {
   playback: { ...DEFAULT_PREFERENCES.playback, speed: 1.5, autoplayNext: false },
   privacy: { ...DEFAULT_PREFERENCES.privacy, historyPaused: true },
   notifications: { ...DEFAULT_PREFERENCES.notifications, processingFinished: false },
+  party: null,
 };
 
 const NOTHING: Preferences = {
@@ -25,6 +26,7 @@ const NOTHING: Preferences = {
   playback: null,
   privacy: null,
   notifications: null,
+  party: null,
 };
 
 describe('@vp/domain-rules: mergePreferences', () => {

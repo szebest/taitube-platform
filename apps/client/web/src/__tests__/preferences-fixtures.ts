@@ -9,6 +9,7 @@ export const preferencesView = (overrides: Partial<PreferencesView> = {}): Prefe
   playback: null,
   privacy: null,
   notifications: null,
+  party: null,
   version: 0,
   updatedAt: null,
   ...overrides,

@@ -113,6 +113,7 @@ export async function saveSwitches(
         playback: null,
         privacy: null,
         notifications: { ...DEFAULT_PREFERENCES.notifications, ...switches },
+        party: null,
       },
       expectedVersion: 0,
       sections: ['notifications'],

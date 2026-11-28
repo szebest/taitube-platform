@@ -42710,7 +42710,7 @@ paths:
       summary: Get my saved preferences
       tags:
         - Account
-      description: Appearance, playback, privacy and notifications for the caller. A section is null until its first save and complete from then on; an account that never saved any is at version 0.
+      description: Appearance, playback, privacy, notifications and watch party view settings for the caller. A section is null until its first save and complete from then on; an account that never saved any is at version 0.
       responses:
         '200':
           description: Default Response
@@ -42885,6 +42885,30 @@ paths:
                           - watchPartyInvites
                         additionalProperties: false
                       - type: 'null'
+                  party:
+                    anyOf:
+                      - type: object
+                        properties:
+                          layout:
+                            type: string
+                            enum:
+                              - side
+                              - below
+                              - theater
+                              - focus
+                          chatOverlay:
+                            type: boolean
+                          reactionOverlay:
+                            type: boolean
+                          systemLines:
+                            type: boolean
+                        required:
+                          - layout
+                          - chatOverlay
+                          - reactionOverlay
+                          - systemLines
+                        additionalProperties: false
+                      - type: 'null'
                   version:
                     type: integer
                     minimum: 0
@@ -42900,6 +42924,7 @@ paths:
                   - playback
                   - privacy
                   - notifications
+                  - party
                   - version
                   - updatedAt
                 additionalProperties: false
@@ -43185,6 +43210,32 @@ paths:
                                 - nobody
                             - type: 'null'
                     - type: 'null'
+                party:
+                  anyOf:
+                    - type: object
+                      properties:
+                        layout:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - side
+                                - below
+                                - theater
+                                - focus
+                            - type: 'null'
+                        chatOverlay:
+                          type:
+                            - boolean
+                            - 'null'
+                        reactionOverlay:
+                          type:
+                            - boolean
+                            - 'null'
+                        systemLines:
+                          type:
+                            - boolean
+                            - 'null'
+                    - type: 'null'
               required:
                 - version
       responses:
@@ -43361,6 +43412,30 @@ paths:
                           - watchPartyInvites
                         additionalProperties: false
                       - type: 'null'
+                  party:
+                    anyOf:
+                      - type: object
+                        properties:
+                          layout:
+                            type: string
+                            enum:
+                              - side
+                              - below
+                              - theater
+                              - focus
+                          chatOverlay:
+                            type: boolean
+                          reactionOverlay:
+                            type: boolean
+                          systemLines:
+                            type: boolean
+                        required:
+                          - layout
+                          - chatOverlay
+                          - reactionOverlay
+                          - systemLines
+                        additionalProperties: false
+                      - type: 'null'
                   version:
                     type: integer
                     minimum: 0
@@ -43376,6 +43451,7 @@ paths:
                   - playback
                   - privacy
                   - notifications
+                  - party
                   - version
                   - updatedAt
                 additionalProperties: false
@@ -80940,6 +81016,7 @@ paths:
                                 - playback
                                 - privacy
                                 - notifications
+                                - party
                           version:
                             type: integer
                             exclusiveMinimum: 0

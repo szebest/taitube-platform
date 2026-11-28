@@ -175,6 +175,7 @@ describe('apps/server/api/services: previewRoom', () => {
             appearance: null,
             playback: null,
             notifications: null,
+            party: null,
             privacy: { ...DEFAULT_PREFERENCES.privacy, showInParties: false },
           },
           expectedVersion: 0,

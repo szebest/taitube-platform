@@ -72,6 +72,7 @@ const savePrivacy = async (
         appearance: null,
         playback: null,
         notifications: null,
+        party: null,
         privacy: { ...DEFAULT_PREFERENCES.privacy, showInParties },
       },
       expectedVersion: 0,

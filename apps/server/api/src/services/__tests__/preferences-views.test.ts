@@ -13,6 +13,7 @@ describe('toPreferencesView', () => {
         playback: null,
         privacy: null,
         notifications: null,
+        party: null,
         version: 0,
         updatedAt: null,
       },

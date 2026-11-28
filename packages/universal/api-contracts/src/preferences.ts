@@ -7,6 +7,8 @@ import {
   mapSection,
   NOTIFICATION_SETTINGS,
   type NotificationPreferences,
+  PARTY_SETTINGS,
+  type PartyPreferences,
   PLAYBACK_SETTINGS,
   type PlaybackPreferences,
   PRIVACY_SETTINGS,
@@ -89,6 +91,8 @@ const NotificationPreferencesSchema = sectionSchema(
   NOTIFICATION_SETTINGS
 ) satisfies z.ZodType<NotificationPreferences>;
 
+const PartyPreferencesSchema = sectionSchema(PARTY_SETTINGS) satisfies z.ZodType<PartyPreferences>;
+
 const AppearancePatchSchema = sectionPatchSchema(APPEARANCE_SETTINGS) satisfies z.ZodType<
   MergePatch<AppearancePreferences>
 >;
@@ -102,11 +106,16 @@ const NotificationPatchSchema = sectionPatchSchema(NOTIFICATION_SETTINGS) satisf
   MergePatch<NotificationPreferences>
 >;
 
+const PartyPatchSchema = sectionPatchSchema(PARTY_SETTINGS) satisfies z.ZodType<
+  MergePatch<PartyPreferences>
+>;
+
 const PreferencesSchema = z.object({
   appearance: AppearancePreferencesSchema.nullable(),
   playback: PlaybackPreferencesSchema.nullable(),
   privacy: PrivacyPreferencesSchema.nullable(),
   notifications: NotificationPreferencesSchema.nullable(),
+  party: PartyPreferencesSchema.nullable(),
   version: z.number().int().nonnegative().describe('0 until the first save'),
   updatedAt: z.string().nullable().describe('ISO 8601 timestamp of the last save'),
 });
@@ -117,6 +126,7 @@ const UpdatePreferencesSchema = z.object({
   playback: PlaybackPatchSchema.nullish(),
   privacy: PrivacyPatchSchema.nullish(),
   notifications: NotificationPatchSchema.nullish(),
+  party: PartyPatchSchema.nullish(),
 });
 
 export const PreferenceSectionSchema = UpdatePreferencesSchema.omit({ version: true }).keyof();
@@ -132,7 +142,7 @@ export const getPreferences = defineEndpoint({
   tag: 'Account',
   summary: 'Get my saved preferences',
   description:
-    'Appearance, playback, privacy and notifications for the caller. A section is null until its first save and complete from then on; an account that never saved any is at version 0.',
+    'Appearance, playback, privacy, notifications and watch party view settings for the caller. A section is null until its first save and complete from then on; an account that never saved any is at version 0.',
   status: 200,
   result: PreferencesSchema,
   errors: { 401: [ErrorCodes.UNAUTHORIZED], 403: [ErrorCodes.FORBIDDEN] },

@@ -12,6 +12,8 @@ export const CONTROL_FLAGS = [
   { flag: 'hideMessages', label: 'party.controlHideMessages', scope: 'both' },
   { flag: 'voiceMuted', label: 'party.controlMute', scope: 'both' },
   { flag: 'blockInvites', label: 'party.controlBlockInvites', scope: 'everywhere' },
+  { flag: 'hideReactions', label: 'party.controlHideReactions', scope: 'both' },
+  { flag: 'hideRequests', label: 'party.controlHideRequests', scope: 'both' },
   { flag: 'hideAvatar', label: 'party.controlHideAvatar', scope: 'both' },
   { flag: 'favourite', label: 'party.controlFavourite', scope: 'both' },
 ] as const satisfies readonly {

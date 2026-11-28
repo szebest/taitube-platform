@@ -20,6 +20,14 @@ export type PartyRole = PartyFrame<'hello'>['roles'][number];
 type PartyConnection = 'connecting' | 'open' | 'closed';
 type PartyEnd = 'kicked' | 'superseded' | 'closed';
 
+/** One member's reactions from a folded `reactions` frame; `id` only grows, so a view can tell new ones from shown ones. */
+export type PartyReaction = Readonly<{
+  id: number;
+  memberKey: string;
+  emoji: PartyFrame<'reactions'>['from'][number]['emoji'];
+  count: number;
+}>;
+
 export interface PartyRequest {
   key: string;
   from: string;
@@ -46,6 +54,7 @@ export interface WatchPartyState {
   pinned: PartyChatLine | null;
   chatMode: PartyFrame<'hello'>['chat']['mode'] | null;
   requests: PartyRequest[];
+  reactions: PartyReaction[];
   refusal: ErrorCode | null;
 }
 
@@ -55,6 +64,7 @@ export type WatchPartyAction =
   | { type: 'dismissRequest'; key: string };
 
 const PARTY_LINES_KEPT = 500;
+const PARTY_REACTIONS_KEPT = 40;
 
 export const INITIAL_WATCH_PARTY: WatchPartyState = {
   connection: 'connecting',
@@ -75,6 +85,7 @@ export const INITIAL_WATCH_PARTY: WatchPartyState = {
   pinned: null,
   chatMode: null,
   requests: [],
+  reactions: [],
   refusal: null,
 };
 
@@ -202,7 +213,11 @@ function applyFrame(state: WatchPartyState, frame: WatchPartyServerFrame): Watch
           },
         ],
       };
-    case 'reactions':
+    case 'reactions': {
+      const last = state.reactions.at(-1)?.id ?? 0;
+      const fresh = frame.from.map((reaction, index) => ({ ...reaction, id: last + index + 1 }));
+      return { ...state, reactions: [...state.reactions, ...fresh].slice(-PARTY_REACTIONS_KEPT) };
+    }
     case 'clock':
     case 'ack':
       return state;

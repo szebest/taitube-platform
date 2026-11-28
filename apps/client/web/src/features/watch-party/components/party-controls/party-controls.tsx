@@ -3,11 +3,13 @@ import type { WatchPartyClientFrame } from '@vp/api-contracts';
 import { expectedPositionMs } from '@vp/domain';
 import { usePartyCan } from '@vp/permissions-react';
 import type { PartyRequest, WatchPartySocket } from '@vp/queries';
+import { usePartyControls } from '#app/features/watch-party/hooks/use-party-controls';
 import { useT } from '#app/lib/messages';
 
 const MS_PER_SECOND = 1000;
 
 interface PartyControlsProps {
+  roomId: string;
   socket: WatchPartySocket;
 }
 
@@ -25,9 +27,10 @@ function acceptFrame(request: PartyRequest, versions: Versioned): WatchPartyClie
 }
 
 /** Who may play, pause and start, and what someone without that may ask for. */
-export function PartyControls({ socket }: PartyControlsProps) {
+export function PartyControls({ roomId, socket }: PartyControlsProps) {
   const { state, serverNow, send, dismissRequest } = socket;
   const { tOr } = useT();
+  const controls = usePartyControls(roomId, state.you?.kind);
   const canControl = usePartyCan({ kind: 'permission', permission: 'playback.control' });
   const canRequest = usePartyCan({ kind: 'permission', permission: 'playback.request' });
   const { playback, version, rolesVersion } = state;
@@ -87,25 +90,27 @@ export function PartyControls({ socket }: PartyControlsProps) {
       </div>
       {canControl && (
         <ul className="m-0 flex list-none flex-col gap-inline p-0" aria-live="polite">
-          {state.requests.map((request) => (
-            <li key={request.key} className="flex flex-wrap items-center gap-inline text-body-sm">
-              <span>{requestText(request)}</span>
-              <Button
-                size="sm"
-                tone="accent"
-                variant="solid"
-                onClick={() => {
-                  send(acceptFrame(request, versions));
-                  dismissRequest(request.key);
-                }}
-              >
-                {tOr('party.requestsAccept', {}, '')}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => dismissRequest(request.key)}>
-                {tOr('party.requestsDismiss', {}, '')}
-              </Button>
-            </li>
-          ))}
+          {state.requests
+            .filter((request) => !controls.resolved(request.from).hideRequests)
+            .map((request) => (
+              <li key={request.key} className="flex flex-wrap items-center gap-inline text-body-sm">
+                <span>{requestText(request)}</span>
+                <Button
+                  size="sm"
+                  tone="accent"
+                  variant="solid"
+                  onClick={() => {
+                    send(acceptFrame(request, versions));
+                    dismissRequest(request.key);
+                  }}
+                >
+                  {tOr('party.requestsAccept', {}, '')}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => dismissRequest(request.key)}>
+                  {tOr('party.requestsDismiss', {}, '')}
+                </Button>
+              </li>
+            ))}
         </ul>
       )}
     </div>

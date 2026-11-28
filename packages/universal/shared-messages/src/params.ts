@@ -24,6 +24,7 @@ export const PARAMS = defineParams([
   'disclosure',
   'done',
   'duration',
+  'emoji',
   'end',
   'event',
   'expiry',

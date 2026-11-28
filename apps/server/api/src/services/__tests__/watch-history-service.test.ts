@@ -84,7 +84,13 @@ describe('WatchHistoryService', () => {
     expectOk(
       await repositories.userPreferences.save({
         userId: VIEWER.id,
-        preferences: { appearance: null, playback: null, privacy, notifications: null },
+        preferences: {
+          appearance: null,
+          playback: null,
+          privacy,
+          notifications: null,
+          party: null,
+        },
         expectedVersion: 0,
         sections: ['privacy'],
       })

@@ -26,6 +26,8 @@ export interface PartyChatLineProps extends ComponentPropsWithRef<'li'> {
   /** The viewer chose to hide this author; shown as a placeholder until `onShow`. */
   hidden?: boolean;
   onShow?: () => void;
+  /** The author's member menu, after the name. */
+  menu?: ReactNode;
 }
 
 export function PartyChatLine({
@@ -35,6 +37,7 @@ export function PartyChatLine({
   system = false,
   hidden = false,
   onShow,
+  menu,
   className,
   children,
   ...props
@@ -66,6 +69,7 @@ export function PartyChatLine({
         <p className={styles.messageBody()}>
           {badges}
           <span className={styles.author()}>{author}</span>
+          {menu}
           {hidden ? (
             <span className="text-fg-muted italic">{tOr('party.chatHidden', {}, '')}</span>
           ) : (

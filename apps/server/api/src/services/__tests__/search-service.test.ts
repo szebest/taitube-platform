@@ -248,6 +248,7 @@ describe('apps/server/api/services: SearchService', () => {
             playback: null,
             privacy: { ...DEFAULT_PREFERENCES.privacy, historyPaused: true },
             notifications: null,
+            party: null,
           },
           expectedVersion: 0,
           sections: ['privacy'],
