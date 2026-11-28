@@ -167,6 +167,11 @@ export const CONTENT_LINK_STATUSES = [
 
 export type ContentLinkStatus = (typeof CONTENT_LINK_STATUSES)[number];
 
+/** A link a member wrote, or one a viewer suggested; it stays on the row after the suggestion is accepted. */
+export const LINK_ORIGINS = ['creator', 'viewer'] as const;
+
+export type LinkOrigin = (typeof LINK_ORIGINS)[number];
+
 export const LINK_POLICIES = ['allow', 'approve', 'block'] as const;
 
 export type LinkPolicy = (typeof LINK_POLICIES)[number];
@@ -196,7 +201,9 @@ export interface ContentLink {
   status: ContentLinkStatus;
   sourceChannelId: string;
   targetChannelId: string;
-  createdBy: string;
+  origin: LinkOrigin;
+  /** `null` once the author's account is deleted. */
+  createdBy: string | null;
   decidedBy: string | null;
   createdAt: Date;
 }

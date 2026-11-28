@@ -130,9 +130,9 @@ export class PostgresContentRefDirectory implements ContentRefDirectoryPort {
       return {
         ref: { type: 'clip', id: clip.id },
         channelId: facts.channelId,
-        ownerId: clip.userId,
+        ownerId: video.ownerId,
         title: clip.title,
-        public: facts.visible,
+        public: false,
         mediaVideoId: clip.videoId,
         durationMs: clip.endMs - clip.startMs,
         format: null,
@@ -200,16 +200,20 @@ export class PostgresContentRefDirectory implements ContentRefDirectoryPort {
     const ids = idsOf(refs, 'live');
     if (ids.length === 0) return [];
     const rows = await this.db
-      .select({ stream: ls, ownerId: ch.userId })
+      .select({ stream: ls, ownerId: ch.userId, archive: videoColumns })
       .from(ls)
       .innerJoin(ch, eq(ls.channelId, ch.id))
+      .leftJoin(v, eq(ls.videoId, v.id))
       .where(inArray(ls.id, ids));
-    return rows.map(({ stream, ownerId }) => ({
+    return rows.map(({ stream, ownerId, archive }) => ({
       ref: { type: 'live', id: stream.id },
       channelId: stream.channelId,
       ownerId,
       title: stream.title,
-      public: stream.visibility === 'public',
+      public:
+        stream.status === 'ENDED'
+          ? archive !== null && factsOf(archive).visible
+          : stream.visibility === 'public',
       mediaVideoId: stream.videoId,
       durationMs: null,
       format: null,

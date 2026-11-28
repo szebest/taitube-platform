@@ -8,7 +8,9 @@ import {
   END_SCREEN_LAYOUTS,
   type EndScreenItem,
   type EndScreenLayout,
+  LINK_ORIGINS,
   LINK_POLICIES,
+  type LinkOrigin,
   type LinkPolicy,
   type StoredLinkRelation,
 } from '@vp/domain';
@@ -56,22 +58,23 @@ export const contentLinks = pgTable(
     targetChannelId: uuid('target_channel_id')
       .notNull()
       .references(() => channels.id, { onDelete: 'cascade' }),
-    createdBy: uuid('created_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    origin: text('origin').$type<LinkOrigin>().notNull(),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('content_links_source_target_relation_unique').on(
-      table.sourceType,
-      table.sourceId,
-      sql`coalesce(${table.sourceAuxId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
-      table.targetType,
-      table.targetId,
-      sql`coalesce(${table.targetAuxId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
-      table.relation
-    ),
+    uniqueIndex('content_links_source_target_relation_unique')
+      .on(
+        table.sourceType,
+        table.sourceId,
+        sql`coalesce(${table.sourceAuxId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+        table.targetType,
+        table.targetId,
+        sql`coalesce(${table.targetAuxId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+        table.relation
+      )
+      .where(sql`${table.status} <> 'declined'`),
     index('content_links_source_idx').on(table.sourceType, table.sourceId, table.status),
     index('content_links_target_idx').on(table.targetType, table.targetId, table.status),
     index('content_links_queue_idx').on(table.targetChannelId, table.status, table.createdAt),
@@ -85,6 +88,7 @@ export const contentLinks = pgTable(
       sql`${table.targetType} IN (${listOf(CONTENT_REF_TYPES)})`
     ),
     check('content_links_relation_check', sql`${table.relation} IN (${listOf(STORED_RELATIONS)})`),
+    check('content_links_origin_check', sql`${table.origin} IN (${listOf(LINK_ORIGINS)})`),
     check('content_links_status_check', sql`${table.status} IN (${listOf(CONTENT_LINK_STATUSES)})`),
     check(
       'content_links_params_relation_check',

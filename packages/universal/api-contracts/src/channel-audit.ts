@@ -7,6 +7,7 @@ import {
   POST_KINDS,
 } from '@vp/domain';
 import { z } from 'zod';
+import { LinkPolicySchema, LinkRelationSchema, LinkStatusSchema } from './content-link-schemas';
 
 export const ChannelRoleSchema = z.enum(CHANNEL_ROLE_NAMES);
 
@@ -25,6 +26,7 @@ const CommentMetaSchema = z.object({
   disclosure: z.enum(DISCLOSURES),
 });
 const PostMetaSchema = z.object({ kind: z.enum(POST_KINDS) });
+const LinkMetaSchema = z.object({ relation: LinkRelationSchema, status: LinkStatusSchema });
 const NoMetaSchema = z.object({});
 const ExportMetaSchema = z.object({
   kind: z.enum(DATA_EXPORT_KINDS),
@@ -98,6 +100,13 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('post.published', 'post', PostMetaSchema),
   auditEntry('post.updated', 'post', PostMetaSchema),
   auditEntry('post.deleted', 'post', PostMetaSchema),
+  auditEntry('link.created', 'link', LinkMetaSchema),
+  auditEntry('link.approved', 'link', LinkMetaSchema),
+  auditEntry('link.declined', 'link', LinkMetaSchema),
+  auditEntry('link.removed', 'link', LinkMetaSchema),
+  auditEntry('link.suggested', 'link', LinkMetaSchema),
+  auditEntry('link.accepted', 'link', LinkMetaSchema),
+  auditEntry('link.policy_changed', 'settings', z.object({ policy: LinkPolicySchema })),
 ]);
 
 export const AuditPageSchema = z.object({

@@ -52,12 +52,20 @@ describe('@vp/domain-rules: decideLinkLoop', () => {
       loops: false,
     },
     {
-      scenario: 'a chain deeper than 50',
+      scenario: 'a chain deeper than 50 above the source',
+      relation: 'previous',
+      edges: chain(60),
+      source: '60',
+      target: 'x',
+      loops: true,
+    },
+    {
+      scenario: 'a new episode after a 51-episode series',
       relation: 'previous',
       edges: chain(60),
       source: 'x',
-      target: '0',
-      loops: true,
+      target: '60',
+      loops: false,
     },
   ])('$scenario loops: $loops', ({ relation, edges, source, target, loops }) => {
     const result = decideLinkLoop({ relation, source: v(source), target: v(target), edges });

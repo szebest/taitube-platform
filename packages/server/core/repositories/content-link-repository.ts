@@ -8,6 +8,16 @@ import type {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 
+/** What a write is decided on: read under the same lock as the insert it guards. */
+export interface LinkWriteState {
+  /** Links the source holds that count against its cap: active and pending. */
+  outgoing: number;
+  /** Links the channel's own content holds that count against its cap: active and pending. */
+  channelTotal: number;
+  /** The channel's chain edges of the link's relation, from each source key to the keys it points at. */
+  chainEdges: Map<string, string[]>;
+}
+
 export type LinkDirection = 'outgoing' | 'incoming';
 
 /** One stored link as seen from one of the refs asked for. */
@@ -22,9 +32,18 @@ export interface TouchingLink {
  * links a viewer may see is the service's decision.
  */
 export interface ContentLinkRepositoryPort {
-  /** `null` when the source, target and relation already hold a row, whatever its status. */
+  /** `null` when the source, target and relation already hold a row that is not declined. */
   insert(link: ContentLink): Promise<Result<ContentLink | null, DatabaseUnavailable>>;
+  /**
+   * `insert` after `guard` has passed on the state of the source's channel, both inside one
+   * transaction under a lock on that channel, so two writers cannot pass a cap or close a loop together.
+   */
+  insertGuarded<E>(
+    link: ContentLink,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>>;
   findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>>;
+  /** The row of this edge that is not declined, whatever else was once declined. */
   findByEdge(
     source: ContentRef,
     target: ContentRef,
@@ -61,9 +80,9 @@ export interface ContentLinkRepositoryPort {
     statuses: readonly ContentLinkStatus[],
     limit: number
   ): Promise<Result<ContentLink[], DatabaseUnavailable>>;
-  /** Links whose target is this content, any status: the rows a hard delete turns `broken`. */
+  /** Active and pending links into this content: the rows a hard delete turns `broken`. */
   markTargetBroken(target: ContentRef): Promise<Result<number, DatabaseUnavailable>>;
-  /** Rows the viewer created since `since` that are still `suggested` or were `declined`. */
+  /** Rows of viewer origin the viewer created since `since`, whatever became of them. */
   countSuggestedBy(viewerId: string, since: Date): Promise<Result<number, DatabaseUnavailable>>;
   linkPolicy(channelId: string): Promise<Result<LinkPolicy, DatabaseUnavailable>>;
   setLinkPolicy(channelId: string, policy: LinkPolicy): Promise<Result<void, DatabaseUnavailable>>;

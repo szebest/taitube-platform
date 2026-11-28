@@ -1,5 +1,9 @@
 import { ok, type Result } from '@kit/result';
-import type { ContentLinkRepositoryPort, TouchingLink } from '@vp/core/repositories';
+import type {
+  ContentLinkRepositoryPort,
+  LinkWriteState,
+  TouchingLink,
+} from '@vp/core/repositories';
 import {
   CHAIN_RELATIONS,
   type ContentLink,
@@ -12,7 +16,6 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 
-const VIEWER_SUGGESTION_STATUSES: readonly ContentLinkStatus[] = ['suggested', 'declined'];
 const COUNTED: readonly ContentLinkStatus[] = ['active', 'pending'];
 
 const edgeKey = (link: ContentLink) =>
@@ -26,10 +29,25 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
   private readonly policies = new Map<string, LinkPolicy>();
 
   async insert(link: ContentLink): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
-    const taken = [...this.links.values()].some((held) => edgeKey(held) === edgeKey(link));
+    const taken = [...this.links.values()].some(
+      (held) => held.status !== 'declined' && edgeKey(held) === edgeKey(link)
+    );
     if (taken) return ok(null);
     this.links.set(link.id, link);
     return ok(link);
+  }
+
+  async insertGuarded<E>(
+    link: ContentLink,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
+    const decided = guard({
+      outgoing: this.outgoingOf(link.source),
+      channelTotal: this.totalOf(link.sourceChannelId),
+      chainEdges: this.edgesOf(link.sourceChannelId, link.params.relation),
+    });
+    if (!decided.ok) return decided;
+    return this.insert(link);
   }
 
   async findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
@@ -42,7 +60,11 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
     relation: ContentLinkRelation
   ): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
     const key = `${contentRefKey(source)}>${contentRefKey(target)}>${relation}`;
-    return ok([...this.links.values()].find((link) => edgeKey(link) === key) ?? null);
+    return ok(
+      [...this.links.values()].find(
+        (link) => link.status !== 'declined' && edgeKey(link) === key
+      ) ?? null
+    );
   }
 
   async transition(
@@ -78,35 +100,18 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
   }
 
   async countOutgoing(source: ContentRef): Promise<Result<number, DatabaseUnavailable>> {
-    const key = contentRefKey(source);
-    return ok(
-      [...this.links.values()].filter(
-        (link) => contentRefKey(link.source) === key && COUNTED.includes(link.status)
-      ).length
-    );
+    return ok(this.outgoingOf(source));
   }
 
   async countForChannel(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
-    return ok(
-      [...this.links.values()].filter(
-        (link) => link.sourceChannelId === channelId && COUNTED.includes(link.status)
-      ).length
-    );
+    return ok(this.totalOf(channelId));
   }
 
   async chainEdges(
     channelId: string,
     relation: ContentLinkRelation
   ): Promise<Result<Map<string, string[]>, DatabaseUnavailable>> {
-    const edges = new Map<string, string[]>();
-    if (!CHAIN_RELATIONS.includes(relation)) return ok(edges);
-    for (const link of this.links.values()) {
-      if (link.sourceChannelId !== channelId || link.params.relation !== relation) continue;
-      if (!COUNTED.includes(link.status)) continue;
-      const key = contentRefKey(link.source);
-      edges.set(key, [...(edges.get(key) ?? []), contentRefKey(link.target)]);
-    }
-    return ok(edges);
+    return ok(this.edgesOf(channelId, relation));
   }
 
   async listByTargetChannel(
@@ -129,7 +134,7 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
     const key = contentRefKey(target);
     let marked = 0;
     for (const link of this.links.values()) {
-      if (contentRefKey(link.target) !== key || link.status === 'broken') continue;
+      if (contentRefKey(link.target) !== key || !COUNTED.includes(link.status)) continue;
       this.links.set(link.id, { ...link, status: 'broken' });
       marked += 1;
     }
@@ -142,10 +147,7 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
   ): Promise<Result<number, DatabaseUnavailable>> {
     return ok(
       [...this.links.values()].filter(
-        (link) =>
-          link.createdBy === viewerId &&
-          link.createdAt >= since &&
-          VIEWER_SUGGESTION_STATUSES.includes(link.status)
+        (link) => link.origin === 'viewer' && link.createdBy === viewerId && link.createdAt >= since
       ).length
     );
   }
@@ -165,6 +167,31 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
   clear(): void {
     this.links.clear();
     this.policies.clear();
+  }
+
+  private outgoingOf(source: ContentRef): number {
+    const key = contentRefKey(source);
+    return [...this.links.values()].filter(
+      (link) => contentRefKey(link.source) === key && COUNTED.includes(link.status)
+    ).length;
+  }
+
+  private totalOf(channelId: string): number {
+    return [...this.links.values()].filter(
+      (link) => link.sourceChannelId === channelId && COUNTED.includes(link.status)
+    ).length;
+  }
+
+  private edgesOf(channelId: string, relation: ContentLinkRelation): Map<string, string[]> {
+    const edges = new Map<string, string[]>();
+    if (!CHAIN_RELATIONS.includes(relation)) return edges;
+    for (const link of this.links.values()) {
+      if (link.sourceChannelId !== channelId || link.params.relation !== relation) continue;
+      if (!COUNTED.includes(link.status)) continue;
+      const key = contentRefKey(link.source);
+      edges.set(key, [...(edges.get(key) ?? []), contentRefKey(link.target)]);
+    }
+    return edges;
   }
 
   private list(

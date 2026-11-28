@@ -76,4 +76,9 @@ export const notifications = {
   levelFailed: dt('Nie udało się zapisać powiadomień z tego kanału'),
   playlistInvite: dt('{name} zaprasza Cię do współtworzenia playlisty {title}'),
   playlistUpdate: dt('{name} zmienia Twoją playlistę {title}'),
+  linkRequest: dt('{name} prosi o powiązanie z Twoją treścią'),
+  linkApproved: dt('{name} zatwierdza Twoje powiązanie'),
+  linkDeclined: dt('{name} odrzuca Twoje powiązanie'),
+  linkAdded: dt('{name} powiązuje się z Twoją treścią'),
+  linkSuggestion: dt('Widz proponuje powiązanie dla Twojej treści'),
 } as const;

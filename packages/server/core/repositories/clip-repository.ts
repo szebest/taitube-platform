@@ -25,5 +25,10 @@ export interface ClipRepositoryPort {
     viewer: UserContext,
     options: ListClipsOptions
   ): Promise<Result<ClipEntry[], DatabaseUnavailable>>;
+  /** The user's own clips of these videos, newest first, whatever state the video is in. */
+  listOwnByVideos(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<Clip[], DatabaseUnavailable>>;
   remove(id: string): Promise<Result<boolean, DatabaseUnavailable>>;
 }

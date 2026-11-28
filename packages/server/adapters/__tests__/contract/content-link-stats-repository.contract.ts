@@ -33,6 +33,7 @@ export function describeContentLinkStatsRepositoryContract(
           status: 'active',
           sourceChannelId: OWNER_CHANNEL_ID,
           targetChannelId: OWNER_CHANNEL_ID,
+          origin: 'creator',
           createdBy: OWNER_ID,
           decidedBy: null,
           createdAt: new Date('2026-11-01T10:00:00Z'),

@@ -1,3 +1,4 @@
+import { err, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { ContentLinkRepositoryPort } from '@vp/core/repositories';
 import { type ContentLink, type ContentRef, contentRefKey, NO_ANCHORS } from '@vp/domain';
@@ -28,6 +29,7 @@ function link(overrides: Partial<ContentLink> = {}): ContentLink {
     status: 'active',
     sourceChannelId: OWNER_CHANNEL_ID,
     targetChannelId: OWNER_CHANNEL_ID,
+    origin: 'creator',
     createdBy: OWNER_ID,
     decidedBy: null,
     createdAt: new Date(NOW.getTime() + sequence * 1000),
@@ -87,17 +89,22 @@ export function describeContentLinkRepositoryContract(makeSubject: MakeRepositor
       expect(expectOk(await links.findByEdge(video(a), episode, 'full_video'))).toEqual(stored);
     });
 
-    it.each([
-      { scenario: 'active', status: 'active' as const },
-      { scenario: 'declined', status: 'declined' as const },
-    ])(
-      'answers null for a second row on the same edge when the first is $scenario',
-      async ({ status }) => {
+    it.each(['active', 'pending', 'suggested', 'broken'] as const)(
+      'answers null for a second row on the same edge when the first is %s',
+      async (status) => {
         await insert({ status });
 
         expect(expectOk(await links.insert(link()))).toBeNull();
       }
     );
+
+    it('lets a new row take an edge whose first row was declined, and finds the live one', async () => {
+      const declined = await insert({ status: 'declined' });
+      const second = await insert();
+
+      expect(second.id).not.toBe(declined.id);
+      expect(expectOk(await links.findByEdge(video(a), video(b), 'related'))).toEqual(second);
+    });
 
     it('moves a link only out of the statuses named', async () => {
       const pending = await insert({ status: 'pending' });
@@ -210,34 +217,84 @@ export function describeContentLinkRepositoryContract(makeSubject: MakeRepositor
         status: 'pending',
       });
       await insert({ source: video(a), target: video(b), params: { relation: 'recap' } });
+      await insert({
+        source: video(b),
+        target: video(c),
+        params: { relation: 'discussion' },
+        status: 'declined',
+      });
 
       expect(expectOk(await links.markTargetBroken(video(c)))).toBe(2);
       expect(expectOk(await links.markTargetBroken(video(c)))).toBe(0);
       expect(expectOk(await links.findById(inbound.id))?.status).toBe('broken');
     });
 
-    it('counts what a viewer suggested since a time, leaving their accepted links out', async () => {
-      await insert({ createdBy: OTHER_OWNER_ID, status: 'suggested' });
-      await insert({ createdBy: OTHER_OWNER_ID, target: video(c), status: 'declined' });
+    it('counts the viewer-origin rows a viewer created since a time, whatever became of them', async () => {
+      const viewer = { origin: 'viewer' as const, createdBy: OTHER_OWNER_ID };
+      await insert({ ...viewer, status: 'suggested' });
+      await insert({ ...viewer, target: video(c), status: 'declined' });
+      await insert({ ...viewer, source: video(c), target: video(a), status: 'active' });
       await insert({
         createdBy: OTHER_OWNER_ID,
-        source: video(c),
-        target: video(a),
-        status: 'active',
-      });
-      await insert({
-        createdBy: OWNER_ID,
         source: video(b),
         target: video(a),
-        status: 'suggested',
+        status: 'declined',
       });
+      await insert({ ...viewer, createdBy: OWNER_ID, source: video(b), target: video(c) });
 
       expect(expectOk(await links.countSuggestedBy(OTHER_OWNER_ID, new Date(NOW.getTime())))).toBe(
-        2
+        3
       );
       expect(
         expectOk(await links.countSuggestedBy(OTHER_OWNER_ID, new Date(NOW.getTime() + 3_600_000)))
       ).toBe(0);
+    });
+
+    it('keeps the episodes of different playlists apart when counting and breaking', async () => {
+      const other = '00000000-0000-7000-8000-0000000000a2';
+      const first: ContentRef = { type: 'episode', playlistId: PLAYLIST_ID, videoId: b };
+      const second: ContentRef = { type: 'episode', playlistId: other, videoId: b };
+      await insert({ source: first, target: video(a), params: { relation: 'follow_up' } });
+      await insert({ source: video(c), target: first, params: { relation: 'follow_up' } });
+      await insert({ source: second, target: video(a), params: { relation: 'follow_up' } });
+
+      expect(expectOk(await links.countOutgoing(first))).toBe(1);
+      expect(expectOk(await links.markTargetBroken(second))).toBe(0);
+      expect(expectOk(await links.markTargetBroken(first))).toBe(1);
+    });
+
+    it('inserts after the guard passes on the state it was given, and not when it refuses', async () => {
+      await insert({ source: video(a), target: video(b), params: { relation: 'previous' } });
+      const seen: { outgoing: number; channelTotal: number; edges: [string, string[]][] }[] = [];
+
+      const stored = expectOk(
+        await links.insertGuarded(
+          link({ source: video(c), target: video(a), params: { relation: 'previous' } }),
+          (state) => {
+            seen.push({
+              outgoing: state.outgoing,
+              channelTotal: state.channelTotal,
+              edges: [...state.chainEdges],
+            });
+            return ok(undefined);
+          }
+        )
+      );
+      const refused = await links.insertGuarded(
+        link({ source: video(b), target: video(c), params: { relation: 'previous' } }),
+        () => err('refused' as const)
+      );
+
+      expect(stored?.source).toEqual(video(c));
+      expect(seen).toEqual([
+        {
+          outgoing: 0,
+          channelTotal: 1,
+          edges: [[contentRefKey(video(a)), [contentRefKey(video(b))]]],
+        },
+      ]);
+      expect(refused).toEqual(err('refused'));
+      expect(expectOk(await links.countForChannel(OWNER_CHANNEL_ID))).toBe(2);
     });
 
     it('answers approve for a channel with no policy and keeps the one it was given', async () => {

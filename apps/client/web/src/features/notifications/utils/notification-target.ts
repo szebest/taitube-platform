@@ -69,6 +69,11 @@ export function notificationTarget(notification: Notification) {
       return payload.playlist
         ? linkOptions({ to: '/playlist', search: { list: payload.playlist.id } })
         : undefined;
+    case 'link_request':
+    case 'link_decision':
+    case 'link_added':
+    case 'link_suggestion':
+      return undefined;
     default:
       return assertNever(kind, 'NotificationKind');
   }

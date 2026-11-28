@@ -11970,11 +11970,17 @@
           "primaryKey": false,
           "notNull": true
         },
+        "origin": {
+          "name": "origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_by": {
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "decided_by": {
           "name": "decided_by",
@@ -12040,7 +12046,8 @@
           "isUnique": true,
           "concurrently": false,
           "method": "btree",
-          "with": {}
+          "with": {},
+          "where": "\"content_links\".\"status\" <> 'declined'"
         },
         "content_links_source_idx": {
           "name": "content_links_source_idx",
@@ -12182,7 +12189,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "content_links_decided_by_users_id_fk": {
@@ -12214,6 +12221,10 @@
         "content_links_relation_check": {
           "name": "content_links_relation_check",
           "value": "\"content_links\".\"relation\" IN ('full_video', 'part_of', 'previous', 'follow_up', 'recap', 'extended_cut', 'behind_the_scenes', 'translation', 'corrects', 'response_to', 'reaction_to', 'remix_of', 'discussion', 'related')"
+        },
+        "content_links_origin_check": {
+          "name": "content_links_origin_check",
+          "value": "\"content_links\".\"origin\" IN ('creator', 'viewer')"
         },
         "content_links_status_check": {
           "name": "content_links_status_check",

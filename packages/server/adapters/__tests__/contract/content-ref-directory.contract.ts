@@ -72,7 +72,8 @@ export function describeContentRefDirectoryContract(makeSubject: MakeRepositorie
       expect(found.get(`video:${b}`)).toMatchObject({ title: 'Closed', public: false });
       expect(found.get(`clip:${CLIP_ID}`)).toMatchObject({
         title: 'A clip',
-        public: true,
+        ownerId: OWNER_ID,
+        public: false,
         mediaVideoId: a,
         durationMs: 15_000,
       });

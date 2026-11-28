@@ -1,7 +1,12 @@
 import { fromPromise, map, ok, type Result } from '@kit/result';
-import type { ContentLinkRepositoryPort, TouchingLink } from '@vp/core/repositories';
+import type {
+  ContentLinkRepositoryPort,
+  LinkWriteState,
+  TouchingLink,
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
+  CHAIN_RELATIONS,
   type ContentLink,
   type ContentLinkRelation,
   type ContentLinkStatus,
@@ -20,6 +25,7 @@ import {
   getTableColumns,
   gte,
   inArray,
+  isNull,
   or,
   sql,
   type SQL,
@@ -31,7 +37,10 @@ import type { PostgresDatabase } from './types';
 const { contentLinks: cl, channelLinkSettings: settings } = schema;
 
 const COUNTED: ContentLinkStatus[] = ['active', 'pending'];
-const VIEWER_SUGGESTION_STATUSES: ContentLinkStatus[] = ['suggested', 'declined'];
+
+function auxMatches(column: typeof cl.sourceAuxId | typeof cl.targetAuxId, auxId: string | null) {
+  return auxId === null ? isNull(column) : eq(column, auxId);
+}
 
 function refsMatch(
   type: typeof cl.sourceType | typeof cl.targetType,
@@ -50,6 +59,32 @@ function refsMatch(
   );
 }
 
+type Reader = Pick<PostgresDatabase, 'select'>;
+
+async function edgesOf(
+  db: Reader,
+  channelId: string,
+  relation: ContentLinkRelation
+): Promise<Map<string, string[]>> {
+  if (!CHAIN_RELATIONS.includes(relation)) return new Map();
+  const rows = await db
+    .select()
+    .from(cl)
+    .where(
+      and(
+        eq(cl.sourceChannelId, channelId),
+        eq(cl.relation, relation as typeof cl.$inferSelect.relation),
+        inArray(cl.status, COUNTED)
+      )
+    );
+  const edges = new Map<string, string[]>();
+  for (const link of rows.map(linkFromRow)) {
+    const key = contentRefKey(link.source);
+    edges.set(key, [...(edges.get(key) ?? []), contentRefKey(link.target)]);
+  }
+  return edges;
+}
+
 export class PostgresContentLinkRepository implements ContentLinkRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
 
@@ -59,6 +94,52 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
       databaseUnavailable.during('insertContentLink')
     );
     return map(rows, ([row]) => (row ? linkFromRow(row) : null));
+  }
+
+  async insertGuarded<E>(
+    link: ContentLink,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
+    const outcome = await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          await tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`content_links:${link.sourceChannelId}`}))`
+          );
+          const source = toStoredRef(link.source);
+          const [outgoing] = await tx
+            .select({ total: count() })
+            .from(cl)
+            .where(
+              and(
+                eq(cl.sourceType, source.type),
+                eq(cl.sourceId, source.id),
+                auxMatches(cl.sourceAuxId, source.auxId),
+                inArray(cl.status, COUNTED)
+              )
+            );
+          const [channelTotal] = await tx
+            .select({ total: count() })
+            .from(cl)
+            .where(and(eq(cl.sourceChannelId, link.sourceChannelId), inArray(cl.status, COUNTED)));
+          const chainEdges = await edgesOf(tx, link.sourceChannelId, link.params.relation);
+          const decided = guard({
+            outgoing: outgoing?.total ?? 0,
+            channelTotal: channelTotal?.total ?? 0,
+            chainEdges,
+          });
+          if (!decided.ok) return { refused: decided };
+          const [row] = await tx
+            .insert(cl)
+            .values(linkToRow(link))
+            .onConflictDoNothing()
+            .returning();
+          return { stored: row ? linkFromRow(row) : null };
+        }),
+      databaseUnavailable.during('insertGuardedContentLink')
+    );
+    if (!outcome.ok) return outcome;
+    return outcome.value.refused ?? ok(outcome.value.stored);
   }
 
   async findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
@@ -87,7 +168,8 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
               eq(cl.sourceId, from.id),
               eq(cl.targetType, to.type),
               eq(cl.targetId, to.id),
-              eq(cl.relation, relation as typeof cl.$inferSelect.relation)
+              eq(cl.relation, relation as typeof cl.$inferSelect.relation),
+              sql`${cl.status} <> 'declined'`
             )
           ),
       databaseUnavailable.during('findContentLinkByEdge')
@@ -174,6 +256,7 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
             and(
               eq(cl.sourceType, stored.type),
               eq(cl.sourceId, stored.id),
+              auxMatches(cl.sourceAuxId, stored.auxId),
               inArray(cl.status, COUNTED)
             )
           ),
@@ -198,28 +281,10 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
     channelId: string,
     relation: ContentLinkRelation
   ): Promise<Result<Map<string, string[]>, DatabaseUnavailable>> {
-    const rows = await fromPromise(
-      () =>
-        this.db
-          .select()
-          .from(cl)
-          .where(
-            and(
-              eq(cl.sourceChannelId, channelId),
-              eq(cl.relation, relation as typeof cl.$inferSelect.relation),
-              inArray(cl.status, COUNTED)
-            )
-          ),
+    return fromPromise(
+      () => edgesOf(this.db, channelId, relation),
       databaseUnavailable.during('contentLinkChainEdges')
     );
-    return map(rows, (found) => {
-      const edges = new Map<string, string[]>();
-      for (const link of found.map(linkFromRow)) {
-        const key = contentRefKey(link.source);
-        edges.set(key, [...(edges.get(key) ?? []), contentRefKey(link.target)]);
-      }
-      return edges;
-    });
   }
 
   async listByTargetChannel(
@@ -249,7 +314,8 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
             and(
               eq(cl.targetType, stored.type),
               eq(cl.targetId, stored.id),
-              sql`${cl.status} <> 'broken'`
+              auxMatches(cl.targetAuxId, stored.auxId),
+              inArray(cl.status, COUNTED)
             )
           )
           .returning({ id: cl.id }),
@@ -268,11 +334,7 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
           .select({ total: count() })
           .from(cl)
           .where(
-            and(
-              eq(cl.createdBy, viewerId),
-              gte(cl.createdAt, since),
-              inArray(cl.status, VIEWER_SUGGESTION_STATUSES)
-            )
+            and(eq(cl.origin, 'viewer'), eq(cl.createdBy, viewerId), gte(cl.createdAt, since))
           ),
       databaseUnavailable.during('countViewerLinkSuggestions')
     );

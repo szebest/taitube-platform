@@ -75,9 +75,9 @@ export class InMemoryContentRefDirectory implements ContentRefDirectoryPort {
         return {
           ref,
           channelId: video.channelId,
-          ownerId: clip.userId,
+          ownerId: video.ownerId,
           title: clip.title,
-          public: isVisible(video),
+          public: false,
           mediaVideoId: clip.videoId,
           durationMs: clip.endMs - clip.startMs,
           format: null,
@@ -122,12 +122,16 @@ export class InMemoryContentRefDirectory implements ContentRefDirectoryPort {
         const stream = await found(sources.liveStreams.findById(ref.id));
         const channel = stream && (await found(sources.channels.findById(stream.channelId)));
         if (!stream || !channel) return null;
+        const archive = stream.videoId && (await found(sources.videos.findById(stream.videoId)));
         return {
           ref,
           channelId: stream.channelId,
           ownerId: channel.userId,
           title: stream.title,
-          public: stream.visibility === 'public',
+          public:
+            stream.status === 'ENDED'
+              ? !!archive && isVisible(archive)
+              : stream.visibility === 'public',
           mediaVideoId: stream.videoId,
           durationMs: null,
           format: null,

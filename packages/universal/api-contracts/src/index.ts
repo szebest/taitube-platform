@@ -20,6 +20,7 @@ import * as commentRemovals from './comment-removals';
 import * as commentReports from './comment-reports';
 import * as commentSettings from './comment-settings';
 import * as comments from './comments';
+import * as contentLinks from './content-links';
 import * as creatorComments from './creator-comments';
 import * as creatorLive from './creator-live';
 import * as creatorStats from './creator-stats';
@@ -64,6 +65,7 @@ import * as threads from './threads';
 import * as trustedCommenters from './trusted-commenters';
 import * as uploads from './uploads';
 import * as videoAccess from './video-access';
+import * as videoEndScreens from './video-end-screens';
 import * as videoExperiments from './video-experiments';
 import * as videoPipeline from './video-pipeline';
 import * as videoTools from './video-tools';
@@ -99,6 +101,8 @@ export * from './channel-team';
 export * from './channel-videos';
 export * from './channels';
 export * from './clips';
+export * from './content-link-schemas';
+export * from './content-links';
 export * from './comment-removals';
 export * from './comment-reports';
 export * from './comment-moderation';
@@ -155,6 +159,7 @@ export * from './trusted-commenters';
 export * from './uploads';
 export * from './video-resource';
 export * from './video-access';
+export * from './video-end-screens';
 export * from './video-experiments';
 export * from './video-pipeline';
 export * from './video-tools';
@@ -192,6 +197,7 @@ export const contracts = {
   channelVideos,
   channels,
   clips,
+  contentLinks,
   commentModeration,
   commentRemovals,
   commentReports,
@@ -238,6 +244,7 @@ export const contracts = {
   trustedCommenters,
   uploads,
   videoAccess,
+  videoEndScreens,
   videoExperiments,
   videoPipeline,
   videoTools,

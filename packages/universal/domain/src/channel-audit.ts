@@ -2,6 +2,7 @@ import type { PostKind } from './channel-post';
 import type { RestrictionKind } from './channel-restriction';
 import type { ChannelRole } from './channel-team';
 import type { CommentSettingsField, Disclosure } from './comment-settings';
+import type { ContentLinkRelation, ContentLinkStatus, LinkPolicy } from './content-link';
 import type { DataExportFormat, DataExportKind } from './data-export';
 
 export const CHANNEL_AUDIT_RETENTION_DAYS = 365;
@@ -81,7 +82,19 @@ type ChannelAuditEvent =
   | { action: 'video.uploaded'; targetType: 'video'; targetId: string; meta: UserMeta }
   | { action: 'post.published'; targetType: 'post'; targetId: string; meta: PostMeta }
   | { action: 'post.updated'; targetType: 'post'; targetId: string; meta: PostMeta }
-  | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta };
+  | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta }
+  | { action: 'link.created'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.approved'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.declined'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.removed'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.suggested'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.accepted'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | {
+      action: 'link.policy_changed';
+      targetType: 'settings';
+      targetId: string;
+      meta: { policy: LinkPolicy };
+    };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -104,6 +117,8 @@ type PostedMeta = { videoId: string | null };
 type UserMeta = Record<never, never>;
 
 type PostMeta = { kind: PostKind };
+
+type LinkMeta = { relation: ContentLinkRelation; status: ContentLinkStatus };
 
 type BanMeta = { expiresAt: string | null };
 
@@ -183,6 +198,13 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'post.published': true,
   'post.updated': true,
   'post.deleted': true,
+  'link.created': true,
+  'link.approved': true,
+  'link.declined': true,
+  'link.removed': true,
+  'link.suggested': true,
+  'link.accepted': true,
+  'link.policy_changed': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];

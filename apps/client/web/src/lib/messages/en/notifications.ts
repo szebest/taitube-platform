@@ -62,4 +62,9 @@ export const notifications = {
   levelFailed: dt('Could not save the notifications from this channel'),
   playlistInvite: dt('{name} invited you to work on the playlist {title}'),
   playlistUpdate: dt('{name} changed your playlist {title}'),
+  linkRequest: dt('{name} asked to link to your content'),
+  linkApproved: dt('{name} approved your link'),
+  linkDeclined: dt('{name} declined your link'),
+  linkAdded: dt('{name} linked to your content'),
+  linkSuggestion: dt('A viewer suggested a link for your content'),
 } as const;
