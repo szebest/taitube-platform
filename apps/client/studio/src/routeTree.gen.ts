@@ -30,6 +30,7 @@ import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/qu
 import { Route as AuthedAdminScreeningRouteImport } from './routes/_authed/admin/screening';
 import { Route as AuthedCommentsQueueRouteImport } from './routes/_authed/comments_.queue';
 import { Route as AuthedCommentsSettingsRouteImport } from './routes/_authed/comments_.settings';
+import { Route as AuthedCustomizationPageRouteImport } from './routes/_authed/customization_.page';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as LiveOverlayTokenRouteImport } from './routes/live.overlay.$token';
@@ -142,6 +143,11 @@ const AuthedCommentsSettingsRoute = AuthedCommentsSettingsRouteImport.update({
   path: '/comments/settings',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedCustomizationPageRoute = AuthedCustomizationPageRouteImport.update({
+  id: '/customization_/page',
+  path: '/customization/page',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/admin/screening': typeof AuthedAdminScreeningRoute;
   '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/comments/settings': typeof AuthedCommentsSettingsRoute;
+  '/customization/page': typeof AuthedCustomizationPageRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/admin/screening': typeof AuthedAdminScreeningRoute;
   '/comments/queue': typeof AuthedCommentsQueueRoute;
   '/comments/settings': typeof AuthedCommentsSettingsRoute;
+  '/customization/page': typeof AuthedCustomizationPageRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/_authed/admin/screening': typeof AuthedAdminScreeningRoute;
   '/_authed/comments_/queue': typeof AuthedCommentsQueueRoute;
   '/_authed/comments_/settings': typeof AuthedCommentsSettingsRoute;
+  '/_authed/customization_/page': typeof AuthedCustomizationPageRoute;
   '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/screening'
     | '/comments/queue'
     | '/comments/settings'
+    | '/customization/page'
     | '/live/overlay/$token'
     | '/admin/'
     | '/upload/'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/screening'
     | '/comments/queue'
     | '/comments/settings'
+    | '/customization/page'
     | '/live/overlay/$token'
     | '/admin'
     | '/upload'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/screening'
     | '/_authed/comments_/queue'
     | '/_authed/comments_/settings'
+    | '/_authed/customization_/page'
     | '/live/overlay/$token'
     | '/_authed/admin/'
     | '/_authed/upload/'
@@ -515,6 +527,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCommentsSettingsRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/customization_/page': {
+      id: '/_authed/customization_/page';
+      path: '/customization/page';
+      fullPath: '/customization/page';
+      preLoaderRoute: typeof AuthedCustomizationPageRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/upload/': {
       id: '/_authed/upload/';
       path: '/upload';
@@ -601,6 +620,7 @@ interface AuthedRouteChildren {
   AuthedTeamRoute: typeof AuthedTeamRoute;
   AuthedCommentsQueueRoute: typeof AuthedCommentsQueueRoute;
   AuthedCommentsSettingsRoute: typeof AuthedCommentsSettingsRoute;
+  AuthedCustomizationPageRoute: typeof AuthedCustomizationPageRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -621,6 +641,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedTeamRoute: AuthedTeamRoute,
   AuthedCommentsQueueRoute: AuthedCommentsQueueRoute,
   AuthedCommentsSettingsRoute: AuthedCommentsSettingsRoute,
+  AuthedCustomizationPageRoute: AuthedCustomizationPageRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,

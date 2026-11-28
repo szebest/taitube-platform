@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { featuredApi, libraryOf } from '#app/__tests__/featured-api.fixture';
+import { stubRowGeometry } from '#app/__tests__/row-geometry';
 import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
-import { stubRowGeometry } from '#app/features/channel/__tests__/row-geometry';
 
 const [FIRST, SECOND, THIRD] = libraryOf(3);
 
