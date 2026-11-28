@@ -1,13 +1,22 @@
 import type { ContentLinkView, LinkedItem } from '@vp/api-contracts';
 import type { ContentLinkStatCounts, ResolvedContent } from '@vp/core/repositories';
 import { type ContentLink, contentRefKey } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
+import { canReadVideo, type UserContext } from '@vp/permissions';
 
-/** The viewer's own content, or their channel's, or anything public. */
+/** Anyone sees public content; private content goes to whoever the matrix lets read a private video of its channel. */
 export function canSeeContent(viewer: UserContext | null, content: ResolvedContent): boolean {
-  if (content.public) return true;
-  if (!viewer) return false;
-  return content.ownerId === viewer.id || viewer.memberships?.[content.channelId] !== undefined;
+  return (
+    content.public ||
+    canReadVideo({
+      user: viewer,
+      video: {
+        ownerId: content.ownerId,
+        channelId: content.channelId,
+        visibility: 'private',
+        status: 'READY',
+      },
+    })
+  );
 }
 
 export function toLinkedItem(

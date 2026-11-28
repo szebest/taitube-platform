@@ -4,6 +4,7 @@ import { ContentLinkCache } from '../services/content-link-cache';
 import { ContentLinkNotifier } from '../services/content-link-notifier';
 import { ContentLinkReads } from '../services/content-link-reads';
 import { ContentLinkService } from '../services/content-link-service';
+import { VideoEndScreenService } from '../services/video-end-screen-service';
 import { Services } from './service-tokens';
 
 export function registerContentLinkServices(c: Container): Container {
@@ -37,6 +38,17 @@ export function registerContentLinkServices(c: Container): Container {
           clips: c.get(Adapters.Repositories).clips,
           watchHistory: c.get(Adapters.Repositories).watchHistory,
           cache: c.get(Services.ContentLinkCache),
+        })
+    )
+    .provide(
+      Services.VideoEndScreenService,
+      (c) =>
+        new VideoEndScreenService({
+          endScreens: c.get(Adapters.Repositories).videoEndScreens,
+          videos: c.get(Adapters.Repositories).videos,
+          links: c.get(Adapters.Repositories).contentLinks,
+          refs: c.get(Adapters.Repositories).contentRefs,
+          watchHistory: c.get(Adapters.Repositories).watchHistory,
         })
     );
 }

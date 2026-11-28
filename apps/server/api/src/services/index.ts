@@ -77,6 +77,7 @@ export * from './clip-service';
 export * from './content-link-cache';
 export * from './content-link-reads';
 export * from './content-link-service';
+export * from './video-end-screen-service';
 export * from './current-pick-service';
 export * from './oembed-service';
 export * from './pick-service';

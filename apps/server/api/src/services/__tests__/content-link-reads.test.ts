@@ -57,6 +57,28 @@ describe('apps/server/api/services: ContentLinkReads', () => {
     });
   });
 
+  describe('the ref asked for', () => {
+    it.each([
+      { scenario: 'a stranger', viewer: VIEWER, listed: false },
+      { scenario: 'the owner', viewer: CREATOR_A, listed: true },
+    ])('lists the links of a private Short to $scenario: $listed', async ({ viewer, listed }) => {
+      const h = await linkHarness();
+      await h.seed(source, CREATOR_A, CHANNEL_A, { visibility: 'private' });
+      await h.seed(full, CREATOR_A, CHANNEL_A);
+      expectOk(
+        await h.service.create(CREATOR_A, {
+          source,
+          target: full,
+          params: { relation: 'full_video' },
+        })
+      );
+
+      const [view] = expectOk(await h.reads.forItems([source], viewer));
+
+      expect(view?.outgoing.length).toBe(listed ? 1 : 0);
+    });
+  });
+
   describe('lifecycle', () => {
     it('breaks inbound links when a target is deleted and answers nothing for it', async () => {
       const h = await linkHarness();

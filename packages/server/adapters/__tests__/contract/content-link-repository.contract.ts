@@ -297,6 +297,36 @@ export function describeContentLinkRepositoryContract(makeSubject: MakeRepositor
       expect(expectOk(await links.countForChannel(OWNER_CHANNEL_ID))).toBe(2);
     });
 
+    it('moves a suggestion only after the guard passes on the state of its channel', async () => {
+      await insert({ source: video(a), target: video(b), params: { relation: 'previous' } });
+      const suggested = await insert({
+        source: video(b),
+        target: video(a),
+        params: { relation: 'previous' },
+        status: 'suggested',
+      });
+      const guard = vi.fn(() => ok(undefined));
+
+      const refused = await links.transitionGuarded(
+        suggested,
+        ['suggested'],
+        'active',
+        OWNER_ID,
+        () => err('loop' as const)
+      );
+      const moved = expectOk(
+        await links.transitionGuarded(suggested, ['suggested'], 'active', OWNER_ID, guard)
+      );
+
+      expect(refused).toEqual(err('loop'));
+      expect(moved).toMatchObject({ status: 'active', decidedBy: OWNER_ID });
+      expect(guard).toHaveBeenCalledWith({
+        outgoing: 0,
+        channelTotal: 1,
+        chainEdges: new Map([[contentRefKey(video(a)), [contentRefKey(video(b))]]]),
+      });
+    });
+
     it('answers approve for a channel with no policy and keeps the one it was given', async () => {
       expect(expectOk(await links.linkPolicy(OWNER_CHANNEL_ID))).toBe('approve');
 

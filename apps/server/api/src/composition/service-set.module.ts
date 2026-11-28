@@ -42,6 +42,7 @@ export function registerServiceSet(c: Container): Container {
     clipService: c.get(Services.ClipService),
     contentLinkService: c.get(Services.ContentLinkService),
     contentLinkReads: c.get(Services.ContentLinkReads),
+    videoEndScreenService: c.get(Services.VideoEndScreenService),
     oembedService: c.get(Services.OEmbedService),
     webhookService: c.get(Services.WebhookService),
     apiTokenService: c.get(Services.ApiTokenService),

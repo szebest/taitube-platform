@@ -42,6 +42,17 @@ export interface ContentLinkRepositoryPort {
     link: ContentLink,
     guard: (state: LinkWriteState) => Result<void, E>
   ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>>;
+  /**
+   * `transition` of `link` after `guard` has passed on the state of its source's channel, under
+   * the same lock as `insertGuarded`: accepting a suggestion is a write that adds a link.
+   */
+  transitionGuarded<E>(
+    link: ContentLink,
+    from: readonly ContentLinkStatus[],
+    to: ContentLinkStatus,
+    decidedBy: string,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>>;
   findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>>;
   /** The row of this edge that is not declined, whatever else was once declined. */
   findByEdge(

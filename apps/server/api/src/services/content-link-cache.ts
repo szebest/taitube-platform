@@ -50,11 +50,11 @@ export class ContentLinkCache {
   }
 
   async drop(refs: readonly ContentRef[]): Promise<void> {
-    for (const ref of refs) {
-      ignore(
-        await this.cache.del(CacheKeys.contentLinks(contentRefKey(ref))),
-        'the write committed; the entry expires within a minute'
-      );
+    const dropped = await Promise.all(
+      refs.map((ref) => this.cache.del(CacheKeys.contentLinks(contentRefKey(ref))))
+    );
+    for (const result of dropped) {
+      ignore(result, 'the write committed; the entry expires within a minute');
     }
   }
 }

@@ -60,6 +60,7 @@ function refsMatch(
 }
 
 type Reader = Pick<PostgresDatabase, 'select'>;
+type Transaction = Parameters<Parameters<PostgresDatabase['transaction']>[0]>[0];
 
 async function edgesOf(
   db: Reader,
@@ -100,46 +101,37 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
     link: ContentLink,
     guard: (state: LinkWriteState) => Result<void, E>
   ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
-    const outcome = await fromPromise(
-      () =>
-        this.db.transaction(async (tx) => {
-          await tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`content_links:${link.sourceChannelId}`}))`
-          );
-          const source = toStoredRef(link.source);
-          const [outgoing] = await tx
-            .select({ total: count() })
-            .from(cl)
-            .where(
-              and(
-                eq(cl.sourceType, source.type),
-                eq(cl.sourceId, source.id),
-                auxMatches(cl.sourceAuxId, source.auxId),
-                inArray(cl.status, COUNTED)
-              )
-            );
-          const [channelTotal] = await tx
-            .select({ total: count() })
-            .from(cl)
-            .where(and(eq(cl.sourceChannelId, link.sourceChannelId), inArray(cl.status, COUNTED)));
-          const chainEdges = await edgesOf(tx, link.sourceChannelId, link.params.relation);
-          const decided = guard({
-            outgoing: outgoing?.total ?? 0,
-            channelTotal: channelTotal?.total ?? 0,
-            chainEdges,
-          });
-          if (!decided.ok) return { refused: decided };
-          const [row] = await tx
-            .insert(cl)
-            .values(linkToRow(link))
-            .onConflictDoNothing()
-            .returning();
-          return { stored: row ? linkFromRow(row) : null };
-        }),
-      databaseUnavailable.during('insertGuardedContentLink')
+    return this.underLock(
+      link,
+      guard,
+      async (tx) => {
+        const [row] = await tx.insert(cl).values(linkToRow(link)).onConflictDoNothing().returning();
+        return row ? linkFromRow(row) : null;
+      },
+      'insertGuardedContentLink'
     );
-    if (!outcome.ok) return outcome;
-    return outcome.value.refused ?? ok(outcome.value.stored);
+  }
+
+  async transitionGuarded<E>(
+    link: ContentLink,
+    from: readonly ContentLinkStatus[],
+    to: ContentLinkStatus,
+    decidedBy: string,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
+    return this.underLock(
+      link,
+      guard,
+      async (tx) => {
+        const [row] = await tx
+          .update(cl)
+          .set({ status: to, decidedBy })
+          .where(and(eq(cl.id, link.id), inArray(cl.status, [...from])))
+          .returning();
+        return row ? linkFromRow(row) : null;
+      },
+      'transitionGuardedContentLink'
+    );
   }
 
   async findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
@@ -370,6 +362,49 @@ export class PostgresContentLinkRepository implements ContentLinkRepositoryPort 
       databaseUnavailable.during('writeLinkPolicy')
     );
     return map(written, () => undefined);
+  }
+
+  /** The write, after `guard` passed on the state of the source's channel, under a lock on that channel. */
+  private async underLock<E>(
+    link: ContentLink,
+    guard: (state: LinkWriteState) => Result<void, E>,
+    write: (tx: Transaction) => Promise<ContentLink | null>,
+    operation: string
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
+    const outcome = await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          await tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`content_links:${link.sourceChannelId}`}))`
+          );
+          const source = toStoredRef(link.source);
+          const [outgoing] = await tx
+            .select({ total: count() })
+            .from(cl)
+            .where(
+              and(
+                eq(cl.sourceType, source.type),
+                eq(cl.sourceId, source.id),
+                auxMatches(cl.sourceAuxId, source.auxId),
+                inArray(cl.status, COUNTED)
+              )
+            );
+          const [channelTotal] = await tx
+            .select({ total: count() })
+            .from(cl)
+            .where(and(eq(cl.sourceChannelId, link.sourceChannelId), inArray(cl.status, COUNTED)));
+          const decided = guard({
+            outgoing: outgoing?.total ?? 0,
+            channelTotal: channelTotal?.total ?? 0,
+            chainEdges: await edgesOf(tx, link.sourceChannelId, link.params.relation),
+          });
+          if (!decided.ok) return { refused: decided };
+          return { written: await write(tx) };
+        }),
+      databaseUnavailable.during(operation)
+    );
+    if (!outcome.ok) return outcome;
+    return outcome.value.refused ?? ok(outcome.value.written);
   }
 
   private async listWhere(

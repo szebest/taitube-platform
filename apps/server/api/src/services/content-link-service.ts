@@ -12,46 +12,31 @@ import type { ContentLinkView, CreateLinkBody, LinkListView } from '@vp/api-cont
 import type {
   ChannelRepositoryPort,
   ContentLinkRepositoryPort,
-  ContentLinkStatCounts,
   ContentLinkStatsRepositoryPort,
   ContentRefDirectoryPort,
   ChannelUserRestrictionRepositoryPort,
-  ResolvedContent,
+  LinkWriteState,
 } from '@vp/core/repositories';
 import {
   type ActingChannel,
   type ContentLink,
   type ContentRef,
-  type ContentLinkStatus,
-  contentRefKey,
-  type LinkAnchors,
   type LinkPolicy,
   NO_ANCHORS,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
-  authorize,
-  type CommentsBanned,
   type ContentLinkNotFound,
   contentLinkNotFound,
-  decideLinkAnchors,
   decideLinkCaps,
   decideLinkLoop,
-  decideLinkPair,
-  decideLinkSuggestion,
   decideLinkWrite,
-  type LinkAnchorInvalid,
   type LinkExists,
-  type LinkPairFailure,
-  type LinkSuggestionLimit,
-  type LinkTargetNotPublic,
   linkExists,
-  linkTargetNotPublic,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { canReadContentLinkStats, canSuggestContentLink, type UserContext } from '@vp/permissions';
+import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
-import { refuseWhileBanned } from './channel-ban';
 import type { ContentLinkCache } from './content-link-cache';
 import type { ContentLinkNotifier } from './content-link-notifier';
 import {
@@ -60,7 +45,14 @@ import {
   planLink,
   type ContentLinkPlannerDeps,
 } from './content-link-planner';
-import { canSeeContent, toLinkView } from './content-link-views';
+import { ContentLinkQueues } from './content-link-queues';
+import {
+  type ContentLinkSuggestFailure,
+  ContentLinkViewerSuggestions,
+} from './content-link-viewer-suggestions';
+import { toLinkView } from './content-link-views';
+
+export type { ContentLinkSuggestFailure };
 
 export interface ContentLinkServiceDeps {
   links: ContentLinkRepositoryPort;
@@ -74,29 +66,20 @@ export interface ContentLinkServiceDeps {
 }
 
 export type ContentLinkWriteFailure = PlanLinkFailure | LinkExists | AuthorizationFailure;
-export type ContentLinkSuggestFailure =
-  | AuthorizationFailure
-  | ContentLinkNotFound
-  | LinkPairFailure
-  | LinkAnchorInvalid
-  | LinkTargetNotPublic
-  | LinkExists
-  | LinkSuggestionLimit
-  | CommentsBanned
-  | DatabaseUnavailable;
 export type ContentLinkDecideFailure =
   | AuthorizationFailure
   | ContentLinkNotFound
   | DatabaseUnavailable;
 
-const LIST_LIMIT = 200;
-const ALL_STATUSES: ContentLinkStatus[] = ['active', 'pending', 'declined', 'broken'];
-
-const startOfDay = (at: number) => new Date(Math.floor(at / 86_400_000) * 86_400_000);
-
 /** Everything that changes or lists the link graph; reads for viewers are `ContentLinkReads`. */
 export class ContentLinkService {
-  constructor(private readonly deps: ContentLinkServiceDeps) {}
+  private readonly queues: ContentLinkQueues;
+  private readonly suggestions: ContentLinkViewerSuggestions;
+
+  constructor(private readonly deps: ContentLinkServiceDeps) {
+    this.queues = new ContentLinkQueues(deps);
+    this.suggestions = new ContentLinkViewerSuggestions(deps);
+  }
 
   private get planner(): ContentLinkPlannerDeps {
     return this.deps;
@@ -111,14 +94,7 @@ export class ContentLinkService {
     return andThenAsync(planned, async (plan) => {
       const link = this.newLink(request, plan, user.id, plan.status);
       const stored = await this.deps.links.insertGuarded(link, (state) =>
-        andThen(decideLinkCaps(state), () =>
-          decideLinkLoop({
-            relation: request.params.relation,
-            source: request.source,
-            target: request.target,
-            edges: state.chainEdges,
-          })
-        )
+        guardLinkWrite(link, state)
       );
       return andThenAsync(
         stored,
@@ -127,50 +103,6 @@ export class ContentLinkService {
           return this.afterWrite(user, row, 'link.created');
         }
       );
-    });
-  }
-
-  async suggest(
-    viewer: UserContext,
-    body: CreateLinkBody
-  ): Promise<Result<void, ContentLinkSuggestFailure>> {
-    const allowed = authorize(viewer, canSuggestContentLink({ user: viewer }), {
-      action: 'suggest',
-      subject: 'ContentLink',
-    });
-    if (isErr(allowed)) return allowed;
-
-    const resolved = await this.deps.refs.resolve([body.source, body.target]);
-    return andThenAsync(resolved, async (contents) => {
-      const from = contents.get(contentRefKey(body.source));
-      const to = contents.get(contentRefKey(body.target));
-      if (!from) return err(contentLinkNotFound(contentRefKey(body.source)));
-      if (!to) return err(contentLinkNotFound(contentRefKey(body.target)));
-      if (!(from.public && to.public)) return err(linkTargetNotPublic());
-
-      const pair = decideLinkPair({
-        relation: body.params.relation,
-        source: body.source,
-        target: body.target,
-        sourceChannelId: from.channelId,
-        targetChannelId: to.channelId,
-      });
-      if (isErr(pair)) return pair;
-      const anchors = decideLinkAnchors({
-        anchors: body.anchors ?? NO_ANCHORS,
-        source: { type: body.source.type, durationMs: from.durationMs },
-        target: { type: body.target.type, durationMs: to.durationMs },
-      });
-      if (isErr(anchors)) return anchors;
-
-      const now = new Date(this.deps.now());
-      const banned = await refuseWhileBanned(this.deps, from.channelId, viewer.id, now);
-      if (isErr(banned)) return banned;
-      const restriction = await this.deps.restrictions.findActive(from.channelId, viewer.id, now);
-      if (isErr(restriction)) return restriction;
-      if (restriction.value?.kind === 'shadow') return ok(undefined);
-
-      return this.storeSuggestion(viewer, body, anchors.value, from, to, now);
     });
   }
 
@@ -190,11 +122,12 @@ export class ContentLinkService {
       return andThenAsync(
         planned,
         async (plan): Promise<Result<ContentLinkView, ContentLinkWriteFailure>> => {
-          const moved = await this.deps.links.transition(
-            linkId,
+          const moved = await this.deps.links.transitionGuarded(
+            link,
             ['suggested'],
             plan.status,
-            user.id
+            user.id,
+            (state) => guardLinkWrite(link, state)
           );
           return andThenAsync(
             moved,
@@ -256,80 +189,6 @@ export class ContentLinkService {
     return map(marked, () => undefined);
   }
 
-  async list(
-    user: UserContext,
-    acting: ActingChannel,
-    view: LinkListView
-  ): Promise<Result<ContentLinkView[], ContentLinkDecideFailure>> {
-    const action = view === 'requests' ? 'approveLink' : 'link';
-    const allowed = decideLinkWrite(user, acting, action);
-    if (isErr(allowed)) return allowed;
-
-    const rows = await this.rowsOf(acting.channelId, view);
-    return andThenAsync(rows, async (links) => {
-      const contents = await this.deps.refs.resolve(
-        links.flatMap((link) => [link.source, link.target])
-      );
-      return andThenAsync(contents, async (resolved) => {
-        const stats = await this.statsFor(user, acting, links);
-        return andThenAsync(stats, (totals) => {
-          const kept = view === 'fixups' ? links.filter((link) => isFixup(link, resolved)) : links;
-          return ok(
-            kept.map((link) =>
-              toLinkView(link, { viewer: user, contents: resolved, stats: totals })
-            )
-          );
-        });
-      });
-    });
-  }
-
-  async stats(
-    user: UserContext,
-    acting: ActingChannel
-  ): Promise<
-    Result<
-      { linkId: string; impressions: number; clicks: number; watchSeconds: number }[],
-      ContentLinkDecideFailure
-    >
-  > {
-    const allowed = authorize(user, canReadContentLinkStats({ user, channel: acting }), {
-      action: 'read',
-      subject: 'ContentLinkStats',
-    });
-    if (isErr(allowed)) return allowed;
-    const rows = await this.deps.links.listBySourceChannel(acting.channelId, ALL_STATUSES, 5000);
-    return andThenAsync(rows, async (links) => {
-      const totals = await this.deps.stats.totalsFor(links.map(({ id }) => id));
-      return andThen(totals, (found) =>
-        ok([...found].map(([linkId, counts]) => ({ linkId, ...counts })))
-      );
-    });
-  }
-
-  async policy(
-    user: UserContext,
-    acting: ActingChannel
-  ): Promise<Result<LinkPolicy, ContentLinkDecideFailure>> {
-    const allowed = decideLinkWrite(user, acting, 'link');
-    if (isErr(allowed)) return allowed;
-    return this.deps.links.linkPolicy(acting.channelId);
-  }
-
-  async setPolicy(
-    user: UserContext,
-    acting: ActingChannel,
-    policy: LinkPolicy
-  ): Promise<Result<LinkPolicy, ContentLinkDecideFailure>> {
-    const allowed = decideLinkWrite(user, acting, 'approveLink');
-    if (isErr(allowed)) return allowed;
-    const saved = await this.deps.links.setLinkPolicy(acting.channelId, policy);
-    return andThenAsync(saved, async () => {
-      const audited = await this.deps.notifier.auditPolicy(user, acting.channelId, policy);
-      return andThen(audited, () => ok(policy));
-    });
-  }
-
   private async decide(
     user: UserContext,
     linkId: string,
@@ -377,60 +236,6 @@ export class ContentLinkService {
           }
           return this.present(user, row);
         }
-      );
-    });
-  }
-
-  private async storeSuggestion(
-    viewer: UserContext,
-    body: CreateLinkBody,
-    anchors: LinkAnchors,
-    from: ResolvedContent,
-    to: ResolvedContent,
-    now: Date
-  ): Promise<Result<void, ContentLinkSuggestFailure>> {
-    const existing = await this.deps.links.findByEdge(
-      body.source,
-      body.target,
-      body.params.relation
-    );
-    if (isErr(existing)) return existing;
-    if (existing.value) {
-      const mine = existing.value.createdBy === viewer.id && existing.value.status === 'suggested';
-      return mine ? err(linkExists()) : ok(undefined);
-    }
-    const today = await this.deps.links.countSuggestedBy(viewer.id, startOfDay(now.getTime()));
-    if (isErr(today)) return today;
-    const decided = decideLinkSuggestion({ openDuplicate: false, suggestedToday: today.value });
-    if (isErr(decided)) return decided;
-
-    const link: ContentLink = {
-      id: uuidv7(),
-      source: body.source,
-      target: body.target,
-      params: body.params,
-      anchors,
-      status: 'suggested',
-      sourceChannelId: from.channelId,
-      targetChannelId: to.channelId,
-      origin: 'viewer',
-      createdBy: viewer.id,
-      decidedBy: null,
-      createdAt: now,
-    };
-    const inserted = await this.deps.links.insert(link);
-    return andThenAsync(inserted, async (row) => {
-      if (!row) return ok(undefined);
-      const audited = await this.deps.notifier.audit(
-        viewer,
-        'link.suggested',
-        row.sourceChannelId,
-        row
-      );
-      if (isErr(audited)) return audited;
-      const managers = await this.deps.notifier.managersOf(row.sourceChannelId, viewer.id);
-      return andThenAsync(managers, (ids) =>
-        this.deps.notifier.tell('link_suggestion', ids, row, row.sourceChannelId, { at: now })
       );
     });
   }
@@ -500,39 +305,42 @@ export class ContentLinkService {
     );
   }
 
-  private async statsFor(
-    user: UserContext,
-    acting: ActingChannel,
-    links: readonly ContentLink[]
-  ): Promise<Result<ReadonlyMap<string, ContentLinkStatCounts> | null, DatabaseUnavailable>> {
-    if (!canReadContentLinkStats({ user, channel: acting })) return ok(null);
-    return this.deps.stats.totalsFor(links.map(({ id }) => id));
-  }
-
-  private rowsOf(
-    channelId: string,
-    view: LinkListView
-  ): Promise<Result<ContentLink[], DatabaseUnavailable>> {
-    switch (view) {
-      case 'requests':
-        return this.deps.links.listByTargetChannel(channelId, ['pending'], LIST_LIMIT);
-      case 'suggestions':
-        return this.deps.links.listBySourceChannel(channelId, ['suggested'], LIST_LIMIT);
-      case 'fixups':
-        return this.deps.links.listBySourceChannel(channelId, ['active', 'broken'], LIST_LIMIT);
-      case 'all':
-        return this.deps.links.listBySourceChannel(channelId, ALL_STATUSES, LIST_LIMIT);
-    }
-  }
-
   private async channelOf(channelId: string): Promise<{ channelId: string; ownerId: string }> {
     const found = await this.deps.channels.findById(channelId);
     return { channelId, ownerId: found.ok ? (found.value?.userId ?? '') : '' };
   }
+  suggest(
+    viewer: UserContext,
+    body: CreateLinkBody
+  ): Promise<Result<void, ContentLinkSuggestFailure>> {
+    return this.suggestions.suggest(viewer, body);
+  }
+
+  list(user: UserContext, acting: ActingChannel, view: LinkListView) {
+    return this.queues.list(user, acting, view);
+  }
+
+  stats(user: UserContext, acting: ActingChannel) {
+    return this.queues.stats(user, acting);
+  }
+
+  policy(user: UserContext, acting: ActingChannel) {
+    return this.queues.policy(user, acting);
+  }
+
+  setPolicy(user: UserContext, acting: ActingChannel, policy: LinkPolicy) {
+    return this.queues.setPolicy(user, acting, policy);
+  }
 }
 
-function isFixup(link: ContentLink, contents: ReadonlyMap<string, ResolvedContent>): boolean {
-  if (link.status === 'broken') return true;
-  const target = contents.get(contentRefKey(link.target));
-  return !target || !canSeeContent(null, target);
+/** The caps and the loop check, on the state the repository read under its lock. */
+function guardLinkWrite(link: ContentLink, state: LinkWriteState) {
+  return andThen(decideLinkCaps(state), () =>
+    decideLinkLoop({
+      relation: link.params.relation,
+      source: link.source,
+      target: link.target,
+      edges: state.chainEdges,
+    })
+  );
 }

@@ -50,6 +50,22 @@ export class InMemoryContentLinkRepository implements ContentLinkRepositoryPort 
     return this.insert(link);
   }
 
+  async transitionGuarded<E>(
+    link: ContentLink,
+    from: readonly ContentLinkStatus[],
+    to: ContentLinkStatus,
+    decidedBy: string,
+    guard: (state: LinkWriteState) => Result<void, E>
+  ): Promise<Result<ContentLink | null, DatabaseUnavailable | E>> {
+    const decided = guard({
+      outgoing: this.outgoingOf(link.source),
+      channelTotal: this.totalOf(link.sourceChannelId),
+      chainEdges: this.edgesOf(link.sourceChannelId, link.params.relation),
+    });
+    if (!decided.ok) return decided;
+    return this.transition(link.id, from, to, decidedBy);
+  }
+
   async findById(id: string): Promise<Result<ContentLink | null, DatabaseUnavailable>> {
     return ok(this.links.get(id) ?? null);
   }

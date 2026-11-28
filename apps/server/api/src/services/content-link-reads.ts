@@ -21,7 +21,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { ContentLinkCache } from './content-link-cache';
-import { toLinkedItem } from './content-link-views';
+import { canSeeContent, toLinkedItem } from './content-link-views';
 
 export interface ContentLinkReadsDeps {
   links: Pick<ContentLinkRepositoryPort, 'touching'>;
@@ -65,13 +65,19 @@ export class ContentLinkReads {
 
     const progress = await this.progressOf(viewer, resolved.value);
     if (isErr(progress)) return progress;
-    const clips = await this.clipsOf(viewer, unique, resolved.value);
+    const visible = unique.filter((ref) => {
+      const self = resolved.value.get(contentRefKey(ref));
+      return self && canSeeContent(viewer, self);
+    });
+    const clips = await this.clipsOf(viewer, visible, resolved.value);
     if (isErr(clips)) return clips;
 
     return ok(
       unique.map((ref) => {
+        const self = resolved.value.get(contentRefKey(ref));
+        if (!self || !canSeeContent(viewer, self)) return { ref, outgoing: [], incoming: [] };
         const found = touching.value.get(contentRefKey(ref)) ?? [];
-        const content = this.contentOf(ref, found, resolved.value, progress.value);
+        const content = this.contentOf(ref, found, resolved.value, progress.value, viewer);
         const own = clips.value.get(contentRefKey(ref));
         return own ? { ...content, incoming: [...content.incoming, own] } : content;
       })
@@ -83,20 +89,23 @@ export class ContentLinkReads {
   ): Promise<Result<Map<string, TouchingLink[]>, DatabaseUnavailable>> {
     const found = new Map<string, TouchingLink[]>();
     const missing: ContentRef[] = [];
-    for (const ref of refs) {
-      const cached = await this.deps.cache.read(ref);
-      if (cached) found.set(contentRefKey(ref), cached);
+    const cached = await Promise.all(refs.map((ref) => this.deps.cache.read(ref)));
+    for (const [index, ref] of refs.entries()) {
+      const entry = cached[index];
+      if (entry) found.set(contentRefKey(ref), entry);
       else missing.push(ref);
     }
     if (missing.length === 0) return ok(found);
 
     const read = await this.deps.links.touching(missing);
     if (isErr(read)) return read;
+    const written: Promise<void>[] = [];
     for (const ref of missing) {
       const own = read.value.filter((entry) => contentRefKey(entry.ref) === contentRefKey(ref));
       found.set(contentRefKey(ref), own);
-      await this.deps.cache.write(ref, own);
+      written.push(this.deps.cache.write(ref, own));
     }
+    await Promise.all(written);
     return ok(found);
   }
 
@@ -104,7 +113,8 @@ export class ContentLinkReads {
     ref: ContentRef,
     found: readonly TouchingLink[],
     resolved: ReadonlyMap<string, ResolvedContent>,
-    progress: ReadonlyMap<string, Progress>
+    progress: ReadonlyMap<string, Progress>,
+    viewer: UserContext | null
   ): LinkedContent {
     const self = resolved.get(contentRefKey(ref));
     const ends = (
@@ -127,7 +137,7 @@ export class ContentLinkReads {
       const other = resolved.get(
         contentRefKey(direction === 'outgoing' ? link.target : link.source)
       );
-      if (!other?.public) continue;
+      if (!other || !canSeeContent(viewer, other)) continue;
       const bucket = direction === 'outgoing' ? outgoing : incoming;
       const key = link.params.relation;
       bucket.set(key, [

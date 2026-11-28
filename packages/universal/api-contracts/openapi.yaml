@@ -73555,6 +73555,1437 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/videos/{id}/end-screen:
+    get:
+      summary: Read a video's end screen as the viewer sees it
+      tags:
+        - Videos
+      description: The creator's picks that the viewer can see, with the next episode of the series filled in for this viewer (absent when there is none). A pick the viewer cannot see is left out. Anonymous access permitted.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  endScreen:
+                    anyOf:
+                      - type: object
+                        properties:
+                          layout:
+                            type: string
+                            enum:
+                              - grid
+                              - row
+                              - hero
+                          startsAtMs:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                          showSubscribe:
+                            type: boolean
+                          items:
+                            maxItems: 4
+                            type: array
+                            items:
+                              oneOf:
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - content
+                                    ref:
+                                      oneOf:
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - video
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - clip
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - post
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - thread
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - playlist
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - live
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - episode
+                                            playlistId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                            videoId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - playlistId
+                                            - videoId
+                                          additionalProperties: false
+                                    title:
+                                      type: string
+                                    mediaVideoId:
+                                      anyOf:
+                                        - type: string
+                                          format: uuid
+                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                        - type: 'null'
+                                  required:
+                                    - type
+                                    - ref
+                                    - title
+                                    - mediaVideoId
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - channel_tab
+                                    channelId:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    tabId:
+                                      type: string
+                                  required:
+                                    - type
+                                    - channelId
+                                    - tabId
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - next_episode
+                                    ref:
+                                      oneOf:
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - video
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - clip
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - post
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - thread
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - playlist
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - live
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - episode
+                                            playlistId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                            videoId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - playlistId
+                                            - videoId
+                                          additionalProperties: false
+                                    title:
+                                      type: string
+                                    mediaVideoId:
+                                      anyOf:
+                                        - type: string
+                                          format: uuid
+                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                        - type: 'null'
+                                  required:
+                                    - type
+                                    - ref
+                                    - title
+                                    - mediaVideoId
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - subscribe
+                                  required:
+                                    - type
+                                  additionalProperties: false
+                        required:
+                          - layout
+                          - startsAtMs
+                          - showSubscribe
+                          - items
+                        additionalProperties: false
+                      - type: 'null'
+                  fallback:
+                    type: boolean
+                    description: 'True when none is set or nothing in it can be shown: the client uses 100''s related videos'
+                required:
+                  - endScreen
+                  - fallback
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    put:
+      summary: Replace a video's end screen
+      tags:
+        - Videos
+      description: Replaces the whole end screen when `version` is the stored one. Up to four items, a next_episode and a subscribe item at most once each, starting 5 to 20 seconds before the end of the video. A content item must be one the creator may link. 409 when another save got there first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                layout:
+                  type: string
+                  enum:
+                    - grid
+                    - row
+                    - hero
+                startsAtMs:
+                  type: integer
+                  minimum: 0
+                  maximum: 9007199254740991
+                items:
+                  maxItems: 4
+                  type: array
+                  items:
+                    oneOf:
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - content
+                          ref:
+                            oneOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - video
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - clip
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - post
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - thread
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - playlist
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - live
+                                  id:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - id
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - episode
+                                  playlistId:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  videoId:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                required:
+                                  - type
+                                  - playlistId
+                                  - videoId
+                        required:
+                          - type
+                          - ref
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - channel_tab
+                          channelId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          tabId:
+                            type: string
+                            minLength: 1
+                            maxLength: 64
+                        required:
+                          - type
+                          - channelId
+                          - tabId
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - next_episode
+                        required:
+                          - type
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - subscribe
+                        required:
+                          - type
+                showSubscribe:
+                  type: boolean
+                version:
+                  type: integer
+                  minimum: 0
+                  maximum: 9007199254740991
+                  description: The version read; 0 when the video has no end screen yet
+              required:
+                - layout
+                - startsAtMs
+                - items
+                - showSubscribe
+                - version
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoId:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                  layout:
+                    type: string
+                    enum:
+                      - grid
+                      - row
+                      - hero
+                  startsAtMs:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: 5 to 20 seconds before the end
+                  items:
+                    maxItems: 4
+                    type: array
+                    items:
+                      oneOf:
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - content
+                            ref:
+                              oneOf:
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - video
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - clip
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - post
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - thread
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - playlist
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - live
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - episode
+                                    playlistId:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    videoId:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  required:
+                                    - type
+                                    - playlistId
+                                    - videoId
+                                  additionalProperties: false
+                          required:
+                            - type
+                            - ref
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - channel_tab
+                            channelId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            tabId:
+                              type: string
+                              minLength: 1
+                              maxLength: 64
+                          required:
+                            - type
+                            - channelId
+                            - tabId
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - next_episode
+                          required:
+                            - type
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - subscribe
+                          required:
+                            - type
+                          additionalProperties: false
+                    description: Up to four, in display order
+                  showSubscribe:
+                    type: boolean
+                  version:
+                    type: integer
+                    exclusiveMinimum: 0
+                    maximum: 9007199254740991
+                required:
+                  - videoId
+                  - layout
+                  - startsAtMs
+                  - items
+                  - showSubscribe
+                  - version
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - END_SCREEN_INVALID
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/creator/videos/{id}/end-screen:
+    get:
+      summary: Read a video's end screen for editing
+      tags:
+        - Videos
+      description: The stored end screen with its version, or null when none is set.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: header
+          name: x-channel-id
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  endScreen:
+                    anyOf:
+                      - type: object
+                        properties:
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          layout:
+                            type: string
+                            enum:
+                              - grid
+                              - row
+                              - hero
+                          startsAtMs:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                            description: 5 to 20 seconds before the end
+                          items:
+                            maxItems: 4
+                            type: array
+                            items:
+                              oneOf:
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - content
+                                    ref:
+                                      oneOf:
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - video
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - clip
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - post
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - thread
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - playlist
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - live
+                                            id:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - id
+                                          additionalProperties: false
+                                        - type: object
+                                          properties:
+                                            type:
+                                              type: string
+                                              enum:
+                                                - episode
+                                            playlistId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                            videoId:
+                                              type: string
+                                              format: uuid
+                                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                          required:
+                                            - type
+                                            - playlistId
+                                            - videoId
+                                          additionalProperties: false
+                                  required:
+                                    - type
+                                    - ref
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - channel_tab
+                                    channelId:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    tabId:
+                                      type: string
+                                      minLength: 1
+                                      maxLength: 64
+                                  required:
+                                    - type
+                                    - channelId
+                                    - tabId
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - next_episode
+                                  required:
+                                    - type
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - subscribe
+                                  required:
+                                    - type
+                                  additionalProperties: false
+                            description: Up to four, in display order
+                          showSubscribe:
+                            type: boolean
+                          version:
+                            type: integer
+                            exclusiveMinimum: 0
+                            maximum: 9007199254740991
+                        required:
+                          - videoId
+                          - layout
+                          - startsAtMs
+                          - items
+                          - showSubscribe
+                          - version
+                        additionalProperties: false
+                      - type: 'null'
+                required:
+                  - endScreen
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                      - CHANNEL_MEMBERSHIP_REQUIRED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/picks/current:
     get:
       summary: Pick of the day

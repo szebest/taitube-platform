@@ -24,6 +24,7 @@ import type {
   ContentLinkCache,
   ContentLinkReads,
   ContentLinkService,
+  VideoEndScreenService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -104,6 +105,7 @@ export interface ServiceSet
   clipService: ClipService;
   contentLinkService: ContentLinkService;
   contentLinkReads: ContentLinkReads;
+  videoEndScreenService: VideoEndScreenService;
   liveIngestService: LiveIngestService;
   creatorLiveService: CreatorLiveService;
   liveService: LiveService;
@@ -167,6 +169,7 @@ export const Services = {
   ContentLinkCache: token<ContentLinkCache>('ContentLinkCache'),
   ContentLinkService: token<ContentLinkService>('ContentLinkService'),
   ContentLinkReads: token<ContentLinkReads>('ContentLinkReads'),
+  VideoEndScreenService: token<VideoEndScreenService>('VideoEndScreenService'),
   LiveIngestService: token<LiveIngestService>('LiveIngestService'),
   CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
   LiveService: token<LiveService>('LiveService'),

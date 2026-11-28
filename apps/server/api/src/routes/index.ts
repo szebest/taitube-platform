@@ -68,6 +68,7 @@ import { threadsRoutes } from './threads';
 import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videoAccessRoutes } from './video-access';
+import { videoEndScreenRoutes } from './video-end-screens';
 import { videoExperimentsRoutes } from './video-experiments';
 import { videoPipelineRoutes } from './video-pipeline';
 import { videoToolsRoutes } from './video-tools';
@@ -131,6 +132,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   viewerActivityRoutes,
   clipsRoutes,
   contentLinksRoutes,
+  videoEndScreenRoutes,
   picksRoutes,
   oembedRoutes,
   webhooksRoutes,
