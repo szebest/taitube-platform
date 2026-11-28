@@ -2,6 +2,7 @@ import { VideoCard } from '@kit/components';
 import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import { publishedAt } from '@vp/intl-formats';
+import { PartyQueueMenuItem } from '#app/components/party/party-queue-menu-item';
 import { WatchTogetherMenuItem } from '#app/components/party/watch-together-menu-item';
 import type { VideoHit } from '#app/features/search/utils/search-hits';
 import { useDurationText } from '#app/hooks/use-duration-text';
@@ -58,6 +59,7 @@ export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
       )}
       <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
         <WatchTogetherMenuItem videoId={video.id} />
+        <PartyQueueMenuItem videoId={video.id} />
       </VideoCard.Menu>
     </VideoCard.Root>
   );

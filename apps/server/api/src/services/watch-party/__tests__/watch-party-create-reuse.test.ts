@@ -50,6 +50,16 @@ describe('apps/server/api/services: createRoom reuse', () => {
       body: reusing({ source: { videoId: VIDEO_C } }),
     },
     {
+      scenario: 'it starts from another moment',
+      disturb: async () => {},
+      body: reusing({ source: { videoId: VIDEO_A, startMs: 5000 } }),
+    },
+    {
+      scenario: 'the source is a list that merely begins with the same video',
+      disturb: async () => {},
+      body: reusing({ source: { videoIds: [VIDEO_A, VIDEO_C] } }),
+    },
+    {
       scenario: 'reuse was not asked for',
       disturb: async () => {},
       body: reusing({ reuse: false }),

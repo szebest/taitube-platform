@@ -26,6 +26,8 @@ A popover from the header bell with grouped items and an empty state. It ships n
 | 5 | `Group` | `overline`, `fg-muted` heading |
 | 6 | `Item` | `Avatar` at `avatar.md`, text to three lines, time in `caption`, unread dot in `accent` |
 | 7 | `Item` thumbnail | optional 16:9, 96 px wide |
+| 8 | `Item` `cta` | a `Cta` pill after the time, never a nested control; "Join" in the accent, "Ended" greyed |
+| 9 | `ItemAction` | a sibling icon button at the item's inline-end, 44 px, `actions` of the item (Decline) |
 
 ## Props
 
@@ -69,6 +71,9 @@ interface NotificationCentreItemProps {
 | empty | an [EmptyState](../../components/empty-state.md) `section` line with one action ("Manage subscriptions") |
 | loading, error | five skeleton rows; a [SectionError](../../components/section-error.md) `bar` with retry |
 | offline | cached items with a one-line notice |
+| party invite, pending | the whole row is the join link ending in its Join pill, a "who is watching" line, and a Decline icon beside it |
+| party invite, declined or read | the pill and the Decline icon are gone |
+| party invite, ended | the pill reads "Ended" and greys; the row still opens the room page, which says the party ended |
 
 ## Responsive behaviour
 
@@ -101,6 +106,7 @@ Open: fade and 8 px drop at `base` with `enter`; close at `fast` with `exit`. Th
 |---|---|---|---|
 | `HeaderNotificationCentre` | `notifications/components/` | none | `useNotifications` (empty until the feature lands), `useMarkAllRead`, `useFormat`, `useT` |
 | `NotificationRow` | `notifications/components/` | `notification` (typed by the feature that defines it) | `useFormat`, `useT` |
+| `PartyInviteRow` | `notifications/components/` | `notification`, `party` | `useJoinPartyInvite`, `useDeclinePartyInvite`, `useMarkRead` |
 
 ## Used by
 
@@ -108,4 +114,4 @@ Open: fade and 8 px drop at `base` with `enter`; close at `fast` with `exit`. Th
 
 ## Workbench stories
 
-Empty; grouped items with three unread; thumbnail items; loading and error; offline; "9+"; compact sheet; keyboard open; RTL; skeleton.
+Empty; grouped items with three unread; party invite pending, declined, ended; thumbnail items; loading and error; offline; "9+"; compact sheet; keyboard open; RTL; skeleton.

@@ -1,6 +1,14 @@
 import { axeViolations } from '@kit/web-testing/dom';
 import { act, fireEvent, screen } from '@testing-library/react';
+import { createWatchParty, listWatchPartyInviteCandidates } from '@vp/api-contracts';
+import { apiServer, mockEndpoint, partyRoom, VIDEO_ID } from '@vp/web-testing';
+import { HttpResponse } from 'msw/http';
+import { LazyWatchTogetherContent } from '#app/components/party/watch-together/watch-together.lazy';
 import { renderBar } from './render-bar';
+
+vi.mock(import('#app/hooks/use-require-account'), async () => ({
+  useRequireAccount: () => ({ allowed: true, run: (perform: () => void) => perform() }),
+}));
 
 afterEach(() => {
   vi.useRealTimers();
@@ -163,4 +171,36 @@ describe('apps/client/web: the player control bar', () => {
     expect(screen.queryByRole('slider', { name: 'Seek' })).not.toBeInTheDocument();
     expect(await axeViolations()).toEqual([]);
   });
+
+  it.each([
+    { where: 'inline', fullscreen: 'inline' },
+    { where: 'fullscreen', fullscreen: 'fullscreen' },
+  ] as const)(
+    'opens Watch together $where inside the player, with the room link',
+    async ({ fullscreen }) => {
+      await LazyWatchTogetherContent.preload();
+      const bodies: unknown[] = [];
+      apiServer.use(
+        mockEndpoint(createWatchParty, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(partyRoom(), { status: 201 });
+        }),
+        mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] }))
+      );
+      const { user, player } = renderBar({
+        partyVideoId: VIDEO_ID,
+        range: { startMs: 20_000, endMs: 40_000 },
+        fullscreen,
+      });
+
+      await user.click(await screen.findByRole('button', { name: 'Watch together' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Watch together' });
+      expect(player.contains(dialog)).toBe(true);
+      expect(await screen.findByRole('button', { name: 'Copy link' })).toBeInTheDocument();
+      expect(bodies).toEqual([
+        expect.objectContaining({ source: { videoId: VIDEO_ID, startMs: 20_000 } }),
+      ]);
+    }
+  );
 });

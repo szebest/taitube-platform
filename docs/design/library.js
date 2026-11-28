@@ -28,6 +28,11 @@ const LIBRARY = {
     "phone": false
    },
    {
+    "path": "screens/web/party.html",
+    "title": "Watch party",
+    "phone": true
+   },
+   {
     "path": "screens/web/search.html",
     "title": "Search",
     "phone": false
@@ -479,6 +484,56 @@ const LIBRARY = {
    "path": "apps/web/pick-of-the-day.md",
    "title": "PickOfTheDay",
    "summary": "Location: apps/client/web/src/components/discovery/pick-of-the-day/. Web's app kit, presentational and compoun"
+  },
+  {
+   "path": "apps/web/party-room.md",
+   "title": "PartyRoom",
+   "summary": "Location: `apps/client/web/src/components/party/party-room/`. Web's app kit, presentational and compound, buil"
+  },
+  {
+   "path": "apps/web/party-join-panel.md",
+   "title": "PartyJoinPanel",
+   "summary": "Location: `apps/client/web/src/components/party/party-join-panel/`. Web's app kit, presentational, built from "
+  },
+  {
+   "path": "apps/web/party-lobby.md",
+   "title": "PartyLobby",
+   "summary": "Location: `apps/client/web/src/components/party/party-lobby/`. Web's app kit, presentational and compound, bui"
+  },
+  {
+   "path": "apps/web/party-chat.md",
+   "title": "PartyChat",
+   "summary": "Location: `apps/client/web/src/components/party/party-chat/`. Web's app kit, presentational and compound, buil"
+  },
+  {
+   "path": "apps/web/party-queue.md",
+   "title": "PartyQueue",
+   "summary": "Location: `apps/client/web/src/components/party/party-queue/`. Web's app kit, presentational and compound, bui"
+  },
+  {
+   "path": "apps/web/roster.md",
+   "title": "Roster",
+   "summary": "Location: `apps/client/web/src/components/party/roster/`. Web's app kit, presentational and compound, built fr"
+  },
+  {
+   "path": "apps/web/member-menu.md",
+   "title": "MemberMenu",
+   "summary": "Location: `apps/client/web/src/components/party/member-menu/`. Web's app kit, presentational, built from `Drop"
+  },
+  {
+   "path": "apps/web/role-editor.md",
+   "title": "RoleEditor",
+   "summary": "Location: `apps/client/web/src/components/party/role-editor/`. Web's app kit, presentational and compound, bui"
+  },
+  {
+   "path": "apps/web/party-controls-list.md",
+   "title": "PartyControlsList",
+   "summary": "Location: `apps/client/web/src/components/party/party-controls-list/`. Web's app kit, presentational and compo"
+  },
+  {
+   "path": "apps/web/watch-together.md",
+   "title": "WatchTogether",
+   "summary": "Location: `apps/client/web/src/components/party/watch-together/`. Web's app kit, presentational and compound, "
   },
   {
    "path": "apps/web/queue.md",

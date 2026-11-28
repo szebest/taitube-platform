@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch party · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .mark { inline-size: var(--space-8); block-size: calc(var(--space-8) * 0.7); }
+  [hidden] { display: none !important; }
+  .p-demo { gap: var(--space-4); flex-wrap: wrap; }
+  .p-room { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1024px) { .p-room { grid-template-columns: minmax(0, 1fr) 360px; } }
+  .p-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-block-end: var(--space-3); }
+  .p-stage { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r-card); background: var(--media); display: grid; place-items: center; color: var(--on-media); text-align: center; padding: var(--space-4); }
+  .p-panel { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border-radius: var(--r-card); background: var(--raised); min-block-size: 360px; }
+  .p-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .p-line { display: flex; align-items: center; gap: var(--space-2); min-block-size: var(--size-control-md); }
+  .p-grow { flex: 1; min-inline-size: 0; }
+  .p-card { max-inline-size: 36rem; margin-inline: auto; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--r-card); background: var(--surface); }
+  .p-dialog { max-inline-size: 28rem; margin-inline: auto; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--r-card); background: var(--raised); box-shadow: var(--shadow-3); }
+  .p-link { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: var(--border-control) solid var(--border-strong); border-radius: var(--r-control); background: var(--surface); }
+  .p-qr { inline-size: 10rem; block-size: 10rem; border-radius: var(--r-thumb); background: var(--on-media); }
+  .p-note { color: var(--fg-muted); font-size: var(--type-caption-size); }
+</style>
+</head>
+<body>
+<div class="tt-shell">
+  <header class="tt-header">
+    <a class="tt-brand" href="home.html" aria-label="taitube, home"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+    <span class="tt-spacer"></span>
+    <button class="tt-avatar" type="button" aria-label="Your account, Quiet Heron" data-avatar="#5fb3ae #3d6595">QH</button>
+  </header>
+  <div class="tt-body-wrap">
+    <main class="tt-main" id="main">
+      <div class="tt-row p-demo">
+        <span class="tt-kicker">Watch party</span>
+        <div class="tt-seg" role="group" aria-label="Screen" id="screens">
+          <button type="button" aria-pressed="true" data-screen="room">Room</button>
+          <button type="button" aria-pressed="false" data-screen="lobby">Lobby</button>
+          <button type="button" aria-pressed="false" data-screen="join">Join</button>
+          <button type="button" aria-pressed="false" data-screen="full">Full</button>
+          <button type="button" aria-pressed="false" data-screen="share">Watch together</button>
+          <button type="button" aria-pressed="false" data-screen="roles">Role editor</button>
+          <button type="button" aria-pressed="false" data-screen="controls">Personal controls</button>
+        </div>
+      </div>
+
+      <section data-screen="room" aria-label="Room">
+        <div class="p-head"><h1 class="tt-title-lg">Movie night</h1><span class="tt-badge">Playing</span><span class="tt-muted tt-body-sm">by Ana · 6 here</span><span class="tt-spacer"></span><button class="tt-btn tt-btn--secondary tt-btn--sm" type="button">Invite</button><button class="tt-btn tt-btn--ghost tt-btn--sm" type="button">Layout</button></div>
+        <div class="p-room">
+          <div class="p-stage"><span class="tt-editorial">The picture, synced to the room</span></div>
+          <aside class="p-panel" aria-label="Party panel">
+            <div class="tt-seg" role="group" aria-label="Panel"><button type="button" aria-pressed="true">Chat</button><button type="button" aria-pressed="false">People</button><button type="button" aria-pressed="false">Queue</button></div>
+            <ul class="p-list"><li class="p-line"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="p-grow"><b>Ana</b> <span class="tt-badge">Host</span> that cut at 12:30</span></li><li class="p-line"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span><span class="p-grow"><b>Tom</b> haha yes</span></li><li class="p-line p-note">Hidden message <button class="tt-btn tt-btn--ghost tt-btn--sm" type="button">Show anyway</button></li></ul>
+            <label class="tt-field"><span class="tt-sr-only">Message</span><input class="tt-input" placeholder="Say something"></label>
+          </aside>
+        </div>
+      </section>
+
+      <section data-screen="lobby" aria-label="Lobby" hidden>
+        <div class="p-head"><h1 class="tt-title-lg">Movie night</h1><span class="tt-badge">Waiting to start</span></div>
+        <div class="p-room"><div class="p-stage"><span class="tt-editorial">Waiting to start · starts in 3</span></div>
+          <aside class="p-panel"><h2 class="tt-title">4 of 6 ready</h2><div class="tt-row"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12">A</span><span class="tt-avatar" data-avatar="#22d3ee #0f766e">T</span><span class="tt-avatar" data-avatar="#fb7185 #9f1239">M</span><span class="tt-avatar" data-avatar="#e5e7eb #374151">R</span></div><div class="tt-row"><button class="tt-btn tt-btn--primary" type="button">Start</button><button class="tt-btn tt-btn--secondary" type="button">Ready</button></div></aside></div>
+      </section>
+
+      <section data-screen="join" aria-label="Join" hidden>
+        <div class="p-card"><div class="p-stage"><span class="tt-editorial">Big Buck Bunny</span></div><h1 class="tt-title-lg">Movie night</h1><p class="tt-body-sm tt-muted">by Ana · 7 here</p><div class="tt-row"><button class="tt-btn tt-btn--primary" type="button">Watch as guest</button><button class="tt-btn tt-btn--secondary" type="button">Sign in</button></div></div>
+      </section>
+
+      <section data-screen="full" aria-label="Full room" hidden>
+        <div class="p-card"><h1 class="tt-title-lg">Movie night</h1><p class="tt-body">This party is full (10 of 10)</p><button class="tt-btn tt-btn--primary" type="button" disabled>Join</button><p class="p-note" role="status">When a seat frees, Join turns on and this says "A spot opened up".</p></div>
+      </section>
+
+      <section data-screen="share" aria-label="Watch together" hidden>
+        <div class="p-dialog" role="dialog" aria-label="Watch together"><h2 class="tt-title">Watch together</h2>
+          <div class="p-link"><span class="p-grow">https://taitube.example/parties/0190c3a0…9001</span><button class="tt-btn tt-btn--primary tt-btn--sm" type="button">Copy link</button></div>
+          <label class="tt-row"><input type="checkbox" checked> Start at 12:34</label>
+          <div class="tt-row"><div class="p-qr" role="img" aria-label="QR code of the party link"></div><button class="tt-btn tt-btn--secondary tt-btn--sm" type="button">Share with an app</button></div>
+          <h3 class="tt-label">Invite people</h3><input class="tt-input" type="search" placeholder="Search by name or handle" aria-label="Search by name or handle">
+          <ul class="p-list"><li class="p-line"><span class="p-grow">Ana Reis</span><button class="tt-btn tt-btn--secondary tt-btn--sm" type="button">Invite</button></li><li class="p-line"><span class="p-grow">Tom Lindqvist</span><span class="p-note">Invited</span></li></ul>
+          <details><summary class="tt-label">Room settings</summary><p class="p-note">Name, who can find it, password, capacity, Allow guests, who can do what, schedule, accent colour.</p></details>
+          <button class="tt-btn tt-btn--primary" type="button">Go to party</button></div>
+      </section>
+
+      <section data-screen="roles" aria-label="Role editor" hidden>
+        <div class="p-card"><h1 class="tt-title-lg">Roles</h1>
+          <ul class="p-list"><li class="p-line"><b class="p-grow">DJ <span class="tt-badge">custom</span></b><label><input type="checkbox" checked> queue.add</label></li><li class="p-line"><b class="p-grow">Owner</b><span class="p-note">Protected</span></li><li class="p-line"><b class="p-grow">Member</b><label><input type="checkbox" disabled> roles.manage</label><span class="p-note">You do not hold this</span></li></ul>
+          <div class="tt-row"><input class="tt-input" placeholder="New role" aria-label="New role"><button class="tt-btn tt-btn--secondary" type="button">Create</button><button class="tt-btn tt-btn--ghost" type="button">Apply preset</button></div></div>
+      </section>
+
+      <section data-screen="controls" aria-label="Personal controls" hidden>
+        <div class="p-card"><h1 class="tt-title-lg">Party controls</h1>
+          <ul class="p-list"><li class="p-line"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span><span class="p-grow">Tom · messages hidden, everywhere</span><button class="tt-btn tt-btn--ghost tt-btn--sm" type="button">Remove</button></li></ul></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+  document.getElementById('screens').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-screen]');
+    if (!button) return;
+    for (const other of document.querySelectorAll('#screens button')) other.setAttribute('aria-pressed', String(other === button));
+    for (const section of document.querySelectorAll('section[data-screen]')) section.hidden = section.dataset.screen !== button.dataset.screen;
+  });
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { declineWatchPartyInvite, getWatchParty, joinWatchParty } from '@vp/api-contracts';
 import { mockEndpoint, PARTY_ID, partyMembership, partyPreview } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
@@ -72,5 +72,32 @@ describe('apps/client/web: party invite row', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/parties/${PARTY_ID}`));
     expect(joined).toEqual([]);
+  });
+
+  it('joins a password room on the invite alone and never asks for the password', async () => {
+    const joined: unknown[] = [];
+    const { user, openBell } = await renderBell({
+      unreadCount: 1,
+      items: [partyInvite()],
+      handlers: [
+        mockEndpoint(getWatchParty, () =>
+          HttpResponse.json(
+            partyPreview({
+              hasPassword: true,
+              viewer: { canJoin: joined.length > 0 ? 'yes' : 'password', actions: [] },
+            })
+          )
+        ),
+        mockEndpoint(joinWatchParty, async ({ request }) => {
+          joined.push(await request.json());
+          return HttpResponse.json({ membership: partyMembership() });
+        }),
+      ],
+    });
+
+    await user.click(await within(await openBell()).findByRole('link', { name: /Join$/ }));
+
+    await waitFor(() => expect(joined).toEqual([{ invite: PARTY_INVITE_ID }]));
+    await waitFor(() => expect(screen.queryByLabelText('Password')).toBeNull());
   });
 });

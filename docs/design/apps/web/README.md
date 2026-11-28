@@ -6,7 +6,7 @@ and `@kit/ui` primitives. Nothing here goes into a package, and studio never imp
 ([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@kit/components` the day studio
 needs it. [Ticket 95](../../../tickets/95-design-system-2.md) section 7 builds it.
 
-Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`, `playlist`.
+Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`, `playlist`, `party`.
 
 ## Catalogue
 
@@ -40,6 +40,16 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
 | [CollaboratorList](collaborator-list.md) | playlist | who can edit a playlist | `Avatar` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
 | [ActivityList](activity-list.md) | playlist | a playlist's change history | `Avatar` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
 | [SmartRuleBuilder](smart-rule-builder.md) | playlist | form layout for a smart playlist's rules | `Button`, `IconButton` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
+| [PartyRoom](party-room.md) | party | the room page's frame: stage, header, tabbed panel, overlay | `SegmentedControl`, `Tabs`, `IconButton`, `Badge` | [140](../../../tickets/140-watch-parties.md) |
+| [PartyJoinPanel](party-join-panel.md) | party | what a visitor with no seat sees on a party URL | `Avatar`, `Button`, `Field`, `Input` | [140](../../../tickets/140-watch-parties.md) |
+| [PartyLobby](party-lobby.md) | party | the stage before playback: ready check and countdown | `Avatar`, `Button`, `Progress` | [140](../../../tickets/140-watch-parties.md) |
+| [PartyChat](party-chat.md) | party | room chat with role badges and a composer that says why it cannot send | [LiveChat](live-chat.md), `Badge`, `Textarea` | [140](../../../tickets/140-watch-parties.md) |
+| [PartyQueue](party-queue.md) | party | the room's shared queue | [Queue](queue.md), `Button`, `Dialog` | [140](../../../tickets/140-watch-parties.md) |
+| [Roster](roster.md) | party | members by role with sync marks | `Avatar`, `Badge` | [140](../../../tickets/140-watch-parties.md) |
+| [MemberMenu](member-menu.md) | party | moderation and personal controls on one member | `DropdownMenu`, `Drawer` | [140](../../../tickets/140-watch-parties.md) |
+| [RoleEditor](role-editor.md) | party | a room's roles and their permissions | `Checkbox`, `Input`, `AlertDialog` | [140](../../../tickets/140-watch-parties.md) |
+| [PartyControlsList](party-controls-list.md) | party | personal controls that apply everywhere | `Avatar`, `Button` | [140](../../../tickets/140-watch-parties.md) |
+| [WatchTogether](watch-together.md) | party | the dialog every Watch together entry opens | `ResponsiveModal`, `Checkbox`, `Button`, `Input` | [140](../../../tickets/140-watch-parties.md) |
 
 ## Rules
 
@@ -107,6 +117,13 @@ it; props are the entity (or its id) and at most one placement fact. `Video`, `V
 | [OfflineState](offline-state.md) | `OfflineBanner`, `OfflineRoute` | `offline` | none | `useOnlineStatus`, `useOfflineCache` |
 | [ChannelHeader](channel-header.md) | `ChannelPageHeader` | `channels` | `channel: Channel` | `useSubscription`, `useChannelTabs`, `useAmbientSample` |
 | | `ChannelResultHeader` | `search` | `channel: ChannelCard` | `useSubscription` |
+| [PartyRoom](party-room.md) | `PartyRoomView` | `watch-party` | `roomId`, `preview` | `usePartySync`, `usePartyClock` |
+| [PartyJoinPanel](party-join-panel.md) | `PartyJoin` | `watch-party` | `roomId`, `preview`, `invite?` | `useJoinParty`, `useJoinPartyAsGuest` |
+| [PartyLobby](party-lobby.md) | `PartyStage` | `watch-party` | none | `usePartyCountdown` |
+| [PartyQueue](party-queue.md) | `PartyQueueTab` | `watch-party` | none | `usePartyQueueEdits` |
+| [RoleEditor](role-editor.md) | `PartyRoleEditor` | `watch-party` | `roomId` | `usePartyRoleEdits` |
+| [PartyControlsList](party-controls-list.md) | `PartyControlsRow` | `account` | none | `useWatchPartyControls` |
+| [WatchTogether](watch-together.md) | `WatchTogetherMenuItem` | kit (`components/party`) | `videoId` | `useRequireAccount` |
 | [StartHereShelf](start-here-shelf.md) | `ChannelStartHere` | `channels` | `channelId: string` | `useChannelFeatured`, `useChannelVideos` |
 | [ChannelSpotlight](channel-spotlight.md) | `ChannelPageSpotlight` | `channel` | `channelId: string` | `useChannelSpotlight`, `useFormat` |
 | [LiveChat](live-chat.md) | `LiveStreamChat` | `live` | `streamId: string` | `useLiveChat`, `usePlayerLayout` |

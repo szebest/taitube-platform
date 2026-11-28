@@ -1,11 +1,14 @@
+import { RouterContextProvider } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/queries/intl';
 import { Fragment, type ReactNode } from 'react';
+import { signedInWithToasts } from '#app/__tests__/providers';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { WEB_MESSAGES } from '#app/lib/messages';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
 import type { PlaybackRange, PlayerChapter } from '#app/lib/player/taitube-player-props';
+import { getRouter } from '#app/router';
 import { ControlBar } from '../control-bar';
 
 type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';
@@ -55,6 +58,7 @@ export function renderBar({
   chapters,
   markers,
   title,
+  partyVideoId,
 }: Partial<Playhead> & {
   channel?: boolean;
   live?: boolean;
@@ -62,6 +66,8 @@ export function renderBar({
   chapters?: readonly PlayerChapter[];
   markers?: ReactNode;
   title?: string;
+  /** Offers Watch together for this video, with a signed-in viewer and a router around the bar. */
+  partyVideoId?: string;
 } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
   vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'get').mockReturnValue(currentTime);
@@ -72,22 +78,35 @@ export function renderBar({
   const fullscreenCalls = stubFullscreen(fullscreen);
   const user = userEvent.setup();
   const Channel = channel ? PlayerChannelProvider : Fragment;
+  const Viewer = partyVideoId ? signedInWithToasts() : Fragment;
+  const router = getRouter();
+  const Routed = ({ children }: { children: ReactNode }) =>
+    partyVideoId ? (
+      <RouterContextProvider router={router}>{children}</RouterContextProvider>
+    ) : (
+      children
+    );
   const rendered = render(
     <IntlProvider messages={WEB_MESSAGES} locale="en" timeZone="UTC">
       <Channel>
-        <VideoJsEngine
-          playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
-          posterUrl="http://localhost:9000/posters/p.jpg"
-          title="Launch day"
-        >
-          <ControlBar
-            title={title}
-            live={live}
-            range={range}
-            chapters={chapters}
-            markers={markers}
-          />
-        </VideoJsEngine>
+        <Viewer>
+          <Routed>
+            <VideoJsEngine
+              playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
+              posterUrl="http://localhost:9000/posters/p.jpg"
+              title="Launch day"
+            >
+              <ControlBar
+                title={title}
+                live={live}
+                range={range}
+                chapters={chapters}
+                markers={markers}
+                partyVideoId={partyVideoId}
+              />
+            </VideoJsEngine>
+          </Routed>
+        </Viewer>
         <TheaterProbe />
       </Channel>
     </IntlProvider>

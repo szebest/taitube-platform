@@ -3,6 +3,7 @@ import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl-formats';
+import { PartyQueueMenuItem } from '#app/components/party/party-queue-menu-item';
 import { WatchTogetherMenuItem } from '#app/components/party/watch-together-menu-item';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
@@ -77,6 +78,7 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
       )}
       <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
         <WatchTogetherMenuItem videoId={video.id} />
+        <PartyQueueMenuItem videoId={video.id} />
         {hideable ? <FeedbackMenuItems video={video} /> : undefined}
       </VideoCard.Menu>
       <VideoCard.Expanded onSave={save} onQueue={enqueue} onPlayNext={playNext}>

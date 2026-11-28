@@ -77,18 +77,28 @@ async function hostedChannelId(
 async function reusableRoom(
   { repositories, now }: CreateDeps,
   ownerKey: string,
-  firstVideoId: string | null
+  wanted: readonly { videoId: string; startMs: number }[]
 ): Promise<Result<WatchPartyRoom | null, DatabaseUnavailable>> {
-  if (firstVideoId === null) return ok(null);
+  const [first] = wanted;
+  if (first === undefined) return ok(null);
   const open = await repositories.watchPartyRooms.listOpenOwnedBy(ownerKey);
   return andThenAsync(open, async (rooms) => {
     const since = now().getTime() - REUSE_WINDOW_MS;
     for (const room of rooms) {
-      if (room.phase !== 'lobby' || room.currentVideoId !== firstVideoId) continue;
+      if (room.phase !== 'lobby' || room.currentVideoId !== first.videoId) continue;
       if (room.createdAt.getTime() < since) continue;
       const seated = await repositories.watchPartyMembers.listSeated(room.id);
       if (isErr(seated)) return seated;
-      if (seated.value.every((seat) => seat.memberKey === ownerKey)) return ok(room);
+      if (!seated.value.every((seat) => seat.memberKey === ownerKey)) continue;
+      const queued = await repositories.watchPartyQueue.list(room.id);
+      if (isErr(queued)) return queued;
+      const same =
+        queued.value.items.length === wanted.length &&
+        queued.value.items.every(
+          (item, index) =>
+            item.videoId === wanted[index]?.videoId && item.startMs === wanted[index]?.startMs
+        );
+      if (same) return ok(room);
     }
     return ok(null);
   });
@@ -182,7 +192,7 @@ export async function createRoom(
   if (isErr(asChannelId)) return asChannelId;
 
   if (body.reuse === true) {
-    const reusable = await reusableRoom(deps, ownerKey, first?.videoId ?? null);
+    const reusable = await reusableRoom(deps, ownerKey, queue.value.items);
     if (isErr(reusable)) return reusable;
     if (reusable.value !== null) return presentRoom(deps, reusable.value);
   }
