@@ -104,8 +104,9 @@ test.describe('live', () => {
         json: { ...(await response.json()), liveStreamId: STREAM_ID },
       });
     });
-    await page.route(new RegExp(`/v1/live/${STREAM_ID}/chat/replay`), (route) =>
-      route.fulfill({
+    await page.route(new RegExp(`/v1/live/${STREAM_ID}/chat/replay`), (route) => {
+      const firstWindow = new URL(route.request().url()).searchParams.get('fromMs') === '0';
+      return route.fulfill({
         json: {
           items: [
             {
@@ -120,11 +121,11 @@ test.describe('live', () => {
               offsetMs: 0,
               createdAt: '2026-11-05T10:00:00.000Z',
             },
-          ],
+          ].filter(() => firstWindow),
         },
         headers: ALLOW_ANY_ORIGIN,
-      })
-    );
+      });
+    });
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`/search?q=${encodeURIComponent(watchable.title)}`);
 
