@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Why.** Content on the platform is connected in the creator's head and nowhere else: a Short is cut from a long video, an
 > episode follows another, a video answers someone else's, a thread discusses a moment, a correction replaces an error.
