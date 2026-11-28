@@ -7,6 +7,8 @@ import type { Video } from '@vp/api-contracts';
 import { SectionBoundary, useApi } from '@vp/queries';
 import type { ReactNode } from 'react';
 import { SubscribeAction } from '#app/components/channel/subscribe-action';
+import { WatchTogether } from '#app/components/party/watch-together';
+import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { ShareDialog } from '#app/components/watch/share-dialog';
 import { toSummary } from '#app/features/watch/utils/to-summary';
@@ -81,6 +83,29 @@ function QueueSection({ video }: { video: Video }) {
   );
 }
 
+const MS_PER_SECOND = 1000;
+
+function WatchTogetherSection({ video }: { video: Video }) {
+  const { currentTime } = usePlayerSeek();
+  const { tOr } = useT();
+
+  return (
+    <WatchTogether.Root
+      source={() => ({
+        kind: 'video',
+        videoId: video.id,
+        startMs: Math.floor(currentTime() * MS_PER_SECOND) || undefined,
+      })}
+    >
+      <WatchTogether.Trigger>
+        <EngagementBar.Action icon="party">
+          {tOr('party.watchTogether', {}, '')}
+        </EngagementBar.Action>
+      </WatchTogether.Trigger>
+    </WatchTogether.Root>
+  );
+}
+
 export interface WatchEngagementBarProps {
   video: Video;
   /** More actions after Save, from the features the route composes in. */
@@ -105,6 +130,7 @@ export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarP
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />
+        <WatchTogetherSection video={video} />
         <SaveSection video={video} />
         <QueueSection video={video} />
         <StartThreadAction videoId={video.id} variant="pill" />

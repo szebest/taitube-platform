@@ -12,9 +12,10 @@ import {
 import { unreadNotificationCountQueryOptions } from '@vp/queries';
 import { api, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { renderRoute, stubEventSource } from '@vp/web-testing/dom';
-import { HttpResponse } from 'msw/http';
+import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
+import { LazyNotificationPanel } from '#app/features/notifications/components/notification-panel/notification-panel.lazy';
 import { getRouter } from '#app/router';
 
 export const arrival = (created: Notification): UserEvent => ({
@@ -27,6 +28,7 @@ interface BellOptions {
   unreadCount?: number;
   viewer?: Account;
   list?: Parameters<typeof mockEndpoint<typeof listNotifications>>[1];
+  handlers?: HttpHandler[];
 }
 
 /**
@@ -34,7 +36,14 @@ interface BellOptions {
  * drives with `push`; the API lists `items` whatever the filter (or answers with `list`), counts
  * `unreadCount`, and records the filters asked for and the bodies marked read.
  */
-export async function renderBell({ items = [], unreadCount = 0, viewer, list }: BellOptions = {}) {
+export async function renderBell({
+  items = [],
+  unreadCount = 0,
+  viewer,
+  list,
+  handlers = [],
+}: BellOptions = {}) {
+  await LazyNotificationPanel.preload();
   const stream = stubEventSource();
   vi.spyOn(navigator.locks, 'request').mockImplementation(async (name, _options, grant) =>
     grant({ name, mode: 'exclusive' })
@@ -43,6 +52,7 @@ export async function renderBell({ items = [], unreadCount = 0, viewer, list }: 
   const marked: unknown[] = [];
   const rendered = await renderRoute(getRouter, '/', {
     handlers: [
+      ...handlers,
       signInBrowser(viewer),
       mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount })),
       mockEndpoint(

@@ -60,7 +60,10 @@ export const search = {
   }),
   openHistory: dt('Otwórz historię'),
   uploadVideo: dt('Prześlij film'),
+  startParty: dt('Zacznij wspólne oglądanie'),
+  joinParty: dt('Dołącz do seansu z linku'),
+  noPartyLink: dt('Nie ma linku do seansu w schowku'),
   actionKind: dt('{kind:enum}', {
-    enum: { kind: { theme: 'motyw', mode: 'tryb', page: 'strona' } },
+    enum: { kind: { theme: 'motyw', mode: 'tryb', page: 'strona', party: 'seans' } },
   }),
 } as const;

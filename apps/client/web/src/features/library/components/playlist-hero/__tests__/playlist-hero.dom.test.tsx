@@ -1,10 +1,16 @@
 import { screen } from '@testing-library/react';
+import { createWatchParty, listWatchPartyInviteCandidates } from '@vp/api-contracts';
+import { mockEndpoint, PARTY_ID, partyRoom } from '@vp/web-testing';
+import { HttpResponse } from 'msw/http';
 import { uuid } from '#app/__tests__/library-fixtures';
+import { LazyWatchTogetherContent } from '#app/components/party/watch-together/watch-together.lazy';
 import {
   LIST,
   renderPlaylist,
   renderSeries,
 } from '#app/features/library/__tests__/render-playlist';
+
+beforeAll(() => LazyWatchTogetherContent.preload());
 
 const modes = vi.hoisted(() => ({ set: vi.fn() }));
 
@@ -83,5 +89,22 @@ describe('apps/client/web: the playlist hero', () => {
     await screen.findByRole('button', { name: 'Play all' });
 
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+  });
+
+  it('makes a room from the whole playlist and offers its link', async () => {
+    const bodies: unknown[] = [];
+    const { user } = await renderPlaylist({}, [
+      mockEndpoint(createWatchParty, async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(partyRoom(), { status: 201 });
+      }),
+      mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] })),
+    ]);
+
+    await user.click(await screen.findByRole('button', { name: 'Watch together' }));
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }));
+
+    expect(await navigator.clipboard.readText()).toBe(`http://localhost:3000/parties/${PARTY_ID}`);
+    expect(bodies).toEqual([expect.objectContaining({ source: { playlistId: LIST } })]);
   });
 });

@@ -18,4 +18,5 @@ export const signInPrompt = {
   bell: dt('Zaloguj się, aby dostawać powiadomienia'),
   feedback: dt('Zaloguj się, aby dostosować rekomendacje'),
   vote: dt('Zaloguj się, aby zagłosować'),
+  party: dt('Zaloguj się, aby oglądać razem'),
 } as const;

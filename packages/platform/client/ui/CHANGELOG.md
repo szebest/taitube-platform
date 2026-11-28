@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- `DialogContent`, `DrawerContent` and `ResponsiveModal.Content` take `container`, the element their portal mounts in, so a modal opened inside a fullscreen element shows.
+
 ## 0.4.0
 
 - `DateTimePicker`: the browser's date and time boxes side by side over one local `YYYY-MM-DDTHH:mm` string, each box named by a prop.

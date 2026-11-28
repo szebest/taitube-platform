@@ -47,5 +47,10 @@ export const search = {
   }),
   openHistory: dt('Open History'),
   uploadVideo: dt('Upload a video'),
-  actionKind: dt('{kind:enum}', { enum: { kind: { theme: 'theme', mode: 'mode', page: 'page' } } }),
+  startParty: dt('Start a watch party'),
+  joinParty: dt('Join a party from a link'),
+  noPartyLink: dt('No party link on your clipboard'),
+  actionKind: dt('{kind:enum}', {
+    enum: { kind: { theme: 'theme', mode: 'mode', page: 'page', party: 'party' } },
+  }),
 } as const;

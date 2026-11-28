@@ -17,6 +17,7 @@ describe('apps/client/web: the notification rows', () => {
     { row: 'Uploads from subscriptions', field: 'subscriptionUploads' },
     { row: 'Replies and mentions', field: 'repliesAndMentions' },
     { row: 'Processing finished', field: 'processingFinished' },
+    { row: 'Watch parties', field: 'watchParties' },
   ])('starts $row on and saves it switched off', async ({ row, field }) => {
     const sent: SentSave[] = [];
     const { user } = await renderRoute(getRouter, '/settings/notifications', {
@@ -33,5 +34,26 @@ describe('apps/client/web: the notification rows', () => {
     await user.click(toggle);
 
     await waitFor(() => expect(sent).toEqual([{ version: 0, notifications: { [field]: false } }]));
+  });
+
+  it('saves who may invite the account to a party, everyone until chosen', async () => {
+    const sent: SentSave[] = [];
+    const { user } = await renderRoute(getRouter, '/settings/notifications', {
+      handlers: [
+        signInBrowser(),
+        holds(preferencesView()),
+        acceptsSaves(sent, () => preferencesView()),
+        mockEndpoint(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
+      ],
+    });
+    const select = await screen.findByRole('combobox', { name: 'Watch party invites' });
+    expect(select).toHaveTextContent('Everyone');
+
+    await user.click(select);
+    await user.click(await screen.findByRole('option', { name: 'Nobody' }));
+
+    await waitFor(() =>
+      expect(sent).toEqual([{ version: 0, notifications: { watchPartyInvites: 'nobody' } }])
+    );
   });
 });

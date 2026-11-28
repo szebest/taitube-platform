@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl-formats';
 import type { ReactNode } from 'react';
+import { WatchTogetherMenuItem } from '#app/components/party/watch-together-menu-item';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { useT } from '#app/lib/messages';
@@ -70,6 +71,7 @@ export function LibraryVideoRow({
         </time>
       </VideoCard.Meta>
       <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
+        <WatchTogetherMenuItem videoId={video.id} />
         {actions}
       </VideoCard.Menu>
     </VideoCard.Root>

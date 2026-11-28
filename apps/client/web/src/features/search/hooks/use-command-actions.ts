@@ -33,5 +33,10 @@ export function useCommandActions(): CommandAction[] {
     ? [{ kind: 'studio', label: tOr('search.uploadVideo', {}, '') }]
     : [];
 
-  return [...themes, ...modes, ...pages, ...studio];
+  const party: CommandAction[] = [
+    { kind: 'party-start', label: tOr('search.startParty', {}, '') },
+    { kind: 'party-join', label: tOr('search.joinParty', {}, '') },
+  ];
+
+  return [...themes, ...modes, ...pages, ...studio, ...party];
 }

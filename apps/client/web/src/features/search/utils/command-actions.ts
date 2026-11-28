@@ -6,7 +6,9 @@ type ActionKind =
   | { kind: 'theme'; id: string; name: string }
   | { kind: 'mode'; mode: AppearanceMode }
   | { kind: 'page'; id: 'history'; path: string }
-  | { kind: 'studio' };
+  | { kind: 'studio' }
+  | { kind: 'party-start' }
+  | { kind: 'party-join' };
 
 /** What runs, and the words it is listed and matched by. */
 export type CommandAction = ActionKind & { label: string };
