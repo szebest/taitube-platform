@@ -146,9 +146,9 @@ One stack of three slices:
       URL is reported and nothing is fetched from it.
 - [x] A followed playlist tracks its source and disappears when it turns private; a fork is independent and credits its source.
 - [x] A share link opens a private playlist until it expires; only the owner reads stats.
-- [ ] `privilege-escalation.test.ts` gains the collaborator, link and stats rows.
-- [ ] The pieces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] `privilege-escalation.test.ts` gains the collaborator, link and stats rows.
+- [x] The pieces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -178,6 +178,6 @@ One stack of three slices:
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
+- [x] All acceptance criteria proved with command output in the PR.
 - [x] SDD §5, §6.1 and §6.2 updated; the OpenAPI document regenerated.
 - [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
