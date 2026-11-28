@@ -124,6 +124,22 @@ describe('playlist transfer, merge, import and export routes', () => {
     expect((await ctx.call('owner', 'GET', `/v1/playlists/${source}`)).statusCode).toBe(404);
   });
 
+  it('refuses a smart source with 409 and keeps it, deleteSources or not', async () => {
+    const smart = await ctx.playlist('owner', {
+      title: 'Computed',
+      rules: { match: 'all', conditions: [], sort: 'oldest', limit: 3 },
+    });
+
+    const res = await ctx.call('owner', 'POST', '/v1/playlists/merge', {
+      sourceIds: [smart],
+      into: target,
+      deleteSources: true,
+    });
+
+    expect([res.statusCode, res.json().code]).toEqual([409, ErrorCodes.PLAYLIST_IS_SMART]);
+    expect((await ctx.call('owner', 'GET', `/v1/playlists/${smart}`)).statusCode).toBe(200);
+  });
+
   it.each(['json', 'csv'] as const)(
     'round-trips a playlist through a %s export',
     async (format) => {
