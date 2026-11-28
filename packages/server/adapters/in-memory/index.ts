@@ -20,3 +20,4 @@ export * from './in-memory-frame-classifier';
 export * from './in-memory-watch-party-gate';
 export * from './in-memory-watch-party-presence';
 export * from './in-memory-party-guest-sessions';
+export * from './in-memory-fixed-window-counter';

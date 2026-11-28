@@ -15,6 +15,8 @@
       "CommentCachePort": "@vp/core",
       "CommentSlowModeClaim": "@vp/core",
       "CommentSlowModePort": "@vp/core",
+      "FixedWindowCounterPort": "@vp/core",
+      "FixedWindowHit": "@vp/core",
       "PostOpenSketchPort": "@vp/core",
       "DatabaseClient": "@kit/ports",
       "ExperimentEvent": "@vp/core",

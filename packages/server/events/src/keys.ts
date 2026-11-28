@@ -29,6 +29,7 @@ export const CacheKeys = defineKeyspace('taitube', (key) => ({
   viewSession: (videoId: string, sessionId: string) => key('views', 'session', videoId, sessionId),
   commentSlowMode: (channelId: string, userId: string) =>
     key('comments', 'slow', channelId, userId),
+  rateWindow: (scope: string) => key('rate', 'window', scope),
   postOpens: (postId: string, day: string) => key('posts', postId, 'opens', day),
   liveChatTicket: (ticket: string) => key('live', 'chat', 'ticket', ticket),
   liveChatSlowMode: (liveStreamId: string, userId: string) =>

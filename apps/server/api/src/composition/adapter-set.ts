@@ -6,6 +6,7 @@ import type {
   CategoryCachePort,
   CommentCachePort,
   DatabaseClient,
+  FixedWindowCounterPort,
   JobQueue,
   MultipartStorage,
   ReactionCachePort,
@@ -34,6 +35,7 @@ export interface AdapterOverrides {
   searchSuggestions?: SearchSuggestionIndexPort;
   authorization?: AuthorizationPort;
   tokenVerifier?: TokenVerifier;
+  fixedWindowCounter?: FixedWindowCounterPort;
 }
 
 const OVERRIDABLE: Record<keyof AdapterOverrides, { readonly name: string }> = {
@@ -52,6 +54,7 @@ const OVERRIDABLE: Record<keyof AdapterOverrides, { readonly name: string }> = {
   searchSuggestions: Adapters.SearchSuggestions,
   authorization: Adapters.Authorization,
   tokenVerifier: Adapters.TokenVerifier,
+  fixedWindowCounter: Adapters.FixedWindowCounter,
 };
 
 export function overrideAdapters(c: Container, overrides: AdapterOverrides = {}): Container {
