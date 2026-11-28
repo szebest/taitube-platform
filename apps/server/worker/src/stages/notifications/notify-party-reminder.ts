@@ -36,7 +36,7 @@ export function createNotifyPartyReminderProcessor(deps: NotifyPartyReminderDeps
     if (isErr(room)) return room;
     const current = room.value;
     if (!current || current.status !== 'open' || current.scheduledFor === null) return skipped;
-    if (current.scheduledFor.getTime() !== Date.parse(scheduledFor)) return skipped;
+    if (current.scheduledFor.getTime() !== new Date(scheduledFor).getTime()) return skipped;
 
     const interested = await repositories.watchPartyInterest.userIdsOf(roomId);
     if (isErr(interested)) return interested;

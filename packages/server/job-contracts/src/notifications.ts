@@ -8,7 +8,6 @@ export const NOTIFY_COMMENT = 'notify-comment';
 export const NOTIFY_PROCESSING = 'notify-processing';
 export const NOTIFY_HEART = 'notify-heart';
 export const NOTIFY_PARTY_INVITE = 'notify-party-invite';
-export const NOTIFY_PARTY_REMINDER = 'notify-party-reminder';
 export const NOTIFY_TEAM_INVITE = 'notify-team-invite';
 export const NOTIFY_MODERATION = 'notify-moderation';
 export const NOTIFY_POST_SUBSCRIBERS = 'notify-post-subscribers';
@@ -65,20 +64,6 @@ export const NotifyPartyInviteJob = z.object({
   requestId: z.string().optional(),
 });
 
-/** `before` goes out ten minutes ahead of the party, `start` at its time. */
-export const PARTY_REMINDER_LEADS = ['before', 'start'] as const;
-const PARTY_REMINDER_LEAD_MS = { before: 10 * 60_000, start: 0 } as const;
-
-export const NotifyPartyReminderJob = z.object({
-  roomId: z.uuid(),
-  /** The instant the room was scheduled for when this job was enqueued; a job that no longer matches the room does nothing. */
-  scheduledFor: z.iso.datetime(),
-  lead: z.enum(PARTY_REMINDER_LEADS),
-  traceparent: z.string().optional(),
-  requestId: z.string().optional(),
-});
-export type NotifyPartyReminderJob = z.infer<typeof NotifyPartyReminderJob>;
-
 export const NotifyTeamInviteJob = z.object({
   inviteId: z.uuid(),
   traceparent: z.string().optional(),
@@ -131,8 +116,6 @@ const notificationJobIds = {
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
   heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
   partyInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PARTY_INVITE}`,
-  partyReminder: (roomId: string, scheduledForMs: number, lead: NotifyPartyReminderJob['lead']) =>
-    `${roomId}--${NOTIFY_PARTY_REMINDER}--${scheduledForMs}--${lead}`,
   teamInvite: (inviteId: string) => `${inviteId}--${NOTIFY_TEAM_INVITE}`,
   moderation: (eventId: string) => `${eventId}--${NOTIFY_MODERATION}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
@@ -209,26 +192,6 @@ export const partyInviteOutbox = (job: NotifyPartyInviteJob) =>
     data: job,
     jobId: notificationJobIds.partyInvite(job.inviteId),
   });
-
-/**
- * The reminders of a scheduled room still ahead of `now`: ten minutes before and at the start. The
- * job id carries the instant, so a reschedule enqueues new ones and the old ones find the room moved.
- */
-export function partyReminderOutboxes(roomId: string, scheduledFor: Date, now: Date) {
-  return PARTY_REMINDER_LEADS.flatMap((lead) => {
-    const delay = scheduledFor.getTime() - PARTY_REMINDER_LEAD_MS[lead] - now.getTime();
-    return delay <= 0
-      ? []
-      : [
-          notificationOutbox({
-            name: NOTIFY_PARTY_REMINDER,
-            data: { roomId, scheduledFor: scheduledFor.toISOString(), lead },
-            jobId: notificationJobIds.partyReminder(roomId, scheduledFor.getTime(), lead),
-            delay,
-          }),
-        ];
-  });
-}
 
 export const teamInviteOutbox = (job: NotifyTeamInviteJob) =>
   notificationOutbox({

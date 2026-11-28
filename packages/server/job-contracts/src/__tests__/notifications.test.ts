@@ -18,8 +18,6 @@ import {
   NotifyHeartJob,
   NotifyModerationJob,
   NotifyPartyInviteJob,
-  NotifyPartyReminderJob,
-  partyReminderOutboxes,
   NotifyTeamInviteJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
@@ -58,10 +56,6 @@ describe('job-contracts: notification jobs', () => {
     },
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyPartyInviteJob, valid: { inviteId: INVITE_ID } },
-    {
-      schema: NotifyPartyReminderJob,
-      valid: { roomId: VIDEO_ID, scheduledFor: '2026-12-01T20:00:00.000Z', lead: 'before' },
-    },
     { schema: NotifyTeamInviteJob, valid: { inviteId: INVITE_ID } },
     { schema: NotifyModerationJob, valid: MODERATION },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
@@ -205,31 +199,4 @@ describe('job-contracts: notification jobs', () => {
       );
     }
   );
-
-  describe('party reminders', () => {
-    const START = new Date('2026-12-01T20:00:00.000Z');
-    const delaysAt = (now: string) =>
-      partyReminderOutboxes(VIDEO_ID, START, new Date(now)).map(({ payload }) =>
-        payload.type === 'queue' ? [payload.job.opts?.jobId, payload.job.opts?.delay] : undefined
-      );
-
-    it.each([
-      {
-        scenario: 'more than ten minutes ahead: both reminders',
-        now: '2026-12-01T19:00:00.000Z',
-        expected: [
-          [`${VIDEO_ID}--notify-party-reminder--${START.getTime()}--before`, 50 * 60_000],
-          [`${VIDEO_ID}--notify-party-reminder--${START.getTime()}--start`, 60 * 60_000],
-        ],
-      },
-      {
-        scenario: 'inside the last ten minutes: only the start',
-        now: '2026-12-01T19:55:00.000Z',
-        expected: [[`${VIDEO_ID}--notify-party-reminder--${START.getTime()}--start`, 5 * 60_000]],
-      },
-      { scenario: 'past the start: none', now: '2026-12-01T20:00:00.000Z', expected: [] },
-    ])('enqueues $scenario', ({ now, expected }) => {
-      expect(delaysAt(now)).toEqual(expected);
-    });
-  });
 });

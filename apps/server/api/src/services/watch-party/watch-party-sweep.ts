@@ -1,17 +1,13 @@
 import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
 import { isErr, ok, type Result } from '@kit/result';
-import {
-  applyPlaybackCommand,
-  IDLE_CLOSE_MS,
-  type WatchPartyCloseReason,
-  type WatchPartyRoom,
-} from '@vp/domain';
+import { IDLE_CLOSE_MS, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange } from './watch-party-moderation-effects';
 import { handOverAbsentOwner } from './watch-party-owner-grace';
-import { advanceRoom, announceQueue, commitState } from './watch-party-playback';
+import { advanceRoom, announceQueue } from './watch-party-playback';
+import { startOrExpire } from './watch-party-scheduled-start';
 import { addToTally, emptyTally, publishTally, type SweepTally } from './watch-party-sweep-gauges';
 
 type SweepDeps = Pick<
@@ -58,35 +54,6 @@ export function idleCloseReason(
   const lastSeenAt = (room.lastPresentAt ?? room.createdAt).getTime();
   if (nowMs - lastSeenAt < allowed) return null;
   return room.startedAt === null ? 'not_started' : 'idle';
-}
-
-/** A scheduled room nobody started within its grace closes as not started, whoever is waiting in it. */
-/** @internal */
-export function missedStart(
-  room: Pick<WatchPartyRoom, 'scheduledFor' | 'startedAt' | 'phase'>,
-  nowMs: number,
-  graceMs: number
-): boolean {
-  return (
-    room.scheduledFor !== null &&
-    room.startedAt === null &&
-    room.phase === 'lobby' &&
-    nowMs >= room.scheduledFor.getTime() + graceMs
-  );
-}
-
-/** An `auto_start` room at its time, still in the lobby: the room starts itself when anyone is present. */
-/** @internal */
-export function dueToAutoStart(
-  room: Pick<WatchPartyRoom, 'scheduledFor' | 'autoStart' | 'phase'>,
-  nowMs: number
-): boolean {
-  return (
-    room.autoStart &&
-    room.phase === 'lobby' &&
-    room.scheduledFor !== null &&
-    nowMs >= room.scheduledFor.getTime()
-  );
 }
 
 /**
@@ -170,9 +137,11 @@ export class WatchPartySweep {
     const available = await this.skipUnavailable(room);
     if (isErr(available)) return available;
 
-    const nowRoom = await this.startOrExpire(room, present.value.length, nowMs);
-    if (isErr(nowRoom)) return nowRoom;
-    if (nowRoom.value === 'closed') return ok('closed');
+    const scheduled = await startOrExpire(this.deps, room, present.value.length, nowMs, (reason) =>
+      this.close(room.id, reason)
+    );
+    if (isErr(scheduled)) return scheduled;
+    if (scheduled.value === 'closed') return ok('closed');
 
     if (present.value.length === 0) {
       this.ownerAbsentSince.delete(room.id);
@@ -183,43 +152,6 @@ export class WatchPartySweep {
       return ok('kept');
     }
     return this.handOverIfAbsent(room.id, nowMs);
-  }
-
-  private async startOrExpire(
-    room: WatchPartyRoom,
-    present: number,
-    nowMs: number
-  ): Promise<Result<'kept' | 'closed', SweepFailure>> {
-    const { metrics, config, repositories, now } = this.deps;
-    if (missedStart(room, nowMs, config.sweep.scheduledStartGraceMs)) {
-      const closed = await this.close(room.id, 'not_started');
-      if (isErr(closed)) return closed;
-      if (closed.value === 'closed')
-        metrics.watchPartyScheduledStartsTotal.inc({ outcome: 'expired' });
-      return closed;
-    }
-    if (present === 0 || !dueToAutoStart(room, nowMs)) return ok('kept');
-
-    const fresh = await repositories.watchPartyRooms.findById(room.id);
-    if (isErr(fresh)) return fresh;
-    if (
-      fresh.value === null ||
-      fresh.value.phase !== 'lobby' ||
-      fresh.value.playback.itemId === null
-    ) {
-      return ok('kept');
-    }
-    const started = await commitState(this.deps, fresh.value, {
-      playback: applyPlaybackCommand(fresh.value.playback, { type: 'start' }, now().getTime()),
-      by: null,
-      reason: 'system',
-    });
-    if (isErr(started)) return started;
-    if (started.value.type === 'applied') {
-      metrics.watchPartyScheduledStartsTotal.inc({ outcome: 'started' });
-      logChange(this.deps, { roomId: room.id, actorKey: 'system', action: 'start.auto' });
-    }
-    return ok('kept');
   }
 
   private async skipUnavailable(room: WatchPartyRoom): Promise<Result<void, DatabaseUnavailable>> {

@@ -1,6 +1,5 @@
 import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
-import { NOTIFY_PARTY_REMINDER } from '@vp/job-contracts';
 import { joinRoom } from '../watch-party-join';
 import { closeRoom, updateRoom } from '../watch-party-settings';
 import { assignRole, assignRoleId, createRole, OWNER_KEY } from './watch-party-access-fixture';
@@ -191,27 +190,6 @@ describe('apps/server/api/services: updateRoom', () => {
         await world.update({ name: 'Co-hosted', scheduledFor: startsAt }, userCaller(MEMBER))
       )
     ).toMatchObject({ name: 'Co-hosted', scheduledFor: startsAt });
-  });
-
-  it('queues reminders for a new time only, so a reschedule sends just the new ones', async () => {
-    const world = await setUpSettings();
-    const at = (minutes: number) => new Date(world.clock.nowMs + minutes * 60_000).toISOString();
-    const jobIds = async () =>
-      expectOk(await world.repositories.outbox.claimBatch(20)).flatMap(({ payload }) =>
-        payload.type === 'queue' && payload.job.name === NOTIFY_PARTY_REMINDER
-          ? [payload.job.opts?.jobId ?? '']
-          : []
-      );
-
-    expectOk(await world.update({ scheduledFor: at(60) }));
-    expect(await jobIds()).toHaveLength(2);
-    expectOk(await world.update({ name: 'Renamed' }, userCaller(OWNER), 2));
-    expect(await jobIds()).toHaveLength(2);
-    expectOk(await world.update({ scheduledFor: at(120) }, userCaller(OWNER), 3));
-
-    const ids = await jobIds();
-    expect(ids).toHaveLength(4);
-    expect(new Set(ids).size).toBe(4);
   });
 
   it('asks for the schedule permission on top of the edit one when a schedule is sent', async () => {

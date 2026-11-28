@@ -1077,6 +1077,7 @@ branch's `.vite-hooks/pre-commit` from the worktree top level, and the hook it r
 - **Capacity.** Counted over present sockets of every kind by one Redis script; the ceiling is `WATCH_PARTY_MAX_MEMBERS`.
 - **Roles.** A versioned registry of room permissions, eleven built-in roles and custom ones with positions; nobody grants what they lack or touches what sits at or above their position, and a guest is clamped to `GUEST_CEILING` after every role and row.
 - **Principals and the credential boundary.** A member key (`user:`, `discord:`, `guest:`) keys everything per person. A guest's or a Discord member's party credential is read only on routes whose contract says `partyGuest: true` (§11).
+- **Scheduled rooms.** The same sweep starts a lobby room whose `auto_start` is on at `scheduled_for` when anyone is present (`state` reason `system`, outcome `started` on `watch_party_scheduled_starts_total`), and closes a scheduled room nobody started within an hour (`WATCH_PARTY_START_GRACE_MS`) as `not_started`, people waiting in it or not (outcome `expired`). `auto_start` defaults on when a room is created with a schedule.
 - **The sweep lives in the API.** Idle close, owner hand-over, the room gauges and the purge run on a `Poller` in every API pod, not in the worker's housekeeping stage (§9.8): the hand-over announces `owner` and `closed` frames defined in `@vp/api-contracts`, which the worker does not depend on, and the presence it reads belongs to the API. Each write is a compare-and-set, so running on every pod is safe.
 - **Passwords** are scrypt through `node:crypto` behind `PasswordHasherPort`, not argon2.
 
@@ -3225,8 +3226,10 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
   comment's first heart. `LiveStreamRepository.goLive` writes `notify-subscribers` (kind `live`) when a public
   stream goes live (ADR-29). `WatchPartyInviteRepository.create` writes `notify-party-invite` (kind `party_invite`,
-  job id `<inviteId>--notify-party-invite`); `party_starting` joins the kinds now and gets its producer, the
-  reminders of a scheduled room, in 140c (§10.7).
+  job id `<inviteId>--notify-party-invite`); `WatchPartyRoomRepository.create` and `updateSettings` write
+  `notify-party-reminder` for a scheduled room, one delayed job 10 minutes before and one at the start (kind `party_starting`;
+  job id `<roomId>--notify-party-reminder--<scheduledForMs>--<before|start>`, delay carried by the outbox row's job options),
+  only for an instant still ahead and only when the schedule changed, so a reschedule enqueues just the new pair.
 - **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
   24 hour completed-job retention is dropped by BullMQ.
 - **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
@@ -3255,6 +3258,11 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   when the invite is sent, where the refusal is reported to the inviter without a reason. The row carries
   `payload.party` (`roomId`, `name`, `videoTitle`, `scheduledFor`, `inviteId`, `expiresAt`, `watching`), a snapshot
   taken at send time, and the video title only when the invitee may hear about that video (`mayHearAbout`).
+- **Party reminders.** `notify-party-reminder` tells the accounts interested in the room (`watch_party_interest`) and its pending,
+  unexpired invitees when the room is about to start. It reads both lists when it runs, and does nothing for a job whose
+  `scheduledFor` no longer matches the room's `scheduled_for` (a reschedule), for a closed room, and for an account whose
+  `watchParties` switch is off. The row carries `payload.party` with `inviteId` set for an invitee and `null` for an account that
+  was only interested, and groups under `party_starting:<roomId>`, so a retried job records nothing twice.
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).

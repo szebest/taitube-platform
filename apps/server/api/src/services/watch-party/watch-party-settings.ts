@@ -1,7 +1,7 @@
 import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { PatchWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
-import type { NewOutboxInput, RoomWrite, SettingsPatch } from '@vp/core/repositories';
+import type { RoomWrite, SettingsPatch } from '@vp/core/repositories';
 import type { WatchPartyCloseReason, WatchPartyPermission, WatchPartyRoom } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import {
@@ -14,12 +14,12 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
-import { partyReminderOutboxes } from '@vp/job-contracts';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine, logChange, systemLineFor } from './watch-party-moderation-effects';
 import { requirePrincipal, type Unauthenticated } from './watch-party-principals';
+import { remindersFor } from './watch-party-reminders';
 import { checkRoomInput, type InvalidRoomInput } from './watch-party-room-input';
 import { presentRoom } from './watch-party-room-views';
 
@@ -100,16 +100,6 @@ function appliedRoom(
     default:
       return assertNever(write, 'RoomWrite');
   }
-}
-
-/** A reschedule is the only edit that enqueues: reminders for the new instant, none for an unchanged one. */
-function remindersFor(
-  room: WatchPartyRoom,
-  scheduledFor: Date | null | undefined,
-  now: Date
-): NewOutboxInput[] {
-  if (!scheduledFor || scheduledFor.getTime() === room.scheduledFor?.getTime()) return [];
-  return partyReminderOutboxes(room.id, scheduledFor, now);
 }
 
 export type UpdateFailure =
