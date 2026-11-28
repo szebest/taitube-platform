@@ -3365,7 +3365,7 @@ data: {"liveStreamId":"…","status":"ENDED"}
   touches its own viewers every `LIVE_CHAT.presenceHeartbeatMs` (15 s) and a viewer is counted until it is
   `presenceWindowMs` (40 s) stale, so a pod that dies drops its viewers within one window. A join, a leave and every
   heartbeat publish the count as `live.viewers` on `video:{id}`. `GET /v1/live` and `GET /v1/live/:id` read the same
-  count. `live_streams.current_viewers` is not written.
+  count.
 - **`live.status`**: the live worker publishes `ENDED` once it has ended the stream and closed the archive; the
   `status` event that follows (`READY`, or `FAILED` for a broadcast that never got a segment out) is the video's as
   ever. Nobody can hold the stream of a video that does not exist yet, so going live is announced on the user stream

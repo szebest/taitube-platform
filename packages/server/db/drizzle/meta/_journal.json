@@ -351,6 +351,13 @@
       "when": 1795701077047,
       "tag": "0048_playlists_collaboration",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1795825338901,
+      "tag": "0055_drop_live_streams_current_viewers",
+      "breakpoints": true
     }
   ]
 }

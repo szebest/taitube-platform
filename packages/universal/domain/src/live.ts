@@ -25,7 +25,6 @@ export interface LiveStream {
   archiveVisibility: VideoVisibility;
   overlayToken: string | null;
   controlToken: string | null;
-  currentViewers: number;
   chatSlowModeSeconds: number;
   chatSubscribersOnly: boolean;
   markers: LiveMarker[];

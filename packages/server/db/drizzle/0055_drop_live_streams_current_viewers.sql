@@ -1,0 +1,1 @@
+ALTER TABLE "live_streams" DROP COLUMN "current_viewers";
