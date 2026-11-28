@@ -1,6 +1,7 @@
 import { ResponsiveModal } from '@kit/ui';
 import { useState } from 'react';
 import { urlModals } from '#app/lib/url-modal/registry';
+import type { PartyHost } from './hooks/use-quick-watch-party';
 import { WatchTogetherContext } from './watch-together.context';
 import { LazyWatchTogetherContent } from './watch-together.lazy';
 
@@ -8,6 +9,7 @@ import { LazyWatchTogetherContent } from './watch-together.lazy';
 export function WatchTogetherModal() {
   const { params, close } = urlModals.useUrlModal('watch-together');
   const [withStart, setWithStart] = useState(true);
+  const [hostAs, setHostAs] = useState<PartyHost>('user');
 
   if (!params) {
     return null;
@@ -20,6 +22,8 @@ export function WatchTogetherModal() {
           source: params.videoId ? { kind: 'video', videoId: params.videoId } : { kind: 'empty' },
           withStart,
           setWithStart,
+          hostAs,
+          setHostAs,
           container: undefined,
         }}
       >

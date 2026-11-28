@@ -1,6 +1,7 @@
 import { ResponsiveModal } from '@kit/ui';
 import { type ReactNode, useState } from 'react';
 import { useRequireAccount } from '#app/hooks/use-require-account';
+import type { PartyHost } from './hooks/use-quick-watch-party';
 import type { WatchTogetherSource } from './types';
 import { WatchTogetherContext } from './watch-together.context';
 import { LazyWatchTogetherContent } from './watch-together.lazy';
@@ -22,6 +23,7 @@ export function WatchTogetherRoot({ source, container, children }: WatchTogether
   const [opened, setOpened] = useState<WatchTogetherSource>();
   const [open, setOpen] = useState(false);
   const [withStart, setWithStart] = useState(true);
+  const [hostAs, setHostAs] = useState<PartyHost>('user');
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
@@ -31,6 +33,7 @@ export function WatchTogetherRoot({ source, container, children }: WatchTogether
     run(() => {
       setOpened(source());
       setWithStart(true);
+      setHostAs('user');
       setOpen(true);
     });
   };
@@ -39,7 +42,9 @@ export function WatchTogetherRoot({ source, container, children }: WatchTogether
     <ResponsiveModal.Root open={open} onOpenChange={handleOpenChange}>
       {children}
       {opened && (
-        <WatchTogetherContext value={{ source: opened, withStart, setWithStart, container }}>
+        <WatchTogetherContext
+          value={{ source: opened, withStart, setWithStart, hostAs, setHostAs, container }}
+        >
           <LazyWatchTogetherContent />
         </WatchTogetherContext>
       )}

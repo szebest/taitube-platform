@@ -2,7 +2,9 @@ import { useFormat } from '@kit/intl-react';
 import { unwrapOr } from '@kit/result';
 import { Button, Checkbox, Label, ResponsiveModal, Skeleton } from '@kit/ui';
 import { useNavigate } from '@tanstack/react-router';
+import type { WatchPartyView } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl-formats';
+import { useAccount } from '@vp/queries';
 import { useState } from 'react';
 import {
   canShareNatively,
@@ -14,10 +16,12 @@ import { useT } from '#app/lib/messages';
 import { useInviteCandidates } from '../../hooks/use-invite-candidates';
 import { useInvitePerson } from '../../hooks/use-invite-people';
 import { useQuickWatchParty } from '../../hooks/use-quick-watch-party';
+import { useRoomInviteLink } from '../../hooks/use-room-invite-link';
 import type { WatchTogetherSource } from '../../types';
 import { useWatchTogether } from '../../watch-together.context';
 import { InvitePicker } from '../invite-picker/invite-picker';
 import { PartyQr } from '../party-qr/party-qr';
+import { WatchTogetherSettings } from '../watch-together-settings/watch-together-settings';
 
 const SEARCH_DELAY_MS = 250;
 
@@ -58,13 +62,21 @@ function withoutStart(source: WatchTogetherSource): WatchTogetherSource {
   return source.kind === 'video' ? { kind: 'video', videoId: source.videoId } : source;
 }
 
-function Ready({ roomId, title }: { roomId: string; title: string }) {
+function Ready({ room, title }: { room: WatchPartyView; title: string }) {
   const { tOr } = useT();
   const { format } = useFormat();
   const navigate = useNavigate();
-  const { source, withStart, setWithStart } = useWatchTogether('Ready');
+  const { source, withStart, setWithStart, hostAs, setHostAs } = useWatchTogether('Ready');
+  const account = useAccount();
+  const roomId = room.id;
   const startAtMs = startMsOf(source);
-  const link = partyUrl(roomId);
+  const gated = room.visibility === 'private' || room.hasPassword;
+  const [skipsPassword, setSkipsPassword] = useState(true);
+  const inviteLink = useRoomInviteLink(roomId, gated && skipsPassword);
+  const link =
+    gated && skipsPassword && inviteLink.data
+      ? new URL(inviteLink.data.url, window.location.origin).toString()
+      : partyUrl(roomId);
 
   return (
     <>
@@ -88,7 +100,26 @@ function Ready({ roomId, title }: { roomId: string; title: string }) {
         <PartyQr link={link} label={tOr('party.shareQr', {}, '')} />
         {canShareNatively() && <ShareNativeButton title={title} link={link} />}
       </div>
+      {gated && (
+        <Label className="flex items-center gap-inline">
+          <Checkbox
+            checked={skipsPassword}
+            onCheckedChange={(next) => setSkipsPassword(next === true)}
+          />
+          {tOr('party.linkSkipsPassword', {}, '')}
+        </Label>
+      )}
+      {account?.channel && (
+        <Label className="flex items-center gap-inline">
+          <Checkbox
+            checked={hostAs === 'channel'}
+            onCheckedChange={(next) => setHostAs(next === true ? 'channel' : 'user')}
+          />
+          {tOr('party.hostAsChannel', {}, '')}
+        </Label>
+      )}
       <Invite roomId={roomId} />
+      <WatchTogetherSettings room={room} source={source} hostAs={hostAs} />
       <Button
         tone="accent"
         variant="solid"
@@ -127,14 +158,14 @@ function Failed({ retry }: { retry: () => void }) {
 
 function Room() {
   const { tOr } = useT();
-  const { source, withStart } = useWatchTogether('Room');
-  const room = useQuickWatchParty(withStart ? source : withoutStart(source));
+  const { source, withStart, hostAs } = useWatchTogether('Room');
+  const room = useQuickWatchParty(withStart ? source : withoutStart(source), hostAs);
 
   return (
     <ResponsiveModal.Body className="flex min-w-0 flex-col gap-stack">
       {room.isError && <Failed retry={() => void room.refetch()} />}
       {room.isPending && <Making />}
-      {room.data && <Ready roomId={room.data.id} title={tOr('party.shareTitle', {}, '')} />}
+      {room.data && <Ready room={room.data} title={tOr('party.shareTitle', {}, '')} />}
     </ResponsiveModal.Body>
   );
 }

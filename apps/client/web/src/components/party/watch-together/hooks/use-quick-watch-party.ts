@@ -20,15 +20,24 @@ function toRoomSource(source: WatchTogetherSource): CreateWatchPartyBody['source
   }
 }
 
-function quickWatchPartyQueryOptions(api: ApiClient, source: WatchTogetherSource) {
+export type PartyHost = 'user' | 'channel';
+
+export const quickWatchPartyKey = (source: WatchTogetherSource, hostAs: PartyHost) =>
+  [...watchPartyKeys.all, 'quick', source, hostAs] as const;
+
+function quickWatchPartyQueryOptions(
+  api: ApiClient,
+  source: WatchTogetherSource,
+  hostAs: PartyHost
+) {
   return queryOptions({
-    queryKey: [...watchPartyKeys.all, 'quick', source],
+    queryKey: quickWatchPartyKey(source, hostAs),
     queryFn: () =>
       api.watchParties.createWatchParty({
         body: {
           visibility: 'unlisted',
           preset: 'friends',
-          hostAs: 'user',
+          hostAs,
           reuse: true,
           source: toRoomSource(source),
         },
@@ -45,8 +54,8 @@ function quickWatchPartyQueryOptions(api: ApiClient, source: WatchTogetherSource
  * The quick party for a source: unlisted, and the caller's unstarted room for the same source reused,
  * so asking again answers the same room.
  */
-export function useQuickWatchParty(source: WatchTogetherSource) {
+export function useQuickWatchParty(source: WatchTogetherSource, hostAs: PartyHost = 'user') {
   const api = useApi();
 
-  return useQuery(quickWatchPartyQueryOptions(api, source));
+  return useQuery(quickWatchPartyQueryOptions(api, source, hostAs));
 }
