@@ -253,9 +253,12 @@ function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | n
   const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
   const canPictureInPicture = usePlayerState((state) => state.canPictureInPicture);
   const pictureInPicture = usePlayerState((state) => state.pictureInPicture);
-  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
+  const volume = usePlayerState((state) => state.volume);
+  const { requestPictureInPicture, exitPictureInPicture, setVolume } = usePlayerCommands();
 
   useEffect(() => channel?.attach(seek), [channel, seek]);
+  useEffect(() => channel?.attachVolume(setVolume), [channel, setVolume]);
+  useEffect(() => channel?.publishVolume(volume), [channel, volume]);
 
   useEffect(() => {
     const video = videoRef.current;

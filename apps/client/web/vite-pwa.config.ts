@@ -58,6 +58,7 @@ export async function pwaPlugins(target: string[]): Promise<PluginOption[]> {
     injectManifest: {
       target,
       globPatterns: ['**/*.{js,css,woff2}', 'favicon.{svg,ico}'],
+      globIgnores: ['**/livekit-engine-*.js'],
       additionalManifestEntries: [{ url: OFFLINE_PAGE_URL, revision: buildRevision() }],
     },
     devOptions: { enabled: true, type: 'module' },

@@ -1,8 +1,9 @@
 import { Avatar, Badge, Icon, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { SPEAKING_RING } from '#app/components/party/voice-tile';
 import { useT } from '#app/lib/messages';
 import { SYNC_COPY } from './constants';
-import type { RosterSource, RosterSync } from './types';
+import type { RosterSource, RosterSync, RosterVoice } from './types';
 
 /** The People tab: who is here, grouped, with the viewer's own marks and a menu for each person. */
 export function RosterRoot({ className, ...props }: ComponentPropsWithRef<'section'>) {
@@ -47,6 +48,9 @@ export interface RosterMemberProps extends ComponentPropsWithRef<'li'> {
   away?: boolean;
   ready?: boolean;
   sync: RosterSync;
+  /** Where the member is in the room's voice; the ring follows `speaking`. */
+  voice?: RosterVoice;
+  speaking?: boolean;
   /** The member's role badges, in their colours. */
   badges?: ReactNode;
   /** The member menu, at the row's end. */
@@ -61,6 +65,8 @@ export function RosterMember({
   away = false,
   ready = false,
   sync,
+  voice = 'off',
+  speaking = false,
   badges,
   menu,
   className,
@@ -75,7 +81,12 @@ export function RosterMember({
       className={`group flex items-center gap-inline ${className ?? ''}`}
       {...props}
     >
-      <Avatar.Root size="sm" aria-hidden="true" className="shrink-0 group-data-away:opacity-60">
+      <Avatar.Root
+        size="sm"
+        aria-hidden="true"
+        data-speaking={speaking || undefined}
+        className={`shrink-0 group-data-away:opacity-60 ${SPEAKING_RING}`}
+      >
         {avatarUrl && <Avatar.Image src={avatarUrl} alt="" />}
         <Avatar.Fallback>{name.slice(0, 1)}</Avatar.Fallback>
       </Avatar.Root>
@@ -92,6 +103,11 @@ export function RosterMember({
               {tOr('party.rosterViaDiscord', {}, '')}
             </Badge>
           )}
+          {voice === 'self_muted' || voice === 'server_muted' ? (
+            <Badge size="sm" variant="soft" tone="neutral">
+              {tOr('party.voiceMuted', {}, '')}
+            </Badge>
+          ) : null}
           {badges}
         </span>
         <span className="text-caption text-fg-muted">{tOr(SYNC_COPY[sync], {}, '')}</span>

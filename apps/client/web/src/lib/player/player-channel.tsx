@@ -12,6 +12,9 @@ import {
 export interface PlayerChannel {
   seek(seconds: number): void;
   currentTime(): number;
+  /** The gain the media element applies, from 0 to 1. */
+  volume(): number;
+  setVolume(volume: number): void;
   theater(): boolean;
   toggleTheater(): void;
   fullscreen(): boolean;
@@ -28,6 +31,8 @@ export interface PlayerChannel {
 interface PlayerChannelEnd extends PlayerChannel {
   attach(seek: (seconds: number) => void): () => void;
   publish(seconds: number): void;
+  attachVolume(setVolume: (volume: number) => void): () => void;
+  publishVolume(volume: number): void;
   publishFullscreen(fullscreen: boolean): void;
   attachPictureInPicture(toggle: () => void): () => void;
   publishPictureInPicture(state: { available: boolean; active: boolean }): void;
@@ -38,6 +43,8 @@ interface PlayerChannelEnd extends PlayerChannel {
 function createPlayerChannel(): PlayerChannelEnd {
   let target: ((seconds: number) => void) | undefined;
   let time = 0;
+  let volume = 1;
+  let setTargetVolume: ((volume: number) => void) | undefined;
   let theater = false;
   let fullscreen = false;
   let pip = { available: false, active: false };
@@ -52,6 +59,8 @@ function createPlayerChannel(): PlayerChannelEnd {
   return {
     seek: (seconds) => target?.(seconds),
     currentTime: () => time,
+    volume: () => volume,
+    setVolume: (next) => setTargetVolume?.(next),
     theater: () => theater,
     toggleTheater: () => {
       theater = !theater;
@@ -78,6 +87,15 @@ function createPlayerChannel(): PlayerChannelEnd {
       return () => {
         target = undefined;
       };
+    },
+    attachVolume: (setVolume) => {
+      setTargetVolume = setVolume;
+      return () => {
+        setTargetVolume = undefined;
+      };
+    },
+    publishVolume: (next) => {
+      volume = next;
     },
     publish: (seconds) => {
       time = seconds;

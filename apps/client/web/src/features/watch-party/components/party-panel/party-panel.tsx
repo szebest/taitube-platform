@@ -11,6 +11,7 @@ import { usePartyModeration } from '#app/features/watch-party/hooks/use-party-mo
 import { getComposerState } from '#app/features/watch-party/utils/get-composer-state';
 import { getMemberSubject } from '#app/features/watch-party/utils/get-member-subject';
 import { getRoleBadges } from '#app/features/watch-party/utils/get-role-badges';
+import { VoiceJoinButton, useVoice } from '#app/features/watch-party/voice';
 import { useT } from '#app/lib/messages';
 
 const UNASSIGNABLE_ROLES = ['owner', 'member', 'guest', 'chat_muted', 'voice_muted'];
@@ -30,6 +31,7 @@ export function PartyPanel({ roomId, socket, tab, onTabChange, onSignIn }: Party
   const { tOr } = useT();
   const { format } = useFormat();
   const moderation = usePartyModeration(roomId);
+  const speaking = useVoice()?.snapshot.speaking ?? [];
   const canPost = usePartyCan({ kind: 'permission', permission: 'chat.post' });
   const { room, you, roles, roster } = state;
 
@@ -84,6 +86,8 @@ export function PartyPanel({ roomId, socket, tab, onTabChange, onSignIn }: Party
       away={person.away}
       ready={person.ready}
       sync={person.sync}
+      voice={person.voice}
+      speaking={speaking.includes(person.memberKey)}
       badges={badgesOf(person.memberKey)}
       menu={
         person.memberKey === you?.memberKey ? null : (
@@ -138,6 +142,7 @@ export function PartyPanel({ roomId, socket, tab, onTabChange, onSignIn }: Party
       </PartyRoom.TabPanel>
       <PartyRoom.TabPanel value="people">
         <Roster.Root>
+          <VoiceJoinButton />
           <Roster.Group label={tOr('party.rosterPresent', {}, '')} count={present.length}>
             {present.map(memberOf)}
           </Roster.Group>
