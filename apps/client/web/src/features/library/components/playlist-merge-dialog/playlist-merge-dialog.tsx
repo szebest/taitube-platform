@@ -73,7 +73,7 @@ function MergeForm({ playlist, canMergeHere }: PlaylistMergeDialogProps) {
   if (playlists.isPending) return <Skeleton aria-hidden="true" className="h-24 w-full" />;
 
   const candidates = playlists.data.items.filter(
-    ({ id, isSystem }) => id !== playlist.id && !isSystem
+    ({ id, isSystem, isSmart }) => id !== playlist.id && !isSystem && !isSmart
   );
 
   return (
