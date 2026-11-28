@@ -3,6 +3,7 @@ import {
   createWatchPartySocketTicket,
   getVideo,
   getWatchParty,
+  listWatchPartyControls,
   type WatchPartyServerFrame,
 } from '@vp/api-contracts';
 import {
@@ -47,6 +48,7 @@ export async function renderPartyRoute({
     handlers: [
       ...handlers,
       ...(viewer ? [signInBrowser(viewer)] : []),
+      mockEndpoint(listWatchPartyControls, () => HttpResponse.json({ items: [] })),
       mockEndpoint(getWatchParty, () => HttpResponse.json(partyPreview(preview))),
       mockEndpoint(createWatchPartySocketTicket, () =>
         HttpResponse.json(

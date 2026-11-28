@@ -10,7 +10,7 @@ function AsDj({ children }: { children: ReactNode }) {
     <PartyPermissionsProvider
       userContext={null}
       viewer={{
-        permissions: ['queue.add', 'queue.remove'],
+        permissions: ['queue.add', 'queue.remove', 'queue.reorder'],
         topPosition: 20,
         isOwner: false,
         kind: 'user',
@@ -38,8 +38,18 @@ export const Filled: Story = {
       <PartyQueue.Root {...args}>
         <PartyQueue.List>
           <PartyQueue.Item title="Big Buck Bunny" addedBy="Ana" current />
-          <PartyQueue.Item title="Sintel" addedBy="Bruno" onRemove={() => undefined} />
-          <PartyQueue.Item title="Tears of Steel" addedBy="Carla" onRemove={() => undefined} />
+          <PartyQueue.Item
+            title="Sintel"
+            addedBy="Bruno"
+            onRemove={() => undefined}
+            onMoveDown={() => undefined}
+          />
+          <PartyQueue.Item
+            title="Tears of Steel"
+            addedBy="Carla"
+            onRemove={() => undefined}
+            onMoveUp={() => undefined}
+          />
         </PartyQueue.List>
         <PartyQueue.Add onAdd={() => undefined} />
       </PartyQueue.Root>

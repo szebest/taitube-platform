@@ -47,3 +47,25 @@ export const Empty: Story = {
     </Roster.Root>
   ),
 };
+
+export const Marked: Story = {
+  render: (args) => (
+    <Roster.Root {...args} className="w-[22.5rem]">
+      <Roster.Group label="Present" count={3}>
+        <Roster.Member name="Carla" favourite sync="in_sync" />
+        <Roster.Member
+          name="Bruno"
+          avatarHidden
+          avatarUrl="https://example.test/bruno.png"
+          sync="in_sync"
+          mark={<Roster.ControlMark name="Bruno" kind="hidden" onUndo={() => undefined} />}
+        />
+        <Roster.Member
+          name="Davi"
+          sync="in_sync"
+          mark={<Roster.ControlMark name="Davi" kind="muted" onUndo={() => undefined} />}
+        />
+      </Roster.Group>
+    </Roster.Root>
+  ),
+};

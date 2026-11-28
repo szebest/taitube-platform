@@ -17,6 +17,8 @@ export interface PartyJoinPanelProps extends Omit<ComponentPropsWithRef<'section
   actions?: readonly PartyJoinAction[];
   /** A full room: who is in it and how many it holds. */
   full?: { present: number; capacity: number };
+  /** A full room that has a seat free now: said once, with Join enabled. */
+  spotOpened?: boolean;
   passwordError?: PartyPasswordError | null;
   pending?: boolean;
   onJoin: (password?: string) => void;
@@ -39,6 +41,7 @@ export function PartyJoinPanel({
   total = 0,
   actions = [],
   full,
+  spotOpened = false,
   passwordError = null,
   pending = false,
   onJoin,
@@ -108,6 +111,11 @@ export function PartyJoinPanel({
       {state === 'full' && full && (
         <p className="m-0 text-body">
           {tOr('party.fullTitle', { present: full.present, capacity: full.capacity }, '')}
+        </p>
+      )}
+      {spotOpened && (
+        <p role="status" className="m-0 text-body">
+          {tOr('party.fullSpotOpened', {}, '')}
         </p>
       )}
       {state === 'password' && (

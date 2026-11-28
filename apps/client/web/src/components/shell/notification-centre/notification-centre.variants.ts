@@ -16,15 +16,18 @@ export const notificationCentreStyles = tv({
     groupHeading: 'm-0 px-inset-card pt-stack pb-inline text-overline text-fg-muted',
     list: 'm-0 flex list-none flex-col p-0',
     row: 'group/item relative flex',
-    item: 'grid min-h-[4.5rem] w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] content-start gap-x-stack gap-y-inline border-0 bg-transparent py-stack ps-inset-card pe-inset-control text-start font-sans text-body-sm text-fg no-underline transition-colors duration-fast hover:bg-tint focus-ring group-data-unread/item:bg-accent-soft',
+    item: 'group-data-actions/item:pe-[3.5rem] grid min-h-[4.5rem] w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] content-start gap-x-stack gap-y-inline border-0 bg-transparent py-stack ps-inset-card pe-inset-control text-start font-sans text-body-sm text-fg no-underline transition-colors duration-fast hover:bg-tint focus-ring group-data-unread/item:bg-accent-soft',
     dot: 'pointer-events-none absolute start-[0.5rem] top-[1.75rem] size-[0.5rem] rounded-full bg-accent opacity-0 transition-opacity duration-fast group-data-unread/item:opacity-100',
     avatar: 'row-span-2',
     text: 'line-clamp-3',
     time: 'col-start-2 row-start-2 text-caption text-fg-muted group-data-unread/item:text-fg',
+    cta: 'col-start-2 row-start-3 inline-flex w-fit items-center rounded-full bg-accent px-inset-control text-label text-on-accent',
+    action: 'absolute end-[0.25rem] top-[0.5rem] size-[2.75rem] shrink-0',
     thumbnail:
       'col-start-3 row-span-2 row-start-1 hidden aspect-video w-[6rem] rounded-sm object-cover large:block',
   },
   variants: {
+    ended: { true: { cta: 'bg-tint text-fg-muted' } },
     layout: {
       popover: {
         panel:

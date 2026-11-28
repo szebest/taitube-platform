@@ -11,7 +11,8 @@ type SwitchRowId =
   | 'subscriptions-visible'
   | 'subscription-uploads'
   | 'replies-and-mentions'
-  | 'processing-finished';
+  | 'processing-finished'
+  | 'watch-parties';
 
 export type SettingSwitchRowProps = {
   row: SwitchRowId;

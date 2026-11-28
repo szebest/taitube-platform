@@ -1,4 +1,4 @@
-import { Avatar, Badge, Icon, VisuallyHidden } from '@kit/ui';
+import { Avatar, Badge, Icon, IconButton, VisuallyHidden } from '@kit/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { useT } from '#app/lib/messages';
 import { SYNC_COPY } from './constants';
@@ -49,6 +49,12 @@ export interface RosterMemberProps extends ComponentPropsWithRef<'li'> {
   sync: RosterSync;
   /** The member's role badges, in their colours. */
   badges?: ReactNode;
+  /** The viewer's own mark on this member, with its undo. */
+  mark?: ReactNode;
+  /** The viewer hides this member's avatar. */
+  avatarHidden?: boolean;
+  /** The viewer's favourite: highlighted. */
+  favourite?: boolean;
   /** The member menu, at the row's end. */
   menu?: ReactNode;
 }
@@ -62,6 +68,9 @@ export function RosterMember({
   ready = false,
   sync,
   badges,
+  mark,
+  avatarHidden = false,
+  favourite = false,
   menu,
   className,
   ...props
@@ -72,11 +81,12 @@ export function RosterMember({
     <li
       data-slot="roster-member"
       data-away={away || undefined}
-      className={`group flex items-center gap-inline ${className ?? ''}`}
+      data-favourite={favourite || undefined}
+      className={`group flex items-center gap-inline rounded-control data-favourite:bg-tint ${className ?? ''}`}
       {...props}
     >
       <Avatar.Root size="sm" aria-hidden="true" className="shrink-0 group-data-away:opacity-60">
-        {avatarUrl && <Avatar.Image src={avatarUrl} alt="" />}
+        {avatarUrl && !avatarHidden && <Avatar.Image src={avatarUrl} alt="" />}
         <Avatar.Fallback>{name.slice(0, 1)}</Avatar.Fallback>
       </Avatar.Root>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -93,6 +103,7 @@ export function RosterMember({
             </Badge>
           )}
           {badges}
+          {mark}
         </span>
         <span className="text-caption text-fg-muted">{tOr(SYNC_COPY[sync], {}, '')}</span>
       </div>
@@ -133,5 +144,33 @@ export function RosterGuests({ count }: { count: number }) {
     <p data-slot="roster-guests" className="m-0 text-body-sm text-fg-muted">
       {tOr('party.rosterGuests', { count }, '')}
     </p>
+  );
+}
+
+export interface RosterControlMarkProps {
+  /** Whose mark this is, for the undo's name. */
+  name: string;
+  kind: 'hidden' | 'muted';
+  onUndo: () => void;
+}
+
+/** "Hidden by you" or "Muted for you" on a person in the viewer's own roster, with a one-click undo. */
+export function RosterControlMark({ name, kind, onUndo }: RosterControlMarkProps) {
+  const { tOr } = useT();
+
+  return (
+    <span data-slot="roster-control-mark" className="inline-flex items-center gap-1">
+      <Badge size="sm" variant="soft" tone="neutral">
+        {tOr(kind === 'hidden' ? 'party.controlMarkHidden' : 'party.controlMarkMuted', {}, '')}
+      </Badge>
+      <IconButton
+        size="sm"
+        variant="ghost"
+        aria-label={tOr('party.controlMarkUndo', { name }, '')}
+        onClick={onUndo}
+      >
+        <Icon name="close" size="sm" />
+      </IconButton>
+    </span>
   );
 }

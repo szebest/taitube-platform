@@ -42,6 +42,7 @@ export const Password: Story = { args: { state: 'password' } };
 export const WrongPassword: Story = { args: { state: 'password', passwordError: 'invalid' } };
 export const LockedOut: Story = { args: { state: 'password', passwordError: 'locked' } };
 export const Full: Story = { args: { state: 'full', full: { present: 10, capacity: 10 } } };
+export const SpotOpened: Story = { args: { state: 'yes', spotOpened: true } };
 export const Banned: Story = { args: { state: 'banned', actions: [] } };
 export const Closed: Story = { args: { state: 'closed' } };
 export const NotFound: Story = { args: { state: 'not_found', total: 0 } };

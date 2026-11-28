@@ -2,7 +2,9 @@ import { writeCookie } from '@kit/ui';
 import { screen } from '@testing-library/react';
 import {
   type ContractResult,
+  createWatchParty,
   getChannel,
+  listWatchPartyInviteCandidates,
   setReaction,
   subscribeToChannel,
 } from '@vp/api-contracts';
@@ -12,6 +14,8 @@ import {
   CHANNEL_ID,
   channel,
   mockEndpoint,
+  PARTY_ID,
+  partyRoom,
   problemReply,
   VIDEO_ID,
 } from '@vp/web-testing';
@@ -128,6 +132,7 @@ describe('apps/client/web: watch engagement bar', () => {
   it.each([
     { action: 'Subscribe', name: 'Subscribe', reason: 'Sign in to subscribe to this channel' },
     { action: 'Like', name: 'Like 24', reason: 'Sign in to like this' },
+    { action: 'Watch together', name: 'Watch together', reason: 'Sign in to watch together' },
   ])('asks a guest who presses $action to sign in, on this video', async ({ name, reason }) => {
     const { router, user } = await renderWatch();
 
@@ -135,6 +140,34 @@ describe('apps/client/web: watch engagement bar', () => {
 
     expect(await screen.findByRole('dialog', { name: reason })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(`/watch/${VIDEO_ID}`);
+  });
+
+  it('puts a working room link on the clipboard in two clicks, starting where the player is', async () => {
+    const bodies: unknown[] = [];
+    const { user } = await renderWatch({
+      viewer: account(),
+      handlers: [
+        mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] })),
+        mockEndpoint(createWatchParty, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(partyRoom(), { status: 201 });
+        }),
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Watch together' }));
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }));
+
+    expect(await navigator.clipboard.readText()).toBe(`http://localhost:3000/parties/${PARTY_ID}`);
+    expect(bodies).toEqual([
+      {
+        visibility: 'unlisted',
+        preset: 'friends',
+        hostAs: 'user',
+        reuse: true,
+        source: { videoId: VIDEO_ID, startMs: 75_000 },
+      },
+    ]);
   });
 
   it('subscribes at once and settles on the count the API answers', async () => {

@@ -13,6 +13,7 @@ import {
   WhenSwitcherOpened,
 } from '@vp/queries';
 import { Suspense, useState } from 'react';
+import { LazyWatchTogetherModal } from '#app/components/party/watch-together';
 import {
   AccountMenu,
   ChannelPermissions,
@@ -91,6 +92,9 @@ export function AppLayout() {
                                           <AppCommandPalette />
                                           <UrlModal.WhenOpened id="save-to-playlist">
                                             <LazySaveToPlaylistDialog />
+                                          </UrlModal.WhenOpened>
+                                          <UrlModal.WhenOpened id="watch-together">
+                                            <LazyWatchTogetherModal />
                                           </UrlModal.WhenOpened>
                                           <UrlModal.WhenOpened id="sign-in">
                                             <LazySignInDialog />

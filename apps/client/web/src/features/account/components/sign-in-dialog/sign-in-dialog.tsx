@@ -27,6 +27,7 @@ const REASONS = {
   bell: 'signInPrompt.bell',
   feedback: 'signInPrompt.feedback',
   vote: 'signInPrompt.vote',
+  party: 'signInPrompt.party',
 } as const satisfies Record<AccountAction, MessageKey>;
 
 /** `?modal=sign-in&reason=`: says why an account is needed, and signs in to come back to the same page. */

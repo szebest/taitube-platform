@@ -18,6 +18,7 @@ import { useT } from '#app/lib/messages';
 import { PartyControls } from '../party-controls/party-controls';
 import { PartyLayoutMenu } from '../party-layout-menu/party-layout-menu';
 import { PartyPanel } from '../party-panel/party-panel';
+import { PartyRoleEditor } from '../party-role-editor/party-role-editor';
 import { PartyStage } from '../party-stage/party-stage';
 
 const ENDED_COPY = {
@@ -100,7 +101,8 @@ export function PartyRoomView({ roomId, preview }: PartyRoomViewProps) {
                 {tOr('party.roomPresent', { count: present }, '')}
               </span>
             )}
-            <div className="ms-auto">
+            <div className="ms-auto flex items-center gap-inline">
+              <PartyRoleEditor roomId={roomId} socket={socket} />
               <PartyLayoutMenu layout={layout} onLayoutChange={setLayout} />
             </div>
           </PartyRoom.Header>

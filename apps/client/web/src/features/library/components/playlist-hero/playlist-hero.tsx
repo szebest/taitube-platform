@@ -2,6 +2,7 @@ import { Button, Icon } from '@kit/ui';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import type { PlaylistView } from '@vp/api-contracts';
 import { useState } from 'react';
+import { WatchTogether } from '#app/components/party/watch-together';
 import { PlaylistCover } from '#app/components/playlist/playlist-cover';
 import { usePlaylistAbilities } from '#app/features/library/hooks/use-playlist-abilities';
 import { coverImages } from '#app/features/library/utils/cover-images';
@@ -84,6 +85,14 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
                 <Icon name="shuffle" />
                 {tOr('library.playOrder', { mode: 'shuffle' }, '')}
               </Button>
+              <WatchTogether.Root source={() => ({ kind: 'playlist', playlistId: id })}>
+                <WatchTogether.Trigger>
+                  <Button variant="soft">
+                    <Icon name="party" />
+                    {tOr('party.watchTogether', {}, '')}
+                  </Button>
+                </WatchTogether.Trigger>
+              </WatchTogether.Root>
             </>
           )}
           <Button variant="soft" onClick={share}>

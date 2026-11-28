@@ -5,6 +5,8 @@ import {
   RepliesAndMentionsRow,
   SettingsSectionPage,
   SubscriptionUploadsRow,
+  WatchPartiesRow,
+  WatchPartyInvitesRow,
 } from '#app/features/account';
 import { ChannelLevels } from '#app/features/library';
 
@@ -21,6 +23,8 @@ function NotificationSettings() {
         <SubscriptionUploadsRow />
         <RepliesAndMentionsRow />
         <ProcessingFinishedRow />
+        <WatchPartiesRow />
+        <WatchPartyInvitesRow />
       </SettingsSectionPage>
       <ChannelLevels />
     </>

@@ -91642,7 +91642,7 @@ paths:
       summary: Decline an invite
       tags:
         - Watch parties
-      description: The invitee declines and its notification is marked read. Nobody is told.
+      description: The invitee declines. Nobody is told, and the inviter still sees the invite as pending until it expires.
       parameters:
         - schema:
             type: string

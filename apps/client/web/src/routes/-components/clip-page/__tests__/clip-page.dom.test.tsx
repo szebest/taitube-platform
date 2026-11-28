@@ -1,8 +1,13 @@
 import { axeViolations } from '@kit/web-testing/dom';
 import { screen } from '@testing-library/react';
-import { account, VIDEO_ID } from '@vp/web-testing';
+import { createWatchParty, listWatchPartyInviteCandidates } from '@vp/api-contracts';
+import { account, mockEndpoint, PARTY_ID, partyRoom, VIDEO_ID } from '@vp/web-testing';
+import { HttpResponse } from 'msw/http';
 import { viewerAccount } from '#app/__tests__/comment-fixtures';
+import { LazyWatchTogetherContent } from '#app/components/party/watch-together/watch-together.lazy';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
+
+beforeAll(() => LazyWatchTogetherContent.preload());
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
@@ -44,5 +49,37 @@ describe('apps/client/web: clip page', () => {
     await renderClip({ viewer: as });
 
     expect(screen.queryByRole('button', { name: 'Delete clip' }) !== null).toBe(sees);
+  });
+
+  it('makes a room that starts where the clip does, and offers its link', async () => {
+    const bodies: unknown[] = [];
+    const { user } = await renderClip({
+      viewer: account(),
+      handlers: [
+        mockEndpoint(createWatchParty, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(partyRoom(), { status: 201 });
+        }),
+        mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] })),
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Watch together' }));
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }));
+
+    expect(await navigator.clipboard.readText()).toBe(`http://localhost:3000/parties/${PARTY_ID}`);
+    expect(bodies).toEqual([
+      expect.objectContaining({ source: { videoId: VIDEO_ID, startMs: 20_000 } }),
+    ]);
+  });
+
+  it('asks a guest who wants to watch together to sign in', async () => {
+    const { user } = await renderClip();
+
+    await user.click(screen.getByRole('button', { name: 'Watch together' }));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in to watch together' })
+    ).toBeInTheDocument();
   });
 });

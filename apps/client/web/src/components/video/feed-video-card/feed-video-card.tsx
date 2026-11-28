@@ -3,6 +3,7 @@ import { Format } from '@kit/intl-react';
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl-formats';
+import { WatchTogetherMenuItem } from '#app/components/party/watch-together-menu-item';
 import { FeedbackMenuItems } from '#app/components/video/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useHoverPlay } from '#app/hooks/use-hover-play';
@@ -75,6 +76,7 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
       <VideoCard.Menu onSave={save} onQueue={enqueue} onPlayNext={playNext}>
+        <WatchTogetherMenuItem videoId={video.id} />
         {hideable ? <FeedbackMenuItems video={video} /> : undefined}
       </VideoCard.Menu>
       <VideoCard.Expanded onSave={save} onQueue={enqueue} onPlayNext={playNext}>

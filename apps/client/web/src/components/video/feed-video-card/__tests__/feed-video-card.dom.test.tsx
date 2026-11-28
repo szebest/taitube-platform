@@ -1,19 +1,31 @@
 import { DEFAULT_APPEARANCE, writeCookie } from '@kit/ui';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import {
+  createWatchParty,
   getCurrentPick,
   getHome,
   getShorts,
   type HomeShelf,
   listLiveStreams,
   listMyPlaylists,
+  listWatchPartyInviteCandidates,
   type VideoSummary,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
+import {
+  CHANNEL_ID,
+  mockEndpoint,
+  PARTY_ID,
+  partyRoom,
+  problemReply,
+  VIDEO_ID,
+  videoSummary,
+} from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
+import { LazyWatchTogetherModal } from '#app/components/party/watch-together/watch-together-modal.lazy';
+import { LazyWatchTogetherContent } from '#app/components/party/watch-together/watch-together.lazy';
 import { saveStoredPlayback } from '#app/lib/preferences/device-preferences';
 import { getRouter } from '#app/router';
 
@@ -41,6 +53,8 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
     mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)),
     mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
     mockEndpoint(listLiveStreams, () => HttpResponse.json({ items: [] })),
+    mockEndpoint(createWatchParty, () => HttpResponse.json(partyRoom(), { status: 201 })),
+    mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] })),
     mockEndpoint(listMyPlaylists, () =>
       HttpResponse.json({
         items: [
@@ -65,6 +79,10 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
   const card = within(await screen.findByRole('article'));
   return { ...rendered, card };
 }
+
+beforeAll(() =>
+  Promise.all([LazyWatchTogetherContent.preload(), LazyWatchTogetherModal.preload()])
+);
 
 describe('apps/client/web: FeedVideoCard', () => {
   afterEach(() => {
@@ -199,6 +217,7 @@ describe('apps/client/web: FeedVideoCard', () => {
   it.each([
     { item: 'Add to queue', reason: 'Sign in to build a queue' },
     { item: 'Save', reason: 'Sign in to save this video' },
+    { item: 'Watch together', reason: 'Sign in to watch together' },
   ])('answers a guest who picks $item with the sign-in prompt', async ({ item, reason }) => {
     const { card, user } = await renderHome();
 
@@ -215,5 +234,15 @@ describe('apps/client/web: FeedVideoCard', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Save' }));
 
     expect(await screen.findByRole('dialog', { name: 'Save to playlist' })).toBeInTheDocument();
+  });
+
+  it("opens the watch together dialog on a room link from a member's card menu", async () => {
+    const { card, user } = await renderHome(LAUNCH_DAY, true);
+
+    await user.click(await card.findByRole('button', { name: 'More actions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Watch together' }));
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }));
+
+    expect(await navigator.clipboard.readText()).toBe(`http://localhost:3000/parties/${PARTY_ID}`);
   });
 });

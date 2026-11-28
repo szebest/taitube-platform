@@ -8,7 +8,8 @@ export type SettingsSectionId =
   | 'privacy'
   | 'notifications'
   | 'language'
-  | 'accounts';
+  | 'accounts'
+  | 'partyControls';
 
 type SettingsPath =
   | '/settings/appearance'
@@ -18,7 +19,8 @@ type SettingsPath =
   | '/settings/privacy'
   | '/settings/notifications'
   | '/settings/language'
-  | '/settings/accounts';
+  | '/settings/accounts'
+  | '/settings/party-controls';
 
 export interface SettingsSectionDefinition {
   to: SettingsPath;
@@ -46,6 +48,12 @@ export const SETTINGS_SECTIONS: Readonly<Record<SettingsSectionId, SettingsSecti
   notifications: { to: '/settings/notifications', icon: 'bell', account: true, inNav: true },
   language: { to: '/settings/language', icon: 'globe', account: false, inNav: true },
   accounts: { to: '/settings/accounts', icon: 'you', account: true, inNav: true },
+  partyControls: {
+    to: '/settings/party-controls',
+    icon: 'party',
+    account: true,
+    inNav: true,
+  },
 };
 
 /** Every section, in the order the navigation and the overview list them. */
@@ -97,11 +105,14 @@ export const SETTING_ROWS = [
   row('subscription-uploads', 'notifications'),
   row('replies-and-mentions', 'notifications'),
   row('processing-finished', 'notifications'),
+  row('watch-parties', 'notifications'),
+  row('watch-party-invites', 'notifications'),
   row('language', 'language'),
   row('account-order', 'accounts'),
   row('account-accent', 'accounts'),
   row('owned-channels', 'accounts'),
   row('sign-in-history', 'accounts'),
+  row('party-controls', 'partyControls'),
 ];
 
 export type SettingRowId = (typeof SETTING_ROWS)[number]['id'];

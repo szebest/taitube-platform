@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Drawer, Icon, Popover, Skeleton, Slot } from '@kit/ui';
+import { Avatar, Badge, Button, Drawer, Icon, Popover, Slot } from '@kit/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -11,8 +11,6 @@ import { useT } from '#app/lib/messages';
 import { NotificationCentreContext, useNotificationCentre } from './notification-centre.context';
 import { notificationCentreStyles } from './notification-centre.variants';
 import type { NotificationCentreLayout } from './types';
-
-const SKELETON_ROWS = ['first', 'second', 'third', 'fourth', 'fifth'];
 
 const ITEM = '[data-slot="notification-centre-item"]';
 
@@ -259,6 +257,10 @@ export interface NotificationCentreItemProps extends Omit<
   onSelect: () => void;
   /** Draws the item on the caller's router link; its children are the text. */
   asChild?: boolean;
+  /** A `NotificationCentre.Cta` inside the item, after its time: a pill, never a nested control. */
+  cta?: ReactNode;
+  /** Sibling controls of the item, at its inline-end: `NotificationCentre.ItemAction`s. */
+  actions?: ReactNode;
 }
 
 export function NotificationCentreItem({
@@ -268,6 +270,8 @@ export function NotificationCentreItem({
   thumbnailSrc,
   onSelect,
   asChild = false,
+  cta,
+  actions,
   className,
   children,
   ...props
@@ -278,7 +282,11 @@ export function NotificationCentreItem({
   const Element = asChild ? Slot.Root : 'button';
 
   return (
-    <li className={styles.row()} data-unread={unread ? '' : undefined}>
+    <li
+      className={styles.row()}
+      data-unread={unread ? '' : undefined}
+      data-actions={actions ? '' : undefined}
+    >
       <span aria-hidden="true" className={styles.dot()} />
       <Element
         data-slot="notification-centre-item"
@@ -303,41 +311,45 @@ export function NotificationCentreItem({
           {unread && <span className="sr-only">, {unreadWord}</span>}
         </span>
         {thumbnailSrc && <img src={thumbnailSrc} alt="" className={styles.thumbnail()} />}
+        {cta}
       </Element>
+      {actions}
     </li>
   );
 }
 
-export function NotificationCentreSkeleton() {
-  const styles = notificationCentreStyles();
+/** An item's call to action: a pill, greyed once it can no longer be done. */
+export function NotificationCentreCta({
+  ended = false,
+  className,
+  ...props
+}: ComponentPropsWithRef<'span'> & { ended?: boolean }) {
+  const styles = notificationCentreStyles({ ended });
 
   return (
-    <div
-      data-slot="notification-centre-skeleton"
-      aria-hidden="true"
-      className="flex h-[30rem] w-[25rem] max-w-full flex-col overflow-hidden rounded-card bg-raised"
-    >
-      <div className={styles.header()}>
-        <Skeleton shape="text" className="w-[8rem]" />
-      </div>
-      <NotificationCentreSkeletonRows />
-    </div>
+    <span data-slot="notification-centre-cta" className={styles.cta({ className })} {...props} />
   );
 }
 
-/** The five placeholder rows, alone, for a body whose list is loading under a real header. */
-export function NotificationCentreSkeletonRows() {
-  return SKELETON_ROWS.map((row) => (
-    <div
-      key={row}
-      aria-hidden="true"
-      className="flex h-[4.5rem] items-center gap-stack ps-inset-card pe-inset-control"
+/** A 44 px button beside an item, at its inline-end; it does not open the item. */
+export function NotificationCentreItemAction({
+  label,
+  className,
+  children,
+  ...props
+}: Omit<ComponentPropsWithRef<'button'>, 'children'> & { label: string; children?: ReactNode }) {
+  const styles = notificationCentreStyles();
+
+  return (
+    <Button
+      data-slot="notification-centre-item-action"
+      variant="ghost"
+      shape="icon"
+      aria-label={label}
+      className={styles.action({ className })}
+      {...props}
     >
-      <Skeleton shape="circle" className="size-control-md shrink-0" />
-      <div className="flex flex-1 flex-col gap-inline">
-        <Skeleton shape="text" className="w-full" />
-        <Skeleton shape="text" className="w-[60%]" />
-      </div>
-    </div>
-  ));
+      {children ?? <Icon name="close" />}
+    </Button>
+  );
 }

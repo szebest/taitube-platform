@@ -1,6 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { getRelatedVideos } from '@vp/api-contracts';
-import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
+import {
+  createWatchParty,
+  getRelatedVideos,
+  listWatchPartyInviteCandidates,
+} from '@vp/api-contracts';
+import { account, mockEndpoint, partyRoom, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import {
   QUEUED,
@@ -181,5 +185,28 @@ describe('apps/client/web: watch queue', () => {
     await screen.findByText(`Queued ${QUEUED[0]}`);
 
     expect(screen.queryByText(/^Episode/)).not.toBeInTheDocument();
+  });
+
+  it('makes a room of the queue from the current video, from its header', async () => {
+    const bodies: unknown[] = [];
+    const { user } = await renderPlaylistWatch({
+      viewer: account(),
+      handlers: [
+        mockEndpoint(createWatchParty, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(partyRoom(), { status: 201 });
+        }),
+        mockEndpoint(listWatchPartyInviteCandidates, () => HttpResponse.json({ items: [] })),
+      ],
+    });
+    await screen.findByText(`Queued ${QUEUED[0]}`);
+
+    const queue = screen.getByRole('region', { name: 'Your queue' });
+    await user.click(within(queue).getByRole('button', { name: 'Watch this queue together' }));
+
+    expect(await screen.findByRole('button', { name: 'Copy link' })).toBeInTheDocument();
+    expect(bodies).toEqual([
+      expect.objectContaining({ source: { videoIds: [VIDEO_ID, ...QUEUED] } }),
+    ]);
   });
 });

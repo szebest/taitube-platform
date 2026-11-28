@@ -1,8 +1,11 @@
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@kit/components';
+import { Icon, IconButton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams, useSearch } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
+import { WATCH_PARTY_LIMITS } from '@vp/domain';
 import { useApi } from '@vp/queries';
+import { WatchTogether, type WatchTogetherSource } from '#app/components/party/watch-together';
 import { usePlayerTheater } from '#app/components/player/taitube-player';
 import { Queue } from '#app/components/watch/queue';
 import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
@@ -63,6 +66,12 @@ export function WatchQueue({ video }: WatchQueueProps) {
 
   useAutoplayNext(recommended);
 
+  const partySource = (): WatchTogetherSource => {
+    const from = Math.max(position - 1, 0);
+    const ahead = videos.slice(from, from + WATCH_PARTY_LIMITS.queueItems).map(({ id }) => id);
+    return ahead.length > 1 ? { kind: 'queue', videoIds: ahead } : { kind: 'video', videoId };
+  };
+
   const select = (id: string) => {
     const picked = videos.find((video) => video.id === id);
     if (picked && id !== videoId) {
@@ -88,17 +97,26 @@ export function WatchQueue({ video }: WatchQueueProps) {
               : undefined
         }
         modes={
-          <Queue.Modes
-            shuffle={shuffle}
-            repeat={repeat}
-            autoplay={autoplayNext}
-            onChange={(next) => {
-              setModes(next);
-              if (next.autoplay !== autoplayNext) {
-                setAutoplayNext(next.autoplay);
-              }
-            }}
-          />
+          <div className="flex items-center gap-inline">
+            <WatchTogether.Root source={partySource}>
+              <WatchTogether.Trigger>
+                <IconButton size="sm" aria-label={tOr('party.watchQueueTogether', {}, '')}>
+                  <Icon name="party" />
+                </IconButton>
+              </WatchTogether.Trigger>
+            </WatchTogether.Root>
+            <Queue.Modes
+              shuffle={shuffle}
+              repeat={repeat}
+              autoplay={autoplayNext}
+              onChange={(next) => {
+                setModes(next);
+                if (next.autoplay !== autoplayNext) {
+                  setAutoplayNext(next.autoplay);
+                }
+              }}
+            />
+          </div>
         }
       >
         {tOr('watch.queueTitle', {}, '')}
