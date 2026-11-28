@@ -1,36 +1,15 @@
 import { useFormat } from '@kit/intl-react';
-import { fromPromise, unwrapOr } from '@kit/result';
-import { Button, Checkbox, Label, ResponsiveModal, useUiCopy } from '@kit/ui';
+import { unwrapOr } from '@kit/result';
+import { Button, Checkbox, Label, ResponsiveModal } from '@kit/ui';
 import type { Video } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl-formats';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
-import { useCopyLink } from '#app/hooks/use-copy-link';
 import { useT } from '#app/lib/messages';
 import { type ShareKind, shareUrl } from '#app/lib/share/share-url';
 import { SOCIAL_TARGETS } from '#app/lib/share/social-targets';
-import { splitLink } from './utils/split-link';
-
-const LINK_TAIL_LENGTH = 14;
-
-function ShareLink({ link, labelledBy }: { link: string; labelledBy: string }) {
-  const { head, tail } = splitLink(link, LINK_TAIL_LENGTH);
-
-  return (
-    <div
-      aria-labelledby={labelledBy}
-      aria-readonly="true"
-      className="flex h-control-md min-w-0 flex-1 items-center rounded-control border-control border-border-strong bg-surface px-inset-control font-sans text-body text-fg select-text focus-ring"
-      role="textbox"
-      tabIndex={0}
-      onFocus={(event) => window.getSelection()?.selectAllChildren(event.currentTarget)}
-    >
-      <span className="min-w-0 truncate">{head}</span>
-      <span className="shrink-0">{tail}</span>
-    </div>
-  );
-}
+import { canShareNatively, ShareLinkField, ShareNativeButton } from './share-link';
 
 function ShareBody({
   kind,
@@ -43,11 +22,8 @@ function ShareBody({
   title: string | null;
   startAt: number;
 }) {
-  const copyLink = useCopyLink();
   const { tOr } = useT();
   const { format } = useFormat();
-  const { copy } = useUiCopy();
-  const labelId = useId();
   const [withTime, setWithTime] = useState(false);
 
   const text = title ?? '';
@@ -55,31 +31,10 @@ function ShareBody({
     origin: window.location.origin,
     startAt: withTime ? startAt : 0,
   });
-  const canShareNatively = typeof navigator.share === 'function';
-
-  const shareNatively = async () => {
-    unwrapOr(
-      await fromPromise(
-        () => navigator.share({ title: text, url: link }),
-        (cause) => cause
-      ),
-      undefined
-    );
-  };
 
   return (
     <ResponsiveModal.Body className="flex min-w-0 flex-col gap-stack">
-      <div className="flex min-w-0 flex-col gap-inline">
-        <span id={labelId} className="text-label">
-          {tOr('watch.shareLink', {}, '')}
-        </span>
-        <div className="flex min-w-0 items-center gap-inline">
-          <ShareLink link={link} labelledBy={labelId} />
-          <Button className="shrink-0" onClick={() => copyLink(link)}>
-            {copy}
-          </Button>
-        </div>
-      </div>
+      <ShareLinkField link={link} label={tOr('watch.shareLink', {}, '')} />
       {kind === 'watch' && startAt > 0 && (
         <Label className="flex items-center gap-inline">
           <Checkbox checked={withTime} onCheckedChange={(next) => setWithTime(next === true)} />
@@ -104,11 +59,9 @@ function ShareBody({
             </Button>
           </li>
         ))}
-        {canShareNatively && (
+        {canShareNatively() && (
           <li>
-            <Button variant="outline" size="sm" onClick={shareNatively}>
-              {tOr('share.native', {}, '')}
-            </Button>
+            <ShareNativeButton title={text} link={link} />
           </li>
         )}
       </ul>

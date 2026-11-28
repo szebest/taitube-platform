@@ -4,9 +4,15 @@ import { useApi, watchPartyPreviewQueryOptions } from '@vp/queries';
 import { PartyJoin } from '../party-join/party-join';
 import { PartyRoomView } from '../party-room-view/party-room-view';
 
+const FULL_ROOM_POLL_MS = 5_000;
+
 function Party({ roomId, invite }: { roomId: string; invite?: string }) {
   const api = useApi();
-  const { data: preview } = useSuspenseQuery(watchPartyPreviewQueryOptions(api, roomId, invite));
+  const { data: preview } = useSuspenseQuery({
+    ...watchPartyPreviewQueryOptions(api, roomId, invite),
+    refetchInterval: ({ state }) =>
+      state.data?.viewer.canJoin === 'full' ? FULL_ROOM_POLL_MS : false,
+  });
 
   if (preview.viewer.canJoin === 'member') {
     return <PartyRoomView roomId={roomId} preview={preview} />;

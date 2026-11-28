@@ -24,6 +24,7 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
+import { LazyWatchTogetherContent } from '#app/components/party/watch-together/watch-together.lazy';
 import { LazyStatsPanel } from '#app/features/creator-stats/components/creator-stats-panel/stats-panel.lazy';
 import { LazyGlobalNowPlayingBar } from '#app/features/watch/components/global-now-playing-bar/global-now-playing-bar.lazy';
 import { getRouter } from '#app/router';
@@ -65,6 +66,7 @@ export async function renderWatch({
   await Promise.all([
     LazyGlobalNowPlayingBar.preload(),
     viewer ? LazyStatsPanel.preload() : undefined,
+    viewer ? LazyWatchTogetherContent.preload() : undefined,
   ]);
 
   const rendered = await renderRoute(getRouter, `/watch/${VIDEO_ID}${search}`, {
@@ -98,14 +100,19 @@ const PLAYLIST_VIDEOS = [
   ...QUEUED.map((id) => videoSummary({ id, title: `Queued ${id}` })),
 ];
 
-const watchFromList = (detail: PlaylistView) =>
+const watchFromList = (
+  detail: PlaylistView,
+  { viewer, handlers = [] }: Pick<WatchOptions, 'viewer' | 'handlers'> = {}
+) =>
   renderWatch({
+    viewer,
     search: `?list=${LIST}&index=0`,
-    handlers: [mockEndpoint(getPlaylist, () => HttpResponse.json(detail))],
+    handlers: [...handlers, mockEndpoint(getPlaylist, () => HttpResponse.json(detail))],
   });
 
 /** The watch page of the video, opened from a playlist of it and two more, `Queued <id>` by title. */
-export const renderPlaylistWatch = () => watchFromList(playlistDetail(LIST, PLAYLIST_VIDEOS));
+export const renderPlaylistWatch = (options?: Pick<WatchOptions, 'viewer' | 'handlers'>) =>
+  watchFromList(playlistDetail(LIST, PLAYLIST_VIDEOS), options);
 
 /** The same, opened from a series of the three. */
 export const renderSeriesWatch = () =>

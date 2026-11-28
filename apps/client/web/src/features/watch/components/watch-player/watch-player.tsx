@@ -44,6 +44,7 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
       cards={corrections?.items}
       chapters={video?.chapters}
       attribution={video && playbackAttribution(video)}
+      watchTogether
       markers={props.range ? undefined : <LazyWatchThreadMarkers videoId={props.videoId} />}
       {...progressWriter}
       {...props}

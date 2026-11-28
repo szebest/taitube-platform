@@ -17,6 +17,8 @@ export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   overlay?: ReactNode;
   /** Laid over the seek bar of the control bar, such as the thread markers. */
   markers?: ReactNode;
+  /** Puts "Watch together" in the control bar. */
+  watchTogether?: boolean;
 }
 
 export function TaitubePlayer({
@@ -25,6 +27,7 @@ export function TaitubePlayer({
   controls = true,
   overlay,
   markers,
+  watchTogether = false,
   ...props
 }: TaitubePlayerWithTelemetryProps) {
   const telemetry = usePlaybackTelemetry(videoId, attribution);
@@ -71,6 +74,7 @@ export function TaitubePlayer({
             markers={markers}
             onPrevious={props.onPrevious}
             onNext={props.onNext}
+            partyVideoId={watchTogether ? videoId : undefined}
           />
           <PlayerHotkeys />
         </>

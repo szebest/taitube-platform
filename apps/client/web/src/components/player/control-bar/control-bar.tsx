@@ -1,5 +1,5 @@
 import { Format } from '@kit/intl-react';
-import { Badge, IconButton } from '@kit/ui';
+import { Badge, Icon, IconButton } from '@kit/ui';
 import { videoDuration } from '@vp/intl-formats';
 import {
   Maximize,
@@ -14,9 +14,11 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { type ChangeEvent, type ReactNode, useRef } from 'react';
+import { WatchTogether } from '#app/components/party/watch-together';
 import {
   LiveEdgeButton,
   usePlayerCommands,
+  usePlayerContainer,
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
 import { useT } from '#app/lib/messages';
@@ -40,6 +42,8 @@ export interface ControlBarProps {
   markers?: ReactNode;
   onPrevious?: () => void;
   onNext?: () => void;
+  /** Offers "Watch together" for this video, from the playhead or the clip's start. */
+  partyVideoId?: string;
 }
 
 export function ControlBar({
@@ -50,6 +54,7 @@ export function ControlBar({
   markers,
   onPrevious,
   onNext,
+  partyVideoId,
 }: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
@@ -80,6 +85,7 @@ export function ControlBar({
           <VolumeControl />
           {live ? <LiveBadge /> : <ElapsedTime range={range} />}
           <div className="ms-auto flex items-center gap-1">
+            {partyVideoId && !live && <WatchTogetherControl videoId={partyVideoId} range={range} />}
             <CaptionsButton />
             <SettingsMenu />
             <TheaterButton />
@@ -89,6 +95,36 @@ export function ControlBar({
         </div>
       </fieldset>
     </>
+  );
+}
+
+const MS_PER_SECOND = 1000;
+
+function WatchTogetherControl({
+  videoId,
+  range,
+}: { videoId: string } & Pick<ControlBarProps, 'range'>) {
+  const container = usePlayerContainer();
+  const channel = useOfferedPlayerChannel();
+  const { tOr } = useT();
+
+  return (
+    <WatchTogether.Root
+      container={container}
+      source={() => ({
+        kind: 'video',
+        videoId,
+        startMs:
+          range?.startMs ??
+          (Math.floor((channel?.currentTime() ?? 0) * MS_PER_SECOND) || undefined),
+      })}
+    >
+      <WatchTogether.Trigger>
+        <IconButton aria-label={tOr('party.watchTogether', {}, '')}>
+          <Icon name="party" />
+        </IconButton>
+      </WatchTogether.Trigger>
+    </WatchTogether.Root>
   );
 }
 

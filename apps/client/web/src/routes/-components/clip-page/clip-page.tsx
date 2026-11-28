@@ -1,9 +1,10 @@
-import { Button } from '@kit/ui';
+import { Button, Icon } from '@kit/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { canDeleteClip } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { clipQueryOptions, useApi } from '@vp/queries';
+import { WatchTogether } from '#app/components/party/watch-together';
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { ClipDetails } from '#app/components/watch/clip-details';
 import { ClipDelete } from '#app/features/clips';
@@ -36,6 +37,16 @@ export function ClipPage() {
                 {tOr('clips.fullVideo', {}, '')}
               </Link>
             </Button>
+            <WatchTogether.Root
+              source={() => ({ kind: 'video', videoId: clip.videoId, startMs: clip.startMs })}
+            >
+              <WatchTogether.Trigger>
+                <Button variant="soft">
+                  <Icon name="party" />
+                  {tOr('party.watchTogether', {}, '')}
+                </Button>
+              </WatchTogether.Trigger>
+            </WatchTogether.Root>
             <Can type="rule" I={canDeleteClip} this={{ clip: { userId: clip.userId } }}>
               <ClipDelete clip={clip} />
             </Can>

@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from '@tanstack/react-router';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { failureCode } from '@vp/queries';
+import { useState } from 'react';
 import { PartyJoinPanel, type PartyPasswordError } from '#app/components/party/party-join-panel';
 import { useJoinParty } from '#app/features/watch-party/hooks/use-join-party';
 import { useJoinPartyAsGuest } from '#app/features/watch-party/hooks/use-join-party-as-guest';
@@ -26,6 +27,10 @@ export function PartyJoin({ roomId, preview, invite }: PartyJoinProps) {
   const { canJoin, actions } = preview.viewer;
 
   const state = canJoin === 'member' ? 'yes' : canJoin;
+  const [sawFull, setSawFull] = useState(false);
+  if (state === 'full' && !sawFull) {
+    setSawFull(true);
+  }
   const passwordError = join.error ? (PASSWORD_ERRORS[failureCode(join.error)] ?? null) : null;
 
   return (
@@ -39,6 +44,7 @@ export function PartyJoin({ roomId, preview, invite }: PartyJoinProps) {
       total={preview.roster.total}
       actions={actions}
       full={{ present: preview.presentCount, capacity: preview.effectiveCapacity }}
+      spotOpened={sawFull && state === 'yes'}
       passwordError={passwordError}
       pending={join.isPending || joinAsGuest.isPending}
       onJoin={(password) => join.mutate({ password, invite })}

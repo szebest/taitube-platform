@@ -1,7 +1,13 @@
 import { screen } from '@testing-library/react';
-import { joinWatchParty } from '@vp/api-contracts';
+import { getWatchParty, joinWatchParty } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { mockEndpoint, PARTY_ID, partyMembership, problemReply } from '@vp/web-testing';
+import {
+  mockEndpoint,
+  PARTY_ID,
+  partyMembership,
+  partyPreview,
+  problemReply,
+} from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { renderPartyRoute } from '#app/features/watch-party/__tests__/render-party-route';
 
@@ -73,4 +79,36 @@ describe('apps/client/web: PartyJoin', () => {
     expect(screen.getByText('This party is full (10 of 10)')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Join' })).toBeDisabled();
   });
+
+  it('keeps a full room reached from an invite actionable: Join enables when a seat frees up and carries the invite', async () => {
+    const bodies: unknown[] = [];
+    let seats = 'full' as 'full' | 'yes';
+    const { user } = await renderPartyRoute({
+      path: `/parties/${PARTY_ID}?invite=inv-1`,
+      handlers: [
+        mockEndpoint(getWatchParty, () =>
+          HttpResponse.json(
+            partyPreview({
+              viewer: { canJoin: seats, actions: [] },
+              presentCount: 10,
+              effectiveCapacity: 10,
+            })
+          )
+        ),
+        mockEndpoint(joinWatchParty, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json({ membership: partyMembership() });
+        }),
+      ],
+    });
+    expect(await screen.findByRole('button', { name: 'Join' })).toBeDisabled();
+
+    seats = 'yes';
+
+    expect(
+      await screen.findByText('A spot opened up', {}, { timeout: 10_000 })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Join' }));
+    await vi.waitFor(() => expect(bodies).toEqual([{ invite: 'inv-1' }]));
+  }, 20_000);
 });
