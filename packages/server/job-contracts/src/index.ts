@@ -157,6 +157,7 @@ export const HousekeepingJob = z.object({
     'purge-generations',
     'purge-playlist-activity',
     'publish-due-posts',
+    'promote-layout-schedules',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

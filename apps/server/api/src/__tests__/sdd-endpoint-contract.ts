@@ -4,6 +4,7 @@ import { SDD_ADMIN_ENDPOINTS } from './sdd-admin-endpoints';
 import { SDD_ANALYTICS_ENDPOINTS } from './sdd-analytics-endpoints';
 import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
+import { SDD_CHANNEL_PAGE_ENDPOINTS } from './sdd-channel-page-endpoints';
 import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
 import { SDD_EXPORT_ENDPOINTS } from './sdd-export-endpoints';
@@ -246,6 +247,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   },
   ...SDD_ADMIN_ENDPOINTS,
   ...SDD_CHANNEL_ENDPOINTS,
+  ...SDD_CHANNEL_PAGE_ENDPOINTS,
   ...SDD_ACCOUNT_ENDPOINTS,
   ...SDD_COMMENT_ENDPOINTS,
   ...SDD_LIBRARY_ENDPOINTS,

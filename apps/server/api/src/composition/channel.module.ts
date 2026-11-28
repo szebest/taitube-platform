@@ -9,11 +9,12 @@ import {
   ChannelService,
   RequestIdentity,
 } from '../services/index';
+import { registerChannelPageServices } from './channel-page.module';
 import { Services } from './service-tokens';
 import { registerTeamServices } from './team.module';
 
 export function registerChannelServices(c: Container): Container {
-  return registerTeamServices(c)
+  return registerChannelPageServices(registerTeamServices(c))
     .provide(
       Services.ChannelIdentityService,
       (c) =>

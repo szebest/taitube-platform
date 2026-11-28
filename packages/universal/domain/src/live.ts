@@ -5,6 +5,18 @@ type LiveStreamStatus = (typeof LIVE_STREAM_STATUSES)[number];
 
 export const LIVE_CHAT_SLOW_MODE_MAX_SECONDS = 300;
 
+const LIVE_NOW = LIVE_STREAM_STATUSES[1];
+const ENDED = LIVE_STREAM_STATUSES[2];
+
+export function isChannelPageStream(
+  stream: Pick<LiveStream, 'status' | 'visibility' | 'archiveVisibility'>
+): boolean {
+  if (stream.visibility !== 'public') return false;
+  return (
+    stream.status === LIVE_NOW || (stream.status === ENDED && stream.archiveVisibility === 'public')
+  );
+}
+
 export interface LiveMarker {
   offsetMs: number;
   label: string;

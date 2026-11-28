@@ -1,4 +1,9 @@
-import { CHANNEL_AUDIT_ACTIONS, VIDEO_AUDIT_FIELDS, videoEditAudit } from '../channel-audit';
+import {
+  CHANNEL_AUDIT_ACTIONS,
+  VIDEO_AUDIT_FIELDS,
+  scheduleAppliedAudit,
+  videoEditAudit,
+} from '../channel-audit';
 
 describe('@vp/domain: channel audit', () => {
   it('names the video fields an audit row can carry', () => {
@@ -56,5 +61,24 @@ describe('@vp/domain: channel audit', () => {
     const events = videoEditAudit({ videoId: 'v', ...edit, fields: [...edit.fields] });
 
     expect(events.map(({ action }) => action)).toEqual(actions);
+  });
+});
+
+describe('@vp/domain: scheduleAppliedAudit', () => {
+  it('names the author and the version the schedule became', () => {
+    const audit = scheduleAppliedAudit({ channelId: 'c', createdBy: 'u' });
+
+    expect(audit?.(4)).toEqual({
+      channelId: 'c',
+      actorUserId: 'u',
+      action: 'page.published',
+      targetType: 'page',
+      targetId: 'c',
+      meta: { version: 4 },
+    });
+  });
+
+  it('records nothing once the author is gone', () => {
+    expect(scheduleAppliedAudit({ channelId: 'c', createdBy: null })).toBeNull();
   });
 });

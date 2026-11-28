@@ -204,6 +204,10 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
     return ok(copyOf(stream));
   }
 
+  getAll(): LiveStream[] {
+    return [...this.rows.values()].map(copyOf);
+  }
+
   clear(): void {
     this.rows.clear();
   }
