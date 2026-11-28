@@ -96,7 +96,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     guestSessions: container.get(Adapters.PartyGuestSessions),
     partyCredentialTtlSeconds: config.watchParties.guestCredentialTtlSeconds,
     tokens: services.apiTokenService,
-    tokenRateLimit: tokenRateLimit(app),
+    tokenRateLimit: tokenRateLimit(container.get(Adapters.FixedWindowCounter)),
   });
   await app.register(registerHttpMetricsPlugin, { metrics: container.get(Adapters.Metrics) });
   await registerOpenApi(app);

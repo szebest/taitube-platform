@@ -67,6 +67,9 @@ export function graph(now: Clock = realClock): Container {
             auditRepo: c.get(Repo.channelAudit),
             now,
             uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
+            liveStreamsRepo: {
+              findByVideoId: (id) => c.get(Repo.liveStreams).findByVideoId(id),
+            },
           })
       )
       .provide(

@@ -137,6 +137,13 @@ export const VideoSchema = z.object({
   channel: ChannelCardSchema.nullable()
     .optional()
     .describe('The owner channel; set when one video is read, absent on the studio writes'),
+  liveStreamId: z
+    .uuid()
+    .nullable()
+    .optional()
+    .describe(
+      'The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes'
+    ),
   viewsCount: z.number().optional().describe('Total view count'),
   likesCount: z.number().int().nonnegative().default(0).describe('Total like reactions count'),
   dislikesCount: z

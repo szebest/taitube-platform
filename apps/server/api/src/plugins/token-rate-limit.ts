@@ -1,22 +1,21 @@
 import { MS_PER_MINUTE } from '@kit/primitives';
+import { isErr } from '@kit/result';
+import type { FixedWindowCounterPort } from '@vp/core/ports';
 import { API_TOKEN_LIMITS } from '@vp/domain';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 
 /** Seconds to wait when the request's token is over its limit; `null` while it is under. */
 export type TokenRateLimit = (request: FastifyRequest) => Promise<number | null>;
 
 /**
- * Counts per token id, in `@fastify/rate-limit`'s store, apart from the per-address limits of the
- * anonymous routes. Read after the auth hook has set `request.user`, which names the token.
+ * Counts per token id in the counter every API process shares, apart from the per-address limits
+ * of the anonymous routes. Read after the auth hook has set `request.user`, which names the token.
+ * A dead counter costs the limit for one request, never the request.
  */
-export function tokenRateLimit(app: FastifyInstance): TokenRateLimit {
-  const limit = app.createRateLimit({
-    max: API_TOKEN_LIMITS.requestsPerMinute,
-    timeWindow: MS_PER_MINUTE,
-    keyGenerator: (request) => `api-token:${request.user?.token?.id ?? ''}`,
-  });
+export function tokenRateLimit(counter: FixedWindowCounterPort): TokenRateLimit {
   return async (request) => {
-    const verdict = await limit(request);
-    return !verdict.isAllowed && verdict.isExceeded ? verdict.ttlInSeconds : null;
+    const hit = await counter.hit(`api-token:${request.user?.token?.id ?? ''}`, MS_PER_MINUTE);
+    if (isErr(hit) || hit.value.count <= API_TOKEN_LIMITS.requestsPerMinute) return null;
+    return Math.ceil(hit.value.resetInMs / 1000);
   };
 }

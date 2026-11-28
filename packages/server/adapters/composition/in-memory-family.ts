@@ -6,6 +6,7 @@ import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryCommentSlowMode } from '../in-memory/in-memory-comment-slow-mode';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
+import { InMemoryFixedWindowCounter } from '../in-memory/in-memory-fixed-window-counter';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryFrameClassifier } from '../in-memory/in-memory-frame-classifier';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
@@ -76,6 +77,7 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
     .provide(Adapters.CommentSlowMode, () => new InMemoryCommentSlowMode())
+    .provide(Adapters.FixedWindowCounter, () => new InMemoryFixedWindowCounter())
     .provide(Adapters.PostOpenSketch, () => new InMemoryPostOpenSketch())
     .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())
     .provide(Adapters.LivePresence, () => new InMemoryLivePresence())

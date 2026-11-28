@@ -83,6 +83,7 @@
     "@types/react-dom": "^19.3.0",
     "@vp/errors": "workspace:*",
     "@vp/web-testing": "workspace:*",
+    "axe-core": "^4.14.1",
     "hls.js": "1.6.19",
     "jsdom": "^30.1.2",
     "motion": "^14.0.0",

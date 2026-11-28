@@ -100,6 +100,7 @@ export class FakeRedis {
     if (condition === 'NX' && this.strings.has(key)) return null;
     this.strings.set(key, value);
     if (mode === 'EX' && ttlSeconds !== undefined) this.ttls.set(key, ttlSeconds);
+    if (mode === 'PX' && ttlSeconds !== undefined) this.ttls.set(key, ttlSeconds / 1000);
     return 'OK';
   }
 

@@ -9,6 +9,7 @@ import { FakeWatchPartyRedis } from '../../redis/__tests__/fake-watch-party-redi
 import { RedisCacheClient } from '../../redis/redis-cache-client';
 import { RedisCategoryCacheAdapter } from '../../redis/redis-category-cache.adapter';
 import { RedisCommentSlowModeAdapter } from '../../redis/redis-comment-slow-mode.adapter';
+import { RedisFixedWindowCounterAdapter } from '../../redis/redis-fixed-window-counter.adapter';
 import { RedisLiveChatGateAdapter } from '../../redis/redis-live-chat-gate.adapter';
 import { RedisLivePresenceAdapter } from '../../redis/redis-live-presence.adapter';
 import { RedisPartyGuestSessionsAdapter } from '../../redis/redis-party-guest-sessions.adapter';
@@ -19,6 +20,7 @@ import { RedisWatchPartyGateAdapter } from '../../redis/redis-watch-party-gate.a
 import { RedisWatchPartyPresenceAdapter } from '../../redis/redis-watch-party-presence.adapter';
 import type { CategoryCacheSubject } from './category-cache.contract';
 import type { CommentSlowModeSubject } from './comment-slow-mode.contract';
+import type { FixedWindowCounterSubject } from './fixed-window-counter.contract';
 import { inMemoryCacheClientSubject } from './in-memory-port-subjects';
 import type { LiveChatGateSubject } from './live-chat-gate.contract';
 import type { LivePresenceSubject } from './live-presence.contract';
@@ -142,6 +144,26 @@ export async function redisCommentSlowModeSubject(): Promise<CommentSlowModeSubj
     slowMode: new RedisCommentSlowModeAdapter(redis),
     close: async () => {
       await redis.quit();
+    },
+  };
+}
+
+/** The adapter over `FakeRedis` in `unit` and under `bun test`, over the real Redis otherwise. */
+export async function redisFixedWindowCounterSubject(): Promise<FixedWindowCounterSubject> {
+  const services = claimRealServices();
+  const connect = () =>
+    services ? new Redis(services.redis.url, { password: services.redis.password }) : undefined;
+  const redis = connect() ?? FakeLiveRedis.create();
+  const reopened: Redis[] = [];
+  return {
+    counter: new RedisFixedWindowCounterAdapter(redis),
+    restarted: async () => {
+      const fresh = connect();
+      if (fresh) reopened.push(fresh);
+      return new RedisFixedWindowCounterAdapter(fresh ?? redis);
+    },
+    close: async () => {
+      await Promise.all([redis, ...reopened].map((connection) => connection.quit()));
     },
   };
 }

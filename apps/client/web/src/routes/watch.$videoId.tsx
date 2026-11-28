@@ -7,6 +7,7 @@ import { correctionsQueryOptions, prefetched } from '@vp/queries';
 import { z } from 'zod';
 import { ClipAction } from '#app/features/clips';
 import { CreatorStatsPanel } from '#app/features/creator-stats';
+import { LiveChatReplay } from '#app/features/live';
 import { SaveOfflineToggle } from '#app/features/offline';
 import { ShareLinkExpired, WatchPage, WatchPasswordGate, WatchPending } from '#app/features/watch';
 import { WEB_URL } from '#app/lib/config';
@@ -30,6 +31,18 @@ function EngagementActions({ video }: { video: Video }) {
   );
 }
 
+function RecordingChat({ video }: { video: Video }) {
+  if (!video.liveStreamId) {
+    return null;
+  }
+
+  return (
+    <div className="flex h-[28rem] min-h-0 justify-center">
+      <LiveChatReplay liveStreamId={video.liveStreamId} layout="docked" />
+    </div>
+  );
+}
+
 function Watch() {
   const access = Route.useLoaderData();
   const { videoId } = Route.useParams();
@@ -41,6 +54,7 @@ function Watch() {
           readOnServer={access.readOnServer}
           renderActions={(video) => <EngagementActions video={video} />}
           renderCreatorStats={(video) => <CreatorStatsPanel video={video} />}
+          renderChat={(video) => <RecordingChat video={video} />}
         />
       );
     case 'password':

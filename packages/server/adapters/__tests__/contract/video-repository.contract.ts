@@ -89,6 +89,7 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         expect(details?.video.id).toBe(VIDEO_IDS.a);
         expect(details?.renditions).toEqual([]);
         expect(details?.steps).toEqual([]);
+        expect(details?.liveStreamId).toBeNull();
       });
 
       it.each<{

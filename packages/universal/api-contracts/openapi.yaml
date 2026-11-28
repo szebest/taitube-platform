@@ -6668,6 +6668,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
                   viewsCount:
                     description: Total view count
                     type: number
@@ -7241,6 +7248,13 @@ paths:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                       - type: 'null'
                   viewsCount:
                     description: Total view count
@@ -11915,6 +11929,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
                   viewsCount:
                     description: Total view count
                     type: number
@@ -13406,6 +13427,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
                   viewsCount:
                     description: Total view count
                     type: number
@@ -14273,6 +14301,13 @@ paths:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                       - type: 'null'
                   viewsCount:
                     description: Total view count
@@ -19133,6 +19168,13 @@ paths:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                       - type: 'null'
                   viewsCount:
                     description: Total view count
@@ -38123,6 +38165,13 @@ paths:
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
                   viewsCount:
                     description: Total view count
                     type: number
@@ -38555,6 +38604,13 @@ paths:
                     description: The owner channel; set when one video is read, absent on the studio writes
                     anyOf:
                       - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  liveStreamId:
+                    description: The broadcast this video records, for its chat replay; null for any other video, absent on the studio writes
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                       - type: 'null'
                   viewsCount:
                     description: Total view count

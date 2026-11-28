@@ -15,10 +15,6 @@ describe('apps/client/web: en pwa', () => {
       key: 'pwa.offlineDescription',
       expected: 'The feed you already loaded still works. The rest returns with your connection.',
     },
-    {
-      key: 'pwa.offlineBannerDescription',
-      expected: 'The feed you already loaded still works.',
-    },
     { key: 'pwa.offlineToastTitle', expected: 'You are offline' },
     {
       key: 'pwa.offlineToastDescription',

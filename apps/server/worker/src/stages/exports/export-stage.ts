@@ -14,7 +14,7 @@ import {
   type ExportRowPage,
   dataExportExpiry,
 } from '@vp/domain';
-import { type ExportTooLarge, exportTooLarge } from '@vp/domain-rules';
+import { type ExportTooLarge, exportReaders, exportTooLarge } from '@vp/domain-rules';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -143,6 +143,8 @@ export function createExportProcessor(deps: ExportProcessorDeps) {
     tmpDir: string
   ): Promise<Result<ExportResult, ExportStageFailure>> {
     const { id, channelId, kind, format, params } = started;
+    const members = await repositories.channelMembers.listByChannel(channelId);
+    if (isErr(members)) return members;
     const target = path.join(tmpDir, `${id}.${format}`);
     const written = await write(
       target,
@@ -177,8 +179,8 @@ export function createExportProcessor(deps: ExportProcessorDeps) {
       rowCount: written.value,
       expiresAt: expiresAt.toISOString(),
     };
-    const listeners = new Set([ownerId, ...(started.requestedBy ? [started.requestedBy] : [])]);
-    await Promise.all([...listeners].map((userId) => announce(userId, 'export.ready', payload)));
+    const readers = exportReaders({ channelId, ownerId, kind, members: members.value });
+    await Promise.all(readers.map((userId) => announce(userId, 'export.ready', payload)));
     return ok({ exportId: id, rowCount: written.value });
   }
 

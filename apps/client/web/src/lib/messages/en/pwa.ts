@@ -11,7 +11,6 @@ export const pwa = {
   offlineDescription: dt(
     'The feed you already loaded still works. The rest returns with your connection.'
   ),
-  offlineBannerDescription: dt('The feed you already loaded still works.'),
   offlineToastTitle: dt('You are offline'),
   offlineToastDescription: dt('The feed you already loaded stays available.'),
   offlineFeed: dt('Feed'),

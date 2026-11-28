@@ -28,8 +28,9 @@ export const offlineStateStyles = tv({
       banner: {
         root: 'items-center gap-inline border-b-divider border-border bg-raised px-gutter-compact py-inline transition-[opacity,translate] duration-base ease-enter starting:opacity-0 motion-safe:starting:-translate-y-inline medium:px-gutter-medium',
         icon: 'size-icon-md',
-        title: 'min-w-0 flex-1 truncate text-label',
-        description: 'hidden',
+        title: 'min-w-0 flex-1 truncate text-label medium:flex-none',
+        description:
+          'sr-only medium:not-sr-only medium:min-w-0 medium:flex-1 medium:truncate medium:text-end medium:text-body-sm',
         available: 'hidden',
         action: 'hidden',
       },

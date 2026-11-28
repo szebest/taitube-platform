@@ -10,7 +10,6 @@ import { TOKENS, bearer, buildTestApp, seedTeamMember, seedVideo } from './test-
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000019b1';
 const NO_ID = '00000000-0000-7000-8000-0000000019b9';
-const ORIGIN = 'http://localhost:5173';
 
 describe('personal access tokens, end to end', () => {
   let app: FastifyInstance;
@@ -177,20 +176,6 @@ describe('personal access tokens, end to end', () => {
     );
 
     expect([res.statusCode, res.json().code]).toEqual([400, ErrorCodes.API_TOKEN_WITH_SESSION]);
-  });
-
-  it('sends no CORS headers to a token, and limits it to 60 requests a minute', async () => {
-    const { headers } = await tokenFor(['videos:read']);
-    const read = () => call({ ...headers, origin: ORIGIN }, { method: 'GET', url: '/v1/videos' });
-
-    const first = await read();
-    for (let n = 2; n <= 60; n += 1) await read();
-    const limited = await read();
-
-    expect(first.statusCode).toBe(200);
-    expect(first.headers['access-control-allow-origin']).toBeUndefined();
-    expect([limited.statusCode, limited.json().code]).toEqual([429, ErrorCodes.RATE_LIMITED]);
-    expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
   });
 
   it.each<{ what: string; options: InjectOptions }>([

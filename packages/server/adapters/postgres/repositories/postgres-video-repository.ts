@@ -29,7 +29,7 @@ import type { PostgresDatabase } from './types';
 import { videoScanScope } from './video-scan-query';
 import { commitVideoTransition } from './video-transition';
 
-const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
+const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn, liveStreams: ls } = schema;
 
 export class PostgresVideoRepository extends VideoRepository {
   constructor(private readonly db: PostgresDatabase) {
@@ -73,11 +73,18 @@ export class PostgresVideoRepository extends VideoRepository {
           this.db.select().from(rn).where(eq(rn.videoId, id)),
           this.db.select().from(ps).where(eq(ps.videoId, id)),
           this.db.select().from(ve).where(eq(ve.videoId, id)),
+          this.db.select({ id: ls.id }).from(ls).where(eq(ls.videoId, id)),
         ]),
       databaseUnavailable.during('findWithDetails')
     );
 
-    return map(details, ([renditions, steps, events]) => ({ video, renditions, steps, events }));
+    return map(details, ([renditions, steps, events, [stream]]) => ({
+      video,
+      renditions,
+      steps,
+      events,
+      liveStreamId: stream?.id ?? null,
+    }));
   }
 
   async create(

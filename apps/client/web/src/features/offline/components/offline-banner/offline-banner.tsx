@@ -58,11 +58,11 @@ export function OfflineBanner() {
       ) : (
         <>
           <OfflineState.Title>{tOr('pwa.offlineTitle', {}, '')}</OfflineState.Title>
-          <OfflineState.Description>
-            {queued > 0
-              ? tOr('pwa.offlineQueuedChanges', { count: queued }, '')
-              : tOr('pwa.offlineBannerDescription', {}, '')}
-          </OfflineState.Description>
+          {queued > 0 && (
+            <OfflineState.Description>
+              {tOr('pwa.offlineQueuedChanges', { count: queued }, '')}
+            </OfflineState.Description>
+          )}
         </>
       )}
     </OfflineState.Root>
