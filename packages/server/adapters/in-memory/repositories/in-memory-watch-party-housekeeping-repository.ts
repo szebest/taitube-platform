@@ -1,6 +1,11 @@
 import { ok, type Result } from '@kit/result';
 import type { WatchPartyHousekeepingRepositoryPort } from '@vp/core/repositories';
-import { WATCH_PARTY_TREND, type WatchPartyRoom, watchPartyTrendScore } from '@vp/domain';
+import {
+  isOpenWatchParty,
+  WATCH_PARTY_TREND,
+  type WatchPartyRoom,
+  watchPartyTrendScore,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
@@ -21,7 +26,7 @@ export class InMemoryWatchPartyHousekeepingRepository implements WatchPartyHouse
   async refreshTrendScores(at: Date): Promise<Result<void, DatabaseUnavailable>> {
     const windowStart = at.getTime() - WATCH_PARTY_TREND.joinWindowMs;
     for (const room of this.store.rooms.values()) {
-      if (room.status !== 'open') continue;
+      if (!isOpenWatchParty(room)) continue;
       const recentJoins = [...this.store.members.values()].filter(
         (seat) => seat.roomId === room.id && seat.joinedAt.getTime() >= windowStart
       ).length;

@@ -22,6 +22,7 @@ import type { UserContext } from '@vp/permissions';
 import { createPipelineMetrics, createWatchPartyMetrics } from '@vp/pipeline-metrics';
 import { seedPrimaryChannel } from '../../../__tests__/test-app';
 import type { PartyCaller } from '../party-caller';
+import { RoomBatcher } from '../room-batcher';
 import { type RoomEnvelope, WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import { WatchPartyContextLoader } from '../watch-party-context';
 import type { WatchPartyDeps, WatchPartySecrets } from '../watch-party-deps';
@@ -105,6 +106,11 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
   });
   const cdn = asCdnBase('http://localhost:9000/public');
   const discovery = new WatchPartyDiscoveryFeed({
+    batchCounts: (flush) =>
+      new RoomBatcher({
+        windowMs: appConfig.watchParties.discovery.countsBatchMs,
+        flush: (_window, roomIds) => flush(roomIds),
+      }),
     repositories,
     presence,
     config: appConfig.watchParties,

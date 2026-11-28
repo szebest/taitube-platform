@@ -1,6 +1,12 @@
 import { MS_PER_HOUR, MS_PER_MINUTE } from '@kit/primitives';
 import type { SearchMode } from './search';
-import type { WatchPartyRoom } from './watch-party';
+import type { WatchPartyRoom, WatchPartyStatus } from './watch-party';
+
+const OPEN_STATUS: WatchPartyStatus = 'open';
+
+export function isOpenWatchParty(room: Pick<WatchPartyRoom, 'status'>): boolean {
+  return room.status === OPEN_STATUS;
+}
 
 export const WATCH_PARTY_DISCOVERY_STATUSES = ['all', 'now', 'lobby', 'scheduled'] as const;
 type WatchPartyDiscoveryStatus = (typeof WATCH_PARTY_DISCOVERY_STATUSES)[number];

@@ -1,3 +1,4 @@
+import { fromPromise, map, type Result } from '@kit/result';
 import type { DiscoverableRoom } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
@@ -6,6 +7,7 @@ import {
   type WatchPartyDiscoveryPosition,
   type WatchPartyDiscoveryQuery,
 } from '@vp/domain';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import {
   type SQL,
   and,
@@ -170,7 +172,7 @@ function orderOf(sort: WatchPartyDiscoveryQuery['sort']): SQL[] {
   }
 }
 
-export async function discoverableRooms(
+async function discoverableRooms(
   db: PostgresDatabase,
   query: WatchPartyDiscoveryQuery
 ): Promise<DiscoverableRoom[]> {
@@ -202,4 +204,26 @@ export async function discoverableRooms(
     const { trendScore, searchText: _searchText, ...rest } = room;
     return { room: rest, video, trendScore };
   });
+}
+
+export function listDiscoverableRooms(
+  db: PostgresDatabase,
+  query: WatchPartyDiscoveryQuery
+): Promise<Result<DiscoverableRoom[], DatabaseUnavailable>> {
+  return fromPromise(
+    () => discoverableRooms(db, query),
+    databaseUnavailable.during('listDiscoverableWatchParties')
+  );
+}
+
+export async function writeSearchText(
+  db: PostgresDatabase,
+  id: string,
+  text: string
+): Promise<Result<void, DatabaseUnavailable>> {
+  const written = await fromPromise(
+    () => db.update(rooms).set({ searchText: text }).where(eq(rooms.id, id)),
+    databaseUnavailable.during('setWatchPartySearchText')
+  );
+  return map(written, () => undefined);
 }

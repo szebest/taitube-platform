@@ -3,13 +3,17 @@ import { all, isErr, map, ok, type Result } from '@kit/result';
 import { type WatchPartyDiscoveryEvent } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { DiscoverableRoom } from '@vp/core/repositories';
-import { isPublicFeedEligible, type WatchPartyRoom } from '@vp/domain';
+import { isOpenWatchParty, isPublicFeedEligible, type WatchPartyRoom } from '@vp/domain';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { partiesChannel } from '@vp/events';
-import { RoomBatcher } from './room-batcher';
+import type { RoomBatcher } from './room-batcher';
 import { type CardDeps, presentCards } from './watch-party-card-views';
 
 export interface WatchPartyDiscoveryFeedDeps extends CardDeps {
+  /** One window for the whole pod: the composition root builds it around the flush it is handed. */
+  readonly batchCounts: (
+    flush: (roomIds: readonly string[]) => Promise<void>
+  ) => RoomBatcher<string>;
   readonly cache: Pick<CacheClient, 'publish'>;
   readonly logger: Logger;
 }
@@ -25,10 +29,7 @@ export class WatchPartyDiscoveryFeed {
   private readonly counts: RoomBatcher<string>;
 
   constructor(private readonly deps: WatchPartyDiscoveryFeedDeps) {
-    this.counts = new RoomBatcher({
-      windowMs: deps.config.discovery.countsBatchMs,
-      flush: (_window, roomIds) => this.flushCounts(roomIds),
-    });
+    this.counts = deps.batchCounts((roomIds) => this.flushCounts(roomIds));
   }
 
   opened(room: WatchPartyRoom): Promise<void> {
@@ -77,7 +78,7 @@ export class WatchPartyDiscoveryFeed {
   private async listed(
     room: WatchPartyRoom
   ): Promise<Result<DiscoverableRoom | null, DatabaseUnavailable>> {
-    if (room.status !== 'open' || room.visibility !== 'public' || room.hiddenAt !== null) {
+    if (!isOpenWatchParty(room) || room.visibility !== 'public' || room.hiddenAt !== null) {
       return ok(null);
     }
     if (room.currentVideoId === null) return ok({ room, video: null, trendScore: 0 });

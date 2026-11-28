@@ -13,6 +13,7 @@ import {
   type WatchPartyDiscoveryQuery,
   type WatchPartyRoom,
   effectiveCapacity,
+  isOpenWatchParty,
   isPublicFeedEligible,
   memberKeyOf,
 } from '@vp/domain';
@@ -180,7 +181,7 @@ export async function discoverableRooms(
     .filter((candidate) => {
       const { room, video } = candidate;
       const listed =
-        room.status === 'open' &&
+        isOpenWatchParty(room) &&
         room.visibility === 'public' &&
         room.hiddenAt === null &&
         !banned.has(room.id) &&

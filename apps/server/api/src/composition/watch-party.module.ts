@@ -91,6 +91,11 @@ export function registerWatchPartyServices(c: Container): Container {
       Services.WatchPartyDiscoveryFeed,
       (c) =>
         new WatchPartyDiscoveryFeed({
+          batchCounts: (flush) =>
+            new RoomBatcher({
+              windowMs: c.get(Adapters.Config).watchParties.discovery.countsBatchMs,
+              flush: (_window, roomIds) => flush(roomIds),
+            }),
           repositories: c.get(Adapters.Repositories),
           presence: c.get(Adapters.WatchPartyPresence),
           config: c.get(Adapters.Config).watchParties,
