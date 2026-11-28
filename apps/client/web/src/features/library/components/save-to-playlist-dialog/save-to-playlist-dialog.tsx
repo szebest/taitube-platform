@@ -33,17 +33,24 @@ function SaveTargets({ videoId }: { videoId: string }) {
   return (
     <div className="flex flex-col gap-stack">
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
-        {data.items.map(({ id, title, containsVideo, isSystem }) => (
+        {data.items.map(({ id, title, containsVideo, isSystem, isSmart }) => (
           <li key={id}>
             <Label className="flex items-center gap-inline">
               <Checkbox
                 checked={containsVideo}
+                disabled={isSmart}
+                aria-describedby={isSmart ? `${id}-smart` : undefined}
                 onCheckedChange={(next) =>
                   toggle.mutate({ playlistId: id, title, saved: next === true })
                 }
               />
               {isSystem && <Icon name="clock" size="sm" />}
               {title}
+              {isSmart && (
+                <span id={`${id}-smart`} className="text-caption text-fg-muted">
+                  {tOr('playlistPeople.smartNotSavable', {}, '')}
+                </span>
+              )}
             </Label>
           </li>
         ))}

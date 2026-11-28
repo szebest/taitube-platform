@@ -42,6 +42,7 @@ describe('AnalyticsService: audience and benchmark', () => {
         devices,
         shareLinks: [],
         experiments: [],
+        playlists: [],
       })
     );
 

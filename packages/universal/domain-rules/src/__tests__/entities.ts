@@ -1,17 +1,18 @@
-import type {
-  CaptionTrack,
-  Category,
-  Channel,
-  ChannelPost,
-  Comment,
-  CommentHost,
-  CommentReport,
-  EditorPick,
-  LiveStream,
-  Playlist,
-  Upload,
-  Video,
-  VideoThread,
+import {
+  type CaptionTrack,
+  type Category,
+  type Channel,
+  type ChannelPost,
+  type Comment,
+  type CommentHost,
+  type CommentReport,
+  DEFAULT_PLAYLIST_SETTINGS,
+  type EditorPick,
+  type LiveStream,
+  type SeatedPlaylist,
+  type Upload,
+  type Video,
+  type VideoThread,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
@@ -172,8 +173,10 @@ export function aCategory(overrides: Partial<Category> = {}): Category {
   };
 }
 
-export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
+export function aPlaylist(overrides: Partial<SeatedPlaylist> = {}): SeatedPlaylist {
   return {
+    collaboratorId: null,
+    collaboratorRole: null,
     id: 'playlist-1',
     ownerId: OWNER.id,
     title: 'Road trip',
@@ -182,6 +185,7 @@ export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
     kind: 'playlist',
     isSystem: false,
     customThumbnailKey: null,
+    ...DEFAULT_PLAYLIST_SETTINGS,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

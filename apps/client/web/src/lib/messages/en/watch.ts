@@ -164,6 +164,7 @@ export const watch = {
   alreadyQueued: dt('Already in your queue'),
   queueUndo: dt('Undo'),
   queueCount: dt('{count:number} in the queue'),
+  queueSegment: dt('{start} to {end}'),
   closeNowPlaying: dt('Stop playback'),
   nowPlayingProgress: dt('{played} of {total}'),
   transcript: dt('Transcript'),

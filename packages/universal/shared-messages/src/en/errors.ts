@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { playlistErrors } from './errors-playlists';
 import { postErrors } from './errors-posts';
 import { videoToolErrors } from './errors-video-tools';
 
@@ -30,6 +31,7 @@ export const errors = {
   ...channelErrors,
   ...postErrors,
   ...commentErrors,
+  ...playlistErrors,
   reportNotFound: dt('This report does not exist.'),
   reportAlreadyResolved: dt('This report was already resolved.'),
   playlistNotFound: dt('This playlist does not exist or is private.'),

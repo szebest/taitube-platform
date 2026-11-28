@@ -1,16 +1,18 @@
 import { type Result, isErr, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistService } from '../playlist-service';
-import { ViewerProgress } from '../viewer-progress';
-import { TEST_SPRITE } from './service-deps';
+import { playlistReading } from './playlist-reading';
+import { TEST_CDN } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000e002';
+const COVER_UPLOAD = '00000000-0000-7000-8000-00000000e003';
+const COVER_KEY = 'channels/c/playlist-cover/v1/1280.webp';
+const COVERS = new Map([[`${OWNER.id}/${COVER_UPLOAD}`, COVER_KEY]]);
 
 describe('PlaylistService', () => {
   let repositories: InMemoryRepositories;
@@ -20,10 +22,13 @@ describe('PlaylistService', () => {
     repositories = new InMemoryRepositories();
     service = new PlaylistService({
       playlists: repositories.playlists,
+      seats: repositories.playlistCollaborators,
       videos: repositories.videos,
-      viewerProgress: new ViewerProgress(repositories.watchHistory),
-      cdn: asCdnBase('http://cdn.test'),
-      sprite: TEST_SPRITE,
+      reader: playlistReading(repositories).reader,
+      covers: {
+        readyCoverKey: async (ownerId, uploadId) =>
+          ok(COVERS.get(`${ownerId}/${uploadId}`) ?? null),
+      },
     });
     await seedVideo(repositories, { id: VIDEO, ownerId: OWNER.id, title: 'Clip' });
   });
@@ -93,7 +98,13 @@ describe('PlaylistService', () => {
       visibility: 'private',
     });
     const id = await created();
-    expectOk(await repositories.playlists.addItem(id, { id: 'item-hidden', videoId: hidden }));
+    expectOk(
+      await repositories.playlists.addItem(
+        id,
+        { id: 'item-hidden', videoId: hidden, addedBy: OWNER.id },
+        OWNER.id
+      )
+    );
 
     const converted = await service.update(OWNER, id, { kind: 'series' });
 
@@ -120,5 +131,61 @@ describe('PlaylistService', () => {
     });
 
     expect(expectErr(reordered).code).toBe(ErrorCodes.VERSION_CONFLICT);
+  });
+
+  it('decides a cover video against the items the playlist holds', async () => {
+    const id = await created();
+    const absent = await service.update(OWNER, id, { coverVideoId: VIDEO });
+    expectOk(await service.addItem(OWNER, id, VIDEO));
+
+    const held = expectOk(await service.update(OWNER, id, { coverVideoId: VIDEO }));
+
+    expect(expectErr(absent)).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'coverVideoId',
+    });
+    expect(held.cover).toMatchObject({ mode: 'item', videoId: VIDEO });
+  });
+
+  it('makes a processed cover of the owner the custom cover and refuses any other upload', async () => {
+    const id = await created();
+    const unknown = await service.update(OWNER, id, { coverUploadId: VIDEO });
+
+    const custom = expectOk(await service.update(OWNER, id, { coverUploadId: COVER_UPLOAD }));
+
+    expect(expectErr(unknown)).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'coverUploadId',
+    });
+    expect(custom.cover).toMatchObject({ mode: 'custom', videoId: null });
+    expect(custom.thumbnailUrl).toBe(`${TEST_CDN}/${COVER_KEY}`);
+  });
+
+  it('refuses to remove watched videos from a list someone else works on', async () => {
+    const id = await created();
+    vi.spyOn(repositories.playlistCollaborators, 'seats').mockResolvedValueOnce(
+      ok({ seated: 1, isCollaborator: false })
+    );
+
+    const refused = await service.update(OWNER, id, { autoRemoveWatched: true });
+
+    expect(expectErr(refused).code).toBe(ErrorCodes.PLAYLIST_HAS_COLLABORATORS);
+    expect(expectOk(await service.update(OWNER, id, { autoRemoveWatched: true }))).toMatchObject({
+      autoRemoveWatched: true,
+    });
+  });
+
+  it('creates a smart playlist and refuses a video added to it by hand', async () => {
+    const { id, rules } = expectOk(
+      await service.create(OWNER, {
+        title: 'Fresh',
+        rules: { match: 'all', conditions: [], sort: 'newest', limit: 20 },
+      })
+    );
+
+    expect(rules).toMatchObject({ limit: 20 });
+    expect(expectErr(await service.addItem(OWNER, id, VIDEO)).code).toBe(
+      ErrorCodes.PLAYLIST_IS_SMART
+    );
   });
 });

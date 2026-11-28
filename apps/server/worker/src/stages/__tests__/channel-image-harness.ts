@@ -19,6 +19,7 @@ import { createChannelImageProcessor } from '../channel-image';
 const OWNER_ID = '00000000-0000-7000-8000-00000000a001';
 export const IMMUTABLE = 'public, max-age=31536000, immutable';
 const AVATAR_CROP: CropRect = { x: 0, y: 0, width: 400, height: 400 };
+const PLAYLIST_COVER_CROP: CropRect = { x: 0, y: 0, width: 1600, height: 900 };
 const POST_IMAGE_CROP: CropRect = { x: 0, y: 0, width: 3000, height: 2000 };
 export const BANNER_CROPS: BannerCrops = {
   desktop: { x: 0, y: 0, width: 2400, height: 400 },
@@ -36,6 +37,8 @@ function completionFor(kind: ChannelImageKind): ChannelImageCompletion {
       return { width: 800, height: 800, crops: { kind, crop: AVATAR_CROP } };
     case 'banner':
       return { width: 2560, height: 1440, crops: { kind, crops: BANNER_CROPS } };
+    case 'playlist-cover':
+      return { width: 1600, height: 900, crops: { kind, crop: PLAYLIST_COVER_CROP } };
     case 'post-image':
       return { width: 3000, height: 2000, crops: { kind, crop: POST_IMAGE_CROP } };
     default:

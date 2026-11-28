@@ -67,7 +67,7 @@ export class VideoWatchService {
     const { viewDate } = viewBucketsOf(new Date(this.deps.now()));
     ignore(
       await this.deps.viewBuffer.recordShareLinkOpen({
-        videoId: link.targetId,
+        targetId: link.targetId,
         linkId: link.id,
         viewerKey,
         viewDate,

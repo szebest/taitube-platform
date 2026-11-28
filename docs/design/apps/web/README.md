@@ -6,7 +6,7 @@ and `@kit/ui` primitives. Nothing here goes into a package, and studio never imp
 ([architecture section 1](../../architecture.md#1-five-layers)). A piece moves to `@kit/components` the day studio
 needs it. [Ticket 95](../../../tickets/95-design-system-2.md) section 7 builds it.
 
-Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`.
+Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`, `live`, `shorts`, `playlist`.
 
 ## Catalogue
 
@@ -35,6 +35,11 @@ Areas: `shell`, `video`, `watch`, `channel`, `discovery`, `discussion`, `states`
 | [ChannelSpotlight](channel-spotlight.md) | channel | the channel's trailer or returning-subscriber video | `VideoCard`, `Button` | [115](../../../tickets/115-channel-page-customisation.md) |
 | [LiveChat](live-chat.md) | live | docked or overlay chat | `ScrollArea`, `Textarea`, `Slider` | [76](../../../tickets/76-live-streaming-rtmp-whip-llhls-packaging-chat.md), [95](../../../tickets/95-design-system-2.md) |
 | [ShortsPlayerFrame](shorts-player-frame.md) | shorts | 9:16 player with actions | `IconButton`, `Progress`, Stage ground | [95](../../../tickets/95-design-system-2.md) |
+| [PlaylistCover](playlist-cover.md) | playlist | a playlist's 16:9 cover from one to four thumbnails | `Icon` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
+| [PlaylistItemRow](playlist-item-row.md) | playlist | a playlist entry's select, note, clip and adder, and the section divider | `Checkbox`, `Avatar`, `Tooltip` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
+| [CollaboratorList](collaborator-list.md) | playlist | who can edit a playlist | `Avatar` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
+| [ActivityList](activity-list.md) | playlist | a playlist's change history | `Avatar` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
+| [SmartRuleBuilder](smart-rule-builder.md) | playlist | form layout for a smart playlist's rules | `Button`, `IconButton` | [119](../../../tickets/119-playlists-customisation-and-collaboration.md) |
 
 ## Rules
 

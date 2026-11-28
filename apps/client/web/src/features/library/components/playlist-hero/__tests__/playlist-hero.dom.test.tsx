@@ -56,8 +56,7 @@ describe('apps/client/web: the playlist hero', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Road trips' });
 
-    expect(screen.queryByRole('button', { name: 'Edit details' }) !== null).toBe(shown);
-    expect(screen.queryByRole('button', { name: 'Delete playlist' }) !== null).toBe(shown);
+    expect(screen.queryByRole('button', { name: 'More playlist actions' }) !== null).toBe(shown);
     expect(screen.queryAllByRole('button', { name: /^Reorder / }).length > 0).toBe(shown);
   });
 

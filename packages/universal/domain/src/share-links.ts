@@ -1,7 +1,7 @@
 import { MS_PER_DAY, MS_PER_HOUR } from '@kit/primitives';
 import type { ViewDate } from './views';
 
-export const SHARE_LINK_TARGET_TYPES = ['video'] as const;
+export const SHARE_LINK_TARGET_TYPES = ['video', 'playlist'] as const;
 export type ShareLinkTargetType = (typeof SHARE_LINK_TARGET_TYPES)[number];
 
 export const SHARE_LINK_TOKEN_LENGTH = 22;

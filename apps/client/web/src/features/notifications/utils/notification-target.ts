@@ -25,7 +25,8 @@ function comment({ videoId, commentId, payload }: Notification) {
 
 /**
  * Where opening a notification goes, for a `Link` or `navigate`: a group of uploads opens the
- * channel, a comment kind its comment on the video, the post or the thread. `undefined` when there is nothing to open.
+ * channel, a comment kind its comment on the video, the post or the thread, a playlist invite the
+ * page that answers it. `undefined` when there is nothing to open.
  */
 export function notificationTarget(notification: Notification) {
   const { kind, videoId, actorChannelId, payload } = notification;
@@ -56,6 +57,18 @@ export function notificationTarget(notification: Notification) {
     case 'party_invite':
     case 'party_starting':
       return undefined;
+    case 'playlist_invite':
+      return payload.playlist?.invite
+        ? linkOptions({
+            to: '/playlist-invite/$token',
+            params: { token: payload.playlist.invite.token },
+            search: { via: 'notification' },
+          })
+        : undefined;
+    case 'playlist_update':
+      return payload.playlist
+        ? linkOptions({ to: '/playlist', search: { list: payload.playlist.id } })
+        : undefined;
     default:
       return assertNever(kind, 'NotificationKind');
   }
