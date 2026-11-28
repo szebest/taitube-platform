@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import { VideoCorrectionRepository } from '@vp/core/repositories';
 import type { Correction } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export class InMemoryVideoCorrectionRepository extends VideoCorrectionRepository {
   private readonly rows = new Map<string, Correction>();

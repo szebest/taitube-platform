@@ -1,7 +1,7 @@
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { fromPromise, type Result } from '@kit/result';
 import type { PostOpenSketchPort } from '@vp/core/ports';
 import { POST_OPEN_SKETCH_TTL_SECONDS } from '@vp/domain';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- `./contract` exports `describeAppearanceRegistryContract`, `AppearanceRegistrySubject` and `MakeAppearanceRegistry`; vitest is a peer.
+
 ## 0.4.0
 
 - `DateTimePicker`: the browser's date and time boxes side by side over one local `YYYY-MM-DDTHH:mm` string, each box named by a prop.

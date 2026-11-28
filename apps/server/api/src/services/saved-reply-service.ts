@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { SavedReplyView } from '@vp/api-contracts';
 import type { SavedReplyDraft, SavedReplyRepositoryPort } from '@vp/core/repositories';
@@ -10,7 +11,6 @@ import {
   savedReplyLimit,
   savedReplyNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface SavedReplyServiceDeps {

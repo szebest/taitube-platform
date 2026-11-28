@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import {
   type AppealRejectionInput,
@@ -22,7 +23,7 @@ import {
   isScreeningCaseOpen,
   mergeFlag,
 } from '@vp/domain';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 
 export interface ScreeningDependencies {
   videos: Pick<VideoRepository, 'findById' | 'transition'>;

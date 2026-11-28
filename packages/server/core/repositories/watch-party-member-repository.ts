@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { WatchPartyBan, WatchPartyMember } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { NewSystemLine, NewWatchPartyMember } from './watch-party-room-repository';
 
 export interface SeatMove {

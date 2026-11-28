@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, type Result } from '@kit/result';
 import type { AccountAuditQuery, AccountAuditRepositoryPort } from '@vp/core/repositories';
 import { accountAuditLog as log } from '@vp/db';
 import type { AccountAuditEntry, NewAccountAuditEntry } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { keysetBefore, msTimestamp } from '../scopes/index';

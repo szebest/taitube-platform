@@ -44,7 +44,9 @@ describe('apps/client/web: useShortsUrl', () => {
     const navigate = vi.spyOn(router, 'navigate');
 
     vi.useFakeTimers();
-    act(() => vi.advanceTimersByTime(300));
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(navigate).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe(pathOf(2));
@@ -95,7 +97,7 @@ describe('apps/client/web: useShortsUrl', () => {
     await waitFor(() => expect(held).toHaveLength(1));
     vi.useFakeTimers();
     fireEvent.keyDown(frame, { key: 'ArrowUp' });
-    act(() => vi.advanceTimersByTime(300));
+    await act(() => vi.advanceTimersByTimeAsync(300));
     vi.useRealTimers();
     await act(() => held[0]?.());
 

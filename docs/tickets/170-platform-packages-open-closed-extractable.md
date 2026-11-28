@@ -8,7 +8,7 @@
 | Blocks | 48, 171 |
 | Spec | [packages/AGENTS.md](../../packages/AGENTS.md) · [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) · [SDD ADR-23](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-25](../SDD.md#adr-25--composition-one-container-configuration-is-a-value) · [87](87-composition-root-typed-container-config-value.md) · [85](85-universal-intl-formatting-message-core.md) · [86](86-localisation-rollout-locale-negotiation-rtl.md) · [48](48-project-rebrand-cli-unification.md) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Start condition.** The two PRs in flight now (#329 for [113](113-channel-comment-moderation.md), #326 for
 > [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md)) are assumed to merge first; this ticket starts only when no
@@ -128,6 +128,7 @@ fails when a split package gains, loses or renames an export the file does not l
 | `universal/domain` | `platform/universal/primitives` `@kit/primitives`: `time.ts` and any other generic found by the commit 1 scan | `universal/domain` `@vp/domain`: entities, `status-vocabulary` | S |
 | `universal/api-contracts`, `domain-rules` | | stay | = |
 | (new) | `platform/universal/di` `@kit/di`; `platform/universal/runtime` `@kit/runtime` (environment tokens, `node` and `browser` entries) | | N |
+| (from `design-tokens`) | `platform/universal/appearance` `@kit/appearance`: the appearance vocabulary (`MODE_OPTIONS`, `CONTRAST_OPTIONS`, id and accent patterns, override limit) | | N |
 | `client/ui` | `platform/client/ui` `@kit/ui` (cookies, brand, copy, themes by token) | | W |
 | `client/components`, `forms`, `intl-react`, `security-headers`, `web-telemetry` | `platform/client/<same>` `@kit/<same>` | | W |
 | `client/queries` | `platform/client/query` `@kit/query`: `create-query-client`, `retry-policy`, `single-flight-refresh`, `keyset-paging`, `ensure-found`, `parse-param`, `section-boundary`, the session machinery behind `SessionConfig` | `client/queries` `@vp/queries`: `video-queries`, `clip-queries`, `user-event-handlers`, `use-live-*`, `api-proxy` | S |
@@ -140,7 +141,7 @@ fails when a split package gains, loses or renames an export the file does not l
 | `server/testing` | `platform/server/testing` `@kit/testing`: vitest config factory, `log-capture`, `result`, `run-entrypoint`, `jwt` | `server/testing-fixtures` `@vp/testing-fixtures`: `env.ts` (`AUTH_AUDIENCE: 'taitube'`, `idp.vp.local`) | S |
 | `server/storage` | `platform/server/object-storage` `@kit/object-storage`: `mime`, `multipart` | `server/storage` `@vp/storage`: `keys.ts` (`raw/`, `videos/`, HLS layout) | S |
 | `server/core` | `platform/server/ports` `@kit/ports`: the infrastructure ports `cache-client`, `job-queue`, `flow-producer`, `health-checkable`, `database-client` with contract suites (the commit 0 scan found no product type in their signatures; their failure types come from `@kit/errors`' generic `Unavailable`) | `server/core`: the product's ports and repositories | S |
-| `server/db`, `adapters`, `job-contracts`, `ffmpeg`, `whisper`, `lighthouse`, `stack`, `upload-client`, `gen-video`, `demo`, `deploy`, `fingerprint` | | stay | = |
+| `server/db`, `adapters`, `job-contracts`, `ffmpeg`, `whisper`, `lighthouse`, `stack`, `upload-client`, `gen-video`, `demo`, `deploy`, `fingerprint`, `dev-identity` | | stay | = |
 
 Totals: 49 old packages = 18 whole moves + 13 splits + 18 that stay; plus 3 new platform packages; the platform side
 ends at **33 packages** (13 universal, 8 client, 12 server) and the app side gains 7 new packages from the splits
@@ -185,10 +186,12 @@ extends `@vp/tsconfig`; 4 have a README; the scope `@vp` is the project's. Verdi
 | `components`, `forms`, `security-headers` | none found | - | P (W), ok |
 | `config`, `env-schema` | `loadEnv` fixed to `AppEnvSchema` (`load-env.ts`); keys, `platform-env.json` | `EnvSchema` token | P (W) and P (S) |
 | `dev-token` | `vp-dev`, `vp-api`, `vp-dev-key-1` (`jwt.ts`, `keys.ts`, `cli.ts`) | `DevTokenConfig` | P (W) |
+| `dev-identity` | `DEV_TOKEN_CONFIG` binds `@kit/dev-token` to this repo: product `video-pipeline`, issuer `vp-dev`, audience `vp-api`, key id `vp-dev-key-1`, seed (`src/index.ts`); the app side of the `dev-token` split | - | A |
 | `testing` | `AUTH_AUDIENCE: 'taitube'`, `idp.vp.local` (`env.ts`) | fixtures leave | P (S) |
 | `storage` | `rawPrefix`, `videoPrefix`, HLS layout (`keys.ts`); `mime.ts`, `multipart.ts` generic | key layout leaves | P (S) |
 | `compose-autoscaler` | defaults for this app's worker stages (`scaler.ts`) | `AutoscalerConfig` | P (W) |
 | `vite-preset` | none found | - | P (W), ok |
+| `appearance` | none: mode, contrast and id vocabulary and patterns, no dependency, no product value | - | P (N), ok |
 | `domain`, `api-contracts`, `domain-rules` | the product's entities, HTTP API (51 files, 5.1k lines), rules | - | A |
 | `api-client`, `permissions-react`, `web-testing`, `workbench` | typed over this API and its subjects; the harness and Storybook of this product | - | A |
 | `core` (product ports), `db`, `adapters`, `job-contracts`, `ffmpeg`, `whisper`, `lighthouse`, `stack`, `upload-client`, `gen-video` | ports, schema, drivers, queue names (`QUEUES` in `job-contracts/src/index.ts`), ladder, tools of this product | - | A |

@@ -1,7 +1,6 @@
 import { ToastProvider, Tooltip } from '@kit/ui';
 import { useWebTelemetry } from '@kit/web-telemetry';
 import { getRouteApi } from '@tanstack/react-router';
-import { MAX_WEB_VITALS_PER_BATCH, recordWebVitals } from '@vp/api-contracts';
 import {
   ApiProvider,
   IdentitySwitcherProvider,
@@ -13,6 +12,7 @@ import {
   WhenSwitcherOpened,
 } from '@vp/queries';
 import { Suspense, useState } from 'react';
+import { webComposition } from '#app/composition/registry';
 import {
   AccountMenu,
   ChannelPermissions,
@@ -34,11 +34,8 @@ import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
 import { ImpressionsProvider } from '#app/integrations/impressions/impressions-provider';
 import { AmbientGlowProvider } from '#app/lib/ambient/ambient-glow';
 import { CommandPaletteProvider } from '#app/lib/command-palette/command-palette-store';
-import { API_BASE_URL, OTEL_TRACES_URL } from '#app/lib/config';
 import { DevicePreferencesProvider } from '#app/lib/preferences/device-preferences-provider';
 import { urlModals } from '#app/lib/url-modal/registry';
-
-const VITALS_ENDPOINT = { path: recordWebVitals.path, maxBatchSize: MAX_WEB_VITALS_PER_BATCH };
 
 const { UrlModal } = urlModals;
 
@@ -50,13 +47,7 @@ export function AppLayout() {
   const [mergeState] = useState(createMergeState);
   useSessionSync();
 
-  useWebTelemetry({
-    app: 'web',
-    serviceName: 'taitube-web',
-    apiBaseUrl: API_BASE_URL,
-    vitals: VITALS_ENDPOINT,
-    tracesUrl: OTEL_TRACES_URL,
-  });
+  useWebTelemetry(webComposition.telemetry);
 
   return (
     <>

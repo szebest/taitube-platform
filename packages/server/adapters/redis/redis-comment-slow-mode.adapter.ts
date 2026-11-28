@@ -1,6 +1,6 @@
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { andThenAsync, fromPromise, map, ok, type Result } from '@kit/result';
 import type { CommentSlowModeClaim, CommentSlowModePort } from '@vp/core/ports';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { Redis } from 'ioredis';
 

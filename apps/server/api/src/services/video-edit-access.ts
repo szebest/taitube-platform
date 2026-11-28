@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr } from '@kit/result';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { Video } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoEditAccess, publicReadFailure } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export type EditAccessFailure = ReadVideoFailure | DatabaseUnavailable;

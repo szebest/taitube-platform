@@ -22,3 +22,15 @@ export type RuleSet<A extends string, S extends Subject, C> = (context: C, build
 ]>>) => void;
 export function assertCan(allowed: boolean, options: AssertCanOptions): asserts allowed
 export function createAbilityFactory<A extends string, S extends Subject, C>(ruleSets: readonly RuleSet<A, S, C>[]): AbilityFactory<A, S, C>
+
+## @kit/permissions/contract
+export interface AbilityProbe<C> {
+    readonly context: C;
+    readonly granted: readonly Check[];
+    readonly denied: readonly Check[];
+}
+export type Check = readonly [
+    action: string,
+    subject: Subject
+];
+export function describeAbilityFactoryContract<C>(makeFactory: () => AbilityFactory<string, Subject, C>, probes: readonly AbilityProbe<C>[]): void

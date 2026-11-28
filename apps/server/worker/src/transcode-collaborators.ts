@@ -1,4 +1,5 @@
-import type { CacheClient, StorageClient } from '@vp/core/ports';
+import type { CacheClient } from '@kit/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';

@@ -1,9 +1,10 @@
-import { type Token, createRegistry, provide, token } from '../../index';
+import { type Provider, type Token, createRegistry, provide, token } from '../../index';
 
 const port = token<{ readonly ping: () => string }>('port');
 const count = token<number>('count');
 
 expectTypeOf(port).toEqualTypeOf<Token<{ readonly ping: () => string }>>();
+expectTypeOf(provide(count, 1)).toEqualTypeOf<Provider<number>>();
 expectTypeOf(provide(count, 1).value).toEqualTypeOf<number>();
 
 // @ts-expect-error a value of another type than the token carries

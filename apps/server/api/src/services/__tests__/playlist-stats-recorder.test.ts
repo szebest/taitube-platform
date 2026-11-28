@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { cacheUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
-import { cacheUnavailable } from '@vp/errors';
 import { PlaylistStatsRecorder } from '../playlist-stats-recorder';
 
 const LIST = '00000000-0000-7000-8000-0000000000f1';

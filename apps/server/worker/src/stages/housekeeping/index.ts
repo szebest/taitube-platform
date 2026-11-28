@@ -1,10 +1,9 @@
 import type { AnyFailure } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { type Result, assertNever, ok } from '@kit/result';
 import type {
-  JobQueue,
   MultipartStorage,
-  QueueJob,
   ReactionCachePort,
   StorageClient,
   ViewBufferPort,

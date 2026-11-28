@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, ok, type Result } from '@kit/result';
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
 import {
@@ -5,7 +6,6 @@ import {
   DEFAULT_COMMENT_SETTINGS,
   type NewChannelAuditEntry,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 
 export interface InMemoryCommentSettingsRepositoryOptions {

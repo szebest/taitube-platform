@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
@@ -25,7 +26,7 @@ import {
   decideChannelTask,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import {
   type ChannelIdentityService,

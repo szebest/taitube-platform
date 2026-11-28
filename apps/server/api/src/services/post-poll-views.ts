@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { PostView } from '@vp/api-contracts';
 import type { PostEngagementRepositoryPort } from '@vp/core/repositories';
 import type { ChannelPost, PostPayload } from '@vp/domain';
 import { decidePollVisibility, isPollClosed, pollOf } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canManagePost } from '@vp/permissions';
 
 export interface PostViewer {

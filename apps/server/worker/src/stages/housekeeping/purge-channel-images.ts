@@ -1,10 +1,10 @@
+import type { DatabaseUnavailable, StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { ChannelImageUpload } from '@vp/domain';
-import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import { channelImageUploadKey, channelImageVersionPrefix } from '@vp/storage';
 
 export interface PurgeChannelImagesOptions {

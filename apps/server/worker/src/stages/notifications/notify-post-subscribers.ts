@@ -1,10 +1,10 @@
+import type { DatabaseUnavailable, QueueUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { isErr, ok, type Result } from '@kit/result';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { levelAllows, NOTIFICATION_FANOUT_BATCH, type NotificationActor } from '@vp/domain';
 import { decidePostRead } from '@vp/domain-rules';
-import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { type NotifyPostSubscribersJob, postSubscribersOutbox } from '@vp/job-contracts';
 import { usersSwitchedOn } from './notification-switches';
 import { postExcerpt } from './post-excerpt';

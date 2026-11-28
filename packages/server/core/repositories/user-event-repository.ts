@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { UserEvent } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface UserEventRecord {
   id: number;

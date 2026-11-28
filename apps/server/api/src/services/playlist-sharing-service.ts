@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { PlaylistStatsView, ShareLinkView } from '@vp/api-contracts';
 import type {
@@ -29,7 +30,6 @@ import {
   shareLinkLimit,
   shareLinkNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { ShareGrant, UserContext } from '@vp/permissions';
 import { toShareLinkView } from './share-link-service';
 

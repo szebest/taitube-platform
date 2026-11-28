@@ -59,7 +59,7 @@ describe('apps/client/web: OfflineRoute', () => {
     { name: 'stays and says it is still offline when it does not', ok: false, assigned: 0 },
   ])('retry $name', async ({ ok, assigned }) => {
     const assign = vi.fn();
-    vi.stubGlobal('location', { ...window.location, assign });
+    vi.stubGlobal('location', Object.assign({}, window.location, { assign }));
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(new Response(null, { status: ok ? 200 : 503 }))

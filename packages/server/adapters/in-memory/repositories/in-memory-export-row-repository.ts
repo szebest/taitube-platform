@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { ExportRowRepositoryPort, ExportScope, VideoRecord } from '@vp/core/repositories';
 import {
@@ -9,7 +10,6 @@ import {
   type VideoExportRow,
   viewDateOf,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';

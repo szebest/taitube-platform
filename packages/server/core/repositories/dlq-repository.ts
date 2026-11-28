@@ -1,6 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { DlqStatus } from '@vp/domain';
-import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
+import type { ErrorCode } from '@vp/errors';
 import type { NewOutboxInput } from './outbox-repository';
 
 export interface DlqEntryRecord {

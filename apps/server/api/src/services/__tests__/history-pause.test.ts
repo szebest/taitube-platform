@@ -1,8 +1,8 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { databaseUnavailable } from '@vp/errors';
 import { HistoryPause } from '../history-pause';
 
 const VIEWER = { id: '00000000-0000-7000-8000-00000000d001', role: 'USER' } as const;

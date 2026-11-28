@@ -1,7 +1,8 @@
 import type { AnyFailure } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import type { Result } from '@kit/result';
-import type { JobQueue, QueueJob, WebhookDispatcher } from '@vp/core/ports';
+import type { WebhookDispatcher } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
   ANNOUNCE_COMMENT_HELD,

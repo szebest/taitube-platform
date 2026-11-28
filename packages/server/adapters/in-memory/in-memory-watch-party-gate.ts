@@ -1,3 +1,4 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type {
   BudgetRule,
@@ -6,7 +7,6 @@ import type {
   WatchPartyGatePort,
   WatchPartyTicketGrant,
 } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 interface Window {
   count: number;

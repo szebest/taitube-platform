@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { PostOpenSketchPort } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 export class InMemoryPostOpenSketch implements PostOpenSketchPort {
   private readonly seen = new Set<string>();

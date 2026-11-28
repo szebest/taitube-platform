@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { PostView } from '@vp/api-contracts';
 import type { PostOpenSketchPort } from '@vp/core/ports';
@@ -16,7 +17,6 @@ import {
   postAlreadyVoted,
   postNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { refuseWhileBanned } from './channel-ban';
 import type { PostService } from './post-service';

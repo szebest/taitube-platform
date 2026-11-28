@@ -1,4 +1,5 @@
 import type { Singleflight } from '@kit/concurrency';
+import type { CacheClient } from '@kit/ports';
 import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@kit/result';
 import {
   type FeedQuery,
@@ -8,7 +9,6 @@ import {
   VideoSummarySchema,
   getFeed,
 } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
 import type { VideoFormat } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';

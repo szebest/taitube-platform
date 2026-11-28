@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import {
   EntityRevisionRepository,
@@ -6,7 +7,6 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { EntityRevision, EntityRevisionType } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 import { drizzleWhere } from '../scopes/index';
 import type { PostgresDatabase } from './types';

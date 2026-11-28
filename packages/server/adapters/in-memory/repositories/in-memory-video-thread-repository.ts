@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   ListHeldThreadsOptions,
@@ -20,7 +21,6 @@ import {
   commentHeld,
   keepsPin,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { recordModeration } from './comment-moderation-record';
 import type { StoredComment } from './comment-visibility';
 import { standing } from './comment-visibility';

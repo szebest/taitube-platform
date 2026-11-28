@@ -1,8 +1,13 @@
-import { type IntlBinding, unrenderable, wrongKind } from '@kit/intl';
+import {
+  type IntlBinding,
+  type PresetTable,
+  resolveEntry,
+  unrenderable,
+  wrongKind,
+} from '@kit/intl';
 import { all, andThen, err, map, ok } from '@kit/result';
 import { describeValue, isRecord, type Kind, type KindContext, type Rendered } from './kind';
 import type { AnyMessage } from './message';
-import { type PresetTable, resolveEntry } from './presets';
 import { placeholders } from './template';
 
 /** What a message renders against: the context's intl, the engine's kinds and presets, the locale chain. */

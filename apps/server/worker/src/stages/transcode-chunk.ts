@@ -1,10 +1,12 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { DatabaseUnavailable, StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { err, fromPromise, isErr, ok, type Result } from '@kit/result';
-import type { QueueJob, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable, MediaFailure, StorageUnavailable } from '@vp/errors';
+import type { MediaFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CHUNKED_TRANSCODE, type TranscodeJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';

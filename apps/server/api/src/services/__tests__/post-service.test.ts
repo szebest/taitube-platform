@@ -1,7 +1,8 @@
+import { cacheUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import type { PostPayload } from '@vp/domain';
-import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { ABSENT, MODERATOR_ID, OWNER, STRANGER, member, postsFixture } from './post-deps';
 
 const TEXT = (text: string): PostPayload => ({ kind: 'text', text });

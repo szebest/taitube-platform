@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type {
   ApiTokenListView,
@@ -26,7 +27,6 @@ import {
   decideApiTokenRevoke,
   decideApiTokenUse,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 

@@ -1,4 +1,5 @@
-import { ErrorCodes, categorySlugConflict, databaseUnavailable } from '@vp/errors';
+import { databaseUnavailable } from '@kit/errors';
+import { ErrorCodes, categorySlugConflict } from '@vp/errors';
 import { presentAdminCategoryFailure } from '../categories.presenter';
 
 const instance = '/v1/admin/categories';

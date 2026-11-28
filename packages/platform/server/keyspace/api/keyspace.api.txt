@@ -9,3 +9,8 @@ export type KeyNamespace<N extends string> = (...parts: readonly [
 export const SSE_PING_COMMENT: ": ping\n\n"
 export function defineKeyspace<const N extends string, const K extends Readonly<Record<string, string | ((...args: never[]) => string)>>>(namespace: N, define: (key: KeyNamespace<N>) => K): Readonly<K>
 export function formatSseFrame(options: { id?: number | string; event?: string; data?: unknown; }): string
+
+## @kit/keyspace/contract
+export type KeyLayout = Readonly<Record<string, string | ((...args: never[]) => string)>>;
+export type MakeKeyspace = () => KeyLayout;
+export function describeKeyspaceContract(makeKeyspace: MakeKeyspace): void

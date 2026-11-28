@@ -1,11 +1,11 @@
 import { type Container, token } from '@kit/composition';
-import { ErrorCodeRegistry, toPipelineError } from '@kit/errors';
+import { type ErrorCodeSet, ErrorCodeRegistry, toPipelineError } from '@kit/errors';
 import type { LogContext, Logger } from '@kit/logger';
 import { MetricsServer } from '@kit/observability';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { fromPromise, isErr, isOk, ok } from '@kit/result';
 import { Adapters } from '@vp/adapters/composition';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
-import { errorCodeRegistry } from '@vp/errors';
+import { type ErrorCode, errorCodeRegistry } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import { METRICS_ROUTES, type PipelineMetrics } from '@vp/pipeline-metrics';
@@ -42,6 +42,7 @@ export const Worker = {
   Heartbeat: token<Heartbeat>('Heartbeat'),
   Consumer: token<StageConsumer>('Consumer'),
   OutboxRelay: token<OutboxRelay | undefined>('OutboxRelay'),
+  ErrorCodes: token<ErrorCodeSet<ErrorCode>>('ErrorCodes'),
 } as const;
 
 /**
@@ -65,7 +66,8 @@ function instrument(
   stage: StageDefinition,
   processor: StageProcessor,
   metrics: PipelineMetrics,
-  logContext: LogContext
+  logContext: LogContext,
+  errorCodes: ErrorCodeSet<ErrorCode>
 ): (job: TracedJob) => Promise<unknown> {
   const { queue } = stage;
 
@@ -78,7 +80,7 @@ function instrument(
     }
 
     const identified = validateJobId(job.id);
-    if (isErr(identified)) throw toPipelineError(errorCodeRegistry, identified.error);
+    if (isErr(identified)) throw toPipelineError(errorCodes, identified.error);
 
     const settled = await fromPromise(
       () => processor(job),
@@ -89,7 +91,7 @@ function instrument(
     metrics.jobsProcessed.inc({ queue, result: failed ? 'failed' : 'completed' });
 
     if (isErr(settled)) throw settled.error;
-    if (isErr(settled.value)) throw toPipelineError(errorCodeRegistry, settled.value.error);
+    if (isErr(settled.value)) throw toPipelineError(errorCodes, settled.value.error);
     return settled.value.value;
   });
 
@@ -104,6 +106,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
 
   return c
     .provide(ErrorCodeRegistry, () => errorCodeRegistry)
+    .provide(Worker.ErrorCodes, () => errorCodeRegistry)
     .provide(Worker.Stage, () => {
       const stage = STAGE_REGISTRY[config().worker.stage];
       validateQueueName(stage.queue);
@@ -181,13 +184,18 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               getQueue: c.get(Worker.GetQueue),
               logger: runtime.logger,
               metrics,
+              errorCodes: c.get(Worker.ErrorCodes),
               workerId: runtime.workerId,
             })
           );
           return queue.process(
-            instrument(stage, processor, metrics, runtime.logContext) as Parameters<
-              JobQueue['process']
-            >[0],
+            instrument(
+              stage,
+              processor,
+              metrics,
+              runtime.logContext,
+              c.get(Worker.ErrorCodes)
+            ) as Parameters<JobQueue['process']>[0],
             {
               concurrency: config().worker.concurrency ?? stage.concurrency,
               lockDurationMs: stage.lockDurationMs,

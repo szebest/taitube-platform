@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, err, isErr, isOk, map, ok, unwrapOr } from '@kit/result';
 import type { PlaylistImportLineView } from '@vp/api-contracts';
 import type {
@@ -16,7 +17,6 @@ import {
   playlistNotFound,
   resolvePlaylistImportLine,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidField, validatePlaylistNote } from '@vp/validation';
 import {

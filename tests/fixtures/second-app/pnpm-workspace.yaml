@@ -1,19 +1,48 @@
 overrides:
   '@kit/appearance': file:tarballs/kit-appearance.tgz
+  '@kit/components': file:tarballs/kit-components.tgz
+  '@kit/compose-autoscaler': file:tarballs/kit-compose-autoscaler.tgz
+  '@kit/composition': file:tarballs/kit-composition.tgz
+  '@kit/concurrency': file:tarballs/kit-concurrency.tgz
+  '@kit/config': file:tarballs/kit-config.tgz
   '@kit/design-tokens': file:tarballs/kit-design-tokens.tgz
   '@kit/dev-token': file:tarballs/kit-dev-token.tgz
   '@kit/di': file:tarballs/kit-di.tgz
   '@kit/errors': file:tarballs/kit-errors.tgz
+  '@kit/forms': file:tarballs/kit-forms.tgz
+  '@kit/i18n': file:tarballs/kit-i18n.tgz
   '@kit/intl': file:tarballs/kit-intl.tgz
+  '@kit/intl-react': file:tarballs/kit-intl-react.tgz
   '@kit/keyspace': file:tarballs/kit-keyspace.tgz
   '@kit/logger': file:tarballs/kit-logger.tgz
+  '@kit/machine': file:tarballs/kit-machine.tgz
+  '@kit/object-storage': file:tarballs/kit-object-storage.tgz
   '@kit/observability': file:tarballs/kit-observability.tgz
+  '@kit/pagination': file:tarballs/kit-pagination.tgz
+  '@kit/permissions': file:tarballs/kit-permissions.tgz
+  '@kit/ports': file:tarballs/kit-ports.tgz
+  '@kit/primitives': file:tarballs/kit-primitives.tgz
+  '@kit/query': file:tarballs/kit-query.tgz
   '@kit/result': file:tarballs/kit-result.tgz
   '@kit/runtime': file:tarballs/kit-runtime.tgz
+  '@kit/security-headers': file:tarballs/kit-security-headers.tgz
+  '@kit/testing': file:tarballs/kit-testing.tgz
+  '@kit/tsconfig': file:tarballs/kit-tsconfig.tgz
   '@kit/ui': file:tarballs/kit-ui.tgz
+  '@kit/validation': file:tarballs/kit-validation.tgz
+  '@kit/vite-preset': file:tarballs/kit-vite-preset.tgz
+  '@kit/web-telemetry': file:tarballs/kit-web-telemetry.tgz
+  '@kit/web-testing': file:tarballs/kit-web-testing.tgz
   vite: npm:@voidzero-dev/vite-plus-core@1.5.0
 allowBuilds:
   '@parcel/watcher': false
   esbuild: false
   msgpackr-extract: false
   protobufjs: false
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'

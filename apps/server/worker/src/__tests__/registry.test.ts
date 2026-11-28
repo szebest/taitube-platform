@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import {
@@ -16,7 +17,6 @@ import {
   InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
-import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';

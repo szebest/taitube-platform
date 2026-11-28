@@ -87,7 +87,8 @@ export function shapeFindings(source: string): string[] {
   const providerCache = (terraform?.steps ?? []).find((step) =>
     step.uses?.startsWith('actions/cache@')
   );
-  if (terraform && !String(providerCache?.with?.key ?? '').includes(PROVIDER_CACHE_KEY)) {
+  const cacheKey = providerCache?.with?.key;
+  if (terraform && !(typeof cacheKey === 'string' && cacheKey.includes(PROVIDER_CACHE_KEY))) {
     findings.push('terraform: no provider cache keyed by the lock file');
   }
 

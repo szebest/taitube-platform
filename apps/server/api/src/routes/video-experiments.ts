@@ -2,7 +2,6 @@ import {
   applyVideoExperiment,
   createVideoExperiment,
   listVideoExperiments,
-  problemFor,
   stopVideoExperiment,
 } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
@@ -10,7 +9,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
-import { sendResult } from './send-result';
+import { problemOf, sendResult } from './send-result';
 
 export async function videoExperimentsRoutes(app: FastifyInstance): Promise<void> {
   const { videoExperimentService: experiments } = app.services;
@@ -69,7 +68,7 @@ export async function videoExperimentsRoutes(app: FastifyInstance): Promise<void
         reply,
         request,
         await experiments.apply(requireAuth(request), id, experimentId, request.body),
-        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+        { on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) } }
       );
     }
   );

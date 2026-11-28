@@ -1,6 +1,6 @@
+import type { CacheUnavailable, DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import { effectivePermissions, expectedPositionMs, parseMemberKey } from '@vp/domain';
-import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 import {
   announce,

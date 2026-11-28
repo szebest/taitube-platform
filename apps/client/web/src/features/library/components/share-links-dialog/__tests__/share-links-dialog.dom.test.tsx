@@ -46,7 +46,7 @@ async function openShareLinks() {
       return HttpResponse.json(shareLink(3), { status: 201 });
     }),
     mockEndpoint(revokePlaylistShareLink, ({ params }) => {
-      writes.push(`revoke ${params.linkId}`);
+      writes.push(`revoke ${String(params.linkId)}`);
       return new HttpResponse(null, { status: 204 });
     }),
   ]);

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import {
   type CursorPayload,
   type InvalidCursor,
@@ -28,7 +29,6 @@ import {
   playlistNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { InvalidPlaylistDetails } from '@vp/validation';
 import { decodeWith } from './cursor';

@@ -1,14 +1,9 @@
+import type { CacheUnavailable, DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyClientFrame, WatchPartyServerFrame } from '@vp/api-contracts';
 import { effectivePermissions, parseMemberKey, type WatchPartyPermission } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
-import type {
-  CacheUnavailable,
-  DatabaseUnavailable,
-  WatchPartyClosed,
-  WatchPartyNotFound,
-  WatchPartyPermissionMissing,
-} from '@vp/errors';
+import type { WatchPartyClosed, WatchPartyNotFound, WatchPartyPermissionMissing } from '@vp/errors';
 import {
   canInRoom,
   getWatchPartyPermissions,

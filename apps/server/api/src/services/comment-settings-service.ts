@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, andThen, isErr, ok } from '@kit/result';
 import type { CommentSettingsView } from '@vp/api-contracts';
 import type { CommentSettingsRepositoryPort } from '@vp/core/repositories';
@@ -8,7 +9,6 @@ import {
   type CommentSettingsField,
 } from '@vp/domain';
 import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidCommentSettings, validateCommentSettings } from '@vp/validation';
 

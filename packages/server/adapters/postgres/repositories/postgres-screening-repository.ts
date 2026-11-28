@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import {
   type AppealRejectionInput,
@@ -15,7 +16,7 @@ import {
   ScreeningRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type DatabaseUnavailable, ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { and, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm';
 import { decide, flagLatest, latestOf, resolveAppeal, selectCases } from './screening-queries';
 import type { PostgresDatabase } from './types';

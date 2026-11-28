@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   NewPlaylistInput,
@@ -15,7 +16,6 @@ import type {
   SeatedPlaylist,
   StoredPlaylistItem,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { ShareGrant, UserContext } from '@vp/permissions';
 
 export type AddPlaylistItemOutcome = 'added' | 'present' | 'playlist-missing' | 'video-missing';

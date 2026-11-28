@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { all, andThen, andThenAsync, err, isErr, map, type Result } from '@kit/result';
 import type { ChannelFeaturedView } from '@vp/api-contracts';
 import type {
@@ -15,7 +16,6 @@ import {
   type FeaturedVideosFailure,
   isFeaturable,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidFeaturedSelection, validateFeaturedSelection } from '@vp/validation';
 import { findChannelByIdOrHandle } from './channel-lookup';

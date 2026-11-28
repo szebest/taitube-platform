@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { heartOutbox } from '@vp/job-contracts';
 import type { StoredComment } from './comment-visibility';
 

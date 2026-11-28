@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { all, map, type Result } from '@kit/result';
 import type { PartyQueueView } from '@vp/api-contracts';
 import type { QueueSnapshot, VideoRecord } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { type PartyVideoView, toPartyVideoView } from './watch-party-views';
 

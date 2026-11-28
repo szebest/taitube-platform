@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 
 export interface PresenceAdmissionRequest {
   /** From `admissionLimit`: `null` admits at any count (the owner). */

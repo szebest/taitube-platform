@@ -35,7 +35,9 @@ describe('@kit/components: useVideoCardHover', () => {
       vi.advanceTimersByTime(500);
     });
 
-    act(() => end(result));
+    act(() => {
+      end(result);
+    });
 
     expect(result.current.expanded).toBe(false);
   });

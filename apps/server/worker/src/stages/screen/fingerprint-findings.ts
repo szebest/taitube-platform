@@ -1,10 +1,11 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import type { ScreeningFinding } from '@vp/domain';
 import { screenBlankVideo } from '@vp/domain-rules';
 import type { ScreeningConfig } from '@vp/env-schema';
-import type { DatabaseUnavailable, MediaFailure } from '@vp/errors';
+import type { MediaFailure } from '@vp/errors';
 import { mediaFailureFrom } from '@vp/errors';
 import { type FfmpegProcessLimits } from '@vp/ffmpeg';
 import { type FingerprintTools, findMatches, storeFingerprint } from '@vp/fingerprint';

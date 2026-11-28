@@ -1,8 +1,9 @@
+import { queueUnavailable } from '@kit/errors';
+import type { JobQueue } from '@kit/ports';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobQueue } from '@vp/core/ports';
-import { ErrorCodes, queueUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { QueueService } from '../queue-service';
 

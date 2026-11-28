@@ -1,5 +1,6 @@
 import { PermanentError } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { CacheClient } from '@kit/ports';
 import {
   InMemoryCacheClient,
   InMemoryFrameClassifier,
@@ -9,7 +10,7 @@ import {
   InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
-import type { CacheClient, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';

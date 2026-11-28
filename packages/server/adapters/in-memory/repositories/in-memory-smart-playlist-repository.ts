@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY, MS_PER_SECOND } from '@kit/primitives';
 import { type Result, assertNever, ok, unwrapOr } from '@kit/result';
 import type {
@@ -16,7 +17,6 @@ import {
   isPublicFeedEligible,
   isWatchCompleted,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type VideoLookups, channelCard } from './watchable-video';
 

@@ -1,9 +1,10 @@
+import { storageUnavailable } from '@kit/errors';
 import { Paginator } from '@kit/pagination';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { ActingChannel } from '@vp/domain';
-import { ErrorCodes, storageUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { ChannelExportService } from '../channel-export-service';
 

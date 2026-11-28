@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { LiveChatMessage, NewLiveChatMessage } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface LiveChatOffsetRange {
   /** Inclusive. */

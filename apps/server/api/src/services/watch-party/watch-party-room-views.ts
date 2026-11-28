@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { all, andThenAsync, map, ok, type Result } from '@kit/result';
 import type { WatchPartyView } from '@vp/api-contracts';
 import type { WatchPartyRoom } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { type PersonOf, resolvePeople } from './watch-party-names';
 import { type PartyVideoView, toPartyVideoView, toWatchPartyView } from './watch-party-views';

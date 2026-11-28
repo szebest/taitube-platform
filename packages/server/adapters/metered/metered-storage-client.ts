@@ -1,3 +1,4 @@
+import type { StorageUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import {
   StorageClient,
@@ -6,7 +7,6 @@ import {
   type StoragePresignedPutParams,
   type StorageUploadParams,
 } from '@vp/core/ports';
-import type { StorageUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { type StorageOp, meterStorageOp } from './storage-op-meter';
 

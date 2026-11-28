@@ -1,9 +1,9 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type { banWatchPartyMember, transferWatchPartyOwnership } from '@vp/api-contracts';
 import type { RoomWrite } from '@vp/core/repositories';
 import { decideMemberAction, decideOwnerTransfer, requireRoomPermission } from '@vp/domain-rules';
 import {
-  type DatabaseUnavailable,
   type VersionConflict,
   type WatchPartyNotFound,
   type WatchPartyRoleEscalation,

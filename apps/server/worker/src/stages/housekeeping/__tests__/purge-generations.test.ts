@@ -1,8 +1,8 @@
+import { storageUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { RETIRED_GENERATION_GRACE_MS } from '@vp/domain';
-import { storageUnavailable } from '@vp/errors';
 import { masterPlaylistKey, renditionObjectKey } from '@vp/storage';
 import { runPurgeGenerations } from '../purge-generations';
 

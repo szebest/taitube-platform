@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { andThen, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
@@ -7,7 +8,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { WatchPartyBan, WatchPartyMember } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, desc, eq, gte, isNotNull, isNull, max, ne, or } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { PostgresDatabase } from './types';

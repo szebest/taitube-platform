@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import type { ListSearchHistoryOptions, SearchHistoryRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
@@ -6,7 +7,6 @@ import {
   SEARCH_HISTORY_LIMIT,
   type SearchHistoryEntry,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import type { PostgresDatabase } from './types';

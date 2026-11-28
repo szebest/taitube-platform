@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { andThen, andThenAsync, err, isOk, map, ok, type Result } from '@kit/result';
 import type {
   CreatedWebhookView,
@@ -15,7 +16,6 @@ import {
   type WebhookNotFound,
   webhookNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { WebhookUrlPolicy } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';

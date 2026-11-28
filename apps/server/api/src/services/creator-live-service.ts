@@ -1,6 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { type Result, andThenAsync, err, isErr, map, ok } from '@kit/result';
 import type { LiveStreamView, UpdateLiveStreamBody } from '@vp/api-contracts';
-import type { CacheClient, LiveGatewayPort } from '@vp/core/ports';
+import type { LiveGatewayPort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, liveStreamPath } from '@vp/domain';
 import {
@@ -15,7 +17,7 @@ import {
   liveStreamNotFound,
   liveStreamNotLive,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable, LiveGatewayUnavailable } from '@vp/errors';
+import type { LiveGatewayUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidLiveStreamDetails, validateLiveStreamDetails } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';

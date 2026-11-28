@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, type Result } from '@kit/result';
 import type { SavedReplyDraft, SavedReplyRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { SavedReply } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';

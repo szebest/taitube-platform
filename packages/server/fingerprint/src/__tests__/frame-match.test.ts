@@ -81,7 +81,11 @@ describe('@vp/fingerprint: matchFrames', () => {
 
     const matches = matchFrames(frames, [...stored, ...other], OPTIONS);
 
-    expect(matches.map((m) => [m.videoId, m.offsetSeconds, m.coverage]).sort()).toEqual([
+    expect(
+      matches
+        .toSorted((a, b) => a.videoId.localeCompare(b.videoId))
+        .map((m) => [m.videoId, m.offsetSeconds, m.coverage])
+    ).toEqual([
       ['orig', 20, 1],
       ['other', 0, 1],
     ]);

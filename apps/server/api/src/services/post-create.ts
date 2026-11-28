@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { ManagedPostView, PostWriteBody } from '@vp/api-contracts';
@@ -15,7 +16,6 @@ import {
   isPublishNow,
   postNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { postAuditOf } from './post-audit';

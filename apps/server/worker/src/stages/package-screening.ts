@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { ScreenResult } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 

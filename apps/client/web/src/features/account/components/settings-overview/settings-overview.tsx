@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { Card, Icon, Input, InputGroup } from '@kit/ui';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -22,7 +23,10 @@ export function SettingsOverview() {
 
   const search = (text: string) => {
     setQuery(text);
-    navigate({ to: '/settings', search: { find: text.trim() || undefined }, replace: true });
+    ignoreRejection(
+      navigate({ to: '/settings', search: { find: text.trim() || undefined }, replace: true }),
+      'a refused navigation leaves the viewer where they are'
+    );
   };
 
   return (

@@ -4,6 +4,8 @@ A CASL ability built from the app's rule sets, and a guard that throws `UNAUTHOR
 
 Install: `pnpm add @kit/permissions @casl/ability`. It depends on `@kit/errors`; `@casl/ability` is a peer.
 
+Tokens: none. Registries: none. The app passes its rule sets to `createAbilityFactory`.
+
 ```ts
 import type { ForcedSubject } from '@casl/ability';
 import { type RuleSet, assertCan, createAbilityFactory } from '@kit/permissions';

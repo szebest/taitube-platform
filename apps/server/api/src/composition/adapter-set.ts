@@ -1,12 +1,10 @@
 import type { Container, Token } from '@kit/composition';
+import type { CacheClient, DatabaseClient, JobQueue } from '@kit/ports';
 import { Adapters } from '@vp/adapters/composition';
 import type {
   AuthorizationPort,
-  CacheClient,
   CategoryCachePort,
   CommentCachePort,
-  DatabaseClient,
-  JobQueue,
   MultipartStorage,
   ReactionCachePort,
   SearchSuggestionIndexPort,

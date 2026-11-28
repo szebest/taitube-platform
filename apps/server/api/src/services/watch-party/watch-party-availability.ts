@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { QueueSnapshot } from '@vp/core/repositories';
 import type { WatchPartyRoom } from '@vp/domain';
 import { decideWatchPartyShareable } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announceLine } from './watch-party-moderation-effects';
 

@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryWebhookDispatcher } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { WebhookEvent } from '@vp/domain';
 import type { AnnounceCommentHeldJob } from '@vp/job-contracts';
 import { createAnnounceCommentHeldProcessor } from '../announce-comment-held';

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
@@ -22,7 +23,6 @@ import {
   playlistSearchScore,
   videoSearchScore,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type WeightedField, lexicalScore, wordSimilarity } from './search-text';
 
 export interface SearchLookups {

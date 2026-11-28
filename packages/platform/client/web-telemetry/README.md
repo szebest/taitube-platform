@@ -9,6 +9,8 @@ pnpm add @kit/web-telemetry react @tanstack/react-router @opentelemetry/api \
   @opentelemetry/resources @opentelemetry/sdk-trace-web @opentelemetry/semantic-conventions web-vitals
 ```
 
+Tokens: none. Registries: none.
+
 The app provides one `WebTelemetryOptions` to `useWebTelemetry`: `app` and `serviceName` (the labels), `apiBaseUrl`,
 `vitals` (the endpoint path and the most vitals per batch) and `tracesUrl` (unset loads no tracer).
 

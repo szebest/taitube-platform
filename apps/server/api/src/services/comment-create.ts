@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { CommentView } from '@vp/api-contracts';
 import type { CommentSlowModePort } from '@vp/core/ports';
@@ -28,7 +29,6 @@ import {
   decideCommentCreate,
   evaluateCommentGate,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { looksLikeQuestion } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';

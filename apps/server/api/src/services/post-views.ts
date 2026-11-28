@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, all, assertNever, isErr, ok } from '@kit/result';
 import type { PostView } from '@vp/api-contracts';
 import type {
@@ -11,7 +12,6 @@ import {
   type PostImageVariants,
   toChannelCard,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type PollLookups, type PostViewer, loadPollLookups, pollBodyOf } from './post-poll-views';
 import {
   type PostShareDeps,

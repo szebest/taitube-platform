@@ -24,6 +24,7 @@
   "dependencies": {
     "@kit/components": "workspace:*",
     "@kit/design-tokens": "workspace:*",
+    "@kit/di": "workspace:*",
     "@kit/forms": "workspace:*",
     "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",

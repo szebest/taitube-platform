@@ -1,5 +1,5 @@
+import { type QueueUnavailable, queueUnavailable } from '@kit/errors';
 import { type Result, err, fromPromise, isErr, ok } from '@kit/result';
-import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
 import type { ConnectionOptions } from 'bullmq';
 
 /** What a BullMQ `Queue` and `FlowProducer` both expose over the Redis backend they own. */

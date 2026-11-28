@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyPlaylistUpdateJob } from '@vp/job-contracts';
 
 export interface NotifyPlaylistUpdateDeps {

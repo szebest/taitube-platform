@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
@@ -24,7 +25,6 @@ import {
   WATCH_LATER_TITLE,
   renumberPositions,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { and, eq, sql } from 'drizzle-orm';
 import {

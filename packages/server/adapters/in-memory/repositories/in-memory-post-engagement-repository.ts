@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type { PostEngagementRepositoryPort, PostVoteWritten } from '@vp/core/repositories';
 import { POLL_OPTION_SLOTS, type ChannelPost, type PostStats } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 interface Days {
   opens: number;

@@ -1,5 +1,5 @@
 import { useFormat } from '@kit/intl-react';
-import { unwrapOr } from '@kit/result';
+import { ignoreRejection, unwrapOr } from '@kit/result';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_TYPES, type SearchType } from '@vp/domain';
@@ -45,7 +45,10 @@ export function SearchTypeChipBar({ query }: SearchTypeChipBarProps) {
       onValueChange={(next) => {
         const picked = SEARCH_TYPES.find((option) => option === next);
         if (picked) {
-          navigate({ search: (previous) => ({ ...previous, type: picked }), replace: true });
+          ignoreRejection(
+            navigate({ search: (previous) => ({ ...previous, type: picked }), replace: true }),
+            'a refused navigation leaves the viewer where they are'
+          );
         }
       }}
     >

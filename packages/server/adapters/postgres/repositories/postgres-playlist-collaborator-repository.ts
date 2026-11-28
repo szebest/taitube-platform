@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, andThen, fromPromise, isErr, map, ok } from '@kit/result';
 import type {
   AcceptInvitePlan,
@@ -11,7 +12,6 @@ import {
   type PlaylistInvite,
   autoRemoveStopped,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { playlistInviteOutbox } from '@vp/job-contracts';
 import { and, asc, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { enqueueNotificationJobs } from './notification-jobs';

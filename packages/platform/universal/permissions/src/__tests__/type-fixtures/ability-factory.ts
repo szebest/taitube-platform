@@ -1,4 +1,4 @@
-import { type RuleSet, createAbilityFactory } from '../../index';
+import { type AbilityFactory, type RuleSet, createAbilityFactory } from '../../index';
 
 type Action = 'read' | 'edit';
 type Subject = 'Video' | 'Comment';
@@ -14,6 +14,7 @@ const rules: RuleSet<Action, Subject, Context> = (_context, { can }) => {
 const abilityFor = createAbilityFactory([rules]);
 const ability = abilityFor({ userId: 'u1' });
 
+expectTypeOf(abilityFor).toEqualTypeOf<AbilityFactory<Action, Subject, Context>>();
 expectTypeOf(abilityFor).parameter(0).toEqualTypeOf<Context>();
 expectTypeOf(ability.can).toBeFunction();
 

@@ -1,8 +1,8 @@
+import { cacheUnavailable, databaseUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import type { HotComments } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisCommentCacheAdapter } from '../redis-comment-cache.adapter';

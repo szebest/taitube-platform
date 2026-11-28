@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, err, isErr, ok } from '@kit/result';
 import type { ManagedPostView, PostWriteBody } from '@vp/api-contracts';
 import type { ChannelPostPlacement } from '@vp/core/repositories';
@@ -12,7 +13,7 @@ import {
   postNotFound,
   postPollLocked,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { postAuditOf } from './post-audit';
 import { toPostTiming } from './post-create';

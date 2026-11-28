@@ -1,6 +1,6 @@
 import { PermanentError } from '@kit/errors';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { failCaptionsRun } from '../captions-failure';
 import { captionsWorld } from './captions-harness';
 
@@ -13,6 +13,7 @@ describe('captions stage: a parked run', () => {
       await failCaptionsRun(
         world.repositories,
         world.deps.metrics,
+        errorCodeRegistry,
         world.job({ type: 'single' }),
         error
       )

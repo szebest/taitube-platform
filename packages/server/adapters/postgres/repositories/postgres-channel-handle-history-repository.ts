@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type { ChannelHandleHistoryRepositoryPort } from '@vp/core/repositories';
 import { channelHandleHistory as history } from '@vp/db';
 import type { ChannelHandleRetirement } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { eq, lt } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

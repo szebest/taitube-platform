@@ -1,6 +1,6 @@
+import type { StorageUnavailable } from '@kit/errors';
+import type { HealthCheckable } from '@kit/ports';
 import type { Result } from '@kit/result';
-import type { StorageUnavailable } from '@vp/errors';
-import type { HealthCheckable } from './health-checkable';
 
 export interface StoragePresignedPartParams {
   bucket: string;

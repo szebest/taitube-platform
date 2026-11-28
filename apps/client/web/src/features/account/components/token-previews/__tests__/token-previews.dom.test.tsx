@@ -48,9 +48,13 @@ describe('apps/client/web: the token previews', () => {
     const chip = container.querySelector('span');
 
     expect(chip).toHaveClass('translate-x-0');
-    act(() => vi.advanceTimersByTime(1400));
+    act(() => {
+      vi.advanceTimersByTime(1400);
+    });
     expect(chip).toHaveClass('translate-x-[calc(100cqw-1.25rem)]');
-    act(() => vi.advanceTimersByTime(1400));
+    act(() => {
+      vi.advanceTimersByTime(1400);
+    });
     expect(chip).toHaveClass('translate-x-0');
   });
 });

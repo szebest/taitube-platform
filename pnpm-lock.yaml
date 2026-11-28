@@ -254,6 +254,9 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/design-tokens
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
@@ -432,6 +435,9 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/design-tokens
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
@@ -670,6 +676,9 @@ importers:
       '@kit/errors':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/errors
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -688,6 +697,9 @@ importers:
       '@kit/pagination':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/pagination
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/primitives
@@ -806,6 +818,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/testing':
         specifier: workspace:*
         version: link:../../../packages/platform/server/testing
@@ -857,6 +872,9 @@ importers:
       '@kit/observability':
         specifier: workspace:*
         version: link:../../../packages/platform/server/observability
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../../packages/platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/primitives
@@ -948,6 +966,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/testing':
         specifier: workspace:*
         version: link:../../../packages/platform/server/testing
@@ -2486,6 +2507,9 @@ importers:
 
   packages/platform/universal/intl:
     dependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../di
       '@kit/result':
         specifier: workspace:*
         version: link:../result
@@ -2736,6 +2760,9 @@ importers:
       '@kit/object-storage':
         specifier: workspace:*
         version: link:../../platform/server/object-storage
+      '@kit/ports':
+        specifier: workspace:*
+        version: link:../../platform/server/ports
       '@kit/primitives':
         specifier: workspace:*
         version: link:../../platform/universal/primitives
@@ -2806,9 +2833,6 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.8
         version: 0.5.8
-      '@kit/ports':
-        specifier: workspace:*
-        version: link:../../platform/server/ports
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing
@@ -3079,15 +3103,15 @@ importers:
 
   packages/server/events:
     dependencies:
+      '@kit/errors':
+        specifier: workspace:*
+        version: link:../../platform/universal/errors
       '@kit/keyspace':
         specifier: workspace:*
         version: link:../../platform/server/keyspace
       '@kit/result':
         specifier: workspace:*
         version: link:../../platform/universal/result
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../universal/errors
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -3684,6 +3708,9 @@ importers:
         specifier: workspace:*
         version: link:../errors
     devDependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../platform/universal/di
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing
@@ -23261,7 +23288,7 @@ snapshots:
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
       acorn: 8.18.0
-      browserslist: 4.29.5
+      browserslist: 4.29.6
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.24.5
       es-module-lexer: 2.3.2

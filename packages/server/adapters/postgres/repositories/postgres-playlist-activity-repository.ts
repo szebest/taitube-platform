@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ListPlaylistActivityOptions,
@@ -5,7 +6,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { PlaylistActivity } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';
 import { toPlaylistActivity } from './playlist-change';

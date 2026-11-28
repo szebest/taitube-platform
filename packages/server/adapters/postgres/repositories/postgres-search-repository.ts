@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, all, andThen, fromPromise, map, ok } from '@kit/result';
 import type {
   SearchHit,
@@ -7,7 +8,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type Channel, type SearchResultKind, compareSearchPositions } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { desc, or, sql } from 'drizzle-orm';
 import { restrictsQuery } from './search-query';
 import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';

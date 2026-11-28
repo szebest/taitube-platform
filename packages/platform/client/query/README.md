@@ -8,6 +8,8 @@ single-flight session refresh.
 pnpm add @kit/query @tanstack/react-query @tanstack/react-router react zod
 ```
 
+Tokens: none. Registries: none. The app passes the classifier, the missing predicate and the session refresh as arguments.
+
 The app says which failures are worth retrying and which one means "missing"; the package holds no error codes.
 
 ```ts

@@ -1,3 +1,4 @@
+import { queueUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import {
@@ -7,7 +8,6 @@ import {
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { videoStatusChanged } from '@vp/domain';
-import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
 import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';

@@ -2,8 +2,9 @@ import { token } from '@kit/composition';
 import type { Logger } from '@kit/logger';
 import type { MetricsServer } from '@kit/observability';
 import type { Paginator } from '@kit/pagination';
-import type { JobQueue } from '@vp/core/ports';
+import type { JobQueue } from '@kit/ports';
 import type { FastifyPluginCallback } from 'fastify';
+import type { FailureWords } from '../services/failure-words';
 import type { HistoryPause } from '../services/history-pause';
 import type {
   AnalyticsService,
@@ -126,6 +127,7 @@ export interface ServiceSet
   sseService: SseService;
   sseHub: SseHub;
   readiness: ReadinessService;
+  failureWords: FailureWords;
   queueBoard: FastifyPluginCallback;
 }
 
@@ -195,6 +197,7 @@ export const Services = {
   SseService: token<SseService>('SseService'),
   SseHub: token<SseHub>('SseHub'),
   Readiness: token<ReadinessService>('Readiness'),
+  FailureWords: token<FailureWords>('FailureWords'),
   QueuePoller: token<Poller>('QueuePoller'),
   SqlPoller: token<Poller>('SqlPoller'),
   HousekeepingQueue: token<JobQueue>('HousekeepingQueue'),

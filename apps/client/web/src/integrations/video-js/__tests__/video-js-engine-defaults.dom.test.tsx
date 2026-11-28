@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react';
-import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { PlayerChannelProvider } from '#app/lib/player/player-channel';
 import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
 import { VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
@@ -33,7 +32,7 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
   return { ...rendered, video };
 }
 
-describe('apps/client/web: the Video.js engine starting defaults', () => {
+describe('apps/client/web: the Video.js engine starting speed', () => {
   it('starts at the default speed it is given', async () => {
     const { video } = renderEngine({ defaults: { ...DEFAULTS, speed: 1.5 } });
 
@@ -42,22 +41,14 @@ describe('apps/client/web: the Video.js engine starting defaults', () => {
     expect(video.playbackRate).toBe(1.5);
   });
 
-  it.each([
-    { quality: '480p', level: 0 },
-    { quality: '720p', level: 1 },
-    { quality: '1080p', level: 1 },
-    { quality: 'auto', level: undefined },
-  ])('starts at the $quality default on a master of 480p and 720p', async ({ quality, level }) => {
-    const { video } = renderEngine({ defaults: { ...DEFAULTS, quality } });
-    const hls = await attachedHls(video);
-    const nextLevel = vi.spyOn(hls, 'nextLevel', 'set');
+  it.each([1.5, 2])('plays at the speed %s the control asks for', (speed) => {
+    const { video } = renderEngine({
+      layout: 'vertical',
+      control: { paused: true, muted: true, speed },
+    });
 
-    await parseMaster(video, [480, 720], 720);
+    fireEvent(video, new Event('loadedmetadata'));
 
-    await vi.waitFor(() =>
-      level === undefined
-        ? expect(nextLevel).not.toHaveBeenCalled()
-        : expect(nextLevel).toHaveBeenLastCalledWith(level)
-    );
+    expect(video.playbackRate).toBe(speed);
   });
 });

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { CursorPayload, InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, andThen, err, isErr, ok } from '@kit/result';
 import type { ManagedPostPageView, ManagedPostView, PostStatsView } from '@vp/api-contracts';
@@ -17,7 +18,6 @@ import {
   postNotFound,
   postPinLimit,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { asDate, asId, decodeWith, isoOf } from './cursor';
 import { postAuditOf } from './post-audit';

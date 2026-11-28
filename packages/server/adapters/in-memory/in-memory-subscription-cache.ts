@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type { SubscriptionCachePort } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 export class InMemorySubscriptionCache implements SubscriptionCachePort {
   private readonly followed = new Map<string, Set<string>>();

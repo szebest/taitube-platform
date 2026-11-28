@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ModerationOutcome,
@@ -11,7 +12,6 @@ import type {
   VideoThread,
   VideoThreadEntry,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { CommentReplyCursor, CommentViewer } from './comment-repository';
 
 export interface ListVideoThreadsOptions {

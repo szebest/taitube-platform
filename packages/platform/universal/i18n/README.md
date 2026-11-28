@@ -4,8 +4,11 @@ A typed message engine: templates whose placeholders type their arguments, confi
 catalogues whose translations keep the source's params, and a `t` typed by the catalogue the app registers. It holds
 no words and no locale data; the app brings both.
 
+Install: `pnpm add @kit/i18n`. It depends on `@kit/di`, `@kit/intl` and `@kit/result`.
+
 ```ts
-import { builtInKinds, defineEngine, defineParams, definePresets } from '@kit/i18n';
+import { builtInKinds, defineEngine, defineParams } from '@kit/i18n';
+import { definePresets } from '@kit/intl';
 
 export const engine = defineEngine({
   kinds: builtInKinds,
@@ -31,5 +34,5 @@ t('videos.views', { count: 3 }); // Result<string, MessageFailure>
 ```
 
 A new kind is `defineKind({ name, config, arg, options, render })` in the app, listed in `kinds`; the engine is not
-edited. At the composition root, `i18n.providers(catalogues)` provides `Catalogues`, `FormatPresets` and
-`ParamVocabulary`, and `i18n.fromRegistry(registry, intl)` reads them back.
+edited. At the composition root, `i18n.providers(catalogues)` provides `Catalogues`, `FormatPresets` (owned
+by `@kit/intl`) and `ParamVocabulary`, and `i18n.fromRegistry(registry, intl)` reads them back.

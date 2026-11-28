@@ -1,6 +1,6 @@
+import type { JobQueue } from '@kit/ports';
 import { portBoardQueues } from '@vp/adapters/bullmq';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobQueue } from '@vp/core/ports';
 import fastify from 'fastify';
 import { bullBoardPlugin } from '../bull-board';
 

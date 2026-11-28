@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
 import { PlaylistItemSchema, type PlaylistView } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
 import type { SmartPlaylistEntry, SmartPlaylistRepositoryPort } from '@vp/core/repositories';
 import { SMART_PLAYLIST_CACHE_SECONDS, type SmartPlaylistRules, dependsOnViewer } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { z } from 'zod';

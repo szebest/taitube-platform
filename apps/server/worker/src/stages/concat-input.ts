@@ -1,9 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { type StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { err, fromPromise, isErr, ok, type Result } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
-import { ErrorCodes, type MediaFailure, mediaFailure, type StorageUnavailable } from '@vp/errors';
+import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import { chunkKey, chunkPrefix } from '@vp/storage';
 import { transcodeFailure } from './transcode-failure';
 

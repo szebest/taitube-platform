@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type {
   ListPlaylistActivityOptions,
@@ -13,7 +14,6 @@ import {
   playlistUpdateHour,
   playlistUpdated,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { playlistUpdateOutbox } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import type { Clock } from './clock';

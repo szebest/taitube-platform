@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import type {
   ChannelImageCommit,
@@ -12,7 +13,6 @@ import {
   type PostImageUrls,
   type PostImageVariants,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 import {
   commitUpload,

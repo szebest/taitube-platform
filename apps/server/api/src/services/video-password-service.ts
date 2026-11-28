@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { HashingFailed, PasswordHasherPort } from '@vp/core/ports';
@@ -14,7 +15,6 @@ import {
   videoPasswordInvalid,
   videoPasswordsOff,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { UnlockCredentials } from './video-access-gate';
 import { type EditAccessFailure, editableVideo } from './video-edit-access';

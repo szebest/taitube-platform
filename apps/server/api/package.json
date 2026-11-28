@@ -31,12 +31,14 @@
     "@kit/concurrency": "workspace:*",
     "@kit/config": "workspace:*",
     "@kit/errors": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/keyspace": "workspace:*",
     "@kit/logger": "workspace:*",
     "@kit/object-storage": "workspace:*",
     "@kit/observability": "workspace:*",
     "@kit/pagination": "workspace:*",
+    "@kit/ports": "workspace:*",
     "@kit/primitives": "workspace:*",
     "@kit/result": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
@@ -78,6 +80,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@kit/di": "workspace:*",
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@opentelemetry/context-async-hooks": "^2.12.0",

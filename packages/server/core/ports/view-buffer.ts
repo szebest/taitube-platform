@@ -1,3 +1,4 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ExperimentMeasure,
@@ -8,7 +9,6 @@ import type {
   ViewDevice,
   ViewHour,
 } from '@vp/domain';
-import type { CacheUnavailable } from '@vp/errors';
 
 export interface ViewEvent {
   readonly videoId: string;

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, map, ok } from '@kit/result';
 import type { ShareLinkRepository, VideoPasswordRepository } from '@vp/core/repositories';
 import type { ShareLink, Video } from '@vp/domain';
@@ -9,7 +10,6 @@ import {
   decideVideoGate,
   decideVideoRead,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { ShareGrant, UserContext } from '@vp/permissions';
 
 /** The signed value an unlock sets as the video's cookie, bound to the password hash it was made under. */

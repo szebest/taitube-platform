@@ -1,8 +1,8 @@
 import { Singleflight } from '@kit/concurrency';
+import { type CacheUnavailable, cacheUnavailable } from '@kit/errors';
 import { type Result, fromPromise, ignore, isErr, map, ok, unwrapOr } from '@kit/result';
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
-import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import {
   type CachedCounts,

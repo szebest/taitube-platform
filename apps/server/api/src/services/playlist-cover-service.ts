@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type {
   ChannelImageRepositoryPort,
@@ -11,7 +12,6 @@ import {
   channelNotFound,
   decidePlaylistCoverUpload,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { channelImageVariantKey } from '@vp/storage';
 import type {

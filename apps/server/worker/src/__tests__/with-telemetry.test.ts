@@ -1,4 +1,5 @@
 import { getActiveTraceparent } from '@kit/observability';
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { context, SpanKind, SpanStatusCode, type Tracer, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
@@ -7,7 +8,6 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type NotifyJob, type ProbeJob } from '@vp/job-contracts';
 import { SEEDED } from '@vp/testing-fixtures';

@@ -1,8 +1,8 @@
-import { errorCodeOf } from '@kit/errors';
+import { type DatabaseUnavailable, type ErrorCodeSet, errorCodeOf } from '@kit/errors';
+import type { QueueJob } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type DatabaseUnavailable, errorCodeRegistry } from '@vp/errors';
+import type { ErrorCode } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 
@@ -13,6 +13,7 @@ import type { PipelineMetrics } from '@vp/pipeline-metrics';
 export async function failCaptionsRun(
   repositories: Pick<Repositories, 'captions'>,
   metrics: PipelineMetrics,
+  errorCodes: ErrorCodeSet<ErrorCode>,
   job: QueueJob<unknown>,
   error: Error
 ): Promise<Result<void, DatabaseUnavailable>> {
@@ -23,7 +24,7 @@ export async function failCaptionsRun(
     id: parsed.data.captionId,
     expectedVersion: parsed.data.captionVersion,
     status: 'failed',
-    reason: errorCodeOf(errorCodeRegistry, error),
+    reason: errorCodeOf(errorCodes, error),
   });
   if (isErr(failed)) return failed;
   if (failed.value.type === 'committed') metrics.captionsJobsTotal.inc({ outcome: 'failed' });

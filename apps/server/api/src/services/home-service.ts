@@ -1,6 +1,6 @@
+import type { CacheClient } from '@kit/ports';
 import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@kit/result';
 import { type HomeResponse, type HomeShelf, getHome } from '@vp/api-contracts';
-import type { CacheClient } from '@vp/core/ports';
 import type {
   CategoryRepositoryPort,
   RecommendationFeedbackRepositoryPort,

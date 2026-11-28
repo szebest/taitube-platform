@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { PlaylistCollaboratorView, PlaylistInviteView } from '@vp/api-contracts';
 import type {
@@ -28,7 +29,6 @@ import {
   decidePlaylistLinkInvite,
   playlistCollaboratorNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { primaryCards } from './playlist-cards';
 

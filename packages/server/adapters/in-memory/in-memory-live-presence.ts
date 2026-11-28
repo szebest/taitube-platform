@@ -1,6 +1,6 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type { LivePresencePort } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 export class InMemoryLivePresence implements LivePresencePort {
   private readonly streams = new Map<string, Map<string, number>>();

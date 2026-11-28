@@ -7,11 +7,13 @@ import { RefSchema } from '../schema/ref';
 
 const sand = () => themeFromTokens('sand');
 
-const resolveSand = (dark: Record<string, unknown> = {}) => {
+const realRamps = () => RefSchema.parse(refFromTokens());
+
+const resolveSand = (dark: Record<string, unknown> = {}, ramps = realRamps()) => {
   const theme = expectOk(
     parseTheme({ ...sand(), color: { ...sand().color, dark: { ...sand().color.dark, ...dark } } })
   );
-  return resolveTheme(theme, RefSchema.parse(refFromTokens()));
+  return resolveTheme(theme, ramps);
 };
 
 const roundRadius = () => ({
@@ -48,6 +50,25 @@ describe('parse', () => {
       '#14120F',
       '#FFFAF012',
       '#F5EAD4',
+    ]);
+  });
+
+  it('resolves against the ramps it is handed, so a fake ramp set replaces the real one', () => {
+    const fakeRamps = RefSchema.parse(
+      Object.fromEntries(
+        Object.entries(realRamps()).map(([ramp, steps]) => [
+          ramp,
+          Object.fromEntries(Object.keys(steps).map((step) => [step, '#123456'])),
+        ])
+      )
+    );
+
+    const { color, dataviz } = expectOk(resolveSand({}, fakeRamps));
+
+    expect([color.dark.bg, color.dark.tint, dataviz.sequential[0]]).toEqual([
+      '#123456',
+      '#FFFAF012',
+      '#123456',
     ]);
   });
 

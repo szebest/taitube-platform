@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import type {
   CommentLocator,
@@ -8,7 +9,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { CommentRemoval } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, gte, lt, or } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, msTimestamp, notDeletedScope } from '../scopes/index';
 import { moderateComment } from './comment-moderation-writes';

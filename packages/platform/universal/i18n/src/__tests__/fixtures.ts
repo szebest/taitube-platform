@@ -1,8 +1,7 @@
-import { createIntl, createIntlCache, type IntlBinding } from '@kit/intl';
+import { createIntl, createIntlCache, definePresets, type IntlBinding } from '@kit/intl';
 import { defineEngine } from '../engine';
 import { builtInKinds } from '../kinds';
 import { defineParams } from '../params';
-import { definePresets } from '../presets';
 
 export const NOW = '2026-09-22T18:30:00.000Z';
 

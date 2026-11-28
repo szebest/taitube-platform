@@ -1,4 +1,5 @@
 import type { Singleflight } from '@kit/concurrency';
+import { type DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { CommentView, ListCommentsQuery } from '@vp/api-contracts';
@@ -26,7 +27,7 @@ import {
   decideCommentThreadRead,
   publicHostReadFailure,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { deletionAudit, pinAudit } from './comment-audit';
 import {

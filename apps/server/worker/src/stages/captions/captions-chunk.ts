@@ -1,5 +1,5 @@
+import type { QueueJob } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { type CaptionsJob, captionsWindow } from '@vp/job-contracts';
 import { captionsChunkKey } from '@vp/storage';

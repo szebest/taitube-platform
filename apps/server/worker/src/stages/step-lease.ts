@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr } from '@kit/result';
 import type { StepRepository } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /**
  * Why an encode was stopped before FFmpeg finished: the lease renewal failed (retry the job) or

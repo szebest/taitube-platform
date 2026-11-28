@@ -1,6 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Logger } from '../../packages/platform/server/logger/src/index';
+import type {
+  CacheClient,
+  FlowProducerPort,
+  JobQueue,
+} from '../../packages/platform/server/ports/src/index';
 import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
@@ -11,13 +16,7 @@ import {
   S3MultipartStorage,
   S3StorageClient,
 } from '../../packages/server/adapters/index';
-import type {
-  CacheClient,
-  FlowProducerPort,
-  JobQueue,
-  MultipartStorage,
-  StorageClient,
-} from '../../packages/server/core/ports/index';
+import type { MultipartStorage, StorageClient } from '../../packages/server/core/ports/index';
 import type { Repositories } from '../../packages/server/core/repositories/index';
 import { mintToken } from '../../packages/server/dev-identity/src/index';
 import {

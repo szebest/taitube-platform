@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { assertNever, err, ok, type Result } from '@kit/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import type { NewSystemLine, RoleWrite } from '@vp/core/repositories';
@@ -8,7 +9,6 @@ import {
   type WatchPartySystemEvent,
 } from '@vp/domain';
 import {
-  type DatabaseUnavailable,
   type VersionConflict,
   type WatchPartyNotFound,
   versionConflict,

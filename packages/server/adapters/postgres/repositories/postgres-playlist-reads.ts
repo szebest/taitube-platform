@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ListPlaylistItemsOptions,
@@ -13,7 +14,6 @@ import type {
   SeatedPlaylist,
   StoredPlaylistItem,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { ShareGrant, UserContext } from '@vp/permissions';
 import { eq } from 'drizzle-orm';
 import { storedItems } from './playlist-item-writes';

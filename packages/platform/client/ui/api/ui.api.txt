@@ -565,6 +565,15 @@ export type ResolvedAppearance = Readonly<{
 }>;
 export function resolveAppearance({ theme: themeId, mode, accent, contrast, overrides }: AppearancePreference, { defaults, reducedMotion, prefersMoreContrast, registered, }: Readonly<{ defaults?: TokenSetIds; reducedMotion: boolean; prefersMoreContrast?: boolean; registered?: readonly Theme[]; }>): ResolvedAppearance
 
+## @kit/ui/contract
+export interface AppearanceRegistrySubject {
+    readonly appearance: AppearanceSubject;
+    readonly resolveAppearance: typeof resolveAppearance;
+    readonly registerTheme: typeof registerTheme;
+}
+export type MakeAppearanceRegistry = () => AppearanceRegistrySubject;
+export function describeAppearanceRegistryContract(makeSubject: MakeAppearanceRegistry): void
+
 ## @kit/ui/styles.css
 
 ## @kit/ui/themes/*

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   SavePreferencesOptions,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import { preferencesUpdated } from '@vp/domain';
 import type { UserPreferences } from '@vp/domain/settings';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export class InMemoryUserPreferencesRepository implements UserPreferencesRepositoryPort {
   private readonly documents = new Map<string, UserPreferences>();

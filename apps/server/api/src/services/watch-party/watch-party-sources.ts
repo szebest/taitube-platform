@@ -1,13 +1,10 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { all, andThenAsync, assertNever, err, map, ok, type Result } from '@kit/result';
 import type { CreateWatchPartyBody } from '@vp/api-contracts';
 import type { NewWatchPartyQueueItem } from '@vp/core/repositories';
 import { WATCH_PARTY_LIMITS, type WatchPartyVisibility } from '@vp/domain';
 import { decideWatchPartyShareable, type ShareableVideo } from '@vp/domain-rules';
-import {
-  type DatabaseUnavailable,
-  type WatchPartyVideoNotShareable,
-  watchPartyVideoNotShareable,
-} from '@vp/errors';
+import { type WatchPartyVideoNotShareable, watchPartyVideoNotShareable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { WatchPartyDeps } from './watch-party-deps';
 

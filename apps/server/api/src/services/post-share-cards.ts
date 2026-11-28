@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, isOk, map, ok } from '@kit/result';
 import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { PlaylistDetail, PostPayload, PostShareCard, Video } from '@vp/domain';
 import { type SharedTarget, decidePostShare } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { thumbnailUrl } from './video-views';
 
 export interface PostShareDeps {

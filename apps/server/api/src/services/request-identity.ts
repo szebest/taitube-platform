@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { ChannelMemberRepositoryPort } from '@vp/core/repositories';
 import type { ActingChannel, Channel } from '@vp/domain';
 import { type ChannelMembershipRequired, decideActingChannel } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { OwnedChannels, UserContext } from '@vp/permissions';
 import type { ProvisionFailure } from './channel-lookup';
 import type { ChannelService } from './channel-service';

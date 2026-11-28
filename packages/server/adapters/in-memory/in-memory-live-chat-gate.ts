@@ -1,3 +1,4 @@
+import type { CacheUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type {
   LiveChatAdmission,
@@ -5,7 +6,6 @@ import type {
   LiveChatGatePort,
   LiveChatTicketGrant,
 } from '@vp/core/ports';
-import type { CacheUnavailable } from '@vp/errors';
 
 interface Window {
   count: number;

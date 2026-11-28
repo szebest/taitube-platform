@@ -1,6 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { isErr, ok, type Result } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
   type Comment,
@@ -8,7 +9,6 @@ import {
   NOTIFICATION_EXCERPT_LENGTH,
   type NotificationActor,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyCommentJob } from '@vp/job-contracts';
 import { usersSwitchedOn } from './notification-switches';
 import { type CommentSubject, commentSubjectOf } from './notify-comment-subject';

@@ -1,4 +1,5 @@
 import { subject } from '@casl/ability';
+import { describeAbilityFactoryContract } from '@kit/permissions/contract';
 import {
   adminUser,
   creatorUser,
@@ -9,6 +10,31 @@ import {
 } from '../__mocks__/fixtures';
 import { getUserPermissions } from '../ability';
 import type { AppAction, AppSubjects, UserContext } from '../types/index';
+
+describeAbilityFactoryContract(
+  () =>
+    ({ user, share }: { user: UserContext | null; share: null }) =>
+      getUserPermissions(user, share),
+  [
+    {
+      context: { user: guestUser, share: null },
+      granted: [['read', 'Channel']],
+      denied: [
+        ['create', 'Video'],
+        ['manage', 'all'],
+        ['launch', 'Rocket'],
+      ],
+    },
+    {
+      context: { user: adminUser, share: null },
+      granted: [
+        ['manage', 'all'],
+        ['create', 'Video'],
+      ],
+      denied: [],
+    },
+  ]
+);
 
 describe('permissions: getUserPermissions', () => {
   it.each<{

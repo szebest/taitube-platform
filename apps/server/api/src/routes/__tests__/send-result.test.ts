@@ -1,7 +1,14 @@
-import { err, ok } from '@kit/result';
+import { Container } from '@kit/composition';
+import { databaseUnavailable } from '@kit/errors';
+import { createIntl, createIntlCache } from '@kit/intl';
+import { err, ok, unwrapOr } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, problemFor } from '@vp/api-contracts';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
+import { en, ERROR_COPY, LOCALES, sharedI18n } from '@vp/shared-messages';
+import { pl } from '@vp/shared-messages/pl';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { registerFailureWords } from '../../composition/failure-words.module';
+import { Services } from '../../composition/service-tokens';
 import { sendResult } from '../send-result';
 
 interface Sent {
@@ -30,8 +37,26 @@ function fakeReply(): { reply: FastifyReply; sent: Sent } {
   return { reply, sent };
 }
 
-const request = { url: '/v1/videos/v1' } as FastifyRequest;
+const failureWords = registerFailureWords(new Container()).get(Services.FailureWords);
+
+function requestFor(query: { locale?: string }, acceptLanguage?: string): FastifyRequest {
+  return {
+    url: '/v1/videos/v1',
+    query,
+    headers: { 'accept-language': acceptLanguage },
+    server: { services: { failureWords } },
+  } as unknown as FastifyRequest;
+}
+
+function clientWords(locale: string, key: (typeof ERROR_COPY)[keyof typeof ERROR_COPY]): string {
+  const intl = createIntl({ locale, timeZone: 'UTC', cache: createIntlCache() });
+  const catalogues = { locale: LOCALES.source, source: en, translations: { pl } };
+  return unwrapOr(sharedI18n.createTranslator(intl, catalogues).t(key), '');
+}
+
+const request = requestFor({});
 const forbidden = { code: ErrorCodes.FORBIDDEN, message: 'Not allowed', videoId: 'v1' } as const;
+const notFound = { code: ErrorCodes.VIDEO_NOT_FOUND, message: 'Video v1 not found' } as const;
 
 describe('sendResult', () => {
   it('sends the value with status 200 by default', () => {
@@ -66,9 +91,51 @@ describe('sendResult', () => {
     sendResult(reply, request, err(forbidden));
 
     expect(sent.status).toBe(403);
-    expect(sent.body).toEqual(problemFor(forbidden, request.url));
+    expect(sent.body).toEqual(
+      problemFor(forbidden, request.url, { detail: clientWords('en', ERROR_COPY.FORBIDDEN) })
+    );
     expect(sent.headers['content-type']).toBe(PROBLEM_CONTENT_TYPE);
   });
+
+  it.each([
+    { scenario: 'en by default', failure: forbidden, query: {}, header: undefined, renders: 'en' },
+    {
+      scenario: 'pl by query',
+      failure: forbidden,
+      query: { locale: 'pl' },
+      header: undefined,
+      renders: 'pl',
+    },
+    {
+      scenario: 'pl by header',
+      failure: notFound,
+      query: {},
+      header: 'pl-PL,pl;q=0.9',
+      renders: 'pl',
+    },
+    {
+      scenario: 'en for an unknown locale',
+      failure: notFound,
+      query: { locale: 'de' },
+      header: 'fr',
+      renders: 'en',
+    },
+  ])(
+    'renders the detail in the words the client shows, $scenario',
+    ({ failure, query, header, renders }) => {
+      const { reply, sent } = fakeReply();
+
+      sendResult(reply, requestFor(query, header), err(failure));
+
+      const words = clientWords(renders, ERROR_COPY[failure.code]);
+      expect(words).not.toBe(failure.message);
+      expect(sent.body).toMatchObject({
+        code: failure.code,
+        title: failure.message,
+        detail: words,
+      });
+    }
+  );
 
   it('adds the headers the route derives from the failure', () => {
     const { reply, sent } = fakeReply();

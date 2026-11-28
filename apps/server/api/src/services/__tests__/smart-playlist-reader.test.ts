@@ -1,8 +1,8 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { SmartPlaylistRules } from '@vp/domain';
-import { databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { SmartPlaylistReader } from '../smart-playlist-reader';

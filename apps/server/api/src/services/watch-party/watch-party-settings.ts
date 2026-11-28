@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { PatchWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
@@ -5,7 +6,6 @@ import type { RoomWrite, SettingsPatch } from '@vp/core/repositories';
 import type { WatchPartyCloseReason, WatchPartyPermission, WatchPartyRoom } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import {
-  type DatabaseUnavailable,
   type VersionConflict,
   type WatchPartyClosed,
   type WatchPartyNotFound,

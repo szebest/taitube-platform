@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { ExperimentView } from '@vp/api-contracts';
 import type { VideoExperimentRepository, VideoRepository } from '@vp/core/repositories';
@@ -21,7 +22,7 @@ import {
   experimentNotFound,
   experimentNotRunning,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { CreatorStudioService } from './creator-studio-service';
 import { isoOf } from './cursor';

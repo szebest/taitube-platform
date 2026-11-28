@@ -1,9 +1,9 @@
+import { databaseUnavailable } from '@kit/errors';
 import { MS_PER_HOUR } from '@kit/primitives';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { ChannelRole } from '@vp/domain';
-import { databaseUnavailable } from '@vp/errors';
 import { SEEDED } from '@vp/testing-fixtures';
 import { announceStatsUpdated } from '../announce-stats-updated';
 

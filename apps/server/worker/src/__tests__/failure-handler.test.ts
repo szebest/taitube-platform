@@ -1,43 +1,23 @@
-import { PermanentError, TransientError } from '@kit/errors';
-import type { Logger } from '@kit/logger';
-import { type Result, err } from '@kit/result';
-import { expectOk } from '@kit/testing/result';
-import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
-import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
 import {
+  PermanentError,
+  TransientError,
   type DatabaseUnavailable,
-  ErrorCodes,
   type QueueUnavailable,
   databaseUnavailable,
   queueUnavailable,
-} from '@vp/errors';
+} from '@kit/errors';
+import type { QueueJob, QueueJobOptions } from '@kit/ports';
+import { type Result, err } from '@kit/result';
+import { expectOk } from '@kit/testing/result';
+import { InMemoryDlqRepository, InMemoryJobQueue } from '@vp/adapters/in-memory';
+import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { APPLY_EDITS, ids, stagePolicies } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { type FlowWorld, flowWorld, uploadedVideo } from './flow-harness';
+import { type LogLine, recordingLogger } from './recording-logger';
 import { STAGE_SETTINGS } from './stage-settings';
-
-interface LogLine {
-  readonly level: string;
-  readonly message: string;
-}
-
-function recordingLogger(lines: LogLine[]): Logger {
-  const at = (level: string) => (_fields: unknown, message?: string) => {
-    lines.push({ level, message: message ?? '' });
-  };
-  const logger = {
-    fatal: at('fatal'),
-    error: at('error'),
-    warn: at('warn'),
-    info: at('info'),
-    debug: at('debug'),
-    trace: at('trace'),
-    child: () => logger,
-  };
-  return logger as unknown as Logger;
-}
 
 class UnreachableDlqRepository extends InMemoryDlqRepository {
   override async create(
@@ -71,12 +51,13 @@ describe('apps/server/worker: DLQ failure handler', () => {
   let world: FlowWorld;
   let lines: LogLine[];
 
-  const handlerOver = (overrides: Partial<Repositories> = {}, stage = QUEUE_NAME) =>
+  const handlerOver = (repos: Partial<Repositories> = {}, stage = QUEUE_NAME) =>
     createFailureHandler({
+      errorCodes: errorCodeRegistry,
       workerId: STAGE_SETTINGS.workerId,
       stage,
       queueName: stage,
-      repositories: { ...world.repositories, ...overrides },
+      repositories: Object.assign({}, world.repositories, repos),
       getQueue: world.getQueue,
       logger: recordingLogger(lines),
       metrics: STAGE_SETTINGS.metrics,

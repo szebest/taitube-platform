@@ -1,7 +1,9 @@
 import type { AnyFailure } from '@kit/errors';
+import { isRecord } from '@kit/i18n';
 import type { Result } from '@kit/result';
 import { PROBLEM_CONTENT_TYPE, type Problem, problemFor } from '@vp/api-contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { localeChainOf } from '../services/locale-chain';
 
 /**
  * Typed from the service's own error union, so an override for a code the service cannot return is
@@ -20,6 +22,19 @@ export interface SendResultOptions<E extends AnyFailure> {
   readonly present?: (failure: E) => Problem;
   /** Headers a failure carries beside its Problem, such as `Retry-After`. */
   readonly headers?: (failure: E) => Readonly<Record<string, string>>;
+}
+
+/**
+ * The default `Problem` for a failure, its `detail` in the caller's locale: the explicit `locale`
+ * query parameter, then `Accept-Language`, then the source locale.
+ */
+export function problemOf(request: FastifyRequest, failure: AnyFailure): Problem {
+  const { query } = request;
+  const explicit = isRecord(query) && typeof query.locale === 'string' ? query.locale : undefined;
+  const chain = localeChainOf(explicit, request.headers['accept-language']);
+  return problemFor(failure, request.url, {
+    detail: request.server.services.failureWords.detail(failure, chain),
+  });
 }
 
 /**
@@ -45,12 +60,8 @@ export function sendResult<T, E extends AnyFailure>(
 
   const failure = result.error;
   const override = options.on?.[failure.code as E['code']] as ((failure: E) => Problem) | undefined;
-  const problem =
-    override?.(failure) ?? options.present?.(failure) ?? problemFor(failure, request.url);
+  const problem = override?.(failure) ?? options.present?.(failure) ?? problemOf(request, failure);
 
-  for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
-    reply.header(name, value);
-  }
   reply.header('content-type', PROBLEM_CONTENT_TYPE);
   for (const [name, value] of Object.entries(options.headers?.(failure) ?? {})) {
     reply.header(name, value);

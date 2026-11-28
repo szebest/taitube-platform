@@ -1,11 +1,12 @@
-import { type Failure } from '@kit/errors';
+import { type Failure, type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
+import type { CacheClient } from '@kit/ports';
 import { assertNever, err, ignore, isErr, map, ok, parseJson, type Result } from '@kit/result';
 import {
   type LiveChatBroadcast,
   LiveChatClientFrameSchema,
   type LiveChatServerFrame,
 } from '@vp/api-contracts';
-import type { CacheClient, LiveChatGatePort } from '@vp/core/ports';
+import type { LiveChatGatePort } from '@vp/core/ports';
 import type { LiveChatRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, liveChatOffsetMs } from '@vp/domain';
 import {
@@ -22,7 +23,7 @@ import {
   type LiveStreamNotFound,
 } from '@vp/domain-rules';
 import type { LiveChatTuning } from '@vp/env-schema';
-import { type CacheUnavailable, type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { canModerateLiveStream, type UserContext } from '@vp/permissions';
 import {
   type InvalidField,

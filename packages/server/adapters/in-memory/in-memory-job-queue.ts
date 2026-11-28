@@ -1,5 +1,4 @@
-import { attemptsFor } from '@kit/errors';
-import { type Result, err, ok } from '@kit/result';
+import { attemptsFor, type QueueUnavailable, queueUnavailable } from '@kit/errors';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -9,9 +8,10 @@ import {
   type QueueJobOptions,
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
-} from '@vp/core/ports';
+} from '@kit/ports';
+import { type Result, err, ok } from '@kit/result';
 import { JOB_PRIORITY } from '@vp/domain';
-import { type QueueUnavailable, errorCodeRegistry, queueUnavailable } from '@vp/errors';
+import { errorCodeRegistry } from '@vp/errors';
 
 export class InMemoryJobQueue extends JobQueue {
   private readonly name: string;

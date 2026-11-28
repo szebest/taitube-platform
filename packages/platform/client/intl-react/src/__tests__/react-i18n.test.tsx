@@ -1,4 +1,5 @@
-import { builtInKinds, defineEngine, definePresets, defineParams } from '@kit/i18n';
+import { builtInKinds, defineEngine, defineParams } from '@kit/i18n';
+import { definePresets } from '@kit/intl';
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { createReactI18n } from '../react-i18n';

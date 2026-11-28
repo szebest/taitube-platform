@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, andThenAsync, isErr, map, ok } from '@kit/result';
 import type { AuthoredCommentView } from '@vp/api-contracts';
 import type { CommentRepositoryPort, VideoReactionRepositoryPort } from '@vp/core/repositories';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import { type SpriteGeometry, type VideoSummaryView, toVideoSummaryView } from './video-views';

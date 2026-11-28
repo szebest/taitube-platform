@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ChannelPostCreated,
@@ -19,7 +20,6 @@ import type {
   NewUnpublishedPostInput,
   PostPinOutcome,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
 import { and, count, eq, gte, sql } from 'drizzle-orm';
 import { appendChannelAudit } from './channel-audit-writes';

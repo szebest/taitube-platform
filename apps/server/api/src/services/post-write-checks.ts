@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, andThen, isErr, ok } from '@kit/result';
 import type { PostPayload } from '@vp/domain';
 import { type PostImageNotReady, decidePollClose, decidePostImages } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidPostPayload } from '@vp/validation';
 import type { PostViewDeps } from './post-views';
 

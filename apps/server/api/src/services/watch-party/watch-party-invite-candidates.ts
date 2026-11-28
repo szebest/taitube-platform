@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { andThenAsync, isErr, map, ok, type Result } from '@kit/result';
 import type { listWatchPartyInviteCandidates } from '@vp/api-contracts';
 import { searchHandleOf, type WatchPartyInvite } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type InvalidSearchQuery, validateSearchQuery } from '@vp/validation';
 import type { z } from 'zod';
 import type { PartyCaller } from './party-caller';

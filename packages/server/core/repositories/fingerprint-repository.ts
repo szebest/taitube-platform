@@ -1,5 +1,5 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** A frame's position in the video's sample sequence and its 64-bit dHash. */
 export interface FrameFingerprint {

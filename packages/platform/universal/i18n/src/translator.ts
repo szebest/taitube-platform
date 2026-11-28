@@ -2,6 +2,7 @@ import {
   type FormatFailure,
   type IntlBinding,
   localeChain,
+  type PresetTable,
   type Unrenderable,
   unrenderable,
 } from '@kit/intl';
@@ -9,7 +10,6 @@ import { err, type Result, unwrapOr } from '@kit/result';
 import type { ArgsOf, LooseCatalogue, LooseCatalogueSet, MessageKey } from './catalogue';
 import { findMessage } from './catalogue';
 import type { Kind } from './kind';
-import type { PresetTable } from './presets';
 import { renderMessage } from './render';
 
 export type MissingMessage = Unrenderable & { readonly key: string };

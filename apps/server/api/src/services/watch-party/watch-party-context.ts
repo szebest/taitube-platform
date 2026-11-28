@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThen, andThenAsync, err, map, ok, type Result } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import {
@@ -12,7 +13,7 @@ import {
   type WatchPartyRoleRecord,
   type WatchPartyRoom,
 } from '@vp/domain';
-import { type DatabaseUnavailable, type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
+import { type WatchPartyNotFound, watchPartyNotFound } from '@vp/errors';
 import {
   getWatchPartyPermissions,
   toWatchPartyViewer,

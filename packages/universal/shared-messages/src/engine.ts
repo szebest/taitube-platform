@@ -1,4 +1,5 @@
-import { builtInKinds, defineEngine, definePresets, type Engine, type EngineOf } from '@kit/i18n';
+import { builtInKinds, defineEngine, type Engine, type EngineOf } from '@kit/i18n';
+import { definePresets } from '@kit/intl';
 import { PARAMS } from './params';
 
 const PRESETS = definePresets({});

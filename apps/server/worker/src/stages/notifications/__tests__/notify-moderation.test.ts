@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { NotifyModerationJob } from '@vp/job-contracts';
 import { createNotifyModerationProcessor } from '../notify-moderation';
 import {

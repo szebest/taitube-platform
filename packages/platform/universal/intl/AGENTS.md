@@ -12,8 +12,8 @@ Every number, date, count, duration and list an app shows a person is formatted 
 platform's own `Intl` constructors and nothing else. A formatter takes a tagged value and a
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
-A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
-again on hydration. It depends on `@kit/result` only, and owns its four failure codes:
+A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T3, because ticket 89's server render runs it in Node and the browser runs it
+again on hydration. It depends on `@kit/result` and `@kit/di` only, and owns its four failure codes:
 `FormatErrorCodes` is the one place they are written, and the app spreads it into its error code set. The words around a value (the
 `views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
 (a view count, a video duration) live in the app.
@@ -43,6 +43,10 @@ again on hydration. It depends on `@kit/result` only, and owns its four failure 
    tag down to its language only (`sv-FI`, `sv`); the caller appends its own source locale.
 8. **One file per formatter, a spec where it can break.** A new formatter goes in `src/formatters/`, gets a
    member in `TaggedValue`, a kind in `FORMAT_KINDS` and a case in `formatValue`.
+9. **Presets are data the app registers.** `definePresets` freezes a table of named option sets per kind and
+   `resolveEntry` resolves a name along the locale chain, then `default`, with `{ preset, ...overrides }` laid
+   over it. The message engine and a server render call the same function. `FormatPresets` is the token the
+   app provides the table under; it has no default.
 
 ---
 

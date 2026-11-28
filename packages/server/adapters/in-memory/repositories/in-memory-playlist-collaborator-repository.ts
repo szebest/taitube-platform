@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type {
   AcceptInvitePlan,
@@ -12,7 +13,6 @@ import {
   type PlaylistInvite,
   autoRemoveStopped,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { playlistInviteOutbox } from '@vp/job-contracts';
 import type { Clock } from './clock';
 import type { InMemoryPlaylistActivityRepository } from './in-memory-playlist-activity-repository';

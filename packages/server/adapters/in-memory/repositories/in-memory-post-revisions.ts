@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, type Result } from '@kit/result';
 import type {
   ChannelPostCreated,
@@ -6,7 +7,6 @@ import type {
   PostWriteLimits,
 } from '@vp/core/repositories';
 import { isPostPublished, type ChannelPost, type NewPostInput } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** The state before the first edit is recorded too, so the first edit can be undone. */
 export async function recordPostRevisions(

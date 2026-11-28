@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, type Result } from '@kit/result';
 import type {
   AcceptInviteOutcome,
@@ -13,7 +14,6 @@ import {
   type NewChannelAuditEntry,
   roleHas,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { teamInviteOutbox } from '@vp/job-contracts';
 import { and, asc, desc, eq, gt, inArray, lte, sql } from 'drizzle-orm';
 import { keysetBefore, msTimestamp } from '../scopes/index';

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { ThreadBody, ThreadView } from '@vp/api-contracts';
 import type { CommentSlowModePort } from '@vp/core/ports';
@@ -20,7 +21,6 @@ import {
   threadLimit,
   threadNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { claimSlowMode, moderationOf, moderatorsOf } from './comment-create';

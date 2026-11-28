@@ -55,3 +55,6 @@ export const closeOnDispose: Lifecycle<Closable>
 export function exitOnSignals(host: ProcessHost, shutdown: () => Promise<ShutdownOutcome>): void
 export function shutdownOnce(plan: ShutdownPlan): () => Promise<ShutdownOutcome>
 export const token: <T>(name: string) => Token<T>
+
+## @kit/composition/contract
+export function containerProviderSubject(container: Container): ProviderSubject

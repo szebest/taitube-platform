@@ -4,9 +4,10 @@ Formatting on the platform's own `Intl`: a formatter takes a tagged value and a 
 `Result<string, FormatFailure>`. Numbers, dates, times, ranges, relative time, durations, lists, money, bytes,
 bitrates, plurals, collation and display names; `Intl` objects come from an `IntlCache` the owner creates.
 
-Install: `pnpm add @kit/intl`. It depends on `@kit/result`.
+Install: `pnpm add @kit/intl`. It depends on `@kit/result` and `@kit/di`.
 
-Tokens: none. The locale, time zone, reference instant and cache arrive in the `FormatContext`; `localeChain`
+Tokens: `FormatPresets`, the app's `definePresets` table, required and with no default; the message engine and a
+server render read it. The locale, time zone, reference instant and cache arrive in the `FormatContext`; `localeChain`
 walks a tag down to its language, and the caller appends its own source locale. The package holds no locale list:
 the app registers its own.
 

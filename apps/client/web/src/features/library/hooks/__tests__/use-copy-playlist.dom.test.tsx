@@ -22,7 +22,7 @@ async function renderCopy(copy: 'fork' | 'freeze', refused = false) {
   const reply =
     (kind: string) =>
     ({ params }: { params: Record<string, unknown> }): Response => {
-      asked.push(`${kind} ${params.id}`);
+      asked.push(`${kind} ${String(params.id)}`);
       return refused
         ? problemReply(ErrorCodes.INTERNAL)
         : HttpResponse.json(playlistDetail(COPY, [], { title: 'Road trips (copy)' }), {

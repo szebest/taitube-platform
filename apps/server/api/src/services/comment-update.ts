@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type {
   CommentModerationRepositoryPort,
@@ -10,7 +11,6 @@ import {
   commentNotFound,
   decideCommentUpdate,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { CommentCreateDeps } from './comment-create';
 import { decideCommentEdit } from './comment-edit';

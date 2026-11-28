@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { AnnounceLiveJob } from '@vp/job-contracts';
 import { createAnnounceLiveProcessor } from '../announce-live';
 import {

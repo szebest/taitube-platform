@@ -1,9 +1,7 @@
 import { useRef } from 'react';
 import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
 import type { PlaybackEnd, TaitubePlayerProps } from '#app/lib/player/taitube-player-props';
-
-const MS_PER_SECOND = 1000;
-const SEEK_TOLERANCE_SECONDS = 0.5;
+import { isBeforeRange, isPastRange, rangeStartSeconds } from '../playback-range';
 
 type RangePlaybackProps = Pick<TaitubePlayerProps, 'range' | 'loop' | 'startTime'> & {
   onEnded?: (end: PlaybackEnd) => void;
@@ -20,7 +18,7 @@ export function useRangePlayback({ range, loop, startTime, onEnded }: RangePlayb
     }
 
     stopped.current = false;
-    video.currentTime = range.startMs / MS_PER_SECOND;
+    video.currentTime = rangeStartSeconds(range);
   };
 
   const stop = (video: HTMLVideoElement) => {
@@ -37,7 +35,7 @@ export function useRangePlayback({ range, loop, startTime, onEnded }: RangePlayb
   return {
     onLoadedMetadata: (video: HTMLVideoElement) => {
       stopped.current = false;
-      const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
+      const startAt = range ? rangeStartSeconds(range) : startTime;
       if (startAt) {
         video.currentTime = startAt;
       }
@@ -47,12 +45,12 @@ export function useRangePlayback({ range, loop, startTime, onEnded }: RangePlayb
         return;
       }
 
-      if (video.currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS) {
+      if (isBeforeRange(range, video.currentTime)) {
         restart(video);
         return;
       }
 
-      if (video.currentTime >= range.endMs / MS_PER_SECOND) {
+      if (isPastRange(range, video.currentTime)) {
         if (loop) {
           restart(video);
         } else {

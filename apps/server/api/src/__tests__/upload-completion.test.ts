@@ -1,7 +1,8 @@
+import { queueUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, queueUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
 import { MockProbeJobQueue } from './mock-probe-queue';

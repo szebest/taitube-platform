@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   EvaluateRulesOptions,
@@ -6,7 +7,6 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { SmartPlaylistRules } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { asc, desc, eq, getTableColumns, lte, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';

@@ -14,7 +14,9 @@ describe('apps/client/web: usePartyClock', () => {
     const { result } = renderHook(() => usePartyClock());
     expect(result.current.toISOString()).toBe('2026-11-05T20:00:00.000Z');
 
-    act(() => vi.advanceTimersByTime(10_000));
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
 
     expect(result.current.toISOString()).toBe('2026-11-05T20:00:10.000Z');
   });

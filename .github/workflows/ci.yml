@@ -494,6 +494,9 @@ jobs:
       - name: Prove the captions worker transcribes offline with the models baked into the image
         run: bash scripts/captions-smoke.sh infra/compose/docker-compose.yml infra/compose/docker-compose.offline.yml
 
+      - name: Prove the screening worker runs fpcalc and the pinned classifier offline
+        run: bash scripts/screening-smoke.sh infra/compose/docker-compose.yml infra/compose/docker-compose.offline.yml
+
       - name: Run the E2E smoke and the live smoke and, beside them, upload through the studio and play back on web in Chrome
         run: |
           set -o pipefail

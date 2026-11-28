@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelPostCreated,
@@ -23,7 +24,6 @@ import {
   type PostPinOutcome,
 } from '@vp/domain';
 import { decidePollUnlocked } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { postSubscribersOutbox } from '@vp/job-contracts';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import {

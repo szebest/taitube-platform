@@ -1,5 +1,10 @@
 import * as crypto from 'node:crypto';
-import { type AnyFailure, PermanentError } from '@kit/errors';
+import {
+  type AnyFailure,
+  PermanentError,
+  type CacheUnavailable,
+  type DatabaseUnavailable,
+} from '@kit/errors';
 import { type Result, andThen, assertNever, err, ignore, isErr, ok } from '@kit/result';
 import {
   CHANNEL_HEADER,
@@ -27,8 +32,6 @@ import {
 } from '@vp/domain-rules';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   ErrorCodes,
   type WatchPartyCredentialInvalid,
   watchPartyCredentialInvalid,

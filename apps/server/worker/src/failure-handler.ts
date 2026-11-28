@@ -1,9 +1,9 @@
-import { attemptsFor, classifyError, errorCodeOf } from '@kit/errors';
+import { type ErrorCodeSet, attemptsFor, classifyError, errorCodeOf } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { isErr, unwrapOr } from '@kit/result';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { errorCodeRegistry, isErrorCode } from '@vp/errors';
+import { type ErrorCode, isErrorCode } from '@vp/errors';
 import {
   APPLY_EDITS,
   ApplyEditsJob,
@@ -27,20 +27,21 @@ export interface FailureHandlerDeps {
   getQueue?: (name: string) => JobQueue;
   logger: Logger;
   metrics: PipelineMetrics;
+  errorCodes: ErrorCodeSet<ErrorCode>;
   workerId: string;
 }
 
 export function createFailureHandler(deps: FailureHandlerDeps) {
-  const { stage, queueName, repositories, getQueue, logger, metrics, workerId } = deps;
+  const { stage, queueName, repositories, getQueue, logger, metrics, errorCodes, workerId } = deps;
 
   return async function onFailed(job: QueueJob<unknown>, err: Error): Promise<void> {
     const jobId = job.id || '';
     const payload = (job.data || {}) as Record<string, unknown>;
     const videoId = (payload.videoId as string) || null;
     const attemptsMade = job.attemptsMade ?? 1;
-    if (attemptsMade < attemptsFor(errorCodeRegistry, err, job.opts?.attempts ?? 1)) return;
+    if (attemptsMade < attemptsFor(errorCodes, err, job.opts?.attempts ?? 1)) return;
 
-    const errorCode = errorCodeOf(errorCodeRegistry, err);
+    const errorCode = errorCodeOf(errorCodes, err);
     const errorMessage = err.message || 'Job failed';
     const stack = err.stack ?? null;
 
@@ -79,7 +80,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           code: errorCode,
           message: errorMessage,
           stack: stack ?? undefined,
-          unrecoverable: classifyError(errorCodeRegistry, err) === 'permanent',
+          unrecoverable: classifyError(errorCodes, err) === 'permanent',
         },
         attemptsMade,
         workerId,
@@ -106,7 +107,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     }
 
     if (stage === 'captions') {
-      const failed = await failCaptionsRun(repositories, metrics, job, err);
+      const failed = await failCaptionsRun(repositories, metrics, errorCodes, job, err);
       if (isErr(failed)) {
         logger.error({ err: failed.error, jobId }, 'failed to mark the captions track failed');
       }

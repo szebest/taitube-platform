@@ -43,7 +43,7 @@ describe('first week queries', () => {
 
     const rows = await firstWeekRows(db, [VIDEO_IDS.a]);
 
-    expect(rows.map(({ dayOffset }) => Number(dayOffset)).sort()).toEqual([0, 1, 6]);
+    expect(rows.map(({ dayOffset }) => Number(dayOffset)).sort((a, b) => a - b)).toEqual([0, 1, 6]);
     await engine.close();
   });
 

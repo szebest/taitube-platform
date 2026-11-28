@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { map, ok, type Result } from '@kit/result';
 import type {
   InviteWrite,
@@ -6,7 +7,6 @@ import type {
   WatchPartyInviteRepositoryPort,
 } from '@vp/core/repositories';
 import type { WatchPartyInvite } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 const LISTED: readonly WatchPartyInvite['status'][] = ['pending', 'declined', 'joined'];

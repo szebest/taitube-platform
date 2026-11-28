@@ -1,8 +1,9 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { EXPERIMENT_MIN_IMPRESSIONS, MAX_RUNNING_EXPERIMENTS_PER_CHANNEL } from '@vp/domain';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedPrimaryChannel } from '../../__tests__/test-app';
 import { VideoExperimentService } from '../video-experiment-service';

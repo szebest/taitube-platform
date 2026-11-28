@@ -105,7 +105,9 @@ function appOnly(
     const missing = [...importsByApp]
       .filter(([, imported]) => !names.some((name) => imported.has(name)))
       .map(([app]) => app);
-    return missing.length === 0 ? [] : [`${component} (${names.join(', ')}): not in ${missing}`];
+    return missing.length === 0
+      ? []
+      : [`${component} (${names.join(', ')}): not in ${missing.join(',')}`];
   });
 }
 

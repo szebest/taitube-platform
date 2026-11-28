@@ -1,9 +1,9 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { isErr, ok, type Result } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { mayHearAbout, NOTIFICATION_EXCERPT_LENGTH, type NotificationActor } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyHeartJob } from '@vp/job-contracts';
 import { usersSwitchedOn } from './notification-switches';
 

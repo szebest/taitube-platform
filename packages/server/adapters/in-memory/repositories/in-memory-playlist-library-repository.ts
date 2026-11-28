@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   FollowOutcome,
@@ -8,7 +9,6 @@ import type {
   PlaylistLibraryRepositoryPort,
 } from '@vp/core/repositories';
 import type { Playlist } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { copyOf } from './in-memory-playlist-items';

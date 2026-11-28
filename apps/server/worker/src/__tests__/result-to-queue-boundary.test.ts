@@ -1,9 +1,9 @@
-import { type AnyFailure, toPipelineError } from '@kit/errors';
+import { type AnyFailure, toPipelineError, storageUnavailable } from '@kit/errors';
 import { createLogger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, errorCodeRegistry, storageUnavailable } from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
@@ -67,6 +67,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
       const videoId = uuidv7();
       const jobId = `${videoId}--probe--g1`;
       const onFailed = createFailureHandler({
+        errorCodes: errorCodeRegistry,
         workerId: STAGE_SETTINGS.workerId,
         stage: 'probe',
         queueName: 'probe',

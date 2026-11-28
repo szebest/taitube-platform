@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, map, ok } from '@kit/result';
 import type { ReasonedVideo } from '@vp/api-contracts';
 import type {
@@ -8,7 +9,6 @@ import type {
 } from '@vp/core/repositories';
 import { RELATED_LIMIT, relatedReasonOf, withoutHidden } from '@vp/domain';
 import { decideVideoRead } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { ExperimentOverlay } from './experiment-overlay';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';

@@ -25,3 +25,11 @@ export interface Token<T> {
 export const createRegistry: () => Registry
 export const provide: <T>(token: Token<T>, value: T) => Provider<T>
 export const token: <T>(name: string) => Token<T>
+
+## @kit/di/contract
+export type MakeProviderSubject = () => Promise<ProviderSubject> | ProviderSubject;
+export interface ProviderSubject {
+    provide<T>(wanted: Token<T>, value: T): ProviderSubject;
+    resolve<T>(wanted: Token<T>): Result<T, MissingProvider>;
+}
+export function describeProviderContract(makeSubject: MakeProviderSubject): void

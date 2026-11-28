@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, map, ok, type Result } from '@kit/result';
 import {
   memberKeyOf,
@@ -10,7 +11,6 @@ import {
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { UserPreferences } from '@vp/domain/settings';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { partyInviteOutbox } from '@vp/job-contracts';
 import { followsChannel } from '../account-subscription';
 import type { WatchPartyDeps } from './watch-party-deps';

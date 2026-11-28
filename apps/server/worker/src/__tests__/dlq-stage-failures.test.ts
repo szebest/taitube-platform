@@ -1,6 +1,6 @@
 import { PermanentError } from '@kit/errors';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { NotifyJob, stagePolicies } from '@vp/job-contracts';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
@@ -16,6 +16,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
   const parkFailuresOf = (queueName: string) => {
     const parked = Promise.withResolvers<void>();
     const handleFailure = createFailureHandler({
+      errorCodes: errorCodeRegistry,
       ...STAGE_SETTINGS,
       ...world,
       stage: queueName,
@@ -39,7 +40,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
       expectOk(await world.repositories.videos.transition({ videoId, edge }));
     }
     const packageParked = parkFailuresOf('package');
-    parkFailuresOf('transcode-720p');
+    const transcodeParked = parkFailuresOf('transcode-720p');
 
     const transcode720 = createTranscodeProcessor(
       transcodeDeps({ ...world, media: failingTranscodeOf('720p') })
@@ -73,7 +74,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
         },
       })),
     });
-    await packageParked;
+    await Promise.all([packageParked, transcodeParked]);
 
     const video = expectOk(await world.repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
@@ -109,7 +110,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
       message: 'Video duration exceeds maximum allowed',
     },
   ])('parks hostile source $key on its first attempt as $code', async ({ key, code, message }) => {
-    parkFailuresOf('probe');
+    const probeParked = parkFailuresOf('probe');
     const videoId = await uploadedVideo(world, key);
     const media = {
       ...STAGE_SETTINGS.media,
@@ -121,6 +122,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
     await world.getQueue('probe').add('probe', data, { jobId, ...stagePolicies.probe });
 
     await expect(world.getQueue('probe').process(throughRunner(probe))).rejects.toThrow(message);
+    await probeParked;
 
     const entries = expectOk(await world.repositories.dlq.list({ limit: 100 }));
     expect(entries.find((entry) => entry.jobId === jobId)).toMatchObject({

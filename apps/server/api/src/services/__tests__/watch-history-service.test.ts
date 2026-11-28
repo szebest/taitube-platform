@@ -1,3 +1,4 @@
+import { cacheUnavailable } from '@kit/errors';
 import { Paginator } from '@kit/pagination';
 import { MS_PER_HOUR, MS_PER_MINUTE, SECONDS_PER_DAY } from '@kit/primitives';
 import { err } from '@kit/result';
@@ -6,7 +7,7 @@ import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memor
 import { RedisPlayheadCacheAdapter } from '@vp/adapters/redis';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { asCdnBase } from '@vp/env-schema';
-import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { seedVideo } from '../../__tests__/test-app';
 import { HistoryPause } from '../history-pause';

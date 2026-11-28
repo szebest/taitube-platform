@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { assertNever, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelAuditRepositoryPort,
@@ -17,7 +18,6 @@ import {
   type PostImageUrls,
   type PostImageVariants,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 
 export interface InMemoryChannelImageDeps {

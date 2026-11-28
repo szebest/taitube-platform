@@ -1,5 +1,5 @@
+import { storageUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
-import { storageUnavailable } from '@vp/errors';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { meterStorageOp } from '../storage-op-meter';
 

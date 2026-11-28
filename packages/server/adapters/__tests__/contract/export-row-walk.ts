@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import type { ExportScope } from '@vp/core/repositories';
 import type { ExportRowPage } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type Pager<Row> = (
   scope: ExportScope,

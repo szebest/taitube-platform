@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import {
   type CaptionCommit,
@@ -22,7 +23,6 @@ import {
   type TranscriptCue,
   type UserEvent,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type Clock, realClock } from './clock';
 import { searchTokens } from './search-text';
 

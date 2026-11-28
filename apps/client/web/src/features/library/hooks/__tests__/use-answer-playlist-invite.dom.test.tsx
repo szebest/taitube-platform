@@ -34,11 +34,11 @@ async function renderAnswer(
     client,
     handlers: [
       mockEndpoint(acceptPlaylistInvite, ({ params }) => {
-        answered.push(`accept ${params.token}`);
+        answered.push(`accept ${String(params.token)}`);
         return accept();
       }),
       mockEndpoint(declinePlaylistInvite, ({ params }) => {
-        answered.push(`decline ${params.token}`);
+        answered.push(`decline ${String(params.token)}`);
         return new HttpResponse<null>(null, { status: 204 });
       }),
     ],

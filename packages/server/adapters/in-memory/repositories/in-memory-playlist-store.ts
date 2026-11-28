@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok, unwrapOr } from '@kit/result';
 import type {
   AppendItemOutcome,
@@ -17,7 +18,6 @@ import {
   appendPositions,
   isWatchCompleted,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { InMemoryPlaylistCollaboratorRepository } from './in-memory-playlist-collaborator-repository';
 import {

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import {
   type CaptionCommit,
@@ -14,7 +15,6 @@ import {
 import * as schema from '@vp/db';
 import { SEARCH_TEXT_CONFIG, transcriptVector } from '@vp/db';
 import { captionsFailed, captionsReady, type TranscriptCue } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, asc, eq, lt, ne, sql } from 'drizzle-orm';
 import {
   bumped,

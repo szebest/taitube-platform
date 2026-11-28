@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result, unwrapOr } from '@kit/result';
 import type {
   CommentLocator,
@@ -24,7 +25,6 @@ import {
   type NewCommentInput,
   type NewCommentRemoval,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { announceCreated } from './comment-announce';
 import { listAuthored } from './comment-authored';
@@ -81,7 +81,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     viewer: CommentViewer,
     id: string
   ): Promise<Result<Comment | null, DatabaseUnavailable>> {
-    const scope = await this.scope([]);
+    const scope = this.scope();
     const found = this.liveById(id);
     return ok(found && isVisibleTo(viewer, found, scope) ? found : null);
   }

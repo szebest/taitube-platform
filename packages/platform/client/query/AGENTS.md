@@ -5,6 +5,9 @@
 `client` tier. It sits on `@kit/errors` (for the `RetryClass` vocabulary) and `@kit/result`; React, TanStack Query,
 TanStack Router and zod are peer dependencies.
 
+Install: `pnpm add @kit/query`. Tokens: none. Registries: none; the app passes the classifier, the predicate and the
+refresh as arguments. Usage: see [README.md](README.md).
+
 ## What it holds
 
 - `createQueryClient(policy)`: one per request on the server and one per tab, a `staleTime` above zero so hydration

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ChannelPost,
@@ -12,7 +13,6 @@ import type {
   PostPinOutcome,
   PostStatus,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface ListChannelPostsOptions {
   /** Whose like each entry reports; anonymous is `null`. */

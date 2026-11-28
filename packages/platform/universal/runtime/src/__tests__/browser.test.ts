@@ -8,8 +8,9 @@ const registryWith = (cookies: Record<string, string>) =>
       env: { MODE: 'production' },
       cookies: {
         get: async (name) => {
-          const value = typeof name === 'string' ? cookies[name] : undefined;
-          return value === undefined ? null : { name: String(name), value };
+          if (typeof name !== 'string') return null;
+          const value = cookies[name];
+          return value === undefined ? null : { name, value };
         },
       },
     })

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import type { PlaylistStatsRead, PlaylistStatsRepositoryPort } from '@vp/core/repositories';
 import {
@@ -6,7 +7,6 @@ import {
   type ViewDateRange,
   mergePlaylistCounts,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 interface StatsDeps {
   /** Whether the playlist still exists, as a flush leaves out one deleted since the beacon. */

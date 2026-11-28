@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { PostStats } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type PostVoteWritten = 'voted' | 'already_voted' | 'missing';
 

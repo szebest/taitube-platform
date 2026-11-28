@@ -1,7 +1,8 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { CurrentPickSchema } from '@vp/api-contracts';
-import { databaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { CurrentPickService } from '../current-pick-service';
 import { generateEtag } from '../http-cache';
 import type { PickService } from '../pick-service';
@@ -88,7 +89,7 @@ describe('apps/server/api/services: CurrentPickService', () => {
     { name: 'at its end', at: NOW + 14 * HOUR, source: 'fallback' },
   ])('reads $name as $source', async ({ at, source }) => {
     await schedule();
-    await world.store.clear();
+    world.store.clear();
     world.clock.now = at;
 
     expect(expectOk(await service.current()).data.source).toBe(source);

@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type { ChannelPageRepositoryPort } from '@vp/core/repositories';
 import { channelLocalizations as loc, channelPageSettings as page } from '@vp/db';
 import type { ChannelLocalization, ChannelPageSettings } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { asc, eq } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

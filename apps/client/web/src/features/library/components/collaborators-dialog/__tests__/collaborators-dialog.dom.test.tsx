@@ -41,7 +41,7 @@ async function openCollaborators({
     seated([ANA]),
     mockEndpoint(listPlaylistInvites, () => HttpResponse.json({ items: [invite(1)] })),
     mockEndpoint(changePlaylistCollaboratorRole, async ({ params, request }) => {
-      sent.push(`role ${params.userId} ${JSON.stringify(await request.json())}`);
+      sent.push(`role ${String(params.userId)} ${JSON.stringify(await request.json())}`);
       return new HttpResponse(null, { status: 204 });
     }),
     mockEndpoint(createPlaylistInviteLink, async ({ request }) => {

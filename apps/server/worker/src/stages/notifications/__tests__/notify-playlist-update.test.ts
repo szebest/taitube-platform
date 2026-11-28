@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { NotifyPlaylistUpdateJob } from '@vp/job-contracts';
 import { createNotifyPlaylistUpdateProcessor } from '../notify-playlist-update';
 import { CREATOR_ID, logger, notificationsOf, seedCreator, userId } from './notification-harness';

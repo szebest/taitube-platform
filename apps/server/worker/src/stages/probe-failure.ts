@@ -1,7 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
+import type { JobQueue, QueueJob } from '@kit/ports';
 import { type Result, ignore, isErr, ok, unwrapOr } from '@kit/result';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
+import type { ErrorCode } from '@vp/errors';
 import {
   type NotifyJob,
   type ProbeJob,

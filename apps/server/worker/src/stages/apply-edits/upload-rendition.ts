@@ -1,9 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { type StorageUnavailable } from '@kit/errors';
 import { getHeaderMapping } from '@kit/object-storage';
 import { type Result, fromPromise, isErr, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
-import { ErrorCodes, type MediaFailure, type StorageUnavailable, mediaFailure } from '@vp/errors';
+import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 
 const PLAYLIST = 'index.m3u8';
 

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CreateChannelBody, IdentitiesView, OwnedChannelView } from '@vp/api-contracts';
 import type {
@@ -20,7 +21,7 @@ import {
   decideCreateChannel,
   decidePromote,
 } from '@vp/domain-rules';
-import { type ChannelLimitReached, type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { type ChannelLimitReached, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 

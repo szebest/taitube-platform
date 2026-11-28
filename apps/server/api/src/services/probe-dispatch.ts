@@ -1,5 +1,5 @@
+import type { JobQueue, QueueJobOptions } from '@kit/ports';
 import { ignore } from '@kit/result';
-import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
 import type { NewOutboxInput } from '@vp/core/repositories';
 import { type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 

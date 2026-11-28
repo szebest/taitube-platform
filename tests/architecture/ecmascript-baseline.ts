@@ -133,7 +133,8 @@ export function levelDifferences(
     expected === UNSET
       ? { target: undefined, lib: undefined }
       : { target: expected.target, lib: expected.lib.toSorted() };
-  const libNames = (names: readonly string[] | undefined) => (names ? `[${names}]` : 'unset');
+  const libNames = (names: readonly string[] | undefined) =>
+    names ? `[${names.join(',')}]` : 'unset';
   return [
     ...problems.map((problem) => `${file}: ${problem}`),
     ...(target === wanted.target

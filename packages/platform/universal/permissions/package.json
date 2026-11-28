@@ -1,6 +1,6 @@
 {
   "name": "@kit/permissions",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -12,6 +12,12 @@
       "source": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "source": "./src/contract/index.ts",
+      "import": "./dist/contract/index.js",
+      "default": "./dist/contract/index.js"
     }
   },
   "scripts": {
@@ -23,6 +29,10 @@
   "dependencies": {
     "@kit/errors": "workspace:*"
   },
+  "peerDependencies": {
+    "@casl/ability": "^7.0.1",
+    "vitest": "catalog:"
+  },
   "devDependencies": {
     "@casl/ability": "^7.0.1",
     "@kit/testing": "workspace:*",
@@ -32,9 +42,6 @@
     "typescript": "^6.0.3",
     "vite-plus": "catalog:",
     "vitest": "catalog:"
-  },
-  "peerDependencies": {
-    "@casl/ability": "^7.0.1"
   },
   "vp": {
     "layer": 4

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { type Result, andThen, err, isErr, map, ok } from '@kit/result';
 import type { PlaylistItemResultView } from '@vp/api-contracts';
 import type {
@@ -22,7 +23,7 @@ import {
   playlistIsSmart,
   playlistNotFound,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type InvalidField, invalidField } from '@vp/validation';
 

@@ -1,8 +1,8 @@
 import { createLogger } from '@kit/logger';
+import { JobQueue } from '@kit/ports';
 import { ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { JobQueue } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { SEEDED, createMockJob } from '@vp/testing-fixtures';
 import { uuidv7 } from 'uuidv7';

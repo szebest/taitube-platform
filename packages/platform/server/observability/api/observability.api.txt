@@ -34,5 +34,13 @@ export function getTracer(name: string, version?: string): Tracer
 export const registeredTracing: Tracing
 export function rootTraceparent(tracer: Tracer, name: string): string
 
+## @kit/observability/contract
+export type MakeMetricsRegistry = () => MetricsRegistrySubject;
+export interface MetricsRegistrySubject {
+    readonly registry: Registry;
+    readonly prefix: string;
+}
+export function describeMetricsRegistryContract(makeSubject: MakeMetricsRegistry): void
+
 ## @kit/observability/tracing-sdk
 export function initTracing(config: TracingConfig): Result<void, Error>

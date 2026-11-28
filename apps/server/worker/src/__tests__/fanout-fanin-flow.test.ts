@@ -1,6 +1,6 @@
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
-import type { QueueJob } from '@vp/core/ports';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { LadderEntry, type ProbeJob } from '@vp/job-contracts';
 import { createMockJob } from '@vp/testing-fixtures';
 import { createFailureHandler } from '../failure-handler';
@@ -146,6 +146,7 @@ describe('apps/server/worker: fan-out to renditions and fan-in to the package', 
 
     world.getQueue('package').onFailed(
       createFailureHandler({
+        errorCodes: errorCodeRegistry,
         ...STAGE_SETTINGS,
         ...world,
         stage: 'package',

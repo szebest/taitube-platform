@@ -1,5 +1,6 @@
+import { cacheUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
-import { cacheUnavailable, ErrorCodes, watchPartyNotFound } from '@vp/errors';
+import { ErrorCodes, watchPartyNotFound } from '@vp/errors';
 import { WatchPartyBroadcaster } from '../watch-party-broadcaster';
 import {
   afterCommit,

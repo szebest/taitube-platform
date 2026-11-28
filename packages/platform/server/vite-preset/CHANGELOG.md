@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- `clientAppConfig` takes a required `packagesDir` and `workspaceSourceAliases(packagesDir)` takes it as an argument; nothing reads the repository layout at import time.
+- `@rolldown/plugin-babel`, `@babel/core` and `babel-plugin-react-compiler` are optional peers, so `./react-plugins` works for a consumer that installs them.
+
 ## 0.3.0
 
 - The client build compiles to the `browserslist` of the root above the app, through `browserslist-to-esbuild`, in place of Vite's default `baseline-widely-available`; both are peer dependencies now.

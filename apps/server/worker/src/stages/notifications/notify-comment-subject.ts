@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { assertNever, isErr, ok, type Result } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
 import { type CommentTarget, mayHearAbout, type Video } from '@vp/domain';
 import { decidePostRead } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** What a comment sits under, as telling people about it needs it. */
 export interface CommentSubject {

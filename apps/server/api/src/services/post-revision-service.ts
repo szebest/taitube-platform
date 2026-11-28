@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, andThen, err, isErr, ok } from '@kit/result';
 import type { ManagedPostView, PostRevisionPageView, PostRevisionView } from '@vp/api-contracts';
@@ -11,7 +12,6 @@ import {
   decidePostWrite,
   postRevisionNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { isoOf } from './cursor';
 import type { EditPostServiceFailure } from './post-edit';

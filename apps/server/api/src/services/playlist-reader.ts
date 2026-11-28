@@ -1,10 +1,10 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { PlaylistView } from '@vp/api-contracts';
 import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import { nextEpisode, percentWatched } from '@vp/domain';
 import { type PlaylistNotFound, type ShareLinkExpired, playlistNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { ShareGrant, UserContext } from '@vp/permissions';
 import { toPlaylistView } from './library-views';
 import type { PlaylistSharingService } from './playlist-sharing-service';

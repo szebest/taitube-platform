@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import { VideoPasswordRepository } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** The video records whose `passwordProtected` follows the hash held here. */
 export interface PasswordGuardedVideos {

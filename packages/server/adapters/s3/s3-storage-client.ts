@@ -11,6 +11,7 @@ import {
   type S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { type StorageUnavailable, storageUnavailable } from '@kit/errors';
 import { S3_MAX_KEYS_PER_REQUEST } from '@kit/object-storage';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, assertNever, err, fromPromise, map, ok } from '@kit/result';
@@ -26,7 +27,6 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
-import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
 /** `healthBucket` is what readiness asks for: a `HeadBucket` proves both reachability and access. */

@@ -1,6 +1,6 @@
+import type { PresetTable } from '@kit/intl';
 import type { ConfigKey, EntryOf, Kind } from './kind';
 import type { InvalidParamName, IsCamelCase } from './params';
-import type { PresetTable } from './presets';
 import type { Placeholder } from './template';
 
 /** What an engine was defined with, as types: its kinds by name, its presets, its param names. */

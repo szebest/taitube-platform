@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { CursorPayload, InvalidCursor, Page, Paginator } from '@kit/pagination';
 import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { ManagedPostView, PostLikeView, PostPageView, PostView } from '@vp/api-contracts';
@@ -15,7 +16,6 @@ import {
   decidePostWrite,
   postNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { findChannelByIdOrHandle } from './channel-lookup';
 import { postAuditOf } from './post-audit';

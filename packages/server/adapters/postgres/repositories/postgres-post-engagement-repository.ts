@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise } from '@kit/result';
 import type { PostEngagementRepositoryPort, PostVoteWritten } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { PostStats } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { eq, sql } from 'drizzle-orm';
 import { statsOf, talliesOf, votedIndexesOf } from './post-engagement-queries';
 import type { PostgresDatabase } from './types';

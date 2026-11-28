@@ -1,11 +1,10 @@
+import { type CacheUnavailable, type DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_SECOND } from '@kit/primitives';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type { PartyGuestSession } from '@vp/core/ports';
 import { guestName, type MemberKey, pickGuestDigits, type WatchPartyMember } from '@vp/domain';
 import { decideWatchPartyJoin, type WatchPartyJoinFailure } from '@vp/domain-rules';
 import {
-  type CacheUnavailable,
-  type DatabaseUnavailable,
   type WatchPartyInviteInvalid,
   type WatchPartyNotFound,
   watchPartyFull,

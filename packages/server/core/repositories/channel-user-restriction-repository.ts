@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ChannelUserRestriction,
@@ -6,7 +7,6 @@ import type {
   NewChannelAuditEntry,
   NewChannelUserRestriction,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface ChannelUserRestrictionQuery {
   cursor: { createdAt: Date; userId: string } | null;

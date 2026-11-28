@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { ShareLink, ShareLinkTargetType, ShareLinkTotals } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export abstract class ShareLinkRepository {
   /** Newest first, expired and revoked links included. */

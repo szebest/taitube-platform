@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { CommentEditWrite, CommentThread } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type AnnounceDeps, announceHeld } from './comment-announce';
 import { isVisibleTo, type PublicScopeContext } from './comment-public-scope';
 import { type CommentTargetStores, moveCommentsCount } from './comment-targets';

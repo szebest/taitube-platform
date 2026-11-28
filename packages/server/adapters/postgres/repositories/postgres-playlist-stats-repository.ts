@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise } from '@kit/result';
 import type { PlaylistStatsRead, PlaylistStatsRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { PLAYLIST_TOP_ITEMS, type ViewDateRange } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQLWrapper, and, asc, between, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

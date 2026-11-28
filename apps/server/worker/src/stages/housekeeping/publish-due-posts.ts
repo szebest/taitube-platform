@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, isErr, ok } from '@kit/result';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface PublishDuePostsOptions {
   repositories: Repositories;

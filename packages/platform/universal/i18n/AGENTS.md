@@ -19,7 +19,7 @@ const { dt, defineCatalogue, createI18n } = engine;
 |---|---|
 | `defineEngine({ kinds, presets, params })` | the bound `{ dt, defineCatalogue, createI18n }`, typed by those three (`src/engine.ts`) |
 | `defineKind({ name, config, arg, options, render })` | a placeholder kind; `number`, `date`, `list`, `plural`, `enum` are written with it (`src/kinds/`) |
-| `definePresets({ <kind>: { <name>: { default, <locale>... } } })` | named option sets, resolved per locale (`src/presets.ts`) |
+| `definePresets({ <kind>: { <name>: { default, <locale>... } } })` | named option sets, resolved per locale; lives in `@kit/intl` (`src/presets.ts`), which the engine and a server render share |
 | `defineParams([...] as const)` | the closed vocabulary of placeholder names (`src/params.ts`) |
 | `createI18n<AppCatalogue>()` | `createTranslator`, `fromRegistry`, `providers`, typed by the catalogue the app registers |
 | `DisjointNamespaces<[typeof web, typeof shared]>` | an app's catalogues merged, `NamespaceCollision` when two share a namespace |
@@ -30,8 +30,11 @@ composition root):
 | Token | Value |
 |---|---|
 | `Catalogues` | `{ locale, source, translations }`: the source locale's catalogue and its translations |
-| `FormatPresets` | the app's `definePresets` table |
+| `FormatPresets` (from `@kit/intl`) | the app's `definePresets` table |
 | `ParamVocabulary` | the app's `defineParams` list |
+
+Install: `pnpm add @kit/i18n`. Usage: see [README.md](README.md). Registries: none; the catalogues arrive through the
+`Catalogues` token.
 
 ## 2. Invariants
 
@@ -63,7 +66,7 @@ composition root):
 11. **Platform strictness.** No `any`, no type assertion except `as const`, no non-null `!`, no `@ts-ignore`. Every
     public generic has a type-level spec under `src/__tests__/type-fixtures/` (run by `typecheck`), including a second
     engine with its own kinds and presets.
-12. **Universal, T3** (above `@kit/di` and `@kit/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
+12. **Universal, T4** (above `@kit/di` and `@kit/intl`), ESM only, `sideEffects: false`; runs under `vitest` and
     `bun test`.
 
 ## 3. Local Commands

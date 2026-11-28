@@ -1,6 +1,6 @@
 import { type AnyFailure, toPipelineError } from '@kit/errors';
+import type { QueueJob } from '@kit/ports';
 import { type Result, isErr } from '@kit/result';
-import type { QueueJob } from '@vp/core/ports';
 import { errorCodeRegistry } from '@vp/errors';
 
 /**

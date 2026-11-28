@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, map, ok, unwrapOr } from '@kit/result';
 import { trace } from '@opentelemetry/api';
 import {
@@ -17,7 +18,6 @@ import {
 } from '@vp/core/repositories';
 import { type NewChannelAuditEntry, resolveVideoTransition, videoStatusChanged } from '@vp/domain';
 import { VIDEO_LIFECYCLE } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
 import { canReadVideo } from '@vp/permissions';
 import { type Clock, realClock } from './clock';

@@ -32,8 +32,10 @@ expectTypeOf(
 // @ts-expect-error the missing-resource test is a function
 createEnsureFound('NOT_FOUND');
 
-// @ts-expect-error a query key is an array
-ensureFound(queryClient, { queryKey: 'count', queryFn: () => Promise.resolve(1) });
+expectTypeOf(
+  // @ts-expect-error a query key is an array
+  ensureFound(queryClient, { queryKey: 'count', queryFn: () => Promise.resolve(1) })
+).toBeObject();
 
 const policy = createRetryPolicy({ classify: () => 'transient' });
 

@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import {
   type CategoryRepositoryPort,
@@ -20,7 +21,7 @@ import {
   videoEditAudit,
   videoMetadataSnapshot,
 } from '@vp/domain';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
 import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 

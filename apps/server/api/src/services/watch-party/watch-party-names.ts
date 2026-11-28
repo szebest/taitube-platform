@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { map, ok, type Result } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { memberKeyOf, parseMemberKey } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export interface PartyPerson {
   readonly memberKey: string;

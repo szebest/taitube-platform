@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, ok, type Result } from '@kit/result';
 import type { WatchPartyPersonalControlRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { isNoPersonalControl, type PersonalControlRecord, partyControlsUpdated } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';

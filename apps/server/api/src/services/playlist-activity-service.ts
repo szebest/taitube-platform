@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Page, Paginator } from '@kit/pagination';
 import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { PlaylistActivityView } from '@vp/api-contracts';
@@ -15,7 +16,6 @@ import {
   playlistActivityNotRestorable,
   playlistNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import { primaryCards } from './playlist-cards';

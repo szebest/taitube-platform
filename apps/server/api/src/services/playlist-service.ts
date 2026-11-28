@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type { OwnedPlaylistView, PlaylistView } from '@vp/api-contracts';
 import type {
@@ -37,7 +38,6 @@ import {
   publicReadFailure,
   videoNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
 import { toOwnedPlaylistView } from './library-views';

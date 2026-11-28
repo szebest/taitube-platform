@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, isErr, map, ok, type Result } from '@kit/result';
 import type {
   ChannelMemberRepositoryPort,
@@ -11,7 +12,6 @@ import {
   type NewChannelAuditEntry,
   roleHas,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';

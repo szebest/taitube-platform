@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { Upload, UploadStatus, UploadStrategy } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { VideoRecord } from './video-repository';
 
 export type UploadRecord = Upload;

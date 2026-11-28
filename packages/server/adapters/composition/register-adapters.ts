@@ -1,6 +1,7 @@
 import type { Container } from '@kit/composition';
+import type { JobQueue } from '@kit/ports';
 import { assertNever } from '@kit/result';
-import type { JobQueue, TokenVerifier } from '@vp/core/ports';
+import type { TokenVerifier } from '@vp/core/ports';
 import { getDevJwks } from '@vp/dev-identity';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';

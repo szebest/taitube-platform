@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, map } from '@kit/result';
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /** Whether any channel of the account follows `channelId`: what a subscriber-only gate asks. */
 export async function followsChannel(

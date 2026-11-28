@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, fromPromise, map } from '@kit/result';
 import type {
   ListHeldThreadsOptions,
@@ -16,7 +17,6 @@ import type {
   VideoThread,
   VideoThreadEntry,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { heldThreads, threadEntry, threadsOfVideo, toVideoThread } from './video-thread-queries';

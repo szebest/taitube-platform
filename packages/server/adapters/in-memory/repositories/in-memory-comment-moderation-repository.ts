@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result, unwrapOr } from '@kit/result';
 import type {
   CommentLocator,
@@ -9,7 +10,6 @@ import type {
   UserEventRepository,
 } from '@vp/core/repositories';
 import { type CommentRemoval, type CommentTarget, commentCreated } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox } from '@vp/job-contracts';
 import { recordModeration } from './comment-moderation-record';
 import { toThreadOf } from './comment-projections';

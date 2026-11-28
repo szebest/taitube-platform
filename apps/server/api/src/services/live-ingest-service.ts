@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, streamKeyFromPath } from '@vp/domain';
@@ -7,7 +8,6 @@ import {
   decideLiveGatewayCall,
   liveIngestRefused,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { announceLiveOutbox, liveOutbox, subscribersOutbox } from '@vp/job-contracts';
 import { liveMasterKey, livePrefix } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';

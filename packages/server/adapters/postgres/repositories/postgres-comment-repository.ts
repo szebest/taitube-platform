@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import type {
   CommentLocator,
@@ -21,7 +22,6 @@ import {
   type NewCommentInput,
   type NewCommentRemoval,
 } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { eq, not, sql } from 'drizzle-orm';

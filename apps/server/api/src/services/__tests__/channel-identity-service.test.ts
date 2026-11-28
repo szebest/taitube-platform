@@ -27,8 +27,8 @@ describe('ChannelIdentityService', () => {
     );
   }
 
-  const retire = async (handle: string, channelId: string, daysAgo: number) => {
-    await repositories.channelHandleHistory.retire({
+  const retire = (handle: string, channelId: string, daysAgo: number) => {
+    repositories.channelHandleHistory.retire({
       handle,
       channelId,
       retiredAt: new Date(TEST_NOW - daysAgo * MS_PER_DAY),
@@ -138,19 +138,19 @@ describe('ChannelIdentityService', () => {
     });
 
     it('reserves a handle another channel gave up, until the reservation passes', async () => {
-      await retire('gone', OTHER_CHANNEL_ID, HANDLE_RESERVATION_DAYS - 1);
+      retire('gone', OTHER_CHANNEL_ID, HANDLE_RESERVATION_DAYS - 1);
       expect(expectErr(await service.decide(channel, { handle: 'gone' })).code).toBe(
         ErrorCodes.HANDLE_RESERVED
       );
 
-      await retire('gone', OTHER_CHANNEL_ID, HANDLE_RESERVATION_DAYS);
+      retire('gone', OTHER_CHANNEL_ID, HANDLE_RESERVATION_DAYS);
       expect(expectOk(await service.decide(channel, { handle: 'gone' }))).toMatchObject({
         handle: 'gone',
       });
     });
 
     it('lets the channel that gave a handle up take it back', async () => {
-      await retire('gone', CHANNEL_ID, 1);
+      retire('gone', CHANNEL_ID, 1);
 
       expect(expectOk(await service.decide(channel, { handle: 'gone' }))).toMatchObject({
         handle: 'gone',
@@ -184,7 +184,7 @@ describe('ChannelIdentityService', () => {
     });
 
     it('resolves a retired handle to its channel with redirectedFrom, inside the reservation', async () => {
-      await retire('old', CHANNEL_ID, HANDLE_RESERVATION_DAYS - 1);
+      retire('old', CHANNEL_ID, HANDLE_RESERVATION_DAYS - 1);
 
       expect(expectOk(await service.findPublic('@old'))).toMatchObject({
         channel: { id: CHANNEL_ID },
@@ -193,7 +193,7 @@ describe('ChannelIdentityService', () => {
     });
 
     it('answers CHANNEL_NOT_FOUND for a retired handle past the reservation and for an unknown one', async () => {
-      await retire('old', CHANNEL_ID, HANDLE_RESERVATION_DAYS);
+      retire('old', CHANNEL_ID, HANDLE_RESERVATION_DAYS);
 
       expect(expectErr(await service.findPublic('old')).code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
       expect(expectErr(await service.findPublic('nobody')).code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);

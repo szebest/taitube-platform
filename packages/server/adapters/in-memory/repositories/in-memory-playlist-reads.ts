@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok, unwrapOr } from '@kit/result';
 import type {
   ListPlaylistItemsOptions,
@@ -15,7 +16,6 @@ import {
   type SeatedPlaylist,
   type StoredPlaylistItem,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type ShareGrant, type UserContext, canReadPlaylist } from '@vp/permissions';
 import { SORT_ORDER, compareSorted, isPast, toStored } from './in-memory-playlist-items';
 import { InMemoryPlaylistStore } from './in-memory-playlist-store';

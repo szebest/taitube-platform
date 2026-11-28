@@ -1,6 +1,7 @@
+import { databaseUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { databaseUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import type { CurrentPickService } from '../current-pick-service';
 import type { PickService } from '../pick-service';
 import {

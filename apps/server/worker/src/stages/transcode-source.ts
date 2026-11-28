@@ -1,8 +1,9 @@
 import * as path from 'node:path';
+import { type StorageUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, err, isErr, ok } from '@kit/result';
 import type { StorageClient } from '@vp/core/ports';
-import { ErrorCodes, type MediaFailure, type StorageUnavailable, mediaFailure } from '@vp/errors';
+import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 
 export interface TranscodeSourceParams {
   storage: StorageClient;

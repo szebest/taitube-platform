@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { EntityRevision, EntityRevisionType } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 export type NewEntityRevision<T extends EntityRevisionType = EntityRevisionType> =
   EntityRevision<T> extends infer Revision

@@ -1,7 +1,7 @@
-import { PermanentError, TransientError } from '@kit/errors';
+import { PermanentError, TransientError, storageUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { ErrorCodes, RETRY_CLASS, storageUnavailable } from '@vp/errors';
+import { ErrorCodes, RETRY_CLASS } from '@vp/errors';
 import { type ChannelImageProbe } from '@vp/ffmpeg';
 import { channelImageUploadKey } from '@vp/storage';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';

@@ -17,6 +17,9 @@ runtime-agnostic package asks for instead of reading the environment itself (`sr
 On a server the cookies belong to a request, so the node entry provides no `CookieJar`; the app provides one per
 request.
 
+Install: `pnpm add @kit/runtime`. Tokens: it declares the five above and consumes none. Registries: none; an entry
+returns providers for the app's registry. Usage: see [README.md](README.md).
+
 ## 2. Invariants
 
 1. **The entries take what they read.** No file here reads `process.env`, `document` or `cookieStore`; the caller

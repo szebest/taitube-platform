@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, err, fromPromise, map, ok } from '@kit/result';
 import {
   type ListPublicVideosOptions,
@@ -12,7 +13,6 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type NewChannelAuditEntry, publicFeedWalkInstant } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type SQL, and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';
 import {

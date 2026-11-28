@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type {
   EventRepository,
@@ -21,7 +22,6 @@ import {
   videoGenerationUpdated,
 } from '@vp/domain';
 import { RENDERABLE_STATUSES, VIDEO_GENERATION } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 

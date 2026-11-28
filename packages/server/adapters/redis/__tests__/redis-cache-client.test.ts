@@ -1,7 +1,8 @@
+import { type CacheUnavailable } from '@kit/errors';
 import { describeCacheClientContract } from '@kit/ports/contract';
 import { type Result, isOk } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
-import { type CacheUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { redisCacheClientSubject } from '../../__tests__/contract/redis-subjects';
 import { RedisCacheClient } from '../redis-cache-client';
 import { FakeRedis } from './fake-redis';

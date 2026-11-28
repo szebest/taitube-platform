@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, map } from '@kit/result';
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
@@ -11,7 +12,6 @@ import {
   toChannelCard,
 } from '@vp/domain';
 import type { AppConfig, CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { masterPlaylistKey } from '@vp/storage';
 
 interface VideoLadderEntry {

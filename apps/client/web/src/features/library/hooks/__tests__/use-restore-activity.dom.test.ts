@@ -15,7 +15,7 @@ function restoreWith(reply: () => Response) {
   const restored: string[] = [];
   apiServer.use(
     mockEndpoint(restorePlaylistActivity, ({ params }) => {
-      restored.push(`${params.id} ${params.activityId}`);
+      restored.push(`${String(params.id)} ${String(params.activityId)}`);
       return reply();
     })
   );

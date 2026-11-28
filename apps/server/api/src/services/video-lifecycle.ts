@@ -1,13 +1,14 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { createTraceparent, getActiveTraceparent } from '@kit/observability';
+import type { JobQueue } from '@kit/ports';
 import { type Result, err, isErr, ok } from '@kit/result';
-import type { JobQueue } from '@vp/core/ports';
 import type { StepRepository, VideoRepository } from '@vp/core/repositories';
 import {
   type VideoLifecycleFailure,
   decideVideoDelete,
   decideVideoReprocess,
 } from '@vp/domain-rules';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 

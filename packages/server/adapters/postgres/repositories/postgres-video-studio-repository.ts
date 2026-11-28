@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { err, fromPromise, map, ok, type Result } from '@kit/result';
 import {
   type StudioMetadataOutcome,
@@ -9,12 +10,7 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { CREATOR_LIBRARY_COUNTERS, type LibrarySort, videoEditAudit } from '@vp/domain';
-import {
-  type DatabaseUnavailable,
-  databaseUnavailable,
-  type VersionConflict,
-  versionConflict,
-} from '@vp/errors';
+import { type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';

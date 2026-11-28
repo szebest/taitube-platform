@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, map, ok, type Result } from '@kit/result';
 import type {
   CreateExportOutcome,
@@ -17,7 +18,6 @@ import {
   type NewChannelAuditEntry,
   type NewDataExport,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { exportOutbox } from '@vp/job-contracts';
 import type { Clock } from './clock';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';

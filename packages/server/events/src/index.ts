@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 import { videoChannel } from './channels';
 import type { SseMessageEnvelope } from './envelope';
 

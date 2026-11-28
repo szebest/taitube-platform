@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, ok } from '@kit/result';
 import type { RemoveThreadBody, ThreadView } from '@vp/api-contracts';
 import type { CommentCachePort } from '@vp/core/ports';
@@ -26,7 +27,6 @@ import {
   threadNotFound,
   threadPinLimit,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canModerateComment } from '@vp/permissions';
 import { auditActor } from './audit-actor';
 import { toThreadView } from './thread-views';

@@ -5,6 +5,7 @@ export * from './format-value';
 export { createIntlCache } from './intl-cache';
 export * from './locale-chain';
 export * from './locales';
+export * from './presets';
 
 export * from './formatters/bitrate';
 export * from './formatters/bytes';

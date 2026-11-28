@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { ok, type Result } from '@kit/result';
 import type {
   NewSystemLine,
@@ -7,7 +8,6 @@ import type {
   WatchPartyQueueRepositoryPort,
 } from '@vp/core/repositories';
 import { appendPositions, type PositionWrite, type WatchPartyQueueItem } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { InMemoryWatchPartyStore } from './in-memory-watch-party-store';
 
 const MISSING: QueueWrite = { type: 'missing' };

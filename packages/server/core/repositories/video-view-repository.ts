@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type {
   ChannelViewTotals,
@@ -13,7 +14,6 @@ import type {
   ViewDateRange,
   ViewHourRange,
 } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 
 /**
  * `applyBatch` is effectively-once per batch id: the counters, the daily, device and hourly rows, the retention steps

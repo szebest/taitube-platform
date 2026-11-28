@@ -1,9 +1,9 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, ok, type Result } from '@kit/result';
 import type { SavePreferencesOptions, UserPreferencesRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { preferencesUpdated } from '@vp/domain';
 import type { UserPreferences } from '@vp/domain/settings';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';

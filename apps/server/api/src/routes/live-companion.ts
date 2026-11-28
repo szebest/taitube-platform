@@ -6,6 +6,7 @@ import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 import { sendSocketResult } from './send-socket-result';
 import { keepAlive } from './socket-keepalive';
+import { socketText } from './socket-text';
 
 export async function liveCompanionRoutes(app: FastifyInstance): Promise<void> {
   const { liveCompanionService } = app.services;
@@ -29,8 +30,8 @@ export async function liveCompanionRoutes(app: FastifyInstance): Promise<void> {
       const hello = greetings.get(request);
       if (hello) send(hello);
       socket.on('message', async (raw) => {
-        const { ref, result } = await liveCompanionService.receive(token, String(raw));
-        sendSocketResult(socket, request.url, result, ref);
+        const { ref, result } = await liveCompanionService.receive(token, socketText(raw));
+        sendSocketResult(socket, request, result, ref);
       });
     }
   );

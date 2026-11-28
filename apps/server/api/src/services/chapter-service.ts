@@ -1,8 +1,8 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { CaptionRepository, VideoRepository } from '@vp/core/repositories';
 import { type Chapter, suggestChapters } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoEditAccess } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { CreatorStudioService } from './creator-studio-service';
 import type { UpdateVideoServiceFailure } from './video-edit';

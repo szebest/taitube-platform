@@ -33,7 +33,7 @@ function changeWith(failure: boolean) {
         : HttpResponse.json(CREATED, { status: 201 });
     }),
     mockEndpoint(revokePlaylistShareLink, ({ params }) => {
-      sent.push(`revoke ${params.linkId}`);
+      sent.push(`revoke ${String(params.linkId)}`);
       return failure
         ? problemReply(ErrorCodes.INTERNAL)
         : new HttpResponse<null>(null, { status: 204 });

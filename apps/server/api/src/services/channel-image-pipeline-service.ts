@@ -1,6 +1,12 @@
+import {
+  type DatabaseUnavailable,
+  type QueueUnavailable,
+  type StorageUnavailable,
+} from '@kit/errors';
 import { createTraceparent, getActiveTraceparent } from '@kit/observability';
+import type { JobQueue } from '@kit/ports';
 import { type Result, andThen, assertNever, err, isErr, map, ok } from '@kit/result';
-import type { JobQueue, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
 import type { ChannelImageRepositoryPort, ChannelRepositoryPort } from '@vp/core/repositories';
 import type { BannerCrops, ChannelImageKind, ChannelImageUpload, CropRect } from '@vp/domain';
 import type { ActingChannel } from '@vp/domain';
@@ -14,12 +20,7 @@ import {
   decideImageCrops,
   imageUploadNotFound,
 } from '@vp/domain-rules';
-import {
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type QueueUnavailable,
-  type StorageUnavailable,
-} from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies, type ChannelImageJob } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { channelImageUploadKey } from '@vp/storage';

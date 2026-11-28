@@ -1,8 +1,8 @@
+import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { fromPromise, map, type Result } from '@kit/result';
 import type { WatchPartyHousekeepingRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { WatchPartyRoom } from '@vp/domain';
-import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, asc, eq, gt, lt, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

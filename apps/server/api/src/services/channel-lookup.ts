@@ -1,3 +1,4 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { err, isErr, ok, type Result } from '@kit/result';
 import type {
   ChannelRepositoryPort,
@@ -6,7 +7,7 @@ import type {
 } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import { type ChannelNotFound, channelNotFound } from '@vp/domain-rules';
-import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import { ErrorCodes, type HandleTaken } from '@vp/errors';
 import { handleCandidates } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 

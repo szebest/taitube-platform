@@ -1,3 +1,4 @@
+import type { CacheUnavailable, DatabaseUnavailable } from '@kit/errors';
 import type { Logger } from '@kit/logger';
 import { type Result, isErr, map, ok, unwrapOr } from '@kit/result';
 import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
@@ -14,7 +15,6 @@ import type {
 } from '@vp/core/repositories';
 import { VIDEO_LIFECYCLE_EDGES } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import type { SseFrame, SseLogRead } from './sse-connection';

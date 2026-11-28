@@ -1,11 +1,11 @@
 import { createLogger } from '@kit/logger';
+import type { QueueJob } from '@kit/ports';
 import { expectOk } from '@kit/testing/result';
 import {
   InMemoryFrameClassifier,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import type { QueueJob } from '@vp/core/ports';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { ScreenJob } from '@vp/job-contracts';
 import { SEEDED, createMockJob } from '@vp/testing-fixtures';

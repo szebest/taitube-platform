@@ -127,7 +127,9 @@ export function describeScreeningRepositoryContract(makeSubject: MakeRepositorie
 
       const outcomes = await Promise.all([approve(MODERATOR_A), reject(MODERATOR_B)]);
 
-      expect(outcomes.map((outcome) => expectOk(outcome)).sort()).toEqual([false, true]);
+      expect(
+        outcomes.map((outcome) => expectOk(outcome)).sort((a, b) => Number(a) - Number(b))
+      ).toEqual([false, true]);
       expect(await eventTypes()).toHaveLength(1);
     });
 

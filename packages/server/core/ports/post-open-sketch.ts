@@ -1,5 +1,5 @@
+import type { CacheUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { CacheUnavailable } from '@vp/errors';
 
 /** Which viewers opened a post on a day, kept as a sketch so a post costs a few kilobytes however many open it. */
 export interface PostOpenSketchPort {

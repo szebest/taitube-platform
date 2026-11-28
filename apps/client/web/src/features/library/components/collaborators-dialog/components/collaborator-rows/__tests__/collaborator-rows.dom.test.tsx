@@ -24,11 +24,11 @@ async function renderRows(manageable: boolean) {
       handlers: [
         seated([ANA]),
         mockEndpoint(changePlaylistCollaboratorRole, async ({ params, request }) => {
-          sent.push(`role ${params.userId} ${JSON.stringify(await request.json())}`);
+          sent.push(`role ${String(params.userId)} ${JSON.stringify(await request.json())}`);
           return new HttpResponse(null, { status: 204 });
         }),
         mockEndpoint(removePlaylistCollaborator, ({ params }) => {
-          sent.push(`remove ${params.userId}`);
+          sent.push(`remove ${String(params.userId)}`);
           return new HttpResponse(null, { status: 204 });
         }),
       ],

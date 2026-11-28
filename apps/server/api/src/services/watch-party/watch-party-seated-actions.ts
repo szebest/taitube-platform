@@ -1,6 +1,6 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, ok, type Result } from '@kit/result';
 import {
-  type DatabaseUnavailable,
   type WatchPartyClosed,
   type WatchPartyNotFound,
   watchPartyClosed,

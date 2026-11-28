@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, ok } from '@kit/result';
 import {
   type ClaimStepOptions,
@@ -10,7 +11,6 @@ import {
   type ProcessingStepRecord,
   StepRepository,
 } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { type Clock, realClock } from './clock';
 import type { InternalStep } from './types';
 
@@ -26,7 +26,7 @@ export class InMemoryStepRepository extends StepRepository {
   }
 
   async claim(options: ClaimStepOptions): Promise<Result<ClaimStepResult, DatabaseUnavailable>> {
-    const { id, videoId, step, rendition = '-', jobId, attempt, workerId, lockToken } = options;
+    const { id, videoId, step, rendition, jobId, attempt, workerId, lockToken } = options;
     const key = this.getStepKey(videoId, step, rendition);
     const existing = this.stepsMap.get(key);
 
@@ -62,7 +62,7 @@ export class InMemoryStepRepository extends StepRepository {
   async complete(
     options: CompleteStepOptions
   ): Promise<Result<CompleteStepResult, DatabaseUnavailable>> {
-    const { videoId, step, rendition = '-', lockToken, result = {} } = options;
+    const { videoId, step, rendition, lockToken, result = {} } = options;
     const key = this.getStepKey(videoId, step, rendition);
     const existing = this.stepsMap.get(key);
 
@@ -78,7 +78,7 @@ export class InMemoryStepRepository extends StepRepository {
   }
 
   async fail(options: FailStepOptions): Promise<Result<FailStepResult, DatabaseUnavailable>> {
-    const { videoId, step, rendition = '-', lockToken, errorCode, errorMessage } = options;
+    const { videoId, step, rendition, lockToken, errorCode, errorMessage } = options;
     const key = this.getStepKey(videoId, step, rendition);
     const existing = this.stepsMap.get(key);
 

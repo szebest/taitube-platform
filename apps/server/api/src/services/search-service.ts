@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Singleflight } from '@kit/concurrency';
 import type { Paginator } from '@kit/pagination';
+import type { CacheClient } from '@kit/ports';
 import {
   andThen,
   andThenAsync,
@@ -19,7 +20,7 @@ import {
   type SearchSuggestionsResponse,
   search,
 } from '@vp/api-contracts';
-import type { CacheClient, SearchSuggestionIndexPort } from '@vp/core/ports';
+import type { SearchSuggestionIndexPort } from '@vp/core/ports';
 import type {
   ChannelRepositoryPort,
   SearchHistoryRepositoryPort,

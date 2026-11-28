@@ -1,7 +1,8 @@
+import { storageUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { ErrorCodes, storageUnavailable } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
 import { LiveUploader } from '../live-uploader';
 
 const HEADERS = { contentType: 'text/plain', cacheControl: 'no-cache' };

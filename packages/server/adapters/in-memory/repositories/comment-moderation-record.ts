@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { isErr, ok, type Result } from '@kit/result';
 import type { OutboxRepository } from '@vp/core/repositories';
 import type { ModerationRecord } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import { moderationOutbox } from '@vp/job-contracts';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 

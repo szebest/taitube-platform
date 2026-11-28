@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, isOk, map, ok } from '@kit/result';
 import type { CategoryCachePort } from '@vp/core/ports';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
@@ -18,7 +19,7 @@ import {
   decideCategoryDelete,
   decideCategoryUpdate,
 } from '@vp/domain-rules';
-import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
+import type { CategorySlugConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 

@@ -1,9 +1,9 @@
+import { type DatabaseUnavailable } from '@kit/errors';
 import { andThenAsync, err, isErr, map, ok, type Result } from '@kit/result';
 import type { inviteToWatchParty } from '@vp/api-contracts';
 import { memberKeyOf, type WatchPartyInvite } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import {
-  type DatabaseUnavailable,
   type WatchPartyInviteInvalid,
   watchPartyClosed,
   watchPartyInviteInvalid,

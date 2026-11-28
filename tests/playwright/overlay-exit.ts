@@ -32,7 +32,7 @@ function watchExit(page: Page, selector: string) {
         if (surface.getAttribute('data-state') !== 'closed') return;
         observer.disconnect();
         const animations = surface.getAnimations();
-        Promise.allSettled(animations.map((animation) => animation.finished))
+        void Promise.allSettled(animations.map((animation) => animation.finished))
           .then(nextFrame)
           .then(nextFrame)
           .then(() =>

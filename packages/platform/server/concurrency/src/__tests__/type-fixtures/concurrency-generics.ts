@@ -6,10 +6,10 @@ expectTypeOf(flight.do('k', () => Promise.resolve(1))).toEqualTypeOf<Promise<num
 expectTypeOf(flight.do('k', async () => 'x')).toEqualTypeOf<Promise<string>>();
 
 // @ts-expect-error the work returns a promise
-flight.do('k', () => 1);
+expectTypeOf(flight.do('k', () => 1)).toBeObject();
 
 // @ts-expect-error the key is a string
-flight.do(1, () => Promise.resolve(1));
+expectTypeOf(flight.do(1, () => Promise.resolve(1))).toBeObject();
 
 const breaker = new CircuitBreaker({ failureThreshold: 3, cooldownMs: 100, now: () => 0 });
 

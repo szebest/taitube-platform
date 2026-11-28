@@ -49,12 +49,12 @@ function playlistsHolding(
       })
     ),
     mockEndpoint(addPlaylistItem, ({ params }) => {
-      writes.push(`add ${params.id}`);
+      writes.push(`add ${String(params.id)}`);
       held.add(String(params.id));
       return HttpResponse.json(playlistDetail(String(params.id), []), { status: 201 });
     }),
     mockEndpoint(removePlaylistItem, ({ params }) => {
-      writes.push(`remove ${params.id} ${params.videoId}`);
+      writes.push(`remove ${String(params.id)} ${String(params.videoId)}`);
       held.delete(String(params.id));
       return new HttpResponse<null>(null, { status: 204 });
     }),

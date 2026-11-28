@@ -1,4 +1,4 @@
-import { defineKeyspace } from '../../index';
+import { type KeyNamespace, defineKeyspace } from '../../index';
 
 const keys = defineKeyspace('app', (key) => ({
   feed: key('feed'),
@@ -20,3 +20,8 @@ defineKeyspace('app', (key) => ({
   // @ts-expect-error a part is a string
   num: (id: number) => key('user', id),
 }));
+
+defineKeyspace('app', (key) => {
+  expectTypeOf(key).toEqualTypeOf<KeyNamespace<'app'>>();
+  return {};
+});

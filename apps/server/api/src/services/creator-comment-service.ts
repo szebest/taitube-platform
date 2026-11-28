@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, isErr, ok } from '@kit/result';
 import type { CreatorInboxCommentView } from '@vp/api-contracts';
@@ -9,7 +10,6 @@ import type {
 } from '@vp/core/repositories';
 import type { ActingChannel, CreatorInboxComment, CreatorInboxFilter } from '@vp/domain';
 import { type AuthorizationFailure, decideChannelTask } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { toCreatorInboxCommentView } from './comment-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';

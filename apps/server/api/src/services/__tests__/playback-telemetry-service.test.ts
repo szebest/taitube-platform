@@ -1,8 +1,8 @@
+import { cacheUnavailable } from '@kit/errors';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import type { PlaybackEvent } from '@vp/api-contracts';
-import { cacheUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createPipelineMetrics } from '@vp/pipeline-metrics';
 import { PlaybackTelemetryService } from '../playback-telemetry-service';
 import { startTitleTest } from './running-test';

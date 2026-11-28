@@ -17,7 +17,7 @@ export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
 
 const PROBLEM_TYPE_BASE = 'https://errors.video-pipeline.local';
 
-function problemType(code: ErrorCode | string): string {
+function problemType(code: string): string {
   return `${PROBLEM_TYPE_BASE}/${code}`;
 }
 
@@ -209,12 +209,12 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
 
 const UNCLASSIFIED_STATUS = 422;
 
-export function problemStatus(code: ErrorCode | string): number {
+export function problemStatus(code: string): number {
   return PROBLEM_STATUS[code as ErrorCode] ?? UNCLASSIFIED_STATUS;
 }
 
 export interface ProblemInput {
-  code: ErrorCode | string;
+  code: string;
   title: string;
   status: number;
   detail: string;

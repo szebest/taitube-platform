@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, err, ignore, isErr, map, ok } from '@kit/result';
 import type { CommentActionBody, ModerationResultView } from '@vp/api-contracts';
 import { type ModerationNotice, commentModerationAudit, isStored } from '@vp/domain';
@@ -8,7 +9,6 @@ import {
   moderationNotApplicable,
   threadNotFound,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { auditActor } from './audit-actor';
 import { actionOf } from './moderation-action';

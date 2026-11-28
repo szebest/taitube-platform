@@ -1,6 +1,6 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
 import type { ChannelCard, SmartPlaylistRules, Video } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 /** A video a smart playlist computed, its 0-based place in it, and the value its sort compares. */

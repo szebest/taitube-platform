@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { MS_PER_DAY } from '@kit/primitives';
 import { type Result, isErr, ok } from '@kit/result';
 import type {
@@ -42,7 +43,6 @@ import {
   decideVideoStatsRead,
   dropOffMoments,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface AnalyticsServiceDeps {

@@ -1,3 +1,4 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, assertNever, err, isErr, map, ok } from '@kit/result';
 import type {
   ChannelPostRepositoryPort,
@@ -14,7 +15,6 @@ import {
   decideCommentHostRead,
   publicHostReadFailure,
 } from '@vp/domain-rules';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 
 export interface CommentLookupDeps {

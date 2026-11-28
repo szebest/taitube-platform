@@ -1,7 +1,7 @@
+import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
 import type { ManagedPostView } from '@vp/api-contracts';
 import type { ChannelPost } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
 import type { PostViewer } from './post-poll-views';
 import { type PostViewDeps, toPostViews } from './post-views';
 
