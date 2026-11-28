@@ -1,10 +1,10 @@
-import { getCreatorStats, problemFor } from '@vp/api-contracts';
+import { getCreatorStats } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
-import { sendResult } from './send-result';
+import { problemOf, sendResult } from './send-result';
 
 export async function creatorStatsRoutes(app: FastifyInstance): Promise<void> {
   const { analyticsService } = app.services;
@@ -21,7 +21,7 @@ export async function creatorStatsRoutes(app: FastifyInstance): Promise<void> {
         request,
         await analyticsService.creatorStats(user, request.params.id),
         {
-          on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) },
+          on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) },
         }
       );
     }

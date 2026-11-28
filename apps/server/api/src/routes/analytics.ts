@@ -4,14 +4,13 @@ import {
   getVideoAudience,
   getVideoBenchmark,
   getVideoRetention,
-  problemFor,
 } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
-import { sendResult } from './send-result';
+import { problemOf, sendResult } from './send-result';
 
 export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
   const { analyticsService } = app.services;
@@ -32,7 +31,7 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await analyticsService.videoAnalytics(user, request.params.id, request.query.range),
-        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+        { on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) } }
       );
     }
   );
@@ -51,7 +50,7 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await analyticsService.videoRetention(user, request.params.id),
-        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+        { on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) } }
       );
     }
   );
@@ -71,7 +70,7 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await analyticsService.videoAudience(user, request.params.id, request.query.range),
-        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+        { on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) } }
       );
     }
   );
@@ -90,7 +89,7 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await analyticsService.videoBenchmark(user, request.params.id),
-        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+        { on: { FORBIDDEN: (failure) => problemOf(request, publicReadFailure(failure)) } }
       );
     }
   );

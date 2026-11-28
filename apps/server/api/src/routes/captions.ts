@@ -4,7 +4,6 @@ import {
   generateCaptions,
   getTranscript,
   listCaptions,
-  problemFor,
   setChannelAutoCaptions,
   updateCaptionSettings,
   uploadCaptionTrack,
@@ -15,13 +14,13 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireActingChannel, requireAuth } from '../plugins/auth';
 import { contractSchema } from './contract-schema';
-import { sendResult } from './send-result';
+import { problemOf, sendResult } from './send-result';
 
 /** A video the caller cannot see answers as missing; a refusal on one they can see stays a 403. */
 function disguised(request: FastifyRequest) {
   return {
     on: {
-      FORBIDDEN: (failure: VideoForbidden) => problemFor(publicReadFailure(failure), request.url),
+      FORBIDDEN: (failure: VideoForbidden) => problemOf(request, publicReadFailure(failure)),
     },
   };
 }
