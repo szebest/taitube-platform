@@ -55,6 +55,18 @@ export function useNotificationText(): (notification: Notification) => Notificat
         );
       case 'processing':
         return tOr(PROCESSING_TEXT[payload.outcome ?? 'ready'], {}, '');
+      case 'playlist_invite':
+        return tOr(
+          'notifications.playlistInvite',
+          { name, title: payload.playlist?.title ?? '' },
+          ''
+        );
+      case 'playlist_update':
+        return tOr(
+          'notifications.playlistUpdate',
+          { name, title: payload.playlist?.title ?? '' },
+          ''
+        );
       default:
         return assertNever(kind, 'NotificationKind');
     }

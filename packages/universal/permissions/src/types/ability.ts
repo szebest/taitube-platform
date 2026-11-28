@@ -15,7 +15,7 @@ import type { CommentResource } from './comment';
 import type { ChannelUserResource, CommentSettingsResource } from './comment-moderation';
 import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
-import type { PlaylistResource } from './playlist';
+import type { PlaylistInviteResource, PlaylistResource, PlaylistStatsResource } from './playlist';
 import type { PostResource } from './post';
 import type { PreferencesResource } from './preferences';
 import type { RecommendationFeedbackResource } from './recommendation-feedback';
@@ -47,7 +47,13 @@ export type AppAction =
   | 'hide'
   | 'unhide'
   | 'remove'
-  | 'restrict';
+  | 'restrict'
+  | 'addItem'
+  | 'removeItem'
+  | 'manageItems'
+  | 'manageCollaborators'
+  | 'readActivity'
+  | 'restoreItem';
 
 export type AppSubjects =
   | 'all'
@@ -77,6 +83,8 @@ export type AppSubjects =
       | (CommentSettingsResource & ForcedSubject<'CommentSettings'>)
       | (ChannelExportResource & ForcedSubject<'ChannelExport'>)
       | (ApiTokenResource & ForcedSubject<'ApiToken'>)
+      | (PlaylistInviteResource & ForcedSubject<'PlaylistInvite'>)
+      | (PlaylistStatsResource & ForcedSubject<'PlaylistStats'>)
     >
   | 'Video'
   | 'Upload'
@@ -105,6 +113,8 @@ export type AppSubjects =
   | 'ChannelUser'
   | 'CommentSettings'
   | 'ChannelExport'
-  | 'ApiToken';
+  | 'ApiToken'
+  | 'PlaylistInvite'
+  | 'PlaylistStats';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

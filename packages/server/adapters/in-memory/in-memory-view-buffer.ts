@@ -3,6 +3,8 @@ import { type Result, ok } from '@kit/result';
 import type {
   ExperimentEvent,
   PlaybackWatch,
+  PlaylistBufferEvent,
+  PlaylistOpen,
   PlaybackWatchOutcome,
   RetentionMilestone,
   ShareLinkOpen,
@@ -14,6 +16,8 @@ import {
   type DeviceViewCount,
   type ExperimentCount,
   type HourlyViewCount,
+  NO_PLAYLIST_COUNTS,
+  type PlaylistCount,
   RETENTION_STEP_PERCENT,
   type RetentionCount,
   type ShareLinkCount,
@@ -23,6 +27,7 @@ import {
   mergeDeviceCounts,
   mergeExperimentCounts,
   mergeHourlyCounts,
+  mergePlaylistCounts,
   mergeShareLinkCounts,
 } from '@vp/domain';
 
@@ -60,6 +65,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private readonly openers = new Map<string, Set<string>>();
   private shareLinks: ShareLinkCount[] = [];
   private experiments: ExperimentCount[] = [];
+  private playlists: PlaylistCount[] = [];
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     return ok(this.recordOne(view));
@@ -161,6 +167,32 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     return ok();
   }
 
+  async recordPlaylistOpen({
+    playlistId,
+    viewerKey,
+    viewDate,
+  }: PlaylistOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    const key = countKey(`playlist:${playlistId}`, viewDate);
+    if (!firstSighting(this.openers, key, viewerKey)) return ok('duplicate');
+    this.playlists.push({ ...NO_PLAYLIST_COUNTS, playlistId, videoId: null, viewDate, opens: 1 });
+    return ok('counted');
+  }
+
+  async recordPlaylistEvents(
+    events: readonly PlaylistBufferEvent[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    for (const event of events) {
+      this.playlists.push({
+        ...NO_PLAYLIST_COUNTS,
+        playlistId: event.playlistId,
+        videoId: event.measure === 'plays' ? event.videoId : null,
+        viewDate: event.viewDate,
+        [event.measure]: 1,
+      });
+    }
+    return ok();
+  }
+
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
     if (this.pendingBatchId === undefined) {
       if (
@@ -168,7 +200,8 @@ export class InMemoryViewBuffer implements ViewBufferPort {
         this.retention.size === 0 &&
         this.hourly.length === 0 &&
         this.shareLinks.length === 0 &&
-        this.experiments.length === 0
+        this.experiments.length === 0 &&
+        this.playlists.length === 0
       ) {
         return ok(null);
       }
@@ -180,6 +213,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
         devices: mergeDeviceCounts(this.devices),
         shareLinks: mergeShareLinkCounts(this.shareLinks),
         experiments: mergeExperimentCounts(this.experiments),
+        playlists: mergePlaylistCounts(this.playlists),
       });
       this.buffer = new Map();
       this.retention = new Map();
@@ -187,6 +221,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
       this.devices = [];
       this.shareLinks = [];
       this.experiments = [];
+      this.playlists = [];
       this.pendingBatchId = batchId;
     }
     const pending = this.batches.get(this.pendingBatchId);
@@ -229,6 +264,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     this.openers.clear();
     this.shareLinks = [];
     this.experiments = [];
+    this.playlists = [];
     this.batches.clear();
     this.pendingBatchId = undefined;
   }

@@ -84,7 +84,13 @@ describe('what a watch party queue accepts', () => {
         })
       );
       for (const n of videoNumbers) {
-        expectOk(await playlists.addItem(PLAYLIST_ID, { id: uuidv7(), videoId: videoId(n) }));
+        expectOk(
+          await playlists.addItem(
+            PLAYLIST_ID,
+            { id: uuidv7(), videoId: videoId(n), addedBy: null },
+            PLAYLIST_ID
+          )
+        );
       }
     };
 

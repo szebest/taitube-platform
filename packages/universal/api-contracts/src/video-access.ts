@@ -35,7 +35,7 @@ export const ShareTokenSchema = z
 
 const ShareLinkStateSchema = z.enum(['active', 'expired', 'revoked']);
 
-const ShareLinkSchema = z.object({
+export const ShareLinkSchema = z.object({
   id: z.uuid(),
   token: ShareTokenSchema,
   label: z.string().nullable(),

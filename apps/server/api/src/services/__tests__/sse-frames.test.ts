@@ -44,10 +44,17 @@ describe('apps/server/api/services: sse-frames', () => {
     });
   });
 
-  it('coalesces stats updates of one video into the newest', () => {
-    expect(
-      userFrame({ id: 4, type: 'video.stats.updated', payload: { videoId: VIDEO_ID } })
-    ).toMatchObject({ event: 'video.stats.updated', coalesceKey: `stats:${VIDEO_ID}` });
+  it.each([
+    {
+      frame: { id: 4, type: 'video.stats.updated', payload: { videoId: VIDEO_ID } } as const,
+      key: `stats:${VIDEO_ID}`,
+    },
+    {
+      frame: { id: 5, type: 'playlist.updated', payload: { playlistId: VIDEO_ID } } as const,
+      key: `playlist:${VIDEO_ID}`,
+    },
+  ])('coalesces $frame.type of one subject into the newest', ({ frame, key }) => {
+    expect(userFrame(frame)).toMatchObject({ event: frame.type, coalesceKey: key });
   });
 
   it('opens a user stream with an id-less hello', () => {

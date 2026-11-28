@@ -15,7 +15,8 @@ never earlier.
   that has one.
 - `StatCard` (one KPI with its delta and sparkline) and `seriesColor`, the categorical colour its sparkline and the studio's charts share (`src/analytics/`).
 - `Shelf`, `VideoCard` and `StartHereShelf` (a headed scroller of cards, the one video card, and the channel's Start here shelf), which web's pages draw and the studio's Start here section previews.
-- `SpriteStrip` (`src/sprite-strip/`): the frames of a video's sprite sheet side by side, with an optional range left clear and `spriteFrameStyle`, the tile a time falls in. Web's clip editor and the studio's `TimelineRangeEditor` both draw it.
+- `SpriteStrip` (`src/sprite-strip/`): the frames of a video's sprite sheet side by side, with an optional range left clear and `spriteFrameStyle`, the tile a time falls in. Web's clip editor and `TimelineRangeEditor` both draw it.
+- `TimelineRangeEditor` (`src/timeline-range-editor/`): a range or a position over a video's frames, with a tick per point already set. The studio's chapters, corrections, trim and blur editors and web's playlist segment editor draw it.
 - The eight state illustrations (`src/illustrations/`), plain SVG components drawn in `currentColor`: the parent's CSS
   colour tints them, so they take `accent` per theme.
 - `LoginCard` and `AccountMenu`, the presentational parts of sign-in and the account menu; the session hooks

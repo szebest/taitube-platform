@@ -2,43 +2,56 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@kit/errors';
 import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@kit/result';
 import type {
   AddPlaylistItemOutcome,
-  ListPublicPlaylistsOptions,
+  AppendItemOutcome,
   NewPlaylistItem,
+  NewPlaylistSection,
+  PlaylistItemTarget,
   PlaylistRepositoryPort,
   ReorderPlan,
+  RestoreItemOutcome,
+  MergeOutcome,
+  MergeSource,
+  TransferOutcome,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
   type NewPlaylistInput,
-  type OwnedPlaylist,
-  POSITION_GAP,
   type Playlist,
-  type PlaylistDetail,
+  type PlaylistItemPatch,
+  type PlaylistItemSort,
   type PlaylistPatch,
-  type PublicPlaylist,
+  type RestorablePlaylistActivity,
+  type StoredPlaylistItem,
   WATCH_LATER_TITLE,
-  appendPosition,
   renumberPositions,
 } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
-import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
-import { channelCardColumns, toChannelCard } from './channel-card-query';
+import { and, eq, sql } from 'drizzle-orm';
 import {
-  entriesOf,
-  publicPlaylistsOf,
-  reorderSlots,
-  toPlaylist,
-  toPlaylistEntry,
-  writePositions,
-} from './playlist-query';
-import type { PostgresDatabase } from './types';
+  appendLogged,
+  logReorder,
+  mergeRows,
+  restoreRow,
+  transferRows,
+} from './playlist-bulk-writes';
+import { recordPlaylistChange } from './playlist-change';
+import { sortedOrder } from './playlist-item-sort';
+import {
+  appendRows,
+  deleteRow,
+  lockPlaylist,
+  removedOf,
+  touchPlaylist,
+} from './playlist-item-writes';
+import { reorderSlots, toPlaylist, writePositions } from './playlist-query';
+import { PostgresPlaylistReads } from './postgres-playlist-reads';
 
-const { playlists: p, playlistItems: pi, videos: v, channels: ch } = schema;
+const { playlists: p, playlistItems: pi } = schema;
 
-export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
-  constructor(private readonly db: PostgresDatabase) {}
-
+export class PostgresPlaylistRepository
+  extends PostgresPlaylistReads
+  implements PlaylistRepositoryPort
+{
   async create(input: NewPlaylistInput): Promise<Result<Playlist, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.insert(p).values(input).returning(),
@@ -64,113 +77,27 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     return map(inserted, () => undefined);
   }
 
-  async findById(id: string): Promise<Result<Playlist | null, DatabaseUnavailable>> {
-    const rows = await fromPromise(
-      () => this.db.select().from(p).where(eq(p.id, id)),
-      databaseUnavailable.during('findPlaylist')
-    );
-    return map(rows, ([row]) => (row ? toPlaylist(row) : null));
-  }
-
-  async findDetail(
-    id: string,
-    viewer: UserContext | null
-  ): Promise<Result<PlaylistDetail | null, DatabaseUnavailable>> {
-    const headers = await fromPromise(
-      () =>
-        this.db
-          .select({ playlist: getTableColumns(p), ...channelCardColumns })
-          .from(p)
-          .leftJoin(ch, and(eq(ch.userId, p.ownerId), eq(ch.isPrimary, true)))
-          .where(drizzleWhere(eq(p.id, id), playlistReadScope(viewer))),
-      databaseUnavailable.during('findPlaylist')
-    );
-    if (isErr(headers)) return headers;
-    const [header] = headers.value;
-    if (!header) return ok(null);
-
-    const entries = await fromPromise(
-      () => entriesOf(this.db, id, viewer),
-      databaseUnavailable.during('listPlaylistItems')
-    );
-    const { playlist, ...owner } = header;
-    return map(entries, (rows) => ({
-      playlist: toPlaylist(playlist),
-      owner: toChannelCard(owner),
-      items: rows.map(toPlaylistEntry),
-    }));
-  }
-
-  async listOwned(
-    owner: UserContext,
-    videoId: string | null
-  ): Promise<Result<OwnedPlaylist[], DatabaseUnavailable>> {
-    const videoCount = this.db
-      .select({ n: count() })
-      .from(pi)
-      .innerJoin(v, eq(v.id, pi.videoId))
-      .where(drizzleWhere(eq(pi.playlistId, p.id), watchableVideoScope(owner)));
-    const holdsVideo =
-      videoId === null
-        ? sql`false`
-        : inArray(
-            p.id,
-            this.db.select({ id: pi.playlistId }).from(pi).where(eq(pi.videoId, videoId))
-          );
-
-    return await fromPromise(
-      () =>
-        this.db
-          .select({
-            ...getTableColumns(p),
-            videoCount: sql<number>`(${videoCount})`.mapWith(Number),
-            containsVideo: sql<boolean>`${holdsVideo}`.mapWith(Boolean),
-          })
-          .from(p)
-          .where(eq(p.ownerId, owner.id))
-          .orderBy(desc(p.isSystem), desc(p.updatedAt), desc(p.id)),
-      databaseUnavailable.during('listOwnedPlaylists')
-    );
-  }
-
-  async listPublicByOwner(
-    ownerId: string,
-    options: ListPublicPlaylistsOptions
-  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () => publicPlaylistsOf(this.db, ownerId, options),
-      databaseUnavailable.during('listPublicPlaylists')
-    );
-  }
-
-  async listItemOwners(
-    playlistId: string
-  ): Promise<Result<{ id: string; ownerId: string }[], DatabaseUnavailable>> {
-    return await fromPromise(
-      () =>
-        this.db
-          .select({ id: v.id, ownerId: v.ownerId })
-          .from(pi)
-          .innerJoin(v, eq(v.id, pi.videoId))
-          .where(eq(pi.playlistId, playlistId)),
-      databaseUnavailable.during('listPlaylistItemOwners')
-    );
-  }
-
   async update(
     id: string,
-    patch: PlaylistPatch
+    patch: PlaylistPatch,
+    actorId: string
   ): Promise<Result<Playlist | null, DatabaseUnavailable>> {
-    const rows = await fromPromise(
+    return await fromPromise(
       () =>
-        this.db
-          .update(p)
-          .set({ ...patch, updatedAt: sql`now()` })
-          .where(eq(p.id, id))
-          .returning(),
+        this.db.transaction(async (tx) => {
+          const [row] = await tx
+            .update(p)
+            .set({ ...patch, updatedAt: sql`now()` })
+            .where(eq(p.id, id))
+            .returning();
+          if (!row) return null;
+          await recordPlaylistChange(tx, id, actorId, [
+            { action: 'settings_changed', target: { fields: Object.keys(patch) } },
+          ]);
+          return toPlaylist(row);
+        }),
       databaseUnavailable.during('updatePlaylist')
     );
-    return map(rows, ([row]) => (row ? toPlaylist(row) : null));
   }
 
   async remove(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -187,48 +114,93 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
 
   async addItem(
     playlistId: string,
-    item: NewPlaylistItem
+    item: NewPlaylistItem,
+    actorId: string
   ): Promise<Result<AddPlaylistItemOutcome, DatabaseUnavailable>> {
+    const appended = await this.appendItems(playlistId, [item], actorId);
+    return map(appended, (outcomes) =>
+      outcomes ? (outcomes.get(item.id) ?? 'present') : 'playlist-missing'
+    );
+  }
+
+  async appendItems(
+    playlistId: string,
+    items: readonly NewPlaylistItem[],
+    actorId: string
+  ): Promise<Result<Map<string, AppendItemOutcome> | null, DatabaseUnavailable>> {
     return await fromPromise(
       () =>
-        this.db.transaction(async (tx): Promise<AddPlaylistItemOutcome> => {
-          if (!(await this.lockPlaylist(tx, playlistId))) return 'playlist-missing';
-          const [video] = await tx
-            .select({ id: v.id })
-            .from(v)
-            .where(eq(v.id, item.videoId))
-            .for('share');
-          if (!video) return 'video-missing';
-
-          const inserted = await tx
-            .insert(pi)
-            .values({ ...item, playlistId, position: await this.nextPosition(tx, playlistId) })
-            .onConflictDoNothing({ target: [pi.playlistId, pi.videoId] })
-            .returning({ id: pi.id });
-          if (inserted.length === 0) return 'present';
-          await this.touch(tx, playlistId);
-          return 'added';
+        this.db.transaction(async (tx) => {
+          if (!(await lockPlaylist(tx, playlistId))) return null;
+          return await appendLogged(tx, playlistId, items, actorId);
         }),
-      databaseUnavailable.during('addPlaylistItem')
+      databaseUnavailable.during('appendPlaylistItems')
     );
   }
 
   async removeItem(
     playlistId: string,
-    videoId: string
+    target: PlaylistItemTarget,
+    actorId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          if (!(await this.lockPlaylist(tx, playlistId))) return false;
-          const removed = await tx
-            .delete(pi)
-            .where(and(eq(pi.playlistId, playlistId), eq(pi.videoId, videoId)))
-            .returning({ id: pi.id });
-          if (removed.length > 0) await this.touch(tx, playlistId);
-          return removed.length > 0;
+          if (!(await lockPlaylist(tx, playlistId))) return false;
+          const removed = await deleteRow(tx, playlistId, target);
+          if (!removed) return false;
+          await touchPlaylist(tx, playlistId);
+          await recordPlaylistChange(tx, playlistId, actorId, [
+            { action: 'item_removed', target: removedOf(removed) },
+          ]);
+          return true;
         }),
       databaseUnavailable.during('removePlaylistItem')
+    );
+  }
+
+  async editItem(
+    playlistId: string,
+    itemId: string,
+    patch: PlaylistItemPatch,
+    actorId: string
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const edited = await tx
+            .update(pi)
+            .set(patch)
+            .where(and(eq(pi.playlistId, playlistId), eq(pi.id, itemId)))
+            .returning({ id: pi.id });
+          if (edited.length === 0) return false;
+          await touchPlaylist(tx, playlistId);
+          await recordPlaylistChange(tx, playlistId, actorId, [
+            { action: 'note_edited', target: { itemId } },
+          ]);
+          return true;
+        }),
+      databaseUnavailable.during('editPlaylistItem')
+    );
+  }
+
+  async addSection(
+    playlistId: string,
+    section: NewPlaylistSection,
+    actorId: string
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          if (!(await lockPlaylist(tx, playlistId))) return false;
+          await appendRows(tx, playlistId, [{ kind: 'section', ...section }]);
+          await touchPlaylist(tx, playlistId);
+          await recordPlaylistChange(tx, playlistId, actorId, [
+            { action: 'section_added', target: { itemId: section.id, title: section.title } },
+          ]);
+          return true;
+        }),
+      databaseUnavailable.during('addPlaylistSection')
     );
   }
 
@@ -240,11 +212,11 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     const outcome = await fromPromise(
       () =>
         this.db.transaction(async (tx): Promise<Result<boolean, F>> => {
-          if (!(await this.lockPlaylist(tx, playlistId))) return ok(false);
+          if (!(await lockPlaylist(tx, playlistId))) return ok(false);
           const writes = plan(await reorderSlots(tx, playlistId, viewer));
           if (isErr(writes)) return writes;
           await writePositions(tx, playlistId, writes.value);
-          await this.touch(tx, playlistId);
+          await logReorder(tx, playlistId, viewer.id, writes.value.length);
           return ok(true);
         }),
       databaseUnavailable.during('reorderPlaylist')
@@ -252,36 +224,56 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     return andThen(outcome, (decided) => decided);
   }
 
-  private async lockPlaylist(tx: PostgresDatabase, playlistId: string): Promise<boolean> {
-    const [row] = await tx.select({ id: p.id }).from(p).where(eq(p.id, playlistId)).for('update');
-    return Boolean(row);
+  async writeSort(
+    playlistId: string,
+    sort: Exclude<PlaylistItemSort, 'manual'>,
+    viewer: UserContext
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          if (!(await lockPlaylist(tx, playlistId))) return false;
+          const order = await sortedOrder(tx, playlistId, sort, viewer);
+          await writePositions(tx, playlistId, renumberPositions(order));
+          await logReorder(tx, playlistId, viewer.id, order.length);
+          return true;
+        }),
+      databaseUnavailable.during('sortPlaylist')
+    );
   }
 
-  private positions(tx: PostgresDatabase, playlistId: string) {
-    return tx
-      .select({ id: pi.id, position: pi.position })
-      .from(pi)
-      .where(eq(pi.playlistId, playlistId))
-      .orderBy(asc(pi.position), asc(pi.id));
+  async transfer(
+    sourceId: string,
+    targetId: string,
+    items: readonly StoredPlaylistItem[],
+    mode: 'move' | 'copy',
+    actorId: string
+  ): Promise<Result<TransferOutcome, DatabaseUnavailable>> {
+    return await fromPromise(
+      () => this.db.transaction((tx) => transferRows(tx, sourceId, targetId, items, mode, actorId)),
+      databaseUnavailable.during('transferPlaylistItems')
+    );
   }
 
-  private async nextPosition(tx: PostgresDatabase, playlistId: string): Promise<number> {
-    const [last] = await tx
-      .select({ position: max(pi.position) })
-      .from(pi)
-      .where(eq(pi.playlistId, playlistId));
-    const next = appendPosition(last?.position ?? null);
-    if (next !== null) return next;
-
-    const order = (await this.positions(tx, playlistId)).map((row) => row.id);
-    await writePositions(tx, playlistId, renumberPositions(order));
-    return order.length * POSITION_GAP;
+  async merge(
+    targetId: string,
+    sources: readonly MergeSource[],
+    actorId: string
+  ): Promise<Result<MergeOutcome, DatabaseUnavailable>> {
+    return await fromPromise(
+      () => this.db.transaction((tx) => mergeRows(tx, targetId, sources, actorId)),
+      databaseUnavailable.during('mergePlaylists')
+    );
   }
 
-  private async touch(tx: PostgresDatabase, playlistId: string): Promise<void> {
-    await tx
-      .update(p)
-      .set({ updatedAt: sql`now()` })
-      .where(eq(p.id, playlistId));
+  async restoreItem(
+    playlistId: string,
+    activity: RestorablePlaylistActivity,
+    actorId: string
+  ): Promise<Result<RestoreItemOutcome, DatabaseUnavailable>> {
+    return await fromPromise(
+      () => this.db.transaction((tx) => restoreRow(tx, playlistId, activity, actorId)),
+      databaseUnavailable.during('restorePlaylistItem')
+    );
   }
 }

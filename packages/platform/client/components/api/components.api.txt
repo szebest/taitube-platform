@@ -87,6 +87,21 @@ export interface PageHeaderRootProps extends ComponentPropsWithRef<'div'> {
 }
 export function PageHeaderSkeleton({ titleStyle, }: Pick<PageHeaderRootProps, "titleStyle">): JSX.Element
 export type PageHeaderTitleStyle = Extract<TypeStyleOption, 'headline' | 'display'>;
+export interface PositionControl {
+    mode: 'position';
+    positionMs: number;
+    onPositionChange: (positionMs: number) => void;
+    label: string;
+}
+export interface RangeControl {
+    mode: 'range';
+    range: TimelineRange;
+    onRangeChange: (range: TimelineRange) => void;
+    minSpanMs: number;
+    maxSpanMs: number;
+    startLabel: string;
+    endLabel: string;
+}
 export const STAT_CARD_TREND_TONE: { readonly up: "success"; readonly down: "danger"; readonly flat: "neutral"; }
 export const SectionError: { Root: ({ layout, tone, onRetry, retrying, autoFocusRetry, className, children, ...props }: SectionErrorRootProps) => JSX.Element; Message: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Support: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; }
 export type SectionErrorLayout = 'bar' | 'block';
@@ -135,6 +150,25 @@ export type StartHereSource = 'pinned' | 'popular';
 export const StatCard: { Root: ({ size, state, onRetry, asChild, className, children, ...props }: StatCardRootProps) => JSX.Element; Label: ({ className, ...props }: ComponentPropsWithRef<"figcaption">) => JSX.Element; Value: ({ className, children, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Delta: ({ trend, className, children, ...props }: StatCardDeltaProps) => JSX.Element | null; Spark: ({ values, series, className, ...props }: StatCardSparkProps) => JSX.Element | null; }
 export function StatCardSkeleton({ size }: { size?: StatCardSize; }): JSX.Element
 export type StatCardTrend = 'up' | 'down' | 'flat';
+export type TimelineControl = RangeControl | PositionControl;
+export interface TimelineMarker {
+    id: string | number;
+    ms: number;
+    label: string;
+    active?: boolean;
+}
+export interface TimelineRange {
+    startMs: number;
+    endMs: number;
+}
+export function TimelineRangeEditor({ durationMs, control, sprite, markers, summary, className, ...props }: TimelineRangeEditorProps): JSX.Element
+export interface TimelineRangeEditorProps extends Omit<ComponentPropsWithRef<'fieldset'>, 'children' | 'onChange'> {
+    durationMs: number;
+    control: TimelineControl;
+    sprite?: SpriteSheet;
+    markers?: readonly TimelineMarker[];
+    summary: string;
+}
 export const VideoCard: { Root: ({ variant, state, size, videoId, expandOnHover, previewOnHover, className, onPointerEnter, onPointerLeave, onFocus, onBlur, ...props }: VideoCardRootProps) => JSX.Element; Thumb: ({ src, alt, duration, spokenDuration, progress, previewSrc, frames, className, children, ...props }: VideoCardThumbProps) => JSX.Element; Byline: ({ name, avatarSrc, asChild, className, children, ...props }: VideoCardBylineProps) => JSX.Element; Title: ({ asChild, className, ...props }: VideoCardTitleProps) => JSX.Element; Meta: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Snippet: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Reason: ({ className, children, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Menu: ({ onSave, onQueue, onPlayNext, className, children, }: VideoCardMenuProps) => JSX.Element | null; Expanded: ({ onSave, onQueue, onPlayNext, className, children, }: VideoCardExpandedProps) => JSX.Element | null; }
 export interface VideoCardActionsProps {
     onSave?: () => void;

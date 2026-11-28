@@ -1,6 +1,6 @@
+import { TimelineRangeEditor } from '@kit/components';
 import { Field, Tabs, Textarea } from '@kit/ui';
 import type { ReactNode } from 'react';
-import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import { useT } from '#app/lib/messages';
 import { formatTimecode } from '#app/utils/timecode';
 import { POST_LIMITS } from './constants';

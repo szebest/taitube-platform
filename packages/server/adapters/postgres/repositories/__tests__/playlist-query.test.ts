@@ -2,7 +2,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
-import { entriesOf, publicPlaylistsOf, writePositions } from '../playlist-query';
+import { publicPlaylistsOf, rowsOf, toDetailItems, writePositions } from '../playlist-query';
 import type { PostgresDatabase } from '../types';
 
 const OWNER = '00000000-0000-7000-8000-000000000101';
@@ -54,7 +54,10 @@ describe('adapters/postgres: playlist query', () => {
   });
 
   const listed = async (viewer: { id: string; role: 'USER' } | null) =>
-    (await entriesOf(db, PLAYLIST, viewer)).map((row) => [row.videoId, row.position]);
+    toDetailItems(await rowsOf(db, PLAYLIST, viewer)).items.map((row) => [
+      row.videoId,
+      row.position,
+    ]);
 
   it('ranks every item before the viewer scope drops one', async () => {
     expect(await listed({ id: OWNER, role: 'USER' })).toEqual([
@@ -66,6 +69,26 @@ describe('adapters/postgres: playlist query', () => {
       [VIDEOS[1], 1],
       [VIDEOS[2], 2],
     ]);
+  });
+
+  it('ranks a section between the videos and hands it back apart from them', async () => {
+    const section = '00000000-0000-7000-8000-0000000002ff';
+    await db.insert(schema.playlistItems).values({
+      id: section,
+      playlistId: PLAYLIST,
+      kind: 'section',
+      title: 'Part two',
+      position: 1536,
+      addedBy: OWNER,
+    });
+
+    const { items, sections } = toDetailItems(await rowsOf(db, PLAYLIST, null));
+
+    expect(items.map((item) => [item.videoId, item.position])).toEqual([
+      [VIDEOS[0], 0],
+      [VIDEOS[2], 3],
+    ]);
+    expect(sections).toEqual([{ id: section, title: 'Part two', position: 2, addedBy: OWNER }]);
   });
 
   it('moves any number of rows in one statement, and touches no row it is not given', async () => {

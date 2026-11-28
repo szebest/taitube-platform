@@ -1,5 +1,6 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
+import { SDD_ADMIN_ENDPOINTS } from './sdd-admin-endpoints';
 import { SDD_ANALYTICS_ENDPOINTS } from './sdd-analytics-endpoints';
 import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
@@ -10,6 +11,7 @@ import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_LIVE_ENDPOINTS } from './sdd-live-endpoints';
 import { SDD_PICK_ENDPOINTS } from './sdd-pick-endpoints';
+import { SDD_PLAYLIST_ENDPOINTS } from './sdd-playlist-endpoints';
 import { SDD_POST_ENDPOINTS } from './sdd-post-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
 import { SDD_SCREENING_ENDPOINTS } from './sdd-screening-endpoints';
@@ -37,8 +39,6 @@ const AUTHENTICATED = [VALIDATION_FAILED, UNAUTHORIZED];
 const OWNED_VIDEO = [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VIDEO_NOT_FOUND];
 const VIEWED_VIDEO = [...AUTHENTICATED, ErrorCodes.VIDEO_NOT_FOUND];
 const CHANNEL = [...AUTHENTICATED, ErrorCodes.CHANNEL_NOT_FOUND];
-const ADMIN = [UNAUTHORIZED, FORBIDDEN];
-const DLQ_ENTRY = [VALIDATION_FAILED, ...ADMIN, ErrorCodes.DLQ_ENTRY_NOT_FOUND];
 
 export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
@@ -244,79 +244,12 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: AUTHENTICATED,
     hasQueryParams: true,
   },
-  {
-    path: '/v1/admin/videos',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 403],
-    expectedErrorCodes: [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR, ...ADMIN],
-    hasQueryParams: true,
-  },
-  {
-    path: '/v1/admin/categories',
-    method: 'get',
-    expectedStatuses: [200, 401, 403],
-    expectedErrorCodes: ADMIN,
-  },
-  {
-    path: '/v1/admin/videos/{id}',
-    method: 'get',
-    expectedStatuses: [200, 401, 403, 404],
-    expectedErrorCodes: [...ADMIN, ErrorCodes.VIDEO_NOT_FOUND],
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/admin/categories',
-    method: 'post',
-    expectedStatuses: [201, 400, 401, 403, 409],
-    expectedErrorCodes: [VALIDATION_FAILED, ...ADMIN, ErrorCodes.CATEGORY_SLUG_CONFLICT],
-    hasBody: true,
-  },
-  {
-    path: '/v1/admin/categories/{id}',
-    method: 'patch',
-    expectedStatuses: [200, 400, 401, 403, 404, 409],
-    expectedErrorCodes: [
-      VALIDATION_FAILED,
-      ...ADMIN,
-      ErrorCodes.CATEGORY_NOT_FOUND,
-      ErrorCodes.CATEGORY_SLUG_CONFLICT,
-    ],
-    hasBody: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/admin/categories/{id}',
-    method: 'delete',
-    expectedStatuses: [204, 401, 403, 404, 409],
-    expectedErrorCodes: [...ADMIN, ErrorCodes.CATEGORY_NOT_FOUND, ErrorCodes.CATEGORY_IN_USE],
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/admin/dlq',
-    method: 'get',
-    expectedStatuses: [200, 401, 403],
-    expectedErrorCodes: ADMIN,
-    hasQueryParams: true,
-  },
-  {
-    path: '/v1/admin/dlq/{id}/replay',
-    method: 'post',
-    expectedStatuses: [202, 400, 401, 403, 404],
-    expectedErrorCodes: DLQ_ENTRY,
-    hasBody: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/admin/dlq/{id}',
-    method: 'delete',
-    expectedStatuses: [204, 400, 401, 403, 404],
-    expectedErrorCodes: DLQ_ENTRY,
-    hasPathParams: true,
-  },
+  ...SDD_ADMIN_ENDPOINTS,
   ...SDD_CHANNEL_ENDPOINTS,
   ...SDD_ACCOUNT_ENDPOINTS,
   ...SDD_COMMENT_ENDPOINTS,
   ...SDD_LIBRARY_ENDPOINTS,
+  ...SDD_PLAYLIST_ENDPOINTS,
   ...SDD_STUDIO_ENDPOINTS,
   ...SDD_RECOMMENDATION_ENDPOINTS,
   ...SDD_SEARCH_ENDPOINTS,

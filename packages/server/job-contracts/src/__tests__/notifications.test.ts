@@ -6,6 +6,8 @@ import {
   heartOutbox,
   moderationOutbox,
   teamInviteOutbox,
+  playlistInviteOutbox,
+  playlistUpdateOutbox,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
   NOTIFY_MODERATION,
@@ -27,6 +29,7 @@ import {
   transitionNotificationJobs,
   visibilityNotificationJobs,
 } from '../notifications';
+import { NOTIFY_PLAYLIST_INVITE, NOTIFY_PLAYLIST_UPDATE } from '../playlist-notifications';
 import { defaultJobOptions, stagePolicies } from '../policies';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
@@ -132,6 +135,22 @@ describe('job-contracts: notification jobs', () => {
       outbox: teamInviteOutbox({ inviteId: INVITE_ID }),
       name: NOTIFY_TEAM_INVITE,
       jobId: `${INVITE_ID}--notify-team-invite`,
+    },
+    {
+      scenario: 'a playlist invite',
+      outbox: playlistInviteOutbox({ inviteId: INVITE_ID }),
+      name: NOTIFY_PLAYLIST_INVITE,
+      jobId: `${INVITE_ID}--notify-playlist-invite`,
+    },
+    {
+      scenario: 'an hour of changes to a playlist',
+      outbox: playlistUpdateOutbox({
+        playlistId: VIDEO_ID,
+        actorUserId: EVENT_ID,
+        hour: '2026-11-26T12',
+      }),
+      name: NOTIFY_PLAYLIST_UPDATE,
+      jobId: `${VIDEO_ID}--notify-playlist-update--${EVENT_ID}--2026-11-26T12`,
     },
     {
       scenario: 'a visible moderation action',

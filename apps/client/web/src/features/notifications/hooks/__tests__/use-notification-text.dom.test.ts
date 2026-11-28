@@ -1,7 +1,10 @@
 import { renderHook } from '@testing-library/react';
 import type { Notification } from '@vp/api-contracts';
 import { AppProviders } from '#app/__tests__/providers';
-import { notification } from '#app/features/notifications/__tests__/notification-fixtures';
+import {
+  NOTIFICATION_ID,
+  notification,
+} from '#app/features/notifications/__tests__/notification-fixtures';
 import { useNotificationText } from '../use-notification-text';
 
 const textOf = (shown: Notification) =>
@@ -55,6 +58,19 @@ describe('apps/client/web: useNotificationText', () => {
       shown: notification({ kind: 'team_invite', videoId: null }, { videoTitle: null }),
       headline: 'Night Kitchen invited you to join their team',
     },
+    ...(
+      [
+        ['playlist_invite', 'Night Kitchen invited you to work on the playlist Road trip'],
+        ['playlist_update', 'Night Kitchen changed your playlist Road trip'],
+      ] as const
+    ).map(([kind, headline]) => ({
+      case: `a ${kind}`,
+      shown: notification(
+        { kind, videoId: null },
+        { videoTitle: null, playlist: { id: NOTIFICATION_ID, title: 'Road trip', invite: null } }
+      ),
+      headline,
+    })),
     ...(['hold', 'hide', 'remove', 'ban'] as const).map((action) => ({
       case: `a visible ${action}`,
       shown: notification(

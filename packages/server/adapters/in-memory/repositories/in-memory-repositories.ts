@@ -3,13 +3,13 @@ import type { Clock } from './clock';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
-import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
 import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
-import type { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
-import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
-import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
+import {
+  type ChannelContentRepositories as ChannelContent,
+  channelContentOf,
+} from './in-memory-channel-providers';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
@@ -27,8 +27,10 @@ import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repos
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
-import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
-import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
+import {
+  type PlaylistRepositories as Playlists,
+  playlistsOf,
+} from './in-memory-playlist-providers';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -83,7 +85,12 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly comments: InMemoryCommentRepository;
   readonly commentModeration: InMemoryCommentModerationRepository;
   readonly commentReports: InMemoryCommentReportRepository;
-  readonly playlists: InMemoryPlaylistRepository;
+  declare readonly playlists: Playlists['playlists'];
+  declare readonly playlistCollaborators: Playlists['playlistCollaborators'];
+  declare readonly playlistActivity: Playlists['playlistActivity'];
+  declare readonly smartPlaylists: Playlists['smartPlaylists'];
+  declare readonly playlistLibrary: Playlists['playlistLibrary'];
+  declare readonly playlistStats: Playlists['playlistStats'];
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
   readonly notifications: InMemoryNotificationRepository;
@@ -96,12 +103,12 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly screenings: InMemoryScreeningRepository;
   readonly fingerprints: InMemoryFingerprintRepository;
   readonly clips: InMemoryClipRepository;
-  readonly channelFeatured: InMemoryChannelFeaturedRepository;
+  declare readonly channelFeatured: ChannelContent['channelFeatured'];
   readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
-  readonly channelImages: InMemoryChannelImageRepository;
-  readonly channelPages: InMemoryChannelPageRepository;
-  readonly channelPosts: InMemoryChannelPostRepository;
-  readonly postEngagement: InMemoryPostEngagement;
+  declare readonly channelImages: ChannelContent['channelImages'];
+  declare readonly channelPages: ChannelContent['channelPages'];
+  declare readonly channelPosts: ChannelContent['channelPosts'];
+  declare readonly postEngagement: ChannelContent['postEngagement'];
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
@@ -136,7 +143,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.comments = c.get(Repo.comments);
     this.commentModeration = c.get(Repo.commentModeration);
     this.commentReports = c.get(Repo.commentReports);
-    this.playlists = c.get(Repo.playlists);
+    Object.assign(this, playlistsOf(c));
     this.watchHistory = c.get(Repo.watchHistory);
     this.userPreferences = c.get(Repo.userPreferences);
     this.notifications = c.get(Repo.notifications);
@@ -149,12 +156,8 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.screenings = c.get(Repo.screenings);
     this.fingerprints = c.get(Repo.fingerprints);
     this.clips = c.get(Repo.clips);
-    this.channelFeatured = c.get(Repo.channelFeatured);
+    Object.assign(this, channelContentOf(c));
     this.channelHandleHistory = c.get(Repo.channelHandleHistory);
-    this.channelImages = c.get(Repo.channelImages);
-    this.channelPages = c.get(Repo.channelPages);
-    this.channelPosts = c.get(Repo.channelPosts);
-    this.postEngagement = c.get(Repo.postEngagement);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);

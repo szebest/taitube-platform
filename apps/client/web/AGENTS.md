@@ -302,6 +302,18 @@ under `_authed`.
   a heartbeat per ten seconds of playhead, a write-through on pause and at the end, nothing for a guest or while
   `privacy.historyPaused` is set. A sign-in, a sign-out or a switch swaps in the identity's own cache
   (`settleSession`, `switchIdentity`), so no list outlives its viewer.
+- **The playlist page** (`/playlist?list=`, ticket 119): `usePlaylistAccess(playlist)` is the `PlaylistResource` every
+  `useCan` on the page takes, with the viewer's own seat read from `GET .../collaborators` (the read carries none, and a
+  stranger's 403 there means no seat). Rows merge items and sections by position (`utils/playlist-rows.ts`) on the
+  `SortableList`, through `PlaylistItemRow` and `PlaylistSectionRow` (`components/playlist/`); a section folds the videos
+  under it and a drag carries them. The sort is the `sort` search param (replace); a non-manual one reads the sorted
+  items read-only, and "Save this order" writes it for owner and editors. Every dialog (item note and segment over
+  `TimelineRangeEditor`, section, transfer, merge, import and export, collaborators, activity, share links, stats,
+  settings, rules) is a lazy `playlist-*` URL modal, mounted by `PlaylistDialogs` only for a viewer who may open it. A share
+  link's token is the `s` search param, passed to the read and kept out of the query keys; a dead link renders
+  `PlaylistLinkExpired`. `/playlist-invite/$token` (members only) accepts an invite link. The You page shows each pinned
+  playlist as a shelf after Watch later, and the followed ones in `FollowingShelf`, a list gone private as "No longer
+  available" with Unfollow.
 - **A spec renders through `renderLibrary(url, api)`** (`features/library/__tests__/render-library.tsx`), which signs
   the viewer in over `libraryApi` handlers, with `useLibraryClock()` holding `Date` still.
 

@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [76 Live streaming](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) · [SDD live viewers](../SDD.md) |
 
-**Status:** blocked
+**Status:** ready
 
 ## What to build
 

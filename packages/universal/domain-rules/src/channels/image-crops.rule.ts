@@ -1,5 +1,11 @@
 import { type Result, all, andThen, assertNever, map, ok } from '@kit/result';
-import { BANNER_ASPECTS, BANNER_TARGETS, type BannerCrops, type ImageCrops } from '@vp/domain';
+import {
+  BANNER_ASPECTS,
+  BANNER_TARGETS,
+  type BannerCrops,
+  type ImageCrops,
+  PLAYLIST_COVER_ASPECT,
+} from '@vp/domain';
 import {
   type ChannelImageKind,
   type ImageDimensions,
@@ -14,9 +20,9 @@ export type DecideImageCropsFailure = ImageTooSmall | InvalidCropRect;
 type CropsOf<K extends ChannelImageKind> = Extract<ImageCrops, { kind: K }>;
 
 /**
- * An avatar is cropped square, a banner once per target to that target's shape, a post image not
- * at all: its crop is the whole image. Every crop lies inside the image the worker will read, so
- * the job never meets a rectangle it cannot cut.
+ * An avatar is cropped square, a banner once per target to that target's shape, a playlist cover
+ * to a thumbnail's, a post image not at all: its crop is the whole image. Every crop lies inside
+ * the image the worker will read, so the job never meets a rectangle it cannot cut.
  */
 export function decideImageCrops(
   crops: ImageCrops,
@@ -25,25 +31,25 @@ export function decideImageCrops(
   return andThen(validateChannelImageDimensions(crops.kind, image), () => {
     switch (crops.kind) {
       case 'avatar':
-        return avatarCrop(crops, image);
+        return singleCrop(crops, image, 1);
       case 'banner':
         return bannerCrops(crops, image);
+      case 'playlist-cover':
+        return singleCrop(crops, image, PLAYLIST_COVER_ASPECT);
       case 'post-image':
         return ok({ kind: 'post-image' as const, crop: { x: 0, y: 0, ...image } });
       default:
-        return assertNever(crops, 'ImageCrops.kind');
+        return assertNever(crops, 'ImageCrops');
     }
   });
 }
 
-function avatarCrop(
-  { crop }: CropsOf<'avatar'>,
-  image: ImageDimensions
+function singleCrop(
+  { kind, crop }: CropsOf<'avatar' | 'playlist-cover'>,
+  image: ImageDimensions,
+  aspect: number
 ): Result<ImageCrops, InvalidCropRect> {
-  return map(validateCropRect('crop', crop, image, 1), (checked) => ({
-    kind: 'avatar' as const,
-    crop: checked,
-  }));
+  return map(validateCropRect('crop', crop, image, aspect), (checked) => ({ kind, crop: checked }));
 }
 
 function bannerCrops(

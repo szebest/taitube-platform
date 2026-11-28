@@ -68,7 +68,7 @@ describe('RedisViewBufferAdapter', () => {
 
   it('counts a link open once per viewer and day under its own dedup key, which slides with the beacons', async () => {
     const open = {
-      videoId: VIDEO,
+      targetId: VIDEO,
       linkId: 'link-1',
       viewerKey: 'viewer-1',
       viewDate: '2026-03-10',
@@ -143,7 +143,7 @@ describe('RedisViewBufferAdapter', () => {
       'recordShareLinkOpen',
       (b) =>
         b.recordShareLinkOpen({
-          videoId: VIDEO,
+          targetId: VIDEO,
           linkId: 'link-1',
           viewerKey: 'viewer-1',
           viewDate: '2026-03-10',

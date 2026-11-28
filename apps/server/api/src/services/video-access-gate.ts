@@ -98,7 +98,10 @@ export class VideoAccessGate {
     const found = await this.deps.shareLinks.findByToken(token);
     if (isErr(found)) return found;
 
-    const used = decideShareLinkUse(found.value, { videoId, now: new Date(this.deps.now()) });
+    const used = decideShareLinkUse(found.value, {
+      target: { targetType: 'video', targetId: videoId },
+      now: new Date(this.deps.now()),
+    });
     if (isErr(used)) return used;
     return ok(
       used.value === null || found.value === null ? null : { link: found.value, grant: used.value }

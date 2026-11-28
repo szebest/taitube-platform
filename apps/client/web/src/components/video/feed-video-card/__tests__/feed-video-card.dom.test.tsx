@@ -49,6 +49,8 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
             title: 'Watch Later',
             visibility: 'private' as const,
             isSystem: true,
+            isSmart: false,
+            pinnedAt: null,
             videoCount: 0,
             containsVideo: false,
             updatedAt: '2026-01-02T00:00:00.000Z',

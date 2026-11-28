@@ -13,6 +13,7 @@ import {
   CHANNEL_IMAGE_UPLOAD_EDGES,
   channelImageFailed,
   channelImageReady,
+  type ChannelImageKind,
   type ChannelImageUpload,
   type PostImageUrls,
   type PostImageVariants,
@@ -88,6 +89,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     }
 
     const applied =
+      upload.kind === 'playlist-cover' ||
       upload.kind === 'post-image' ||
       this.deps.channels.advanceImageVersion(
         upload.channelId,
@@ -178,23 +180,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
   ): Promise<Result<number, DatabaseUnavailable>> {
     const channel = await this.deps.channels.findById(upload.channelId);
     if (isErr(channel)) return channel;
-    return ok(this.heldVersion(upload.kind, channel.value) ?? 0);
-  }
-
-  private heldVersion(
-    kind: ChannelImageUpload['kind'],
-    channel: { avatarVersion: number; bannerVersion: number } | null | undefined
-  ): number | undefined {
-    switch (kind) {
-      case 'avatar':
-        return channel?.avatarVersion;
-      case 'banner':
-        return channel?.bannerVersion;
-      case 'post-image':
-        return 0;
-      default:
-        return assertNever(kind, 'ChannelImageKind');
-    }
+    return ok(heldVersion(upload.kind, channel.value) ?? 0);
   }
 
   private async nextVersion(
@@ -223,7 +209,7 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
     upload: ChannelImageUpload,
     version: number
   ): Promise<Result<unknown, DatabaseUnavailable>> {
-    if (upload.kind !== 'post-image') {
+    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
       const audited = await this.deps.audit.append({
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,
@@ -243,5 +229,22 @@ export class InMemoryChannelImageRepository implements ChannelImageRepositoryPor
         version,
       }),
     });
+  }
+}
+
+function heldVersion(
+  kind: ChannelImageKind,
+  channel: { avatarVersion: number; bannerVersion: number } | null
+): number | undefined {
+  switch (kind) {
+    case 'avatar':
+      return channel?.avatarVersion;
+    case 'banner':
+      return channel?.bannerVersion;
+    case 'playlist-cover':
+    case 'post-image':
+      return 0;
+    default:
+      return assertNever(kind, 'ChannelImageKind');
   }
 }

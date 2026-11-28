@@ -17,7 +17,7 @@ import {
 
 export type ViewMeasure = 'views' | 'watch';
 
-const SEPARATOR = '|';
+export const SEPARATOR = '|';
 
 /** One hash field per video, day and measure, so a single `HINCRBY` moves one number. */
 export function viewBufferField(videoId: string, viewDate: ViewDate, measure: ViewMeasure): string {

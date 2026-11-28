@@ -1,10 +1,10 @@
+import { readImageSize } from '@kit/forms';
 import { fromPromise, isErr } from '@kit/result';
 import { useApi, useUserEvent } from '@vp/queries';
 import { validateChannelImageDimensions, validateChannelImageUploadRequest } from '@vp/validation';
 import { useEffect, useRef, useState } from 'react';
 import type { DraftUpdate, ImageDraft } from '#app/components/posts/post-composer';
 import { useT } from '#app/lib/messages';
-import { readImageSize } from '#app/utils/read-image-size';
 import { uploadChannelImage } from '#app/utils/upload-channel-image';
 
 /**

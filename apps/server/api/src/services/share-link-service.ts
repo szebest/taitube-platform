@@ -32,7 +32,7 @@ export interface ShareLinkServiceDeps {
 export type CreateShareLinkFailure = EditAccessFailure | InvalidShareLink | ShareLinkLimit;
 export type RevokeShareLinkFailure = EditAccessFailure | ShareLinkNotFound;
 
-function toShareLinkView(link: ShareLink, now: Date, stats: ShareLinkTotals): ShareLinkView {
+export function toShareLinkView(link: ShareLink, now: Date, stats: ShareLinkTotals): ShareLinkView {
   return {
     id: link.id,
     token: link.token,
@@ -79,7 +79,11 @@ export class ShareLinkService {
     if (isErr(links)) return links;
     const now = new Date(this.deps.now());
     const active = links.value.filter((link) => shareLinkState(link, now) === 'active').length;
-    const decided = decideShareLink(input, { videoId, active, now });
+    const decided = decideShareLink(input, {
+      target: { targetType: 'video', targetId: videoId },
+      active,
+      now,
+    });
     if (isErr(decided)) return decided;
 
     const link: ShareLink = {
@@ -96,7 +100,7 @@ export class ShareLinkService {
     if (isErr(created)) return created;
     return created.value
       ? ok(toShareLinkView(link, now, NO_SHARE_LINK_TOTALS))
-      : err(shareLinkLimit(videoId));
+      : err(shareLinkLimit({ targetType: 'video', targetId: videoId }));
   }
 
   async revoke(
