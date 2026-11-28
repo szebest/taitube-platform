@@ -135,16 +135,27 @@ interface NotificationJob {
   name: string;
   data: unknown;
   jobId: string;
+  /** Milliseconds the queue holds the job before it runs. */
+  delay?: number;
 }
 
 /** The outbox row that enqueues a notification job once the change that caused it commits. */
-export function notificationOutbox({ name, data, jobId }: NotificationJob) {
+export function notificationOutbox({ name, data, jobId, delay }: NotificationJob) {
   return {
     kind: 'notification',
     payload: {
       type: 'queue',
       queueName: 'notify',
-      job: { name, data, opts: { jobId, ...stagePolicies.notify, ...defaultJobOptions } },
+      job: {
+        name,
+        data,
+        opts: {
+          jobId,
+          ...(delay === undefined ? {} : { delay }),
+          ...stagePolicies.notify,
+          ...defaultJobOptions,
+        },
+      },
     },
   } as const;
 }

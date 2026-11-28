@@ -7,7 +7,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@kit/primitives';
-import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
+import { NOTIFICATION_RETENTION_DAYS, WATCH_PARTY_START_GRACE_MS } from '@vp/domain';
 export * from './screening-tuning';
 
 /**
@@ -219,9 +219,19 @@ export const WATCH_PARTY = {
   inviteCandidates: 20,
   reactionsFoldMs: 250,
   rosterBatchMs: 500,
+  discovery: {
+    listPerMinute: 60,
+    firstPageCacheSeconds: 5,
+    countsBatchMs: 2 * MS_PER_SECOND,
+    streamsPerIp: 4,
+  },
   buffering: { waitAfterMs: 1500, maxWaitMs: 10 * MS_PER_SECOND, maxRoomSize: 12 },
   scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
   messageRetentionDays: 7,
   closedRoomRetentionDays: 30,
-  sweep: { intervalMs: MS_PER_MINUTE, batchSize: 200, scheduledStartGraceMs: MS_PER_HOUR },
+  sweep: {
+    intervalMs: MS_PER_MINUTE,
+    batchSize: 200,
+    scheduledStartGraceMs: WATCH_PARTY_START_GRACE_MS,
+  },
 } as const;

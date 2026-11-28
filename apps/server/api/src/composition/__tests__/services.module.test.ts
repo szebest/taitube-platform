@@ -120,6 +120,7 @@ describe('apps/server/api/composition: services module', () => {
       'viewerActivityService',
       'watchHistoryService',
       'watchPartyControlsService',
+      'watchPartyDiscoveryService',
       'watchPartyGuestService',
       'watchPartyInviteService',
       'watchPartyMemberService',

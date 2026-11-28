@@ -1,5 +1,6 @@
 import { expectOk } from '@kit/testing/result';
 import { POSITION_GAP } from '@vp/domain';
+import { partyReminderOutboxes } from '@vp/job-contracts';
 import { VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject } from './subjects';
 import {
@@ -119,6 +120,30 @@ export function describeWatchPartyRoomRepositoryContract(
         expect(write).toMatchObject(expected);
         expect(await party.lineIds()).toEqual(lines);
       });
+
+      it.each([
+        { scenario: 'applies', expectedVersion: 1, queued: 1 },
+        { scenario: 'is stale', expectedVersion: 9, queued: 0 },
+      ])(
+        'writes its reminders to the outbox only when the update $scenario',
+        async ({ expectedVersion, queued }) => {
+          const reminder = partyReminderOutboxes(ROOM_ID, later(60), AT);
+
+          expectOk(
+            await rooms().updateSettings(
+              ROOM_ID,
+              { scheduledFor: later(60) },
+              expectedVersion,
+              null,
+              AT,
+              reminder
+            )
+          );
+
+          const waiting = expectOk(await party.subject.repositories.outbox.claimBatch(10));
+          expect(waiting).toHaveLength(queued * reminder.length);
+        }
+      );
 
       it('sets and clears the password hash', async () => {
         expectOk(await rooms().updateSettings(ROOM_ID, { passwordHash: 'hash' }, 1, null, AT));

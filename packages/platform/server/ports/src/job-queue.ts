@@ -17,6 +17,8 @@ export interface QueueJob<T = unknown> {
 
 export interface QueueJobOptions {
   jobId?: string;
+  /** Milliseconds the job waits before it can be processed. */
+  delay?: number;
   attempts?: number;
   priority?: number;
   backoff?: unknown;

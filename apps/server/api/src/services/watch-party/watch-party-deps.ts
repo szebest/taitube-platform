@@ -10,6 +10,7 @@ import type { CdnBase, WatchPartyConfig } from '@vp/env-schema';
 import type { WatchPartyMetrics } from '@vp/pipeline-metrics';
 import type { WatchPartyBroadcaster } from './watch-party-broadcaster';
 import type { WatchPartyContextLoader } from './watch-party-context';
+import type { WatchPartyDiscoveryFeed } from './watch-party-discovery-feed';
 
 type WatchPartyRepositories = Pick<
   Repositories,
@@ -21,6 +22,8 @@ type WatchPartyRepositories = Pick<
   | 'watchPartyInvites'
   | 'watchPartyInviteLinks'
   | 'watchPartyControls'
+  | 'watchPartyInterest'
+  | 'watchPartyReports'
   | 'watchPartyHousekeeping'
   | 'videos'
   | 'channels'
@@ -52,6 +55,8 @@ export interface WatchPartyDeps {
   readonly guestSessions: PartyGuestSessionsPort;
   readonly hasher: PasswordHasherPort;
   readonly broadcaster: WatchPartyBroadcaster;
+  /** What discovery's stream is told of a room opening, changing, closing and its count moving. */
+  readonly discovery: WatchPartyDiscoveryFeed;
   readonly context: WatchPartyContextLoader;
   readonly config: WatchPartyConfig;
   readonly secrets: WatchPartySecrets;

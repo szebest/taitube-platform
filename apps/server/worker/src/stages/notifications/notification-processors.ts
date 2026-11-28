@@ -12,6 +12,7 @@ import {
   NOTIFY_HEART,
   NOTIFY_MODERATION,
   NOTIFY_PARTY_INVITE,
+  NOTIFY_PARTY_REMINDER,
   NOTIFY_POST_SUBSCRIBERS,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
@@ -20,6 +21,7 @@ import {
   NotifyHeartJob,
   NotifyModerationJob,
   NotifyPartyInviteJob,
+  NotifyPartyReminderJob,
   NotifyPostSubscribersJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
@@ -32,6 +34,7 @@ import { createNotifyCommentProcessor } from './notify-comment';
 import { createNotifyHeartProcessor } from './notify-heart';
 import { createNotifyModerationProcessor } from './notify-moderation';
 import { createNotifyPartyInviteProcessor } from './notify-party-invite';
+import { createNotifyPartyReminderProcessor } from './notify-party-reminder';
 import { createNotifyPostSubscribersProcessor } from './notify-post-subscribers';
 import { createNotifyProcessingProcessor } from './notify-processing';
 import { createNotifySubscribersProcessor } from './notify-subscribers';
@@ -71,6 +74,10 @@ export function notificationProcessors(
     [NOTIFY_PARTY_INVITE]: consuming(
       NotifyPartyInviteJob,
       createNotifyPartyInviteProcessor({ ...rowDeps, now })
+    ),
+    [NOTIFY_PARTY_REMINDER]: consuming(
+      NotifyPartyReminderJob,
+      createNotifyPartyReminderProcessor({ ...rowDeps, now })
     ),
     [NOTIFY_MODERATION]: consuming(NotifyModerationJob, createNotifyModerationProcessor(rowDeps)),
     [NOTIFY_TEAM_INVITE]: consuming(NotifyTeamInviteJob, createNotifyTeamInviteProcessor(rowDeps)),

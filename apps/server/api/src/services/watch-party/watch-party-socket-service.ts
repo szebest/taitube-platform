@@ -122,6 +122,7 @@ export class WatchPartySocketService {
       const shown = effectiveCapacity(context.room.capacity, config.maxMembers);
       return err(watchPartyFull(roomId, admitted.value.present, shown));
     }
+    deps.discovery.countChanged(roomId);
     const session: RoomSession = { roomId, caller, memberKey, kind: grant.value.principal.kind };
     return ok(session);
   }

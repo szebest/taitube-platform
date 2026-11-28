@@ -4,6 +4,7 @@ import {
   SHARE_TOKEN_PARAM,
   streamMyEvents,
   streamVideoEvents,
+  streamWatchPartyEvents,
 } from '@vp/api-contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -47,6 +48,7 @@ async function stream(
   const registered = hub.register({
     channel: session.channel,
     userId: session.userId,
+    limit: session.limit,
     resync: session.resync,
     rawResponse: reply.raw,
   });
@@ -107,6 +109,19 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
       }
     );
   }
+
+  server.get(
+    streamWatchPartyEvents.path,
+    { schema: contractSchema(streamWatchPartyEvents) },
+    async (request, reply) =>
+      stream(
+        transport,
+        sseService.openPartiesStream(request.ip, app.config.watchParties.discovery.streamsPerIp),
+        null,
+        request,
+        reply
+      )
+  );
 
   for (const { path, hide } of contractPaths(streamMyEvents)) {
     server.get(

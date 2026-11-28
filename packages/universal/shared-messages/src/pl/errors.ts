@@ -113,6 +113,7 @@ export const errors = {
   watchPartyPasswordRequired: dt('Ta impreza wymaga hasła.'),
   watchPartyPasswordInvalid: dt('To hasło jest nieprawidłowe.'),
   watchPartyPasswordLocked: dt('Zbyt wiele błędnych haseł. Spróbuj ponownie później.'),
+  watchPartyAlreadyReported: dt('Już to zgłosiłeś.'),
   watchPartyInviteInvalid: dt('To zaproszenie jest już nieważne.'),
   watchPartyLimitReached: dt(
     'Prowadzisz już maksymalną liczbę otwartych imprez. Najpierw zamknij jedną.'

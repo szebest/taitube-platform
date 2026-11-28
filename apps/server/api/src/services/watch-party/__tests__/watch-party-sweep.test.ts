@@ -1,9 +1,10 @@
 import { MS_PER_DAY, MS_PER_MINUTE } from '@kit/primitives';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
-import type { WatchPartyRoom } from '@vp/domain';
+import { NO_PERSONAL_CONTROL, type WatchPartyRoom } from '@vp/domain';
 import { cacheUnavailable } from '@vp/errors';
 import { idleCloseReason, WatchPartySweep } from '../watch-party-sweep';
+import { banKey } from './watch-party-access-fixture';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
 import {
@@ -27,6 +28,8 @@ async function present(party: Party, ...keys: string[]) {
     expectOk(await party.presence.admit(ROOM_ID, key, { limit: null, nowMs, staleBeforeMs: 0 }));
   }
 }
+
+const sweepOf = (party: Party) => new WatchPartySweep(party.deps);
 
 const roomWith = (overrides: Partial<WatchPartyRoom>) => ({
   idleClose: '15m' as const,
@@ -77,8 +80,6 @@ describe('idleCloseReason', () => {
 });
 
 describe('the watch party sweep', () => {
-  const sweepOf = (party: Party) => new WatchPartySweep(party.deps);
-
   it('records who is present and leaves a room with people in it open', async () => {
     const party = await socketRoom();
     await present(party, keyOf(OWNER));
@@ -169,8 +170,18 @@ describe('the watch party sweep', () => {
     expect(outcome).toMatchObject({ rooms: 0 });
   });
 
-  it('drops the rooms closed past their retention', async () => {
+  it('drops the rooms closed past their retention with their room-scoped controls and guest ban hashes', async () => {
     const party = await socketRoom();
+    await banKey(party, ROOM_ID, GUEST_KEY, 'ip-hash');
+    const control = {
+      ...NO_PERSONAL_CONTROL,
+      userId: OWNER.id,
+      targetKey: keyOf(MEMBER),
+      voiceMuted: true,
+      updatedAt: new Date(START),
+    };
+    expectOk(await party.repositories.watchPartyControls.put({ ...control, roomId: ROOM_ID }));
+    expectOk(await party.repositories.watchPartyControls.put({ ...control, roomId: null }));
     expectOk(
       await party.repositories.watchPartyRooms.close(ROOM_ID, 'owner', null, new Date(START))
     );
@@ -180,6 +191,12 @@ describe('the watch party sweep', () => {
 
     expect(outcome.purgedRooms).toBe(1);
     expect(expectOk(await party.repositories.watchPartyRooms.findById(ROOM_ID))).toBeNull();
+    expect(
+      expectOk(await party.repositories.watchPartyMembers.isBanned(ROOM_ID, GUEST_KEY, 'ip-hash'))
+    ).toBe(false);
+    expect(expectOk(await party.repositories.watchPartyControls.list(OWNER.id, ROOM_ID))).toEqual([
+      expect.objectContaining({ roomId: null }),
+    ]);
   });
 
   it('drops the chat lines past their retention from a room that stays open', async () => {

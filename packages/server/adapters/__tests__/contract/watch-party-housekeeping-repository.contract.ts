@@ -1,4 +1,6 @@
 import { expectOk } from '@kit/testing/result';
+import { NO_PERSONAL_CONTROL } from '@vp/domain';
+import { OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import {
   AT,
@@ -6,6 +8,7 @@ import {
   MINUTE_MS,
   numberedId,
   OTHER_ROOM_ID,
+  OWNER_KEY,
   ROOM_ID,
   seedRoomWorld,
 } from './watch-party-activity-fixtures';
@@ -96,6 +99,61 @@ export function describeWatchPartyHousekeepingRepositoryContract(
         const kept = subject.repositories.watchPartyMessages;
         expect(expectOk(await kept.listAfter(OTHER_ROOM_ID, null, 10))).toEqual([]);
         expect(expectOk(await kept.listAfter(THIRD_ROOM_ID, null, 10))).toHaveLength(1);
+      });
+    });
+
+    describe('purgeClosedBefore, what belongs to the room', () => {
+      const GUEST_KEY = 'guest:abcdefghijklmnop';
+      const IP_HASH = 'ip-hash-of-the-guest';
+      const banIn = async (roomId: string, n: number) =>
+        expectOk(
+          await subject.repositories.watchPartyMembers.ban(
+            {
+              roomId,
+              memberKey: GUEST_KEY,
+              ipHash: IP_HASH,
+              bannedBy: OWNER_KEY,
+              reason: null,
+              createdAt: AT,
+            },
+            {
+              id: numberedId(8, n),
+              line: { event: 'banned', actorKey: OWNER_KEY, targetKey: GUEST_KEY, detail: null },
+              videoId: null,
+              positionMs: null,
+              createdAt: AT,
+            }
+          )
+        );
+      const controlIn = async (roomId: string | null) =>
+        expectOk(
+          await subject.repositories.watchPartyControls.put({
+            ...NO_PERSONAL_CONTROL,
+            userId: OWNER_ID,
+            targetKey: `user:${numberedId(3, 7)}`,
+            roomId,
+            voiceMuted: true,
+            updatedAt: AT,
+          })
+        );
+      const controlsOf = async (roomId: string | null) =>
+        expectOk(await subject.repositories.watchPartyControls.list(OWNER_ID, roomId));
+
+      it('takes the room-scoped controls and guest ban hashes with a purged room, keeping the rest', async () => {
+        await closeAt(OTHER_ROOM_ID, new Date(AT.getTime() - 40 * DAY_MS));
+        await banIn(OTHER_ROOM_ID, 1);
+        await banIn(THIRD_ROOM_ID, 2);
+        await controlIn(OTHER_ROOM_ID);
+        await controlIn(THIRD_ROOM_ID);
+        await controlIn(null);
+
+        expectOk(await housekeeping().purgeClosedBefore(new Date(AT.getTime() - 30 * DAY_MS)));
+
+        const bans = subject.repositories.watchPartyMembers;
+        expect(expectOk(await bans.isBanned(OTHER_ROOM_ID, GUEST_KEY, IP_HASH))).toBe(false);
+        expect(expectOk(await bans.isBanned(THIRD_ROOM_ID, GUEST_KEY, IP_HASH))).toBe(true);
+        expect(await controlsOf(OTHER_ROOM_ID)).toHaveLength(1);
+        expect(await controlsOf(THIRD_ROOM_ID)).toHaveLength(2);
       });
     });
 

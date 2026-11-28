@@ -6,7 +6,8 @@ import {
   type MemberKind,
   type RoomRole,
   upgradeRoomRoles,
-  WATCH_PARTY_PERMISSIONS_VERSION,
+  WATCH_PARTY_PERMISSIONS,
+  type WatchPartyPermissionEntry,
   type WatchPartyMember,
   type WatchPartyMemberRole,
   type WatchPartyRoleRecord,
@@ -45,7 +46,8 @@ const NO_SEAT: EffectivePermissions = { permissions: [], topPosition: -1 };
 /** The one place a room, its roles and the caller's seat become a decision-ready context. */
 export class WatchPartyContextLoader {
   constructor(
-    private readonly deps: { readonly repositories: ContextRepositories; readonly now: () => Date }
+    private readonly deps: { readonly repositories: ContextRepositories; readonly now: () => Date },
+    private readonly registry: readonly WatchPartyPermissionEntry[] = WATCH_PARTY_PERMISSIONS
   ) {}
 
   async load(
@@ -127,11 +129,16 @@ export class WatchPartyContextLoader {
   private async upgraded(
     room: WatchPartyRoom
   ): Promise<Result<WatchPartyRoom, DatabaseUnavailable>> {
-    if (room.permissionsVersion >= WATCH_PARTY_PERMISSIONS_VERSION) return ok(room);
+    const target = Math.max(...this.registry.map((entry) => entry.since));
+    if (room.permissionsVersion >= target) return ok(room);
     const { watchPartyRooms, watchPartyRoles } = this.deps.repositories;
     const roles = await watchPartyRoles.list(room.id, this.deps.now());
     return andThenAsync(roles, async (current) => {
-      const { roles: next, version } = upgradeRoomRoles<RoomRole>(current, room.permissionsVersion);
+      const { roles: next, version } = upgradeRoomRoles<RoomRole>(
+        current,
+        room.permissionsVersion,
+        this.registry
+      );
       const changed = next.filter((role, index) => role !== current[index]);
       const written = await watchPartyRooms.upgradeRoles(
         room.id,

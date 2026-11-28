@@ -225,6 +225,7 @@ async function seatCaller(
   );
   if (isErr(seat)) return seat;
   if (line !== null) await announceLine(deps, room.id, line);
+  deps.discovery.countChanged(room.id);
   const settled = await settleGrant(deps, via === 'invite' ? grant : { type: 'none' });
   if (isErr(settled)) return settled;
 
@@ -277,5 +278,6 @@ export async function leaveRoom(
   if (isErr(gone)) return gone;
   await announceLine(deps, roomId, line);
   await flushRoster(deps)(roomId, [{ type: 'removal', memberKey }]);
+  deps.discovery.countChanged(roomId);
   return ok();
 }

@@ -19,8 +19,10 @@ import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine, logChange, systemLineFor } from './watch-party-moderation-effects';
 import { requirePrincipal, type Unauthenticated } from './watch-party-principals';
+import { remindersFor } from './watch-party-reminders';
 import { checkRoomInput, type InvalidRoomInput } from './watch-party-room-input';
 import { presentRoom } from './watch-party-room-views';
+import { refreshSearchText } from './watch-party-search-text';
 
 type RoomOutcome<T> = Result<
   T,
@@ -146,12 +148,15 @@ export async function updateRoom(
     patchOf(body, checked.value, passwordHash.value),
     body.version,
     line,
-    deps.now()
+    deps.now(),
+    remindersFor(context.room, checked.value.scheduledFor, deps.now())
   );
   if (isErr(written)) return written;
   const applied = appliedRoom(written.value, roomId, body.version);
   if (isErr(applied)) return applied;
 
+  if (applied.value.name !== context.room.name) await refreshSearchText(deps, applied.value);
+  await deps.discovery.settingsChanged(context.room, applied.value);
   const view = await presentRoom(deps, applied.value);
   if (isErr(view)) return view;
   await announce(deps, roomId, { type: 'settings', room: view.value });
@@ -181,6 +186,7 @@ export async function closeRoom(
       const view = await presentRoom(deps, written.value.room);
       if (isErr(view)) return view;
       await announce(deps, roomId, { type: 'closed', reason });
+      await deps.discovery.closed(roomId);
       logChange(deps, { roomId, actorKey, action: 'close' });
       return view;
     }

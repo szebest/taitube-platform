@@ -9,6 +9,11 @@ export interface WatchPartyHousekeepingRepositoryPort {
     afterId: string | null,
     limit: number
   ): Promise<Result<WatchPartyRoom[], DatabaseUnavailable>>;
+  /**
+   * Rewrites every open room's `trend_score` from its joins in the last 30 minutes, its present
+   * count and its age at `at`, so the trending sort is an index walk.
+   */
+  refreshTrendScores(at: Date): Promise<Result<void, DatabaseUnavailable>>;
   /** The database's own clock, what pod clocks are measured against. */
   databaseClock(): Promise<Result<Date, DatabaseUnavailable>>;
   /** Rooms closed before `cutoff`, with everything that belongs to them; the count removed. */

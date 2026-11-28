@@ -8,9 +8,19 @@ import { ErrorCodes } from '@vp/errors';
  */
 export type SseUnavailable = Failure<typeof ErrorCodes.STORAGE_UNAVAILABLE, { reason: string }>;
 
+/** Who a stream budget belongs to: an account, or an address for a stream that needs no sign-in. */
+export type SseStreamSubject = 'user' | 'ip';
+
+/** A budget of concurrent streams for one account or one address. */
+export interface StreamLimit {
+  subject: SseStreamSubject;
+  key: string;
+  max: number;
+}
+
 export type SseStreamLimitReached = Failure<
   typeof ErrorCodes.RATE_LIMITED,
-  { userId: string; limit: number }
+  { subject: SseStreamSubject; key: string; limit: number }
 >;
 
 export type SseRegisterFailure = SseUnavailable | SseStreamLimitReached;
@@ -19,11 +29,16 @@ export function sseUnavailable(reason: string): SseUnavailable {
   return { code: ErrorCodes.STORAGE_UNAVAILABLE, message: reason, reason };
 }
 
-export function sseStreamLimitReached(userId: string, limit: number): SseStreamLimitReached {
+export function sseStreamLimitReached(
+  subject: SseStreamSubject,
+  key: string,
+  limit: number
+): SseStreamLimitReached {
   return {
     code: ErrorCodes.RATE_LIMITED,
-    message: `Maximum active SSE streams (${limit}) exceeded for user`,
-    userId,
+    message: `Maximum active SSE streams (${limit}) exceeded for ${subject}`,
+    subject,
+    key,
     limit,
   };
 }

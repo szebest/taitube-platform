@@ -1,5 +1,7 @@
 import { andThen, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
+  DiscoverableRoom,
+  NewOutboxInput,
   OwnerTransfer,
   PlaybackChange,
   RoomWrite,
@@ -9,12 +11,18 @@ import type {
   WatchPartyRoomSeed,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { renumberPositions, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
+import {
+  renumberPositions,
+  type WatchPartyCloseReason,
+  type WatchPartyDiscoveryQuery,
+  type WatchPartyRoom,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
+import { listDiscoverableRooms, writeSearchText } from './watch-party-discovery-query';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';
-import { insertSystemLine } from './watch-party-writes';
+import { insertOutbox, toRoom, writeRoom } from './watch-party-writes';
 
 const {
   watchPartyRooms: rooms,
@@ -24,16 +32,11 @@ const {
   watchPartyQueueItems: queue,
 } = schema;
 
-function toRoom(row: typeof rooms.$inferSelect): WatchPartyRoom {
-  const { trendScore: _trendScore, searchText: _searchText, ...room } = row;
-  return room;
-}
-
 export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
 
   async create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>> {
-    const { room, roles: seedRoles, owner, queue: seedQueue } = seed;
+    const { room, roles: seedRoles, owner, queue: seedQueue, reminders = [] } = seed;
     const created = await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
@@ -75,6 +78,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
                 seedQueue.map((item) => ({ ...item, position: positionOf.get(item.id) ?? 0 }))
               );
           }
+          await insertOutbox(tx, reminders);
           return row;
         }),
       databaseUnavailable.during('createWatchPartyRoom')
@@ -117,23 +121,40 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     return map(found, (rows) => rows.map(toRoom));
   }
 
+  listDiscoverable(
+    query: WatchPartyDiscoveryQuery
+  ): Promise<Result<DiscoverableRoom[], DatabaseUnavailable>> {
+    return listDiscoverableRooms(this.db, query);
+  }
+
+  setSearchText(id: string, text: string): Promise<Result<void, DatabaseUnavailable>> {
+    return writeSearchText(this.db, id, text);
+  }
+
   async updateSettings(
     id: string,
     patch: SettingsPatch,
     expectedVersion: number,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    reminders: readonly NewOutboxInput[] = []
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return this.write('updateWatchPartySettings', id, line, (tx) =>
-      tx
-        .update(rooms)
-        .set({
-          ...patch,
-          version: sql`${rooms.version} + 1`,
-          updatedAt: at,
-        })
-        .where(and(eq(rooms.id, id), eq(rooms.version, expectedVersion)))
-        .returning()
+    return writeRoom(
+      this.db,
+      'updateWatchPartySettings',
+      id,
+      line,
+      (tx) =>
+        tx
+          .update(rooms)
+          .set({
+            ...patch,
+            version: sql`${rooms.version} + 1`,
+            updatedAt: at,
+          })
+          .where(and(eq(rooms.id, id), eq(rooms.version, expectedVersion)))
+          .returning(),
+      reminders
     );
   }
 
@@ -142,7 +163,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     change: PlaybackChange
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     const { expected, playback, playedItemId, currentVideoId, line, at } = change;
-    return this.write('commitWatchPartyPlayback', id, line, async (tx) => {
+    return writeRoom(this.db, 'commitWatchPartyPlayback', id, line, async (tx) => {
       const updated = await tx
         .update(rooms)
         .set({
@@ -181,7 +202,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     line: NewSystemLine | null,
     at: Date
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return this.write('closeWatchPartyRoom', id, line, (tx) =>
+    return writeRoom(this.db, 'closeWatchPartyRoom', id, line, (tx) =>
       tx
         .update(rooms)
         .set({ status: 'closed', closedReason: reason, closedAt: at, updatedAt: at })
@@ -211,7 +232,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     transfer: OwnerTransfer
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     const { fromKey, toKey, expectedRolesVersion, cohostRoleId, line, at } = transfer;
-    return this.write('transferWatchPartyOwner', id, line, async (tx) => {
+    return writeRoom(this.db, 'transferWatchPartyOwner', id, line, async (tx) => {
       const updated = await tx
         .update(rooms)
         .set({
@@ -269,31 +290,6 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
           return true;
         }),
       databaseUnavailable.during('upgradeWatchPartyRoles')
-    );
-  }
-
-  /**
-   * One compare-and-set in a transaction: `update` returns the changed row or nothing. The system
-   * line is written only when it applied; nothing changed means the room is stale or gone.
-   */
-  private async write(
-    operation: string,
-    id: string,
-    line: NewSystemLine | null,
-    update: (tx: PostgresDatabase) => Promise<(typeof rooms.$inferSelect)[]>
-  ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return fromPromise(
-      () =>
-        this.db.transaction(async (tx): Promise<RoomWrite> => {
-          const [applied] = await update(tx);
-          if (applied) {
-            if (line) await insertSystemLine(tx, id, line);
-            return { type: 'applied', room: toRoom(applied) };
-          }
-          const [current] = await tx.select().from(rooms).where(eq(rooms.id, id));
-          return current ? { type: 'stale', room: toRoom(current) } : { type: 'missing' };
-        }),
-      databaseUnavailable.during(operation)
     );
   }
 }

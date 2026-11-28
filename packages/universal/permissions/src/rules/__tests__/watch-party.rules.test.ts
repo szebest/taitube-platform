@@ -1,6 +1,6 @@
 import { subject } from '@casl/ability';
-import { guestUser, standardUser } from '../../__mocks__/fixtures';
-import type { WatchPartyResource } from '../../types/index';
+import { guestUser, moderatorUser, standardUser } from '../../__mocks__/fixtures';
+import type { UserContext, WatchPartyResource } from '../../types/index';
 import { defineWatchPartyRules } from '../watch-party.rules';
 import { buildAbility } from './build-ability';
 
@@ -30,5 +30,51 @@ describe('rules/watch-party: creating and reading a room', () => {
     const ability = buildAbility(defineWatchPartyRules, guestUser);
 
     expect(ability.can('read', subject('WatchParty', { ...room }))).toBe(read);
+  });
+});
+
+describe('rules/watch-party: reporting and the moderator close', () => {
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    room: WatchPartyResource;
+    report: boolean;
+  }>([
+    { scenario: 'a public room', user: standardUser, room: { visibility: 'public' }, report: true },
+    {
+      scenario: 'an unlisted room',
+      user: standardUser,
+      room: { visibility: 'unlisted' },
+      report: false,
+    },
+    {
+      scenario: 'an unlisted room they are in',
+      user: standardUser,
+      room: { visibility: 'unlisted', isMember: true },
+      report: true,
+    },
+    {
+      scenario: 'a public room signed out',
+      user: guestUser,
+      room: { visibility: 'public' },
+      report: false,
+    },
+  ])('reporting $scenario: $report', ({ user, room, report }) => {
+    const ability = buildAbility(defineWatchPartyRules, user);
+
+    expect(ability.can('report', subject('WatchParty', { ...room }))).toBe(report);
+  });
+
+  it.each([
+    { who: 'a moderator', user: moderatorUser, allowed: true },
+    { who: 'a signed-in account', user: standardUser, allowed: false },
+    { who: 'a signed-out visitor', user: guestUser, allowed: false },
+  ])('$who may close and restore any room: $allowed', ({ user, allowed }) => {
+    const ability = buildAbility(defineWatchPartyRules, user);
+
+    expect([ability.can('close', 'WatchParty'), ability.can('restore', 'WatchParty')]).toEqual([
+      allowed,
+      allowed,
+    ]);
   });
 });

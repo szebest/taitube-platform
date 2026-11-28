@@ -54,14 +54,14 @@ export const WatchPartyPlaybackSchema = z
       'The room clock: while playing, the position at t is positionMs + (t - anchorAt) * rate',
   });
 
-const PartyVideoSchema = z.object({
+export const PartyVideoSchema = z.object({
   id: z.uuid(),
   title: z.string().nullable(),
   durationMs: z.number().int().nonnegative().nullable(),
   thumbnailUrl: z.string().nullable(),
 });
 
-const PartyPersonSchema = z.object({
+export const PartyPersonSchema = z.object({
   memberKey: MemberKeySchema,
   name: z.string(),
   avatarUrl: z.string().nullable(),

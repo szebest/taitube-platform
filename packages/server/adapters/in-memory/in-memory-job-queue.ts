@@ -103,7 +103,7 @@ export class InMemoryJobQueue extends JobQueue {
       getState: async () => this.jobStates.get(jobId) ?? 'unknown',
     };
 
-    const initialState = options?.initialState ?? 'waiting';
+    const initialState = options?.initialState ?? (options?.delay ? 'delayed' : 'waiting');
     this.allJobs.set(jobId, job);
     this.jobStates.set(jobId, initialState);
 

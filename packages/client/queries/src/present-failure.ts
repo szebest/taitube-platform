@@ -107,6 +107,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF:
     case ErrorCodes.COMMENT_NOT_PINNABLE:
     case ErrorCodes.COMMENT_ALREADY_REPORTED:
+    case ErrorCodes.WATCH_PARTY_ALREADY_REPORTED:
     case ErrorCodes.REPORT_ALREADY_RESOLVED:
     case ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE:
     case ErrorCodes.SCREENING_REJECTED:

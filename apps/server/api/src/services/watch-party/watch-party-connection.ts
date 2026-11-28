@@ -165,6 +165,7 @@ export class RoomConnection {
     deps.buffering.stop(roomId, memberKey);
     if (this.context.room.ownerKey === memberKey) deps.ownerGrace.begin(roomId);
     void this.keep(deps.presence.leave(roomId, memberKey), 'presence not cleared');
+    deps.discovery.countChanged(roomId);
   }
 
   /** A seat upgraded in place: the same socket carries on as the account. */

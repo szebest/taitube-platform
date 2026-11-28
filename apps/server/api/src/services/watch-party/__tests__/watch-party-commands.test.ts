@@ -2,9 +2,10 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import type { WatchPartyServerFrame } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { type CommandFrame, runCommand } from '../watch-party-commands';
+import { WatchPartyQueueService } from '../watch-party-queue-service';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OWNER, userCaller } from './watch-party-test-deps';
+import { MEMBER, OWNER, userCaller, VIDEO_B } from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 type Bare<F = CommandFrame> = F extends unknown ? Omit<F, 'version' | 'rolesVersion'> : never;
@@ -137,5 +138,40 @@ describe('runCommand', () => {
     const { result } = await send(party, { type: 'seek', positionMs: 7 });
 
     expect(expectErr(result).code).toBe(ErrorCodes.RATE_LIMITED);
+  });
+});
+
+describe('what a preset gives Member', () => {
+  const member = userCaller(MEMBER);
+  const actions = {
+    pause: async (party: Party) =>
+      (await send(party, { type: 'pause', positionMs: 1_000 }, MEMBER)).result,
+    skip: async (party: Party) => (await send(party, { type: 'next' }, MEMBER)).result,
+    add: (party: Party) =>
+      new WatchPartyQueueService(party.deps).add(ROOM_ID, member, { videoId: VIDEO_B }),
+    reorder: (party: Party) =>
+      new WatchPartyQueueService(party.deps).move(ROOM_ID, member, party.items[0]?.id ?? '', {
+        toIndex: 1,
+      }),
+    remove: (party: Party) =>
+      new WatchPartyQueueService(party.deps).remove(ROOM_ID, member, party.items[0]?.id ?? ''),
+  };
+
+  it.each(
+    (['friends', 'public'] as const).flatMap((preset) =>
+      (Object.keys(actions) as (keyof typeof actions)[]).map((action) => ({
+        preset,
+        action,
+        allowed: preset === 'friends',
+      }))
+    )
+  )('a $preset room’s Member can act on $action: $allowed', async ({ preset, action, allowed }) => {
+    const party = await socketRoom({ preset });
+    await party.play();
+
+    const result = await actions[action](party);
+
+    expect(result.ok).toBe(allowed);
+    if (!result.ok) expect(result.error.code).toBe(ErrorCodes.WATCH_PARTY_PERMISSION_MISSING);
   });
 });

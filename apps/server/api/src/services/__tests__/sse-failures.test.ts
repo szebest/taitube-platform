@@ -11,7 +11,7 @@ describe('apps/server/api/services: SSE register failures', () => {
     },
     {
       name: 'sseStreamLimitReached',
-      failure: sseStreamLimitReached('user-1', 20),
+      failure: sseStreamLimitReached('user', 'user-1', 20),
       code: ErrorCodes.RATE_LIMITED,
     },
   ])('$name carries $code and stays off the wire', ({ failure, code }) => {
@@ -26,11 +26,23 @@ describe('apps/server/api/services: SSE register failures', () => {
     });
   });
 
-  it('names the user and the budget they ran out of', () => {
-    expect(sseStreamLimitReached('user-1', 20)).toMatchObject({
-      userId: 'user-1',
-      limit: 20,
+  it.each([
+    {
+      subject: 'user',
+      key: 'user-1',
       message: 'Maximum active SSE streams (20) exceeded for user',
+    },
+    {
+      subject: 'ip',
+      key: '203.0.113.9',
+      message: 'Maximum active SSE streams (20) exceeded for ip',
+    },
+  ] as const)('names the $subject and the budget they ran out of', ({ subject, key, message }) => {
+    expect(sseStreamLimitReached(subject, key, 20)).toMatchObject({
+      subject,
+      key,
+      limit: 20,
+      message,
     });
   });
 });

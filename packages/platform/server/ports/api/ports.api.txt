@@ -87,6 +87,7 @@ export interface QueueJob<T = unknown> {
 export type QueueJobCounts = Record<QueueJobState, number>;
 export interface QueueJobOptions {
     jobId?: string;
+    delay?: number;
     attempts?: number;
     priority?: number;
     backoff?: unknown;

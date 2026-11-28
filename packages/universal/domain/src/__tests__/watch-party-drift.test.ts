@@ -41,6 +41,11 @@ describe('@vp/domain: correctDrift', () => {
       action: { type: 'seek', positionMs: 30_120, cooldownUntil: NOW + 3000 },
     },
     {
+      scenario: 'over 2 s ahead once the seek cooldown has run out',
+      input: { driftMs: 2500, cooldownUntil: NOW },
+      action: { type: 'seek', positionMs: 30_120, cooldownUntil: NOW + 3000 },
+    },
+    {
       scenario: 'over 2 s ahead inside the seek cooldown',
       input: { driftMs: 2500, cooldownUntil: NOW + 1 },
       action: { type: 'hold' },

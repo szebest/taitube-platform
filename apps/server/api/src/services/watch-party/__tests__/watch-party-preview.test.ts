@@ -13,9 +13,12 @@ import {
   OWNER_KEY,
   seedInvite,
   seedLink,
+  userOf,
 } from './watch-party-access-fixture';
 import {
   ANONYMOUS,
+  DISCORD_ID,
+  discordSession,
   MEMBER,
   OTHER,
   OWNER,
@@ -195,6 +198,38 @@ describe('apps/server/api/services: previewRoom', () => {
         guests: 1,
         total: 4,
       });
+    });
+
+    it('shows at most five faces, however many accounts are present', async () => {
+      const world = await setUpPreview();
+      const accounts = Array.from({ length: 7 }, (_, index) => userOf(index));
+      for (const [index, user] of accounts.entries()) {
+        expectOk(
+          await world.repositories.channels.create({
+            userId: user.id,
+            handle: `face${index}`,
+            displayName: `Face ${index}`,
+          })
+        );
+        await world.seat(userCaller(user));
+      }
+      await world.present(...accounts.map(({ id }) => `user:${id}`));
+
+      const { roster } = expectOk(await world.preview());
+
+      expect(roster.faces).toHaveLength(5);
+      expect(roster.total).toBe(7);
+    });
+
+    it('counts a Discord member by its source, with no face', async () => {
+      const world = await setUpPreview();
+      await world.seat(guestCaller(discordSession()));
+      await world.present(OWNER_KEY, `discord:${DISCORD_ID}`);
+
+      const { roster } = expectOk(await world.preview());
+
+      expect(roster).toMatchObject({ discord: 1, guests: 0, total: 2 });
+      expect(roster.faces.map(({ name }) => name)).toEqual(['Olivia Owner']);
     });
 
     it('shows no faces for a private room', async () => {
