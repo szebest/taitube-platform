@@ -50,6 +50,7 @@ export async function hydrateRow(
         ownerUserId: video.ownerId,
         format: video.format,
         durationMs: video.durationMs,
+        tags: video.tags ?? [],
         viewsCount: video.viewsCount ?? 0,
         likesCount: video.likesCount ?? 0,
       };

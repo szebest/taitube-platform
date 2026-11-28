@@ -50,6 +50,7 @@ export type PageItemRow =
       kind: 'video';
       format: 'standard' | 'short';
       durationMs: number | null;
+      tags: readonly string[];
       viewsCount: number;
       likesCount: number;
     })

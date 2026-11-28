@@ -22,6 +22,7 @@ const among = (column: Parameters<typeof inArray>[0], ids: string[]): SQL =>
 const NO_NUMBER = sql<number | null>`null::bigint`;
 const NO_TEXT = sql<string | null>`null::text`;
 const NO_UUID = sql<string | null>`null::uuid`;
+const NO_TAGS = sql<string[] | null>`null::text[]`;
 
 function cardOf(kind: PageItemKind): SQL<PageItemKind> {
   return sql<PageItemKind>`${kind}::text`;
@@ -46,6 +47,7 @@ export async function hydrateRefs(
         n3: sql<number | null>`${v.likesCount}::bigint`,
         t1: sql<string | null>`${v.format}`,
         t2: NO_TEXT,
+        tags: sql<string[] | null>`${v.tags}`,
       })
       .from(v)
       .where(sql`${among(v.id, idsOf(refs, 'video'))} and ${publicFeedScope()}`),
@@ -63,6 +65,7 @@ export async function hydrateRefs(
         n3: sql<number | null>`${p.commentsCount}::bigint`,
         t1: NO_TEXT,
         t2: NO_TEXT,
+        tags: NO_TAGS,
       })
       .from(p)
       .where(sql`${among(p.id, idsOf(refs, 'post'))} and ${p.status} = 'published'`),
@@ -82,6 +85,7 @@ export async function hydrateRefs(
         n3: NO_NUMBER,
         t1: NO_TEXT,
         t2: NO_TEXT,
+        tags: NO_TAGS,
       })
       .from(pl)
       .where(
@@ -101,6 +105,7 @@ export async function hydrateRefs(
         n3: NO_NUMBER,
         t1: sql<string | null>`${ls.status}::text`,
         t2: sql<string | null>`${ls.videoId}::text`,
+        tags: NO_TAGS,
       })
       .from(ls)
       .where(
@@ -120,6 +125,7 @@ export async function hydrateRefs(
         n3: NO_NUMBER,
         t1: sql<string | null>`${ch.handle}`,
         t2: NO_TEXT,
+        tags: NO_TAGS,
       })
       .from(ch)
       .where(among(ch.id, idsOf(refs, 'channel')))
@@ -140,6 +146,7 @@ interface HydratedRow {
   n3: number | string | null;
   t1: string | null;
   t2: string | null;
+  tags: string[] | null;
 }
 
 const count = (value: number | string | null): number => Number(value ?? 0);
@@ -160,6 +167,7 @@ function toRow(row: HydratedRow): PageItemRow {
         kind: 'video',
         format: row.t1 === 'short' ? 'short' : 'standard',
         durationMs: row.n1 === null ? null : Number(row.n1),
+        tags: row.tags ?? [],
         viewsCount: count(row.n2),
         likesCount: count(row.n3),
       };

@@ -51,6 +51,12 @@ describe('@vp/domain-rules: isShownTo', () => {
       shown: true,
     },
     { scenario: 'a locale outside the chain', locales: ['de'], chain: ['pl', 'en'], shown: false },
+    {
+      scenario: 'not the fallback of another locale',
+      locales: ['en'],
+      chain: ['pl', 'en'],
+      shown: false,
+    },
   ])('shows $scenario', ({ locales, chain, shown }) => {
     expect(isShownTo(visibility({ locales }), viewer('guest', chain))).toBe(shown);
   });

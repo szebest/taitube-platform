@@ -24,8 +24,13 @@ export type ProbedTabKind = (typeof PROBED_TAB_KINDS)[number];
 
 export const probeKey = (kind: ProbedTabKind): string => `tab:${kind}`;
 
+export interface RefineRequest extends Omit<PoolRequest, 'sort' | 'limit'> {
+  sort: PoolRequest['sort'] | null;
+}
+
 export interface PagePlan {
   pool: Record<PoolSourceType, PoolRequest[]>;
+  refine: RefineRequest[];
   playlistItems: PlaylistItemsRequest[];
   smart: SmartRequest[];
   startHere: { limit: number; sections: { id: string; limit: number }[] } | null;
@@ -69,6 +74,23 @@ function poolLimit(section: ContentSection): number {
   return wantsPool(section) ? LAYOUT_LIMITS.poolSize : section.itemCount;
 }
 
+function rankedSort(sort: ContentSection['sort']): PoolRequest['sort'] | null {
+  return sort === 'random' || sort === 'manual' ? null : sort;
+}
+
+function isRefined({ sort, filters }: ContentSection): boolean {
+  return (
+    rankedSort(sort) !== null ||
+    filters.tags.length > 0 ||
+    filters.dateRange !== null ||
+    filters.duration !== null
+  );
+}
+
+function curatedLimit(section: ContentSection): number {
+  return isRefined(section) ? LAYOUT_LIMITS.poolSize : poolLimit(section);
+}
+
 function windowOf(filters: SectionFilters, now: Date): { since: Date | null; until: Date | null } {
   const range = filters.dateRange;
   if (range === null) return { since: null, until: null };
@@ -85,11 +107,23 @@ function windowOf(filters: SectionFilters, now: Date): { since: Date | null; unt
   }
 }
 
+function refineRequest(section: ContentSection, now: Date): RefineRequest {
+  const { filters } = section;
+  return {
+    key: section.id,
+    sort: rankedSort(section.sort),
+    tags: filters.tags,
+    ...windowOf(filters, now),
+    minDurationSec: filters.duration?.minSeconds ?? null,
+    maxDurationSec: filters.duration?.maxSeconds ?? null,
+  };
+}
+
 function poolRequest(section: ContentSection, now: Date): PoolRequest {
   const { filters, sort } = section;
   return {
     key: section.id,
-    sort: sort === 'random' || sort === 'manual' ? 'newest' : sort,
+    sort: rankedSort(sort) ?? 'newest',
     limit: poolLimit(section),
     tags: filters.tags,
     ...windowOf(filters, now),
@@ -118,6 +152,7 @@ function probeRequest(kind: ProbedTabKind): PoolRequest {
 export function planPage({ layout, audience, locales, now }: PlanInput): PagePlan {
   const plan: PagePlan = {
     pool: { videos: [], shorts: [], posts: [], live: [], playlists: [] },
+    refine: [],
     playlistItems: [],
     smart: [],
     startHere: null,
@@ -154,14 +189,16 @@ export function planPage({ layout, audience, locales, now }: PlanInput): PagePla
           plan.playlistItems.push({
             key: section.id,
             playlistId: source.playlistId,
-            limit: poolLimit(section),
+            limit: curatedLimit(section),
           });
+          plan.refine.push(refineRequest(section, now));
           break;
         case 'smart_playlist':
           plan.smart.push({ key: section.id, rules: source.rules, limit: poolLimit(section) });
           break;
         case 'picked':
           plan.fixed.push({ key: section.id, refs: source.items });
+          plan.refine.push(refineRequest(section, now));
           break;
         case 'start_here': {
           const limit = poolLimit(section);

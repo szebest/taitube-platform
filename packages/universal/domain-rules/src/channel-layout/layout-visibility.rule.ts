@@ -24,7 +24,10 @@ export function isShownInLocale(
   { locales }: Pick<LayoutVisibility, 'locales'>,
   chain: readonly string[]
 ): boolean {
-  return locales.length === 0 || chain.some((locale) => locales.includes(locale));
+  if (locales.length === 0) return true;
+  const [resolved = ''] = chain;
+  const [language = resolved] = resolved.split('-');
+  return locales.includes(resolved) || locales.includes(language);
 }
 
 function isShownInWindow({ from, to }: Pick<LayoutVisibility, 'from' | 'to'>, now: Date): boolean {

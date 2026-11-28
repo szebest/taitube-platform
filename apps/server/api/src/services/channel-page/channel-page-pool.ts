@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@kit/primitives';
 import { type Result, assertNever, isErr, ok } from '@kit/result';
 import { PageItemSchema, type PageItemView } from '@vp/api-contracts';
 import type {
@@ -10,7 +11,13 @@ import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { z } from 'zod';
 import { cdnUrl } from '../video-views';
-import { PROBED_TAB_KINDS, type PagePlan, type ProbedTabKind, probeKey } from './channel-page-plan';
+import {
+  PROBED_TAB_KINDS,
+  type PagePlan,
+  type ProbedTabKind,
+  type RefineRequest,
+  probeKey,
+} from './channel-page-plan';
 
 export const PagePoolSchema = z.object({
   sections: z.record(z.string(), z.array(PageItemSchema)),
@@ -76,6 +83,72 @@ function toItemView(row: PageItemRow, cdn: CdnBase): PageItemView {
   }
 }
 
+function popularityOf(row: PageItemRow): number {
+  switch (row.kind) {
+    case 'video':
+      return row.viewsCount;
+    case 'post':
+      return row.likesCount;
+    case 'live':
+      return row.viewers;
+    case 'playlist':
+    case 'channel':
+      return 0;
+    default:
+      return assertNever(row, 'PageItemRow');
+  }
+}
+
+function likesOf(row: PageItemRow): number {
+  return row.kind === 'video' || row.kind === 'post' ? row.likesCount : 0;
+}
+
+function rankOf(row: PageItemRow, sort: NonNullable<RefineRequest['sort']>): number {
+  switch (sort) {
+    case 'popular':
+      return popularityOf(row);
+    case 'most_liked':
+      return likesOf(row);
+    case 'newest':
+    case 'oldest':
+      return row.createdAt.getTime();
+    default:
+      return assertNever(sort, 'PoolRequestSort');
+  }
+}
+
+function passes(row: PageItemRow, request: RefineRequest): boolean {
+  const { since, until, tags, minDurationSec, maxDurationSec } = request;
+  if (since && row.createdAt < since) return false;
+  if (until && row.createdAt > until) return false;
+  if (row.kind !== 'video') return true;
+  if (tags.length > 0 && !tags.some((tag) => row.tags.includes(tag))) return false;
+  const seconds = row.durationMs === null ? null : row.durationMs / MS_PER_SECOND;
+  if (minDurationSec !== null && (seconds === null || seconds < minDurationSec)) return false;
+  return !(maxDurationSec !== null && (seconds === null || seconds > maxDurationSec));
+}
+
+function refined(
+  refs: readonly PageItemRef[],
+  rows: ReadonlyMap<string, PageItemRow>,
+  request: RefineRequest
+): PageItemRef[] {
+  const kept = refs.filter((ref) => {
+    const row = rows.get(`${ref.kind}:${ref.id}`);
+    return row !== undefined && passes(row, request);
+  });
+  const { sort } = request;
+  if (sort === null) return kept;
+  const sign = sort === 'oldest' ? 1 : -1;
+  const rankOfRef = ({ kind, id }: PageItemRef): number => {
+    const row = rows.get(`${kind}:${id}`);
+    return row ? rankOf(row, sort) : 0;
+  };
+  return kept.toSorted(
+    (a, b) => sign * (rankOfRef(a) - rankOfRef(b)) || sign * a.id.localeCompare(b.id)
+  );
+}
+
 async function collect(
   sources: ChannelPageSourceRepositoryPort,
   channelId: string,
@@ -126,9 +199,11 @@ export async function loadPagePool(
   const hydrated =
     wanted.size > 0 ? await sources.hydrate([...wanted.values()]) : ok<PageItemRow[]>([]);
   if (isErr(hydrated)) return hydrated;
-  const views = new Map(
-    hydrated.value.map((row) => [`${row.kind}:${row.id}`, toItemView(row, cdn)])
-  );
+  const rows = new Map(hydrated.value.map((row) => [`${row.kind}:${row.id}`, row]));
+  const views = new Map([...rows].map(([key, row]) => [key, toItemView(row, cdn)]));
+  for (const request of plan.refine) {
+    refs[request.key] = refined(refs[request.key] ?? [], rows, request);
+  }
 
   const sections: Record<string, PageItemView[]> = {};
   for (const [key, list] of Object.entries(refs)) {

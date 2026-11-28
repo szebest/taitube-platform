@@ -96,7 +96,7 @@ export class ChannelPageResolver {
       channel.id,
       request.revision ?? 0,
       audience,
-      locales.join('|')
+      locales[0] ?? ''
     );
     const hit = await this.read(key);
     if (hit) return ok(hit);
