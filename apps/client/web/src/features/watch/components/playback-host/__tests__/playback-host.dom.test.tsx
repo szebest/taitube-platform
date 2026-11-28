@@ -4,7 +4,7 @@ import { CLIP_ID, clip, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { renderWatch } from '#app/__tests__/render-watch';
+import { renderSegmentedPlaylistWatch, renderWatch } from '#app/__tests__/render-watch';
 import { getRouter } from '#app/router';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
@@ -79,5 +79,14 @@ describe('apps/client/web: the playback host', () => {
 
     expect(document.querySelectorAll('[data-slot=playback-host]')).toHaveLength(0);
     expect(document.querySelectorAll('video')).toHaveLength(0);
+  });
+
+  it.each([
+    { scenario: 'a segment', segmented: [0], range: '30000-105000' },
+    { scenario: 'no segment', segmented: [1], range: null },
+  ])('plays a video of a playlist with $scenario as its range', async ({ segmented, range }) => {
+    await renderSegmentedPlaylistWatch(segmented);
+
+    await vi.waitFor(() => expect(sessionPlayer()?.getAttribute('data-range') ?? null).toBe(range));
   });
 });

@@ -1,3 +1,4 @@
+import type { PlaylistCollaboratorRole } from './playlist-collaboration';
 import type { VideoStatus, VideoVisibility } from './status-vocabulary';
 
 export const NOTIFICATION_KINDS = [
@@ -12,6 +13,8 @@ export const NOTIFICATION_KINDS = [
   'party_starting',
   'team_invite',
   'moderation',
+  'playlist_invite',
+  'playlist_update',
   'post',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -61,6 +64,8 @@ export const KIND_SWITCH = {
   party_starting: 'watchParties',
   team_invite: null,
   moderation: null,
+  playlist_invite: null,
+  playlist_update: null,
   post: 'subscriptionUploads',
 } as const satisfies Record<NotificationKind, string | null>;
 
@@ -107,6 +112,12 @@ interface NotificationParty {
   watching: { names: string[]; count: number };
 }
 
+interface NotificationPlaylist {
+  id: string;
+  title: string;
+  invite: { token: string; role: PlaylistCollaboratorRole } | null;
+}
+
 interface NotificationFields {
   count: number;
   actor: NotificationActor | null;
@@ -115,6 +126,8 @@ interface NotificationFields {
   outcome: 'ready' | 'failed' | 'held' | 'approved' | 'rejected' | null;
   /** Set on `team_invite`: the invite the notification opens. */
   inviteId?: string;
+  /** Set on `playlist_invite` and `playlist_update`: the playlist, and the invite's token and role. */
+  playlist?: NotificationPlaylist;
   /** Set on `post`: the newest post of the group; on `reply`, `mention` and `comment`: the post the comment is under. */
   postId?: string;
   /** Set on `reply`, `mention` and `comment` under a viewer thread: with `videoId`, where it opens. */

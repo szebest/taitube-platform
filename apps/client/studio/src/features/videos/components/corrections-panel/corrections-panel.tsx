@@ -1,4 +1,4 @@
-import { EmptyState } from '@kit/components';
+import { EmptyState, TimelineRangeEditor } from '@kit/components';
 import { isErr } from '@kit/result';
 import { Button, Input, Skeleton, useToast } from '@kit/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -7,7 +7,6 @@ import { CORRECTION_MAX_MS, CORRECTION_MIN_MS } from '@vp/domain';
 import { decideCorrection, decideCorrectionFields } from '@vp/domain-rules';
 import { correctionsQueryOptions, useApi } from '@vp/queries';
 import { useState } from 'react';
-import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import {
   addCorrectionMutationOptions,
   removeCorrectionMutationOptions,

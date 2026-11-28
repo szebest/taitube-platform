@@ -5,6 +5,13 @@ import {
 } from '#app/features/notifications/__tests__/notification-fixtures';
 import { notificationTarget } from '../notification-target';
 
+const PLAYLIST_ID = '0190c3a0-5e1d-7000-8000-0000000000f1';
+const TOKEN = 'invite-token';
+const PLAYLIST = {
+  id: PLAYLIST_ID,
+  title: 'Road trip',
+  invite: { token: TOKEN, role: 'editor' as const },
+};
 const POST_ID = '0190c3a0-5e1d-7000-8000-0000000000a1';
 const THREAD_ID = '0190c3a0-5e1d-7000-8000-0000000000b1';
 
@@ -87,12 +94,30 @@ describe('apps/client/web: notificationTarget', () => {
       target: { to: '/feed/you/moderation', search: {} },
     },
     {
+      case: 'a playlist invite opens the page that answers it',
+      overrides: { kind: 'playlist_invite' as const, videoId: null },
+      count: 1,
+      target: {
+        to: '/playlist-invite/$token',
+        params: { token: TOKEN },
+        search: { via: 'notification' },
+      },
+    },
+    {
+      case: 'a playlist update opens the playlist',
+      overrides: { kind: 'playlist_update' as const, videoId: null },
+      count: 1,
+      target: { to: '/playlist', search: { list: PLAYLIST_ID } },
+    },
+    {
       case: 'a notification with no video opens nothing',
       overrides: { kind: 'processing' as const, videoId: null },
       count: 1,
       target: undefined,
     },
   ])('$case', ({ overrides, payload, count, target }) => {
-    expect(notificationTarget(notification(overrides, { count, ...payload }))).toEqual(target);
+    expect(
+      notificationTarget(notification(overrides, { count, playlist: PLAYLIST, ...payload }))
+    ).toEqual(target);
   });
 });

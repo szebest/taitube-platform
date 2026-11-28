@@ -1,7 +1,7 @@
 import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { movePositions } from '@vp/domain';
-import { OTHER_OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import {
   FIVE,
   OWNER,
@@ -37,7 +37,11 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
     it('answers a video already there as present, and writes nothing', async () => {
       await addAll(ctx, [VIDEO_IDS.a]);
 
-      const again = await ctx.playlists.addItem(P.mix, { id: P.other, videoId: VIDEO_IDS.a });
+      const again = await ctx.playlists.addItem(
+        P.mix,
+        { id: P.other, videoId: VIDEO_IDS.a, addedBy: OWNER_ID },
+        OWNER_ID
+      );
 
       expect(expectOk(again)).toBe('present');
       expect(await orderOf(ctx)).toEqual([VIDEO_IDS.a]);
@@ -57,9 +61,15 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
         outcome: 'video-missing',
       },
     ])('reports $scenario as $outcome', async ({ playlistId, videoId, outcome }) => {
-      expect(expectOk(await ctx.playlists.addItem(playlistId, { id: P.other, videoId }))).toBe(
-        outcome
-      );
+      expect(
+        expectOk(
+          await ctx.playlists.addItem(
+            playlistId,
+            { id: P.other, videoId, addedBy: OWNER_ID },
+            OWNER_ID
+          )
+        )
+      ).toBe(outcome);
     });
 
     it('gives ten concurrent appends ten distinct places', async () => {
@@ -72,7 +82,11 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
 
       await Promise.all(
         ids.map((videoId, index) =>
-          ctx.playlists.addItem(P.mix, { id: numbered('04', index), videoId })
+          ctx.playlists.addItem(
+            P.mix,
+            { id: numbered('04', index), videoId, addedBy: OWNER_ID },
+            OWNER_ID
+          )
         )
       );
 
@@ -114,8 +128,16 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
     it('removes a video and closes the gap it leaves', async () => {
       await addAll(ctx, FIVE);
 
-      expect(expectOk(await ctx.playlists.removeItem(P.mix, VIDEO_IDS.b))).toBe(true);
-      expect(expectOk(await ctx.playlists.removeItem(P.mix, VIDEO_IDS.b))).toBe(false);
+      expect(
+        expectOk(
+          await ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID)
+        )
+      ).toBe(true);
+      expect(
+        expectOk(
+          await ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID)
+        )
+      ).toBe(false);
 
       const detail = expectOk(await ctx.playlists.findDetail(P.mix, OWNER));
       expect(detail?.items.map((item) => [item.videoId, item.position])).toEqual([
@@ -124,6 +146,52 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
         [VIDEO_IDS.d, 2],
         [VIDEO_IDS.e, 3],
       ]);
+    });
+
+    it('restores a removed section once', async () => {
+      const section = { id: itemIdFor('5e'), title: 'Part 1', addedBy: OWNER_ID };
+      expect(expectOk(await ctx.playlists.addSection(P.mix, section, OWNER_ID))).toBe(true);
+      expectOk(await ctx.playlists.removeItem(P.mix, { by: 'item', itemId: section.id }, OWNER_ID));
+      const [removal] = expectOk(
+        await ctx.subject.repositories.playlistActivity.list(P.mix, { cursor: null, limit: 1 })
+      );
+      if (removal?.action !== 'item_removed') throw new Error('the removal was not logged');
+
+      const outcomes = [
+        expectOk(await ctx.playlists.restoreItem(P.mix, removal, OWNER_ID)),
+        expectOk(await ctx.playlists.restoreItem(P.mix, removal, OWNER_ID)),
+      ];
+
+      expect(outcomes).toEqual(['restored', 'present']);
+      expect(expectOk(await ctx.playlists.findItems(P.mix))).toHaveLength(1);
+    });
+
+    it('merges every source, deleting only those asked whose every item landed', async () => {
+      await addAll(ctx, [VIDEO_IDS.a, VIDEO_IDS.b]);
+      await seedPlaylist(ctx, P.other);
+      await seedPlaylist(ctx, P.watchLater);
+      const items = expectOk(await ctx.playlists.findItems(P.mix));
+      const [first] = items;
+      if (!first) throw new Error('the source holds no items');
+      const gone = { ...first, id: itemIdFor('ff') };
+
+      const merged = expectOk(
+        await ctx.playlists.merge(
+          P.watchLater,
+          [
+            { sourceId: P.mix, items, deleteIfLanded: true },
+            { sourceId: P.other, items: [gone], deleteIfLanded: true },
+          ],
+          OWNER_ID
+        )
+      );
+
+      expect(merged?.get(P.other)?.get(gone.id)).toBe('source-missing');
+      expect(expectOk(await ctx.playlists.findById(P.mix))).toBeNull();
+      expect(expectOk(await ctx.playlists.findById(P.other))).not.toBeNull();
+      expect(
+        expectOk(await ctx.playlists.findItems(P.watchLater)).map((item) => item.videoId)
+      ).toEqual([VIDEO_IDS.a, VIDEO_IDS.b]);
     });
 
     it.each([
@@ -179,7 +247,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
       const moved = itemIdFor(VIDEO_IDS.e);
 
       const [removed, reordered] = await Promise.all([
-        ctx.playlists.removeItem(P.mix, VIDEO_IDS.b),
+        ctx.playlists.removeItem(P.mix, { by: 'video', videoId: VIDEO_IDS.b }, OWNER_ID),
         ctx.playlists.reorder(P.mix, OWNER, (items) => ok(movePositions(items, moved, 0) ?? [])),
       ]);
 

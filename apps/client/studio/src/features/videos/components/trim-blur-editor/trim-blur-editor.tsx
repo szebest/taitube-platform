@@ -1,4 +1,4 @@
-import { EmptyState } from '@kit/components';
+import { EmptyState, TimelineRangeEditor } from '@kit/components';
 import { isErr } from '@kit/result';
 import { Button, Callout, useToast } from '@kit/ui';
 import { useMutation } from '@tanstack/react-query';
@@ -7,7 +7,6 @@ import { BLUR_MIN_MS, type BlurRegion, TRIM_MIN_MS, type TimeRange } from '@vp/d
 import { decideVideoEdit } from '@vp/domain-rules';
 import { useApi } from '@vp/queries';
 import { useState } from 'react';
-import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import {
   revertEditsMutationOptions,
   saveEditsMutationOptions,

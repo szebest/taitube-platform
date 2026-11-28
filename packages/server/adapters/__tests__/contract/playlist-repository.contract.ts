@@ -127,7 +127,7 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
       await subject.backdatePlaylist(P.mix, AN_HOUR_AGO);
 
       const updated = expectOk(
-        await playlists.update(P.mix, { title: 'Road trip', visibility: 'unlisted' })
+        await playlists.update(P.mix, { title: 'Road trip', visibility: 'unlisted' }, OWNER_ID)
       );
 
       expect(updated).toMatchObject({
@@ -136,7 +136,7 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
         description: '',
       });
       expect(updated?.updatedAt.getTime()).toBeGreaterThan(AN_HOUR_AGO.getTime());
-      expect(expectOk(await playlists.update(P.absent, { title: 'x' }))).toBeNull();
+      expect(expectOk(await playlists.update(P.absent, { title: 'x' }, OWNER_ID))).toBeNull();
     });
 
     it('removes a user playlist with its items and never a system one', async () => {
@@ -148,9 +148,15 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
       expect(expectOk(await playlists.remove(P.watchLater))).toBe(false);
       expect(expectOk(await playlists.remove(P.mix))).toBe(false);
       expect(expectOk(await playlists.findById(P.watchLater))).not.toBeNull();
-      expect(expectOk(await playlists.addItem(P.mix, { id: P.other, videoId: VIDEO_IDS.a }))).toBe(
-        'playlist-missing'
-      );
+      expect(
+        expectOk(
+          await playlists.addItem(
+            P.mix,
+            { id: P.other, videoId: VIDEO_IDS.a, addedBy: OWNER_ID },
+            OWNER_ID
+          )
+        )
+      ).toBe('playlist-missing');
     });
 
     describePlaylistItemsContract(ctx);

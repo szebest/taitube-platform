@@ -1,10 +1,19 @@
-import { CHANNEL_IMAGE_CONTENT_TYPES, CHANNEL_IMAGE_KINDS } from '../channel-image';
+import {
+  CHANNEL_IMAGE_CONTENT_TYPES,
+  CHANNEL_IMAGE_KINDS,
+  CHANNEL_PAGE_IMAGE_KINDS,
+} from '../channel-image';
 
 describe('@vp/validation: channel image vocabulary', () => {
   it.each([
     {
       name: 'the kinds',
       actual: CHANNEL_IMAGE_KINDS,
+      expected: ['avatar', 'banner', 'post-image', 'playlist-cover'],
+    },
+    {
+      name: 'the channel page kinds',
+      actual: CHANNEL_PAGE_IMAGE_KINDS,
       expected: ['avatar', 'banner', 'post-image'],
     },
     {
