@@ -13,6 +13,12 @@ import {
 import { PlayerChannelProvider } from '#app/components/player/taitube-player';
 import { usePartyClock } from '#app/features/watch-party/hooks/use-party-clock';
 import { useUpgradePartySeat } from '#app/features/watch-party/hooks/use-upgrade-party-seat';
+import {
+  VoiceDockSlot,
+  VoiceHoldOverlay,
+  VoiceJoinButton,
+  VoiceProvider,
+} from '#app/features/watch-party/voice';
 import { API_PUBLIC_URL } from '#app/lib/config';
 import { useT } from '#app/lib/messages';
 import { PartyControls } from '../party-controls/party-controls';
@@ -36,7 +42,7 @@ const PHASE_COPY = {
 interface PartyRoomViewProps {
   roomId: string;
   /** What the server rendered, shown until the socket says hello. */
-  preview: Pick<WatchPartyPreviewView, 'name' | 'owner'>;
+  preview: Pick<WatchPartyPreviewView, 'name' | 'owner' | 'features'>;
 }
 
 /** A member's party page: the stage on the room clock, its controls, and the panel, behind the room ability. */
@@ -75,6 +81,41 @@ export function PartyRoomView({ roomId, preview }: PartyRoomViewProps) {
     );
   }
 
+  const party = (
+    <PartyRoom.Root layout={layout}>
+      <PartyRoom.Header>
+        <h1 className="m-0 text-title-lg">{room.name}</h1>
+        <span className="text-body-sm text-fg-muted">
+          {tOr('party.ownerBy', { name: room.owner.name }, '')}
+        </span>
+        <Badge size="sm" variant="soft" tone="neutral">
+          {tOr(PHASE_COPY[state.playback.phase], {}, '')}
+        </Badge>
+        {present > 0 && (
+          <span className="text-body-sm text-fg-muted">
+            {tOr('party.roomPresent', { count: present }, '')}
+          </span>
+        )}
+        <div className="ms-auto flex items-center gap-inline">
+          <VoiceJoinButton />
+          <PartyLayoutMenu layout={layout} onLayoutChange={setLayout} />
+        </div>
+      </PartyRoom.Header>
+      <PartyRoom.Stage>
+        <PartyStage socket={socket} overlay={<VoiceHoldOverlay />} />
+        <PartyControls socket={socket} />
+        <VoiceDockSlot roomId={roomId} roster={state.roster} />
+      </PartyRoom.Stage>
+      <PartyPanel
+        roomId={roomId}
+        socket={socket}
+        tab={tab}
+        onTabChange={setTab}
+        onSignIn={handleSignIn}
+      />
+    </PartyRoom.Root>
+  );
+
   return (
     <PlayerChannelProvider>
       <PartyPermissionsProvider
@@ -86,36 +127,18 @@ export function PartyRoomView({ roomId, preview }: PartyRoomViewProps) {
           kind: state.you?.kind ?? null,
         }}
       >
-        <PartyRoom.Root layout={layout}>
-          <PartyRoom.Header>
-            <h1 className="m-0 text-title-lg">{room.name}</h1>
-            <span className="text-body-sm text-fg-muted">
-              {tOr('party.ownerBy', { name: room.owner.name }, '')}
-            </span>
-            <Badge size="sm" variant="soft" tone="neutral">
-              {tOr(PHASE_COPY[state.playback.phase], {}, '')}
-            </Badge>
-            {present > 0 && (
-              <span className="text-body-sm text-fg-muted">
-                {tOr('party.roomPresent', { count: present }, '')}
-              </span>
-            )}
-            <div className="ms-auto">
-              <PartyLayoutMenu layout={layout} onLayoutChange={setLayout} />
-            </div>
-          </PartyRoom.Header>
-          <PartyRoom.Stage>
-            <PartyStage socket={socket} />
-            <PartyControls socket={socket} />
-          </PartyRoom.Stage>
-          <PartyPanel
+        {preview.features.voice ? (
+          <VoiceProvider
             roomId={roomId}
-            socket={socket}
-            tab={tab}
-            onTabChange={setTab}
-            onSignIn={handleSignIn}
-          />
-        </PartyRoom.Root>
+            selfKey={state.you?.memberKey ?? ''}
+            roomMode={state.room?.voiceMode ?? 'open'}
+            send={socket.send}
+          >
+            {party}
+          </VoiceProvider>
+        ) : (
+          party
+        )}
       </PartyPermissionsProvider>
     </PlayerChannelProvider>
   );

@@ -41,9 +41,9 @@ export interface AppConfig {
   kind: AppEnv['ADAPTER_FAMILY'];
   logLevel: string;
   cdn: CdnBase;
-  /** The web app's origin: what oEmbed and webhook payloads link to. */
+  /** The web app's origin: what oEmbed and webhooks link to. */
   webUrl: string;
-  /** The sprite geometry: the thumbnail stage and the card read it. */
+  /** The sprite geometry the stage and the card read. */
   sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
   buckets: { raw: string; public: string };
   limits: {
@@ -282,7 +282,11 @@ export function toAppConfig(env: AppEnv): AppConfig {
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
     }),
-    watchParties: watchPartyConfig(env),
+    watchParties: watchPartyConfig({
+      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
+      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
+      guestSalt: env.WATCH_PARTY_GUEST_SALT,
+    }),
     voice: voiceConfig(env),
     worker: {
       stage: env.WORKER_STAGE,

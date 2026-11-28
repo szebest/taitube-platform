@@ -8,4 +8,4 @@ export const Roster = {
   Guests: RosterGuests,
 };
 export type { RosterGroupProps, RosterMemberProps, RosterRoleBadgeProps } from './roster';
-export type { RosterSource, RosterSync } from './types';
+export type { RosterSource, RosterSync, RosterVoice } from './types';

@@ -60,14 +60,17 @@ export class InMemoryVoiceGateway extends VoiceGatewayPort {
 
   join(token: string): boolean {
     const claims = JSON.parse(token.slice(TOKEN_PREFIX.length)) as VoiceTokenRequest;
-    const seats = this.rooms.get(claims.room) ?? new Map<string, Seat>();
+    let seats = this.rooms.get(claims.room);
+    if (seats === undefined) {
+      seats = new Map<string, Seat>();
+      this.rooms.set(claims.room, seats);
+    }
     seats.set(claims.identity, {
       grants: claims.grants,
       wantsToSpeak: claims.grants.canPublish,
       muted: false,
       publishing: false,
     });
-    this.rooms.set(claims.room, seats);
     return true;
   }
 
