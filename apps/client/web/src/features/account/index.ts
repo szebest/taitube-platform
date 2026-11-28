@@ -19,6 +19,8 @@ export {
   ProcessingFinishedRow,
   RepliesAndMentionsRow,
   SubscriptionUploadsRow,
+  WatchPartiesRow,
+  WatchPartyInvitesRow,
 } from './components/notification-rows/notification-rows';
 export { LazyPersonaSwitcher } from './components/persona-switcher/persona-switcher.lazy';
 export {

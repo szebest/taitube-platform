@@ -62,6 +62,9 @@ export function useNotificationText(): (notification: Notification) => Notificat
 
   return (notification) => ({
     headline: headlineOf(notification),
-    detail: notification.payload.excerpt ?? notification.payload.videoTitle,
+    detail:
+      notification.payload.excerpt ??
+      notification.payload.party?.name ??
+      notification.payload.videoTitle,
   });
 }

@@ -1,5 +1,5 @@
 import type { Notification } from '@vp/api-contracts';
-import { CHANNEL_ID, VIDEO_ID } from '@vp/web-testing';
+import { CHANNEL_ID, PARTY_ID, VIDEO_ID } from '@vp/web-testing';
 
 export const NOTIFICATION_ID = '0190c3a0-5e1d-7000-8000-0000000000e1';
 export const SECOND_NOTIFICATION_ID = '0190c3a0-5e1d-7000-8000-0000000000e2';
@@ -28,4 +28,24 @@ export function notification(
       ...payload,
     },
   };
+}
+
+export const PARTY_INVITE_ID = '0190c3a0-5e1d-7000-8000-0000000000f2';
+
+export function partyInvite(party: Partial<NonNullable<Notification['payload']['party']>> = {}) {
+  return notification(
+    { kind: 'party_invite', videoId: null },
+    {
+      party: {
+        roomId: PARTY_ID,
+        name: 'Movie night',
+        videoTitle: 'Big Buck Bunny',
+        scheduledFor: null,
+        inviteId: PARTY_INVITE_ID,
+        expiresAt: '2999-01-01T00:00:00.000Z',
+        watching: { names: ['Ana', 'Tom'], count: 5 },
+        ...party,
+      },
+    }
+  );
 }

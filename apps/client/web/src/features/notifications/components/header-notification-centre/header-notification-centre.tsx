@@ -7,6 +7,7 @@ import type { Notification } from '@vp/api-contracts';
 import { unreadNotificationCountQueryOptions, useAccount, useApi, useUserEvent } from '@vp/queries';
 import { useState } from 'react';
 import { NotificationCentre } from '#app/components/shell/notification-centre';
+import { useJoinPartyInvite } from '#app/features/notifications/hooks/use-join-party-invite';
 import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
 import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
@@ -22,9 +23,11 @@ interface Announcement {
   count: number;
 }
 
+const TOASTED_KINDS: readonly Notification['kind'][] = ['reply', 'mention', 'party_invite'];
+
 /**
- * What a notification arriving with the centre closed does: a reply or a mention gets a toast that
- * opens it, the rest a polite announcement, which this returns for the caller's live region. `count`
+ * What a notification arriving with the centre closed does: a reply, a mention or a party invite
+ * gets a toast that opens it (an invite's says Join and takes the seat), the rest a polite announcement, which this returns for the caller's live region. `count`
  * keys the line, so a second identical arrival is a new node a screen reader announces again.
  */
 function useArrivals(open: boolean): Announcement {
@@ -34,9 +37,14 @@ function useArrivals(open: boolean): Announcement {
   const showToast = useToast();
   const textOf = useNotificationText();
   const markRead = useMarkRead();
+  const joinInvite = useJoinPartyInvite();
 
   const visit = (notification: Notification) => {
     markRead.mutate({ scope: 'ids', ids: [notification.id] });
+    const { party } = notification.payload;
+    if (notification.kind === 'party_invite' && party) {
+      joinInvite.mutate({ roomId: party.roomId, inviteId: party.inviteId });
+    }
     const target = notificationTarget(notification);
     if (target) {
       void navigate(target);
@@ -49,14 +57,21 @@ function useArrivals(open: boolean): Announcement {
     }
 
     const { headline, detail } = textOf(notification);
-    if (notification.kind !== 'reply' && notification.kind !== 'mention') {
+    if (!TOASTED_KINDS.includes(notification.kind)) {
       setAnnouncement(({ count }) => ({ text: headline, count: count + 1 }));
       return;
     }
     showToast({
       title: headline,
       description: detail ?? undefined,
-      action: { label: tOr('notifications.view', {}, ''), onAction: () => visit(notification) },
+      action: {
+        label: tOr(
+          notification.kind === 'party_invite' ? 'party.inviteJoin' : 'notifications.view',
+          {},
+          ''
+        ),
+        onAction: () => visit(notification),
+      },
     });
   });
 

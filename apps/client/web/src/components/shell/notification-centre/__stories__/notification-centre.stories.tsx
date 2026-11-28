@@ -88,6 +88,68 @@ function Items({ thumbnails = false }: { thumbnails?: boolean }) {
   );
 }
 
+function PartyInvite({
+  unread = true,
+  state,
+}: {
+  unread?: boolean;
+  state: 'pending' | 'declined' | 'ended';
+}) {
+  const decide = state === 'pending';
+  const cta =
+    state === 'declined' ? undefined : (
+      <NotificationCentre.Cta ended={state === 'ended'}>
+        {state === 'ended' ? 'Ended' : 'Join'}
+      </NotificationCentre.Cta>
+    );
+
+  return (
+    <NotificationCentre.Body>
+      <NotificationCentre.Group heading="Today">
+        <NotificationCentre.Item
+          unread={unread}
+          avatarSrc={AVATAR}
+          time="5 minutes ago"
+          onSelect={select}
+          cta={cta}
+          actions={
+            decide && <NotificationCentre.ItemAction label="Decline invite" onClick={select} />
+          }
+        >
+          Ana invited you to a watch party
+          <span className="block text-fg-muted">Movie night</span>
+          <span className="block text-fg-muted">Ana, Tom and 3 others are watching</span>
+        </NotificationCentre.Item>
+      </NotificationCentre.Group>
+    </NotificationCentre.Body>
+  );
+}
+
+export const InvitePending: Story = {
+  args: { unread: '1' },
+  render: (args) => (
+    <Centre args={args}>
+      <PartyInvite state="pending" />
+    </Centre>
+  ),
+};
+
+export const InviteDeclined: Story = {
+  render: (args) => (
+    <Centre args={args}>
+      <PartyInvite state="declined" unread={false} />
+    </Centre>
+  ),
+};
+
+export const InviteEnded: Story = {
+  render: (args) => (
+    <Centre args={args}>
+      <PartyInvite state="ended" unread={false} />
+    </Centre>
+  ),
+};
+
 export const Empty: Story = {
   render: (args) => (
     <Centre args={args}>

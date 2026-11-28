@@ -47,15 +47,21 @@ describe('apps/client/web: header notification centre', () => {
   });
 
   it.each([
-    { kind: 'reply' as const, toast: 'Night Kitchen replied to your comment' },
-    { kind: 'mention' as const, toast: 'Night Kitchen mentioned you' },
-  ])('raises the badge and a toast for an arriving $kind', async ({ kind, toast }) => {
+    { kind: 'reply' as const, toast: 'Night Kitchen replied to your comment', action: 'View' },
+    { kind: 'mention' as const, toast: 'Night Kitchen mentioned you', action: 'View' },
+    {
+      kind: 'party_invite' as const,
+      toast: 'Night Kitchen invited you to a watch party',
+      action: 'Join',
+    },
+  ])('raises the badge and a toast for an arriving $kind', async ({ kind, toast, action }) => {
     const { push } = await renderBell();
 
     push(arrival(notification({ kind })));
 
     expect(await screen.findByRole('button', { name: 'Notifications 1' })).toBeInTheDocument();
     expect(await screen.findByText(toast)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: action })).toBeInTheDocument();
   });
 
   it('announces an arriving upload politely, with no toast', async () => {

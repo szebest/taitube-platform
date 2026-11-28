@@ -14,6 +14,7 @@ import { useNotificationText } from '#app/features/notifications/hooks/use-notif
 import { notificationHref } from '#app/features/notifications/utils/notification-href';
 import { notificationTarget } from '#app/features/notifications/utils/notification-target';
 import { STUDIO_URL } from '#app/lib/config';
+import { PartyInviteRow } from '../party-invite-row/party-invite-row';
 
 export interface NotificationRowProps {
   notification: Notification;
@@ -21,6 +22,16 @@ export interface NotificationRowProps {
 
 /** One notification: opening it marks it read, closes the centre and goes where it points. */
 export function NotificationRow({ notification }: NotificationRowProps) {
+  const { party } = notification.payload;
+
+  if (notification.kind === 'party_invite' && party) {
+    return <PartyInviteRow notification={notification} party={party} />;
+  }
+
+  return <OpenableRow notification={notification} />;
+}
+
+function OpenableRow({ notification }: NotificationRowProps) {
   const { setOpen } = useNotificationCentre('NotificationRow');
   const { format } = useFormat();
   const textOf = useNotificationText();

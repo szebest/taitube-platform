@@ -23,9 +23,20 @@ function comment({ videoId, commentId, payload }: Notification) {
   return watch(videoId, commentId, payload.threadId);
 }
 
+function partyRoom({ payload: { party } }: Notification, invited: boolean) {
+  if (!party) {
+    return undefined;
+  }
+  return linkOptions({
+    to: '/parties/$roomId',
+    params: { roomId: party.roomId },
+    search: invited ? { invite: party.inviteId } : {},
+  });
+}
+
 /**
  * Where opening a notification goes, for a `Link` or `navigate`: a group of uploads opens the
- * channel, a comment kind its comment on the video, the post or the thread. `undefined` when there is nothing to open.
+ * channel, a comment kind its comment on the video, the post or the thread, a party kind its room (an invite with its grant). `undefined` when there is nothing to open.
  */
 export function notificationTarget(notification: Notification) {
   const { kind, videoId, actorChannelId, payload } = notification;
@@ -54,8 +65,9 @@ export function notificationTarget(notification: Notification) {
     case 'heart':
       return comment(notification);
     case 'party_invite':
+      return partyRoom(notification, true);
     case 'party_starting':
-      return undefined;
+      return partyRoom(notification, false);
     default:
       return assertNever(kind, 'NotificationKind');
   }

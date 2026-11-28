@@ -97,7 +97,8 @@ export const declineWatchPartyInvite = defineEndpoint({
   path: '/v1/me/watch-party-invites/:inviteId/decline',
   tag: 'Watch parties',
   summary: 'Decline an invite',
-  description: 'The invitee declines and its notification is marked read. Nobody is told.',
+  description:
+    'The invitee declines. Nobody is told, and the inviter still sees the invite as pending until it expires.',
   params: z.object({ inviteId: z.uuid({ error: 'Invalid invite ID format' }) }),
   status: 204,
   result: z.null(),

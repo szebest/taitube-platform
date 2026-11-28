@@ -7,6 +7,17 @@ import { notificationTarget } from '../notification-target';
 
 const POST_ID = '0190c3a0-5e1d-7000-8000-0000000000a1';
 const THREAD_ID = '0190c3a0-5e1d-7000-8000-0000000000b1';
+const ROOM_ID = '0190c3a0-5e1d-7000-8000-0000000000f1';
+const INVITE_ID = '0190c3a0-5e1d-7000-8000-0000000000f2';
+const PARTY = {
+  roomId: ROOM_ID,
+  name: 'Movie night',
+  videoTitle: null,
+  scheduledFor: null,
+  inviteId: INVITE_ID,
+  expiresAt: '2026-01-03T03:04:05.000Z',
+  watching: { names: [], count: 0 },
+};
 
 describe('apps/client/web: notificationTarget', () => {
   it.each([
@@ -85,6 +96,30 @@ describe('apps/client/web: notificationTarget', () => {
       overrides: { kind: 'moderation' as const, videoId: null, actorChannelId: null },
       count: 1,
       target: { to: '/feed/you/moderation', search: {} },
+    },
+    {
+      case: 'a party invite opens the room on its invite',
+      overrides: { kind: 'party_invite' as const, videoId: null },
+      payload: { party: PARTY },
+      count: 1,
+      target: {
+        to: '/parties/$roomId',
+        params: { roomId: ROOM_ID },
+        search: { invite: INVITE_ID },
+      },
+    },
+    {
+      case: 'a party starting opens the room with no invite',
+      overrides: { kind: 'party_starting' as const, videoId: null },
+      payload: { party: PARTY },
+      count: 1,
+      target: { to: '/parties/$roomId', params: { roomId: ROOM_ID }, search: {} },
+    },
+    {
+      case: 'a party notification with no room opens nothing',
+      overrides: { kind: 'party_invite' as const, videoId: null },
+      count: 1,
+      target: undefined,
     },
     {
       case: 'a notification with no video opens nothing',

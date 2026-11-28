@@ -97,6 +97,8 @@ export const SETTING_ROWS = [
   row('subscription-uploads', 'notifications'),
   row('replies-and-mentions', 'notifications'),
   row('processing-finished', 'notifications'),
+  row('watch-parties', 'notifications'),
+  row('watch-party-invites', 'notifications'),
   row('language', 'language'),
   row('account-order', 'accounts'),
   row('account-accent', 'accounts'),
