@@ -4,14 +4,12 @@ import { Link, useSearch } from '@tanstack/react-router';
 import { useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
-import { SubscribeAction } from '#app/components/channel/subscribe-action';
 import { VideoGridSkeleton } from '#app/components/video/video-grid';
-import { avatarSrcSet } from '#app/features/channel/utils/avatar-src-set';
 import { CHANNEL_TABS } from '#app/features/channel/utils/channel-search';
 import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
 import { ChannelAbout } from '../channel-about/channel-about';
-import { ChannelBanner } from '../channel-banner/channel-banner';
+import { ChannelIdentityHeader } from '../channel-identity-header/channel-identity-header';
 import { ChannelPageSpotlight } from '../channel-page-spotlight/channel-page-spotlight';
 import { ChannelPosts } from '../channel-posts/channel-posts';
 import { ChannelStartHere } from '../channel-start-here/channel-start-here';
@@ -31,20 +29,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
   return (
     <BrandScope color={channel.brandColor}>
       <div className="flex flex-col gap-8">
-        <ChannelHeader.Root>
-          <ChannelBanner channel={channel} />
-          <ChannelHeader.Identity
-            name={channel.displayName}
-            handle={tOr('channels.handle', { handle: channel.handle }, '')}
-            avatarSrc={channel.avatar?.sizes['128'] ?? channel.avatarUrl ?? undefined}
-            avatarSrcSet={channel.avatar ? avatarSrcSet(channel.avatar) : undefined}
-            stats={tOr('channels.subscribers', { count: channel.subscriberCount }, '')}
-          >
-            {channel.bio && <ChannelHeader.Bio>{channel.bio}</ChannelHeader.Bio>}
-            <ChannelHeader.Actions>
-              <SubscribeAction channelId={channel.id} className="max-medium:flex-1" />
-            </ChannelHeader.Actions>
-          </ChannelHeader.Identity>
+        <ChannelIdentityHeader channel={channel}>
           <ChannelHeader.Tabs>
             {CHANNEL_TABS.map((value) => (
               <ChannelHeader.Tab key={value} asChild active={tab === value}>
@@ -54,7 +39,7 @@ export function ChannelPage({ channelId }: { channelId: string }) {
               </ChannelHeader.Tab>
             ))}
           </ChannelHeader.Tabs>
-        </ChannelHeader.Root>
+        </ChannelIdentityHeader>
         {tab === 'posts' ? (
           <ChannelPosts channelId={channel.id} />
         ) : (

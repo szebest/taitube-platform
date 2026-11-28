@@ -13,11 +13,13 @@ import {
 } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
+import { channelPageView } from '#app/__tests__/channel-page-fixtures';
 import { AppProviders } from '#app/__tests__/providers';
 import {
   channelQueryOptions,
   channelSpotlightQueryOptions,
 } from '#app/lib/query-keys/channel-keys';
+import { channelPageScope } from '#app/lib/query-keys/channel-page-keys';
 import { subscriptionFeedQueryOptions } from '#app/lib/query-keys/feed-keys';
 import {
   mySubscriptionsQueryOptions,
@@ -29,6 +31,7 @@ type SubscriptionState = ContractResult<typeof subscribeToChannel>;
 const statusKey = subscriptionStatusQueryOptions(api, CHANNEL_ID).queryKey;
 const channelKey = channelQueryOptions(api, CHANNEL_ID).queryKey;
 const spotlightKey = channelSpotlightQueryOptions(api, CHANNEL_ID, 'en', null).queryKey;
+const pageKey = [...channelPageScope(CHANNEL_ID), 'landing', 'en', 'guest', 'public'];
 const listKey = mySubscriptionsQueryOptions(api).queryKey;
 const feedKey = subscriptionFeedQueryOptions(api).queryKey;
 
@@ -42,6 +45,7 @@ function seeded(subscribed: boolean): QueryClient {
   client.setQueryData(statusKey, { channelId: CHANNEL_ID, subscribed });
   client.setQueryData(channelKey, channel({ subscriberCount: 5 }));
   client.setQueryData(spotlightKey, { source: 'trailer', video: null });
+  client.setQueryData(pageKey, channelPageView());
   client.setQueryData(listKey, { items: [subscribedChannel()], nextCursor: null });
   client.setQueryData(feedKey, { pages: [], pageParams: [] });
   return client;
@@ -106,13 +110,13 @@ describe('apps/client/web: useSetSubscription', () => {
     expect(cached(client)).toEqual({ subscribed: false, subscribers: 5 });
   });
 
-  it('marks the status, the channel, its spotlight, the subscription list and its feed stale once settled', async () => {
+  it('marks the status, the channel, its spotlight, its page, the subscription list and its feed stale once settled', async () => {
     apiServer.use(mockEndpoint(subscribeToChannel, state(true)));
     const client = seeded(false);
 
     await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, AppProviders);
 
-    for (const queryKey of [statusKey, channelKey, spotlightKey, listKey, feedKey]) {
+    for (const queryKey of [statusKey, channelKey, spotlightKey, pageKey, listKey, feedKey]) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);
     }
   });

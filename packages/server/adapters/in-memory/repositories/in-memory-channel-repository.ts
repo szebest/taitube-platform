@@ -3,7 +3,6 @@ import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
   type Channel,
-  type ChannelImageKind,
   type ChannelVersionedImageKind,
   type ChannelStats,
   type CreateChannelInput,

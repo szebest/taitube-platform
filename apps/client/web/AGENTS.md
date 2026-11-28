@@ -146,6 +146,10 @@ and points at `dev-token serve` through `SSR_DEV_TOKEN_URL` (setup in `docs/LOCA
 `import.meta.env.VITE_DEMO_PERSONAS === 'true'` in `persona-switcher.lazy.ts`; any other build has no sign-in
 provider until the OIDC client lands.
 
+### The channel page the creator builds
+
+`/channels/$handle` (the viewer's landing tab) and `/channels/$handle/$slug` (any tab of the response, built-in or custom) render `GET /v1/channels/:idOrHandle/page` on the server: `loadChannelLanding` (`features/channel/utils/`) fetches the channel, then the tab through `channelPageQueryOptions`, and keeps the `seed` of the first answer so every tab of a visit shuffles the same way. `ChannelLanding` draws the header with the tabs the API listed, then `PageTabBody`: Home and a custom tab are `PageSection`s (the kit's `ContentSection` over `PageItemCard`s, `RichTextView`, `SectionBackdrop`; a section accent is a `BrandScope` below the viewer's own), the other built-in tabs are fixed bodies. `?preview=draft&as=visitor|subscriber` asks `GET /v1/me/channel/page/preview` instead, only when `canPreviewDraft` finds a session acting on that channel whose `@vp/permissions` ability lets it edit the channel; for anyone else the parameter is ignored. `start.ts` frames such a request for the studio origin alone (`draftPreview` of `@kit/security-headers`, `no-store`, `noindex`). The older `/@handle` and `/channel/$channelId` pages are unchanged.
+
 ### SEO on the server render
 
 `features/seo/` builds a public route's `head()`: `videoHead` (watch), `channelHead` and `feedHead` return the title,

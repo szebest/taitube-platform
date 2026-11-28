@@ -2,7 +2,10 @@ import { requestHandler } from '@tanstack/react-start/server';
 import { getVideo } from '@vp/api-contracts';
 import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { STUDIO_URL } from '../lib/config';
 import { startInstance } from '../start';
+
+const STUDIO_ORIGIN = new URL(STUDIO_URL).origin;
 
 async function requestMiddleware() {
   return (await startInstance.getOptions()).requestMiddleware ?? [];
@@ -12,18 +15,25 @@ describe('apps/client/web: start', () => {
   it.each([
     { path: '/watch/abc', framedBy: "'none'", frameOptions: 'DENY' },
     { path: '/embed/abc', framedBy: '*', frameOptions: null },
+    {
+      path: '/channels/creator?preview=draft&as=visitor',
+      framedBy: STUDIO_ORIGIN,
+      frameOptions: null,
+    },
+    { path: '/channels/creator', framedBy: "'none'", frameOptions: 'DENY' },
   ])('lets $path be framed by $framedBy', async ({ path, framedBy, frameOptions }) => {
     const headersMiddleware = (await requestMiddleware())[1];
     const request = new Request(`http://localhost:5173${path}`);
+    const pathname = new URL(request.url).pathname;
 
     const result = await headersMiddleware?.options.server?.({
       request,
-      pathname: path,
+      pathname,
       context: undefined,
       handlerType: 'router',
       next: vi.fn().mockResolvedValue({
         request,
-        pathname: path,
+        pathname,
         context: {},
         response: new Response('ok'),
       }),

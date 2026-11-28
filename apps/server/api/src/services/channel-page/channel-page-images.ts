@@ -1,4 +1,4 @@
-import { type Result, andThen, map, ok } from '@kit/result';
+import { type Result, map, ok } from '@kit/result';
 import type { ChannelPageView } from '@vp/api-contracts';
 import type { ChannelImageRepositoryPort } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';

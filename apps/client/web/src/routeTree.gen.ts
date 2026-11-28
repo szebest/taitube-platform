@@ -46,6 +46,8 @@ import { Route as AuthedFeedYouRouteImport } from './routes/_authed/feed.you';
 import { Route as AuthedPlaylistInviteTokenRouteImport } from './routes/_authed/playlist-invite.$token';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
+import { Route as ChannelsHandleIndexRouteImport } from './routes/channels.$handle.index';
+import { Route as ChannelsHandleSlugRouteImport } from './routes/channels.$handle.$slug';
 import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
 import { Route as SettingsAppearanceAdvancedRouteImport } from './routes/settings/appearance/advanced';
 import { Route as UploadEditVideoIdRouteImport } from './routes/upload/edit.$videoId';
@@ -238,6 +240,16 @@ const AuthedSubscriptionsVideosRoute =
     path: '/subscriptions/videos',
     getParentRoute: () => AuthedRoute,
   } as any);
+const ChannelsHandleIndexRoute = ChannelsHandleIndexRouteImport.update({
+  id: '/channels/$handle/',
+  path: '/channels/$handle/',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ChannelsHandleSlugRoute = ChannelsHandleSlugRouteImport.update({
+  id: '/channels/$handle/$slug',
+  path: '/channels/$handle/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsAppearanceIndexRoute = SettingsAppearanceIndexRouteImport.update({
   id: '/appearance/',
   path: '/appearance/',
@@ -296,9 +308,11 @@ export interface FileRoutesByFullPath {
   '/feed/you': typeof AuthedFeedYouRoute;
   '/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/channels/$handle/$slug': typeof ChannelsHandleSlugRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
+  '/channels/$handle/': typeof ChannelsHandleIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
   '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
@@ -337,9 +351,11 @@ export interface FileRoutesByTo {
   '/feed/you': typeof AuthedFeedYouRoute;
   '/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/channels/$handle/$slug': typeof ChannelsHandleSlugRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute;
+  '/channels/$handle': typeof ChannelsHandleIndexRoute;
   '/settings/appearance': typeof SettingsAppearanceIndexRoute;
   '/feed/you/moderation': typeof AuthedFeedYouModerationRoute;
 }
@@ -381,9 +397,11 @@ export interface FileRoutesById {
   '/_authed/feed/you': typeof AuthedFeedYouRoute;
   '/_authed/playlist-invite/$token': typeof AuthedPlaylistInviteTokenRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/channels/$handle/$slug': typeof ChannelsHandleSlugRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
+  '/channels/$handle/': typeof ChannelsHandleIndexRoute;
   '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
   '/_authed/feed/you_/moderation': typeof AuthedFeedYouModerationRoute;
 }
@@ -425,9 +443,11 @@ export interface FileRouteTypes {
     | '/feed/you'
     | '/playlist-invite/$token'
     | '/subscriptions/videos'
+    | '/channels/$handle/$slug'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions/'
+    | '/channels/$handle/'
     | '/settings/appearance/'
     | '/feed/you/moderation';
   fileRoutesByTo: FileRoutesByTo;
@@ -466,9 +486,11 @@ export interface FileRouteTypes {
     | '/feed/you'
     | '/playlist-invite/$token'
     | '/subscriptions/videos'
+    | '/channels/$handle/$slug'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/subscriptions'
+    | '/channels/$handle'
     | '/settings/appearance'
     | '/feed/you/moderation';
   id:
@@ -509,9 +531,11 @@ export interface FileRouteTypes {
     | '/_authed/feed/you'
     | '/_authed/playlist-invite/$token'
     | '/_authed/subscriptions/videos'
+    | '/channels/$handle/$slug'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
     | '/_authed/subscriptions/'
+    | '/channels/$handle/'
     | '/settings/appearance/'
     | '/_authed/feed/you_/moderation';
   fileRoutesById: FileRoutesById;
@@ -539,7 +563,9 @@ export interface RootRouteChildren {
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   LiveIndexRoute: typeof LiveIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
+  ChannelsHandleSlugRoute: typeof ChannelsHandleSlugRoute;
   UploadEditVideoIdRoute: typeof UploadEditVideoIdRoute;
+  ChannelsHandleIndexRoute: typeof ChannelsHandleIndexRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -803,6 +829,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSubscriptionsVideosRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/channels/$handle/': {
+      id: '/channels/$handle/';
+      path: '/channels/$handle';
+      fullPath: '/channels/$handle/';
+      preLoaderRoute: typeof ChannelsHandleIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/channels/$handle/$slug': {
+      id: '/channels/$handle/$slug';
+      path: '/channels/$handle/$slug';
+      fullPath: '/channels/$handle/$slug';
+      preLoaderRoute: typeof ChannelsHandleSlugRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/settings/appearance/': {
       id: '/settings/appearance/';
       path: '/appearance';
@@ -921,7 +961,9 @@ const rootRouteChildren: RootRouteChildren = {
   WatchVideoIdRoute: WatchVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   UploadIndexRoute: UploadIndexRoute,
+  ChannelsHandleSlugRoute: ChannelsHandleSlugRoute,
   UploadEditVideoIdRoute: UploadEditVideoIdRoute,
+  ChannelsHandleIndexRoute: ChannelsHandleIndexRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

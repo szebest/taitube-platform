@@ -4,44 +4,58 @@ import { PAGE_IMAGE_REFERENCE } from './rich-text';
 
 type MarkdownNode = ReturnType<typeof fromMarkdown>['children'][number];
 
-export type RichTextInline =
-  | { readonly type: 'text'; readonly value: string }
-  | { readonly type: 'break' }
-  | { readonly type: 'strong'; readonly children: readonly RichTextInline[] }
-  | { readonly type: 'emphasis'; readonly children: readonly RichTextInline[] }
-  | { readonly type: 'link'; readonly url: string; readonly children: readonly RichTextInline[] }
-  | { readonly type: 'image'; readonly imageId: string; readonly alt: string };
+interface Keyed {
+  /** Where the node sits in the tree: the same body always gives the same keys. */
+  readonly key: string;
+}
 
-export type RichTextBlock =
-  | { readonly type: 'paragraph'; readonly children: readonly RichTextInline[] }
-  | {
-      readonly type: 'heading';
-      readonly depth: 2 | 3;
-      readonly children: readonly RichTextInline[];
-    }
-  | {
-      readonly type: 'list';
-      readonly ordered: boolean;
-      readonly items: readonly (readonly RichTextBlock[])[];
-    };
+export type RichTextInline = Keyed &
+  (
+    | { readonly type: 'text'; readonly value: string }
+    | { readonly type: 'break' }
+    | { readonly type: 'strong'; readonly children: readonly RichTextInline[] }
+    | { readonly type: 'emphasis'; readonly children: readonly RichTextInline[] }
+    | { readonly type: 'link'; readonly url: string; readonly children: readonly RichTextInline[] }
+    | { readonly type: 'image'; readonly imageId: string; readonly alt: string }
+  );
 
-function inlinesOf(nodes: readonly MarkdownNode[]): RichTextInline[] {
-  return nodes.flatMap((node): RichTextInline[] => {
+export interface RichTextListItem extends Keyed {
+  readonly blocks: readonly RichTextBlock[];
+}
+
+export type RichTextBlock = Keyed &
+  (
+    | { readonly type: 'paragraph'; readonly children: readonly RichTextInline[] }
+    | {
+        readonly type: 'heading';
+        readonly depth: 2 | 3;
+        readonly children: readonly RichTextInline[];
+      }
+    | {
+        readonly type: 'list';
+        readonly ordered: boolean;
+        readonly items: readonly RichTextListItem[];
+      }
+  );
+
+function inlinesOf(nodes: readonly MarkdownNode[], path: string): RichTextInline[] {
+  return nodes.flatMap((node, position): RichTextInline[] => {
+    const key = `${path}.${position}`;
     switch (node.type) {
       case 'text':
-        return [{ type: 'text', value: node.value }];
+        return [{ key, type: 'text', value: node.value }];
       case 'break':
-        return [{ type: 'break' }];
+        return [{ key, type: 'break' }];
       case 'strong':
       case 'emphasis':
-        return [{ type: node.type, children: inlinesOf(node.children) }];
+        return [{ key, type: node.type, children: inlinesOf(node.children, key) }];
       case 'link':
-        return [{ type: 'link', url: node.url, children: inlinesOf(node.children) }];
+        return [{ key, type: 'link', url: node.url, children: inlinesOf(node.children, key) }];
       case 'image': {
         const imageId = PAGE_IMAGE_REFERENCE.exec(node.url)?.[1];
         return imageId === undefined
           ? []
-          : [{ type: 'image', imageId: imageId.toLowerCase(), alt: node.alt ?? '' }];
+          : [{ key, type: 'image', imageId: imageId.toLowerCase(), alt: node.alt ?? '' }];
       }
       default:
         return [];
@@ -49,21 +63,26 @@ function inlinesOf(nodes: readonly MarkdownNode[]): RichTextInline[] {
   });
 }
 
-function blocksOf(nodes: readonly MarkdownNode[]): RichTextBlock[] {
-  return nodes.flatMap((node): RichTextBlock[] => {
+function blocksOf(nodes: readonly MarkdownNode[], path: string): RichTextBlock[] {
+  return nodes.flatMap((node, position): RichTextBlock[] => {
+    const key = `${path}.${position}`;
     switch (node.type) {
       case 'paragraph':
-        return [{ type: 'paragraph', children: inlinesOf(node.children) }];
+        return [{ key, type: 'paragraph', children: inlinesOf(node.children, key) }];
       case 'heading':
         return node.depth === 2 || node.depth === 3
-          ? [{ type: 'heading', depth: node.depth, children: inlinesOf(node.children) }]
+          ? [{ key, type: 'heading', depth: node.depth, children: inlinesOf(node.children, key) }]
           : [];
       case 'list':
         return [
           {
+            key,
             type: 'list',
             ordered: node.ordered === true,
-            items: node.children.map((item) => blocksOf(item.children)),
+            items: node.children.map((item, itemPosition) => ({
+              key: `${key}.${itemPosition}`,
+              blocks: blocksOf(item.children, `${key}.${itemPosition}`),
+            })),
           },
         ];
       default:
@@ -74,7 +93,7 @@ function blocksOf(nodes: readonly MarkdownNode[]): RichTextBlock[] {
 
 /** The tree of a body the save already checked against the whitelist: anything outside it is left out, never rendered. */
 export function richTextTree(body: string): RichTextBlock[] {
-  return blocksOf(fromMarkdown(body).children);
+  return blocksOf(fromMarkdown(body).children, 'r');
 }
 
 function imageIdsOfInlines(nodes: readonly RichTextInline[]): string[] {
@@ -102,7 +121,7 @@ export function richTextImageIds(blocks: readonly RichTextBlock[]): string[] {
       case 'heading':
         return imageIdsOfInlines(block.children);
       case 'list':
-        return block.items.flatMap(richTextImageIds);
+        return block.items.flatMap((item) => richTextImageIds(item.blocks));
       default:
         return assertNever(block, 'RichTextBlock');
     }

@@ -4,6 +4,7 @@ import type { PublicChannel } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 import { channelQueryOptions, channelSpotlightScope } from '#app/lib/query-keys/channel-keys';
+import { channelPageScope } from '#app/lib/query-keys/channel-page-keys';
 import { feedKeys } from '#app/lib/query-keys/feed-keys';
 import {
   subscriptionKeys,
@@ -54,6 +55,7 @@ function setSubscriptionMutationOptions(
         client.invalidateQueries({ queryKey: subscriptionKeys.all }),
         client.invalidateQueries({ queryKey: channelKey }),
         client.invalidateQueries({ queryKey: channelSpotlightScope(channelId) }),
+        client.invalidateQueries({ queryKey: channelPageScope(channelId) }),
         client.invalidateQueries({ queryKey: feedKeys.subscriptions() }),
       ]),
   });

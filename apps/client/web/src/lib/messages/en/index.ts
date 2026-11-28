@@ -1,5 +1,6 @@
 import { accountSettings } from './account-settings';
 import { appUi } from './app-ui';
+import { channelPage } from './channel-page';
 import { channels } from './channels';
 import { clips } from './clips';
 import { creatorStats } from './creator-stats';
@@ -29,6 +30,7 @@ import { watch } from './watch';
 export const en = {
   accountSettings,
   appUi,
+  channelPage,
   channels,
   clips,
   creatorStats,
