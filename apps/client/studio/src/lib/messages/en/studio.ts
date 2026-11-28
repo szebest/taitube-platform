@@ -11,6 +11,7 @@ import { studioExperiments } from './studio-experiments';
 import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
+import { studioPageBuilder } from './studio-page-builder';
 import { studioPicks } from './studio-picks';
 import { studioPosts } from './studio-posts';
 import { studioScreening } from './studio-screening';
@@ -93,6 +94,7 @@ export const studio = {
   ...studioChannel,
   ...studioImages,
   ...studioLive,
+  ...studioPageBuilder,
   ...studioPicks,
   ...studioPosts,
   ...studioScreening,

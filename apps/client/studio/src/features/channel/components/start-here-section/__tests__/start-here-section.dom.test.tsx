@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { api, CHANNEL_ID } from '@vp/web-testing';
 import { featuredApi, libraryOf } from '#app/__tests__/featured-api.fixture';
+import { stubRowGeometry } from '#app/__tests__/row-geometry';
 import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
-import { stubRowGeometry } from '#app/features/channel/__tests__/row-geometry';
 import { featuredQueryOptions } from '#app/features/channel/api/channel-featured';
 
 const LIBRARY = libraryOf(7);

@@ -83,3 +83,4 @@ export * from './watch-party-records';
 export * from './watch-party-roles';
 export * from './watch-party-roster';
 export * from './webhook';
+export * from './channel-layout-templates';

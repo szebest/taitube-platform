@@ -4,6 +4,7 @@ import {
   canModerateComments,
   canReadAnalytics,
   canReadChannelTeam,
+  canUpdateChannel,
   canUpdateLiveStream,
   canUpdateVideo,
 } from '@vp/permissions';
@@ -44,6 +45,21 @@ function SignedInNavItems({ newComments, reviewQueue }: ActingNavItemsProps) {
         <StudioWorkspace.NavItem asChild icon="chat" active={Boolean(matchRoute({ to: '/posts' }))}>
           <Link to="/posts" search={{}}>
             {tOr('studio.postsNav', {}, '')}
+          </Link>
+        </StudioWorkspace.NavItem>
+      </Can>
+      <Can
+        type="rule"
+        I={canUpdateChannel}
+        this={{ channel: { id: channelId, userId: ownerId, ownerId } }}
+      >
+        <StudioWorkspace.NavItem
+          asChild
+          icon="layout"
+          active={Boolean(matchRoute({ to: '/customization/page' }))}
+        >
+          <Link to="/customization/page" search={{}}>
+            {tOr('studio.pageNav', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
       </Can>

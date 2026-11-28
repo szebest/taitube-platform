@@ -227,7 +227,12 @@ export function tabSlug(tab: LayoutTab): string {
   return tab.kind === 'custom' ? tab.slug : tab.kind;
 }
 
-const EVERYONE: LayoutVisibility = { audience: 'everyone', from: null, to: null, locales: [] };
+export const EVERYONE_VISIBILITY: LayoutVisibility = {
+  audience: 'everyone',
+  from: null,
+  to: null,
+  locales: [],
+};
 
 const PRESENTATION: SectionPresentation = {
   title: null,
@@ -254,7 +259,7 @@ const TAB_TITLES: Readonly<Record<BuiltInTabKind, string>> = {
   about: 'About',
 };
 
-function contentSection(id: string, source: SectionSource, title: string): ContentSection {
+export function contentSection(id: string, source: SectionSource, title: string): ContentSection {
   return {
     kind: 'content',
     id,
@@ -265,7 +270,7 @@ function contentSection(id: string, source: SectionSource, title: string): Conte
     itemCount: 12,
     seeAll: null,
     presentation: { ...PRESENTATION, title: { default: title } },
-    visibility: EVERYONE,
+    visibility: EVERYONE_VISIBILITY,
     hideWhenEmpty: true,
   };
 }
@@ -276,7 +281,7 @@ export function standardChannelLayout(): ChannelLayout {
     id: kind,
     title: TAB_TITLES[kind],
     hidden: false,
-    visibility: EVERYONE,
+    visibility: EVERYONE_VISIBILITY,
   });
   return {
     schemaVersion: CHANNEL_LAYOUT_VERSION,
@@ -287,7 +292,7 @@ export function standardChannelLayout(): ChannelLayout {
         id: 'home',
         title: TAB_TITLES.home,
         hidden: false,
-        visibility: EVERYONE,
+        visibility: EVERYONE_VISIBILITY,
         sections: [
           { ...contentSection('start-here', { type: 'start_here' }, 'Start here'), seeAll: null },
           { ...contentSection('latest', { type: 'videos' }, 'Latest uploads'), seeAll: 'videos' },
