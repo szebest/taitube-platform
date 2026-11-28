@@ -10,7 +10,6 @@ import { LogContext, type Logger, createLogger } from '@kit/logger';
 import { registeredTracing } from '@kit/observability';
 import { fromPromise, ignore, isErr } from '@kit/result';
 import { AppEnvSchema, toAppConfig } from '@vp/env-schema';
-import { errorCodeRegistry } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { fingerprintTools } from '@vp/fingerprint';
 import { speechTools } from '@vp/whisper';
@@ -64,7 +63,7 @@ async function start(host: ProcessHost): Promise<WorkerProcess> {
 
   const started = await runner.start();
   if (isErr(started) && started.error.type === 'failed')
-    throw asThrowable(errorCodeRegistry, started.error.cause);
+    throw asThrowable(runner.errorCodes, started.error.cause);
 
   logger.info(
     { started: runner.started(), queue: runner.worker.name, metricsPort: runner.metricsPort() },

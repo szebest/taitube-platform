@@ -1,7 +1,7 @@
 import type { QueueJob } from '@kit/ports';
 import { err } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes, mediaFailure } from '@vp/errors';
+import { ErrorCodes, mediaFailure, errorCodeRegistry } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { captionsTmpPrefix } from '@vp/storage';
 import { createMockJob } from '@vp/testing-fixtures';
@@ -47,6 +47,7 @@ describe('apps/server/worker: captions flow', () => {
     const queue = world.getQueue('captions');
     queue.onFailed(
       createFailureHandler({
+        errorCodes: errorCodeRegistry,
         stage: 'captions',
         queueName: 'captions',
         repositories: world.repositories,

@@ -1,16 +1,8 @@
 import { clientAppRequestMiddleware } from '@kit/security-headers';
 import { createStart } from '@tanstack/react-start';
 import { sessionMiddleware } from '@vp/queries';
-import { ACCOUNTS_MAX, API_BASE_URL, COOKIE_DOMAIN, DEV_TOKEN_URL } from './lib/config';
+import { studioComposition } from '#app/composition/registry';
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [
-    ...clientAppRequestMiddleware,
-    sessionMiddleware({
-      apiBaseUrl: API_BASE_URL,
-      cookieDomain: COOKIE_DOMAIN,
-      devTokenUrl: DEV_TOKEN_URL,
-      accountsMax: ACCOUNTS_MAX,
-    }),
-  ],
+  requestMiddleware: [...clientAppRequestMiddleware, sessionMiddleware(studioComposition.session)],
 }));

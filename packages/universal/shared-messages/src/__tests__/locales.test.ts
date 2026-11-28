@@ -1,3 +1,4 @@
+import { describeLocalesContract } from '@kit/intl/contract';
 import { LOCALES } from '../locales';
 
 describe('@vp/shared-messages: the supported locales', () => {
@@ -10,3 +11,5 @@ describe('@vp/shared-messages: the supported locales', () => {
     expect(LOCALES.isSupported(tag)).toBe(supported);
   });
 });
+
+describeLocalesContract(() => LOCALES);

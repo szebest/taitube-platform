@@ -254,6 +254,9 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/design-tokens
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
@@ -432,6 +435,9 @@ importers:
       '@kit/design-tokens':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/design-tokens
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/di
       '@kit/forms':
         specifier: workspace:*
         version: link:../../../packages/platform/client/forms
@@ -3702,6 +3708,9 @@ importers:
         specifier: workspace:*
         version: link:../errors
     devDependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../../platform/universal/di
       '@kit/testing':
         specifier: workspace:*
         version: link:../../platform/server/testing

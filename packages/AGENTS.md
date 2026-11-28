@@ -145,9 +145,9 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@kit/design-tokens` | universal | `@kit/appearance`, `@vp/errors`, `@kit/result` |
-| `@kit/intl` | universal | `@kit/result` |
-| `@kit/pagination` | universal | `@vp/errors`, `@kit/result` |
+| `@kit/design-tokens` | universal | `@kit/appearance`, `@kit/errors`, `@kit/result` |
+| `@kit/intl` | universal | `@kit/di`, `@kit/result` |
+| `@kit/pagination` | universal | `@kit/errors`, `@kit/result` |
 | `@vp/permissions` | universal | `@vp/domain`, `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@kit/result` |
 | `@kit/security-headers` | client | `@kit/result` |
@@ -175,7 +175,7 @@ document is stale — fix it.
 | `@kit/runtime` | universal | `@kit/di` |
 | `@kit/i18n` | universal | `@kit/di`, `@kit/intl`, `@kit/result` |
 | `@kit/composition` | server | `@kit/di`, `@kit/result` |
-| `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/result` |
+| `@kit/ui` | client | `@kit/appearance`, `@kit/design-tokens`, `@kit/errors`, `@kit/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@kit/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@kit/ports`, `@vp/permissions`, `@kit/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@kit/result`, `@vp/storage` |
@@ -189,9 +189,9 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@kit/components` | client | `@kit/design-tokens`, `@kit/ui` |
-| `@kit/forms` | client | `@vp/errors`, `@kit/result` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
-| `@kit/intl-react` | client | `@kit/i18n`, `@kit/intl`, `@kit/result` |
-| `@kit/web-telemetry` | client | `@vp/api-contracts`, `@kit/result` |
+| `@kit/forms` | client | `@kit/errors`, `@kit/result`, `@kit/ui` (T4 by design: above `@kit/ui` at T3, whose primitives its fields move onto) |
+| `@kit/intl-react` | client | `@kit/i18n`, `@kit/intl`, `@kit/result`, `@kit/runtime` |
+| `@kit/web-telemetry` | client | `@kit/result` |
 | `@vp/adapters` | server | `@kit/composition`, `@kit/concurrency`, `@vp/core`, `@vp/db`, `@kit/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@kit/object-storage`, `@vp/permissions`, `@vp/pipeline-metrics`, `@kit/ports`, `@kit/result`, `@vp/storage` |
 | `@kit/config` | server | `@kit/composition`, `@kit/logger`, `@kit/result` |
 | `@vp/fingerprint` | server | `@vp/core`, `@vp/domain`, `@vp/errors`, `@vp/ffmpeg`, `@kit/result` |

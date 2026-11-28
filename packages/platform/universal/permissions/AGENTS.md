@@ -15,6 +15,9 @@ depends only on platform packages (`pnpm boundaries`). It is the machinery of au
 - **`assertCan(allowed, options)`** (`src/assert-can.ts`): the throwing guard for a caller that needs an
   exception, `UNAUTHORIZED` when there is no `Actor` and `FORBIDDEN` when there is one.
 
+Install: `pnpm add @kit/permissions @casl/ability`. Tokens: none. Registries: none; the rule sets are arguments of
+`createAbilityFactory`. Usage: see [README.md](README.md).
+
 ## 2. Invariants
 
 1. **No app rule, subject, action or role here.** They arrive as the app's rule sets and type parameters. An

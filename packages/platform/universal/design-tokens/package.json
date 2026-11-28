@@ -1,6 +1,6 @@
 {
   "name": "@kit/design-tokens",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -11,6 +11,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "source": "./src/contract/index.ts",
+      "import": "./dist/contract/index.js",
+      "default": "./dist/contract/index.js"
     }
   },
   "scripts": {
@@ -39,6 +45,7 @@
     "layer": 5
   },
   "peerDependencies": {
+    "vitest": "catalog:",
     "zod": "^4.6.5"
   }
 }

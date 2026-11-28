@@ -1,4 +1,5 @@
 import { Container, DisposeFailed, type StartupFailed } from '@kit/composition';
+import type { ErrorCodeSet } from '@kit/errors';
 import type { LogContext, Logger } from '@kit/logger';
 import type { CacheClient, FlowProducerPort, JobQueue } from '@kit/ports';
 import { type Result, isErr, ok } from '@kit/result';
@@ -6,6 +7,7 @@ import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import type { MultipartStorage, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
+import type { ErrorCode } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { FingerprintTools } from '@vp/fingerprint';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
@@ -40,6 +42,7 @@ export interface WorkerRunner {
   queue: JobQueue;
   worker: { name: string };
   outboxRelay?: OutboxRelay;
+  errorCodes: ErrorCodeSet<ErrorCode>;
   metricsPort: () => number;
   start: () => Promise<Result<void, StartupFailed>>;
   started: () => readonly string[];
@@ -90,6 +93,7 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     queue,
     worker: { name: container.get(Worker.Stage).queue },
     outboxRelay: container.get(Worker.OutboxRelay),
+    errorCodes: container.get(Worker.ErrorCodes),
     metricsPort: () => metricsServer.port,
     start: async () => {
       const started = await container.start();

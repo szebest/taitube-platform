@@ -245,7 +245,7 @@ The table lists the app packages and the platform packages of each tier.
 
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `messages`, `permissions`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
+| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `intl-formats`, `permissions`, `shared-messages`, `validation`; platform: `appearance`, `design-tokens`, `di`, `errors`, `i18n`, `intl`, `machine`, `pagination`, `permissions`, `primitives`, `result`, `runtime`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
 | `server` | `adapters`, `core`, `db`, `env-schema`, `events`, `ffmpeg`, `fingerprint`, `gen-video`, `job-contracts`, `pipeline-metrics`, `storage`, `testing-fixtures`, `upload-client`, `whisper`; platform: `compose-autoscaler`, `composition`, `concurrency`, `config`, `dev-token`, `keyspace`, `logger`, `object-storage`, `observability`, `ports`, `testing`, `vite-preset` | `universal` + `server` |
 | `client` | `api-client`, `permissions-react`, `queries`, `web-testing`, `workbench`; platform: `components`, `forms`, `intl-react`, `query`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
 
@@ -267,7 +267,7 @@ portability.
 |---|---|---|
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
 | T2 | Contracts and policy, and the CLIs that log through `@kit/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
-| T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `permissions-react`, `shared-messages`, `ui` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `fingerprint`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |

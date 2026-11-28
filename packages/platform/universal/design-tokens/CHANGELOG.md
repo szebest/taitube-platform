@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `./contract` exports `describeAppearanceContract`, `AppearanceSubject` and `MakeAppearance`; vitest is a peer.
+
 ## 0.2.0
 
 - `InvalidDefinition` and `InvalidColour` take `VALIDATION_FAILED` from `CommonErrorCodes` in `@kit/errors`;

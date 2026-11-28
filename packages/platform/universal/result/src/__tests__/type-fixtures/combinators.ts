@@ -1,4 +1,4 @@
-import { all, andThen, map, unwrapOr } from '../../combinators';
+import { all, andThen, ignoreRejection, map, unwrapOr } from '../../combinators';
 import { type Err, type Ok, type Result, err, ok } from '../../result';
 
 declare const result: Result<number, 'A'>;
@@ -22,3 +22,30 @@ andThen(result, (value) => value + 1);
 
 // @ts-expect-error every result of a list shares one value type
 all([ok(1), ok('one')]);
+
+expectTypeOf(ignoreRejection<'progress is advisory'>)
+  .parameter(0)
+  .toEqualTypeOf<PromiseLike<unknown>>();
+expectTypeOf(ignoreRejection<'progress is advisory'>)
+  .parameter(1)
+  .toEqualTypeOf<'progress is advisory'>();
+expectTypeOf(ignoreRejection<'x'>).returns.toEqualTypeOf<void>();
+
+function _rejectionSpelledOut(): void {
+  ignoreRejection(Promise.reject(new Error('gone')), 'the beacon is best effort');
+}
+
+function _rejectionFromAVariable(reason: string): void {
+  // @ts-expect-error a reason held in a variable could say anything, so it justifies nothing
+  ignoreRejection(Promise.resolve(1), reason);
+}
+
+function _rejectionEmpty(): void {
+  // @ts-expect-error an empty reason is no reason
+  ignoreRejection(Promise.resolve(1), '');
+}
+
+function _rejectionNotAPromise(): void {
+  // @ts-expect-error only a promise-like is dropped through ignoreRejection
+  ignoreRejection(42, 'a number is not a promise');
+}

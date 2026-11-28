@@ -1,6 +1,6 @@
 {
   "name": "@kit/observability",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -16,6 +16,12 @@
       "types": "./dist/tracing-sdk.d.ts",
       "import": "./dist/tracing-sdk.js",
       "default": "./dist/tracing-sdk.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "source": "./src/contract/index.ts",
+      "import": "./dist/contract/index.js",
+      "default": "./dist/contract/index.js"
     }
   },
   "scripts": {
@@ -38,7 +44,8 @@
     "@opentelemetry/sdk-trace": "^2.12.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
-    "prom-client": "^15.1.3"
+    "prom-client": "^15.1.3",
+    "vitest": "catalog:"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

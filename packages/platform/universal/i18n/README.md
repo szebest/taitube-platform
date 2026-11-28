@@ -4,6 +4,8 @@ A typed message engine: templates whose placeholders type their arguments, confi
 catalogues whose translations keep the source's params, and a `t` typed by the catalogue the app registers. It holds
 no words and no locale data; the app brings both.
 
+Install: `pnpm add @kit/i18n`. It depends on `@kit/di`, `@kit/intl` and `@kit/result`.
+
 ```ts
 import { builtInKinds, defineEngine, defineParams } from '@kit/i18n';
 import { definePresets } from '@kit/intl';

@@ -1,15 +1,7 @@
-import {
-  requestAppearancePreference,
-  ThemedDocument,
-  ToastProvider,
-  type TokenSetIds,
-  Tooltip,
-} from '@kit/ui';
+import { requestAppearancePreference, ThemedDocument, ToastProvider, Tooltip } from '@kit/ui';
 import uiStyles from '@kit/ui/styles.css?url';
 import { useWebTelemetry } from '@kit/web-telemetry';
 import { createRootRouteWithContext } from '@tanstack/react-router';
-import { MAX_WEB_VITALS_PER_BATCH, recordWebVitals } from '@vp/api-contracts';
-import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -22,20 +14,15 @@ import {
   useTabIdentity,
 } from '@vp/queries';
 import type { ReactNode } from 'react';
-import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
+import { studioComposition } from '#app/composition/registry';
 import type { StudioCatalogue } from '#app/lib/messages';
 import { AccessDeniedSearchSchema } from '#app/utils/access-denied-search';
 import { StudioRoot } from './-components/studio-root/studio-root';
 
-/** The studio is a dense workspace: it starts on compact spacing and small sizing. */
-const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
-
-const VITALS_ENDPOINT = { path: recordWebVitals.path, maxBatchSize: MAX_WEB_VITALS_PER_BATCH };
-
 export const Route = createRootRouteWithContext<AppRouterContext<StudioCatalogue>>()({
   validateSearch: AccessDeniedSearchSchema,
   beforeLoad: async ({ context, location }) => ({
-    appearance: requestAppearancePreference(APPEARANCE_COOKIES),
+    appearance: requestAppearancePreference(studioComposition.appearanceCookies),
     ...(await requestLocale(context.locales, { searchStr: location.searchStr })),
     auth: await ensureSession(context),
   }),
@@ -62,10 +49,10 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <ThemedDocument
       stored={appearance}
-      defaults={STUDIO_SETS}
+      defaults={studioComposition.tokenSetDefaults}
       lang={locale}
       dir={direction}
-      cookieDomain={COOKIE_DOMAIN}
+      cookieDomain={studioComposition.cookieDomain}
     >
       {children}
     </ThemedDocument>
@@ -77,13 +64,7 @@ function RootLayout() {
   const { identity, prefixed } = useTabIdentity();
   useSessionSync();
 
-  useWebTelemetry({
-    app: 'studio',
-    serviceName: 'taitube-studio',
-    apiBaseUrl: API_BASE_URL,
-    vitals: VITALS_ENDPOINT,
-    tracesUrl: OTEL_TRACES_URL,
-  });
+  useWebTelemetry(studioComposition.telemetry);
 
   return (
     <ApiProvider api={api}>

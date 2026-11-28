@@ -1,6 +1,6 @@
 import { PermanentError } from '@kit/errors';
 import { expectOk } from '@kit/testing/result';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, errorCodeRegistry } from '@vp/errors';
 import { NotifyJob, stagePolicies } from '@vp/job-contracts';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
@@ -16,6 +16,7 @@ describe('apps/server/worker: stage failures that end in the DLQ', () => {
   const parkFailuresOf = (queueName: string) => {
     const parked = Promise.withResolvers<void>();
     const handleFailure = createFailureHandler({
+      errorCodes: errorCodeRegistry,
       ...STAGE_SETTINGS,
       ...world,
       stage: queueName,

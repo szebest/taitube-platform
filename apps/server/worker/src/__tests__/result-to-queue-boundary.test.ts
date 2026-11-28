@@ -67,6 +67,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
       const videoId = uuidv7();
       const jobId = `${videoId}--probe--g1`;
       const onFailed = createFailureHandler({
+        errorCodes: errorCodeRegistry,
         workerId: STAGE_SETTINGS.workerId,
         stage: 'probe',
         queueName: 'probe',

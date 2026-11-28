@@ -112,6 +112,10 @@ needs the version bump and the changelog entry.
 | `@kit/errors` | `describeErrorCodeSetContract` | its fixture set, `@vp/errors`' `errorCodeRegistry` |
 | `@kit/i18n` | `describeI18nContract` | its fixture, `@vp/shared-messages`, the web and studio catalogues |
 | `@kit/keyspace` | `describeKeyspaceContract` | its fixture, `@vp/events`' `CacheKeys` |
+| `@kit/intl` | `describeLocalesContract`, `describePresetsContract` | its fixtures, `@vp/shared-messages`' `LOCALES` and the presets its engine provides |
+| `@kit/observability` | `describeMetricsRegistryContract` | its `createMetricsRegistry`, `@vp/pipeline-metrics`' registry |
+| `@kit/design-tokens` | `describeAppearanceContract` | its fixture appearance, `@kit/ui`'s `appearance` registry |
+| `@kit/ui` | `describeAppearanceRegistryContract` | its `resolveAppearance`, `registerTheme` and `appearance` registry |
 | `@kit/runtime` | clock, random, env source, fetch, cookie jar | its node and browser providers |
 | `@kit/permissions` | `describeAbilityFactoryContract` | its fixture, `@vp/permissions`' `getUserPermissions` |
 

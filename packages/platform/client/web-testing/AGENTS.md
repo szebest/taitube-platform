@@ -6,6 +6,8 @@
 manifest names it under `devDependencies` only (an app's own spec-helper package may list it as a dependency). It
 knows no API client, contract, error registry or product: whatever needs one stays with the app.
 
+Install: `pnpm add -D @kit/web-testing`. Tokens: none. Registries: none. Usage: see [README.md](README.md).
+
 ## What it holds
 
 Three entry points, so a spec loads only what its environment can hold:

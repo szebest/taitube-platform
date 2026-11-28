@@ -3,6 +3,10 @@
 Typed tokens and an immutable registry. A package declares the token it needs; the app provides it once, at
 its composition root.
 
+Install: `pnpm add @kit/di`. It depends on `@kit/result`. No peers.
+
+Tokens: none of its own, it is the machinery that declares them. Registries: `createRegistry()` builds an immutable one.
+
 ```ts
 import { createRegistry, provide, token } from '@kit/di';
 

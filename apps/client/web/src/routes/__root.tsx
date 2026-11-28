@@ -1,9 +1,9 @@
 import { requestAppearancePreference } from '@kit/ui';
 import uiStyles from '@kit/ui/styles.css?url';
 import { createRootRouteWithContext, useRouterState } from '@tanstack/react-router';
-import { APPEARANCE_COOKIES } from '@vp/domain/settings';
 import { type AppRouterContext, ensureSession, requestLocale } from '@vp/queries';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
+import { webComposition } from '#app/composition/registry';
 import { isEmbedPath } from '#app/features/embed';
 import { requestSidebarState } from '#app/features/shell';
 import type { WebCatalogue } from '#app/lib/messages';
@@ -18,7 +18,7 @@ export const Route = createRootRouteWithContext<AppRouterContext<WebCatalogue>>(
   beforeLoad: async ({ context, location }) => {
     const devicePreferences = requestDevicePreferences();
     return {
-      appearance: requestAppearancePreference(APPEARANCE_COOKIES),
+      appearance: requestAppearancePreference(webComposition.appearanceCookies),
       devicePreferences,
       sidebarState: requestSidebarState(),
       ...(await requestLocale(context.locales, {

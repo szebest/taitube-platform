@@ -11,6 +11,9 @@ immutable `Registry` (`src/registry.ts`): `createRegistry().provide(provide(Toke
 registry, and `registry.get(Token)` returns `Result<T, MissingProvider>`. It is universal, so a browser package can
 declare a token; `@kit/composition` builds its lifecycle `Container` on the same `Token`.
 
+Install: `pnpm add @kit/di`. Tokens: none of its own, it declares them. Registries: `createRegistry()`, immutable. Usage: see
+[README.md](README.md).
+
 ## 2. Invariants
 
 1. **Resolution is by identity.** A token's `name` is for messages; two tokens with one name never collide.

@@ -35,6 +35,7 @@
     "@vp/errors": "workspace:*"
   },
   "devDependencies": {
+    "@kit/di": "workspace:*",
     "@kit/testing": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "jsdom": "^30.1.2",

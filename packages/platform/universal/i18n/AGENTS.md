@@ -33,6 +33,9 @@ composition root):
 | `FormatPresets` (from `@kit/intl`) | the app's `definePresets` table |
 | `ParamVocabulary` | the app's `defineParams` list |
 
+Install: `pnpm add @kit/i18n`. Usage: see [README.md](README.md). Registries: none; the catalogues arrive through the
+`Catalogues` token.
+
 ## 2. Invariants
 
 1. **The template is the type.** `dt('{count:plural} views', ...)` makes `count` a required `number`; a kind's `arg`

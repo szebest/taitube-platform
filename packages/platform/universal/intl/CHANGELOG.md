@@ -2,6 +2,7 @@
 
 ## 0.4.0
 
+- `./contract` exports `describeLocalesContract`, `describePresetsContract`, `MakeLocales` and `MakePresets`; vitest is a peer.
 - Breaking: the `User` type is removed; `USER` stays. `resolveCurrency`'s `requested`, `DisplayNameValue.value` and the money formatter's `currency` are typed `string`: the `User` member of the union was already absorbed by `string`, so no accepted value changes, and nothing else used the type.
 - `Preset`, `PresetTable`, `definePresets`, `resolveEntry` and the `FormatPresets` token, moved from `@kit/i18n`;
   `@kit/di` is a dependency and the package moves to layer T3.
