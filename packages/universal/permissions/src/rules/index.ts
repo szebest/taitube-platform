@@ -10,6 +10,7 @@ export * from './upload.rules';
 export * from './analytics.rules';
 export * from './playlist.rules';
 export * from './post.rules';
+export * from './content-link.rules';
 export * from './thread.rules';
 export * from './preferences.rules';
 export * from './caption.rules';

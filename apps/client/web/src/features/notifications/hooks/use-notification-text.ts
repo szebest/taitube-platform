@@ -67,6 +67,20 @@ export function useNotificationText(): (notification: Notification) => Notificat
           { name, title: payload.playlist?.title ?? '' },
           ''
         );
+      case 'link_request':
+        return tOr('notifications.linkRequest', { name }, '');
+      case 'link_decision':
+        return tOr(
+          payload.link?.decision === 'declined'
+            ? 'notifications.linkDeclined'
+            : 'notifications.linkApproved',
+          { name },
+          ''
+        );
+      case 'link_added':
+        return tOr('notifications.linkAdded', { name }, '');
+      case 'link_suggestion':
+        return tOr('notifications.linkSuggestion', {}, '');
       default:
         return assertNever(kind, 'NotificationKind');
     }

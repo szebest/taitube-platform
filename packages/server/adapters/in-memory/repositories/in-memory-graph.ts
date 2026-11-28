@@ -5,6 +5,7 @@ import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { provideChannels } from './in-memory-channel-providers';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { provideCommentRepositories } from './in-memory-comment-graph';
+import { provideContentLinks } from './in-memory-content-link-providers';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { provideExports } from './in-memory-export-providers';
@@ -43,7 +44,9 @@ export function graph(now: Clock = realClock): Container {
   return provideCommentRepositories(
     provideChannels(
       provideExports(
-        provideScreening(providePlaylists(provideVideoTools(new Container(), now), now)),
+        provideScreening(
+          providePlaylists(provideContentLinks(provideVideoTools(new Container(), now)), now)
+        ),
         now
       ),
       now

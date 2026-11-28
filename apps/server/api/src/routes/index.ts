@@ -26,6 +26,7 @@ import { commentRemovalsRoutes } from './comment-removals';
 import { commentReportsRoutes } from './comment-reports';
 import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
+import { contentLinksRoutes } from './content-links';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorLiveRoutes } from './creator-live';
 import { creatorStatsRoutes } from './creator-stats';
@@ -67,6 +68,7 @@ import { threadsRoutes } from './threads';
 import { trustedCommentersRoutes } from './trusted-commenters';
 import { uploadsRoutes } from './uploads';
 import { videoAccessRoutes } from './video-access';
+import { videoEndScreenRoutes } from './video-end-screens';
 import { videoExperimentsRoutes } from './video-experiments';
 import { videoPipelineRoutes } from './video-pipeline';
 import { videoToolsRoutes } from './video-tools';
@@ -129,6 +131,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   searchHistoryRoutes,
   viewerActivityRoutes,
   clipsRoutes,
+  contentLinksRoutes,
+  videoEndScreenRoutes,
   picksRoutes,
   oembedRoutes,
   webhooksRoutes,

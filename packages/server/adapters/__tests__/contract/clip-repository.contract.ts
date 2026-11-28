@@ -61,6 +61,15 @@ export function describeClipRepositoryContract(makeSubject: MakeRepositoriesSubj
       expect(expectOk(await clips.findById(clipId(2)))).toBeNull();
     });
 
+    it('lists the creator own clips of the videos asked for, whatever state the video is in', async () => {
+      await save(clip(1), clip(2, { videoId: VIDEO_IDS.b }), clip(3, { userId: OWNER_ID }));
+
+      const found = expectOk(await clips.listOwnByVideos(CREATOR.id, [VIDEO_IDS.a]));
+
+      expect(found.map(({ id }) => id)).toEqual([clipId(1)]);
+      expect(expectOk(await clips.listOwnByVideos(CREATOR.id, []))).toEqual([]);
+    });
+
     it('removes a clip once and reports whether it was there', async () => {
       await save(clip(1));
 

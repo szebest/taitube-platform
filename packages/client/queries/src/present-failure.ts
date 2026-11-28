@@ -23,6 +23,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PLAYLIST_NOT_FOUND:
     case ErrorCodes.POST_NOT_FOUND:
     case ErrorCodes.THREAD_NOT_FOUND:
+    case ErrorCodes.CONTENT_LINK_NOT_FOUND:
     case ErrorCodes.PLAYLIST_ITEM_NOT_FOUND:
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
     case ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND:
@@ -193,6 +194,17 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.THREAD_LIMIT:
     case ErrorCodes.THREAD_PIN_LIMIT:
     case ErrorCodes.THREAD_ANCHOR_INVALID:
+    case ErrorCodes.LINK_PAIR_NOT_ALLOWED:
+    case ErrorCodes.LINK_RELATION_SAME_CHANNEL:
+    case ErrorCodes.LINK_TARGET_BLOCKS:
+    case ErrorCodes.LINK_TARGET_NOT_PUBLIC:
+    case ErrorCodes.LINK_SELF:
+    case ErrorCodes.LINK_LOOP:
+    case ErrorCodes.LINK_LIMIT:
+    case ErrorCodes.LINK_ANCHOR_INVALID:
+    case ErrorCodes.LINK_EXISTS:
+    case ErrorCodes.LINK_SUGGESTION_LIMIT:
+    case ErrorCodes.END_SCREEN_INVALID:
     case ErrorCodes.LAYOUT_LIMIT_EXCEEDED:
     case ErrorCodes.LAYOUT_MARKDOWN_INVALID:
     case ErrorCodes.LAYOUT_SLUG_INVALID:

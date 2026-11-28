@@ -32,6 +32,7 @@ export * from './channel-identity-schema';
 export * from './exports-schema';
 export * from './api-tokens-schema';
 export * from './account-audit-schema';
+export * from './content-links-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

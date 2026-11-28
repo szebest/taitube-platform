@@ -1,10 +1,10 @@
-import { fromPromise, map, type Result } from '@kit/result';
+import { fromPromise, map, ok, type Result } from '@kit/result';
 import type { ClipRepositoryPort, ListClipsOptions } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { Clip, ClipEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { desc, eq, getTableColumns } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, inArray } from 'drizzle-orm';
 import { toVideoRecord } from '../mappers/video.mapper';
 import { drizzleWhere, keysetBefore, msTimestamp, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
@@ -63,6 +63,22 @@ export class PostgresClipRepository implements ClipRepositoryPort {
         video: toVideoRecord(video),
         channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
       }))
+    );
+  }
+
+  async listOwnByVideos(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<Clip[], DatabaseUnavailable>> {
+    if (videoIds.length === 0) return ok([]);
+    return fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(c)
+          .where(and(eq(c.userId, userId), inArray(c.videoId, [...videoIds])))
+          .orderBy(desc(c.createdAt), desc(c.id)),
+      databaseUnavailable.during('listOwnClipsByVideos')
     );
   }
 

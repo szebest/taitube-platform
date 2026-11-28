@@ -37,6 +37,18 @@ export class InMemoryClipRepository implements ClipRepositoryPort {
     return ok(kept.map(({ video, channel, ...clip }) => ({ clip: { ...clip }, video, channel })));
   }
 
+  async listOwnByVideos(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<Clip[], DatabaseUnavailable>> {
+    return ok(
+      [...this.rows.values()]
+        .filter((clip) => clip.userId === userId && videoIds.includes(clip.videoId))
+        .sort((a, b) => byKeysetDesc(keysetOf(a), keysetOf(b)))
+        .map((clip) => ({ ...clip }))
+    );
+  }
+
   async remove(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
     return ok(this.rows.delete(id));
   }

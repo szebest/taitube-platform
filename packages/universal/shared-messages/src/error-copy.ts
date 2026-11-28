@@ -2,6 +2,7 @@ import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import type { SharedArgumentFreeKey } from './catalogue';
 import { CHANNEL_ERROR_COPY } from './error-copy-channels';
 import { LAYOUT_ERROR_COPY } from './error-copy-layout';
+import { LINK_ERROR_COPY } from './error-copy-links';
 import { PLAYLIST_ERROR_COPY } from './error-copy-playlists';
 import { POST_ERROR_COPY } from './error-copy-posts';
 
@@ -156,5 +157,6 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, SharedArgumentFreeKey>> = {
   ...CHANNEL_ERROR_COPY,
   ...PLAYLIST_ERROR_COPY,
   ...POST_ERROR_COPY,
+  ...LINK_ERROR_COPY,
   ...LAYOUT_ERROR_COPY,
 };

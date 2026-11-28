@@ -35,6 +35,7 @@ export default defineConfig({
     './src/account-audit-schema.ts',
     './src/video-access-schema.ts',
     './src/video-pipeline-schema.ts',
+    './src/content-links-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

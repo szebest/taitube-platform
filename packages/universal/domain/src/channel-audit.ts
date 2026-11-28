@@ -2,6 +2,7 @@ import type { PostKind } from './channel-post';
 import type { RestrictionKind } from './channel-restriction';
 import type { ChannelRole } from './channel-team';
 import type { CommentSettingsField, Disclosure } from './comment-settings';
+import type { ContentLinkRelation, ContentLinkStatus, LinkPolicy } from './content-link';
 import type { DataExportFormat, DataExportKind } from './data-export';
 
 export const CHANNEL_AUDIT_RETENTION_DAYS = 365;
@@ -82,6 +83,18 @@ type ChannelAuditEvent =
   | { action: 'post.published'; targetType: 'post'; targetId: string; meta: PostMeta }
   | { action: 'post.updated'; targetType: 'post'; targetId: string; meta: PostMeta }
   | { action: 'post.deleted'; targetType: 'post'; targetId: string; meta: PostMeta }
+  | { action: 'link.created'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.approved'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.declined'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.removed'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.suggested'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | { action: 'link.accepted'; targetType: 'link'; targetId: string; meta: LinkMeta }
+  | {
+      action: 'link.policy_changed';
+      targetType: 'settings';
+      targetId: string;
+      meta: { policy: LinkPolicy };
+    }
   | { action: 'page.draft_saved'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
   | { action: 'page.published'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
   | { action: 'page.scheduled'; targetType: 'page'; targetId: string; meta: PageScheduleMeta }
@@ -115,6 +128,7 @@ type UserMeta = Record<never, never>;
 
 type PostMeta = { kind: PostKind };
 
+type LinkMeta = { relation: ContentLinkRelation; status: ContentLinkStatus };
 type PageVersionMeta = { version: number };
 
 type PageScheduleMeta = { scheduleId: string; publishAt: string };
@@ -199,6 +213,13 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'post.published': true,
   'post.updated': true,
   'post.deleted': true,
+  'link.created': true,
+  'link.approved': true,
+  'link.declined': true,
+  'link.removed': true,
+  'link.suggested': true,
+  'link.accepted': true,
+  'link.policy_changed': true,
   'page.draft_saved': true,
   'page.published': true,
   'page.scheduled': true,

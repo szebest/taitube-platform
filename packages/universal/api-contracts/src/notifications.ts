@@ -7,6 +7,7 @@ import {
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
+import { ContentRefSchema, LinkRelationSchema } from './content-link-schemas';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
 
@@ -69,6 +70,18 @@ const NotificationPayloadSchema = z.object({
     })
     .optional()
     .describe('The playlist a `playlist_invite` or `playlist_update` is about'),
+  link: z
+    .object({
+      id: z.uuid(),
+      relation: LinkRelationSchema,
+      source: ContentRefSchema,
+      target: ContentRefSchema,
+      decision: z.enum(['approved', 'declined']).nullable(),
+    })
+    .optional()
+    .describe(
+      'The link a `link_request`, `link_decision`, `link_added` or `link_suggestion` is about'
+    ),
 });
 
 export const NotificationSchema = z.object({

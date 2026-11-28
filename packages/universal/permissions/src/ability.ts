@@ -9,6 +9,7 @@ import { defineChannelRules } from './rules/channel.rules';
 import { defineClipRules } from './rules/clip.rules';
 import { defineCommentModerationRules } from './rules/comment-moderation.rules';
 import { defineCommentRules } from './rules/comment.rules';
+import { defineContentLinkRules } from './rules/content-link.rules';
 import { defineLiveStreamRules } from './rules/live-stream.rules';
 import { defineNotificationRules } from './rules/notification.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
@@ -50,6 +51,7 @@ const buildAbility = createAbilityFactory<AppAction, AppSubjects, AbilityContext
   forUser(defineAnalyticsRules),
   forUser(definePlaylistRules),
   forUser(definePostRules),
+  forUser(defineContentLinkRules),
   forUser(defineThreadRules),
   forUser(definePreferencesRules),
   forUser(defineCaptionRules),

@@ -21,6 +21,10 @@ import type {
   ChannelService,
   RequestIdentity,
   ClipService,
+  ContentLinkCache,
+  ContentLinkReads,
+  ContentLinkService,
+  VideoEndScreenService,
   CreatorCommentService,
   CreatorLiveService,
   CreatorStudioService,
@@ -99,6 +103,9 @@ export interface ServiceSet
   channelMemberService: ChannelMemberService;
   channelAuditService: ChannelAuditService;
   clipService: ClipService;
+  contentLinkService: ContentLinkService;
+  contentLinkReads: ContentLinkReads;
+  videoEndScreenService: VideoEndScreenService;
   liveIngestService: LiveIngestService;
   creatorLiveService: CreatorLiveService;
   liveService: LiveService;
@@ -159,6 +166,10 @@ export const Services = {
   ChannelMemberService: token<ChannelMemberService>('ChannelMemberService'),
   ChannelAuditService: token<ChannelAuditService>('ChannelAuditService'),
   ClipService: token<ClipService>('ClipService'),
+  ContentLinkCache: token<ContentLinkCache>('ContentLinkCache'),
+  ContentLinkService: token<ContentLinkService>('ContentLinkService'),
+  ContentLinkReads: token<ContentLinkReads>('ContentLinkReads'),
+  VideoEndScreenService: token<VideoEndScreenService>('VideoEndScreenService'),
   LiveIngestService: token<LiveIngestService>('LiveIngestService'),
   CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
   LiveService: token<LiveService>('LiveService'),

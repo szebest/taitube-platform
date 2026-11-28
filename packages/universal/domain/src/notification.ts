@@ -1,3 +1,4 @@
+import type { ContentLinkRelation, ContentRef } from './content-link';
 import type { PlaylistCollaboratorRole } from './playlist-collaboration';
 import type { VideoStatus, VideoVisibility } from './status-vocabulary';
 
@@ -16,6 +17,10 @@ export const NOTIFICATION_KINDS = [
   'playlist_invite',
   'playlist_update',
   'post',
+  'link_request',
+  'link_decision',
+  'link_added',
+  'link_suggestion',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -67,6 +72,10 @@ export const KIND_SWITCH = {
   playlist_invite: null,
   playlist_update: null,
   post: 'subscriptionUploads',
+  link_request: null,
+  link_decision: null,
+  link_added: null,
+  link_suggestion: null,
 } as const satisfies Record<NotificationKind, string | null>;
 
 interface NotifiableVideo {
@@ -118,6 +127,16 @@ interface NotificationPlaylist {
   invite: { token: string; role: PlaylistCollaboratorRole } | null;
 }
 
+/** The link a `link_*` notification is about. */
+interface NotificationLink {
+  id: string;
+  relation: ContentLinkRelation;
+  source: ContentRef;
+  target: ContentRef;
+  /** On `link_decision`: what the target's managers decided. */
+  decision: 'approved' | 'declined' | null;
+}
+
 interface NotificationFields {
   count: number;
   actor: NotificationActor | null;
@@ -128,6 +147,8 @@ interface NotificationFields {
   inviteId?: string;
   /** Set on `playlist_invite` and `playlist_update`: the playlist, and the invite's token and role. */
   playlist?: NotificationPlaylist;
+  /** Set on the `link_*` kinds. */
+  link?: NotificationLink;
   /** Set on `post`: the newest post of the group; on `reply`, `mention` and `comment`: the post the comment is under. */
   postId?: string;
   /** Set on `reply`, `mention` and `comment` under a viewer thread: with `videoId`, where it opens. */

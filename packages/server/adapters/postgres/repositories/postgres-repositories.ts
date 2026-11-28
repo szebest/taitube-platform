@@ -13,6 +13,10 @@ import {
 } from './postgres-comment-repositories';
 import { connectPostgres, type PostgresRepositoriesConfig } from './postgres-connection';
 import {
+  type ContentLinkRepositories,
+  createContentLinkRepositories,
+} from './postgres-content-link-repositories';
+import {
   type CreatorDataRepositories,
   createCreatorDataRepositories,
 } from './postgres-creator-data-repositories';
@@ -70,6 +74,11 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly channelInvites: Channels['channelInvites'];
   declare readonly channelAudit: Channels['channelAudit'];
   declare readonly channelFeatured: Channels['channelFeatured'];
+  declare readonly contentLinks: ContentLinkRepositories['contentLinks'];
+  declare readonly contentRefs: ContentLinkRepositories['contentRefs'];
+  declare readonly contentLinkDismissals: ContentLinkRepositories['contentLinkDismissals'];
+  declare readonly contentLinkStats: ContentLinkRepositories['contentLinkStats'];
+  declare readonly videoEndScreens: ContentLinkRepositories['videoEndScreens'];
   declare readonly channelHandleHistory: Channels['channelHandleHistory'];
   declare readonly channelImages: Channels['channelImages'];
   declare readonly channelPages: Channels['channelPages'];
@@ -144,6 +153,7 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
     this.outbox = new PostgresOutboxRepository(db);
     this.categories = new PostgresCategoryRepository(db);
     Object.assign(this, createChannelRepositories(db));
+    Object.assign(this, createContentLinkRepositories(db));
     Object.assign(this, createCreatorDataRepositories(db));
     Object.assign(this, createCommentRepositories(db));
     this.videoReactions = new PostgresVideoReactionRepository(db);
