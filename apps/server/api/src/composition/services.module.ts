@@ -31,6 +31,7 @@ import { registerCaptionServices } from './captions.module';
 import { registerChannelServices } from './channel.module';
 import { registerClipServices } from './clip.module';
 import { registerCommentServices } from './comment.module';
+import { registerContentLinkServices } from './content-link.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
@@ -72,16 +73,20 @@ export function registerServices(c: Container): Container {
       registerDiscoveryServices(
         registerActivityServices(
           registerClipServices(
-            registerChannelServices(
-              registerSearchServices(
-                registerCaptionServices(
-                  registerNotificationServices(
-                    registerStudioServices(
-                      registerVideoAccessServices(
-                        registerScreeningServices(
-                          registerCommentServices(
-                            registerSseServices(
-                              registerLiveServices(registerWatchPartyServices(registerBootstrap(c)))
+            registerContentLinkServices(
+              registerChannelServices(
+                registerSearchServices(
+                  registerCaptionServices(
+                    registerNotificationServices(
+                      registerStudioServices(
+                        registerVideoAccessServices(
+                          registerScreeningServices(
+                            registerCommentServices(
+                              registerSseServices(
+                                registerLiveServices(
+                                  registerWatchPartyServices(registerBootstrap(c))
+                                )
+                              )
                             )
                           )
                         )

@@ -31,8 +31,8 @@ const LinkedItemSchema = z.object({
 });
 
 const LinkEndsSchema = z.object({
-  id: z.uuid(),
-  params: LinkParamsSchema,
+  id: z.uuid().describe("The link's id, or the clip's for a clip_of entry"),
+  params: z.union([LinkParamsSchema, z.object({ relation: z.literal('clip_of') })]),
   anchors: LinkAnchorsSchema.describe('Clamped to the current duration of each end'),
   item: LinkedItemSchema.describe('The other end'),
 });

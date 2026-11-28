@@ -26,6 +26,7 @@ import { commentRemovalsRoutes } from './comment-removals';
 import { commentReportsRoutes } from './comment-reports';
 import { commentSettingsRoutes } from './comment-settings';
 import { commentsRoutes } from './comments';
+import { contentLinksRoutes } from './content-links';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorLiveRoutes } from './creator-live';
 import { creatorStatsRoutes } from './creator-stats';
@@ -129,6 +130,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   searchHistoryRoutes,
   viewerActivityRoutes,
   clipsRoutes,
+  contentLinksRoutes,
   picksRoutes,
   oembedRoutes,
   webhooksRoutes,
