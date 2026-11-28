@@ -24,8 +24,11 @@ type WorkerFixtures = {
   devUrl: string;
 };
 
-/** `stranger` is a viewer this test alone signs in as, for state no other test may share. */
-type TestPersona = Persona | 'stranger';
+/**
+ * `stranger` is a viewer this test alone signs in as, for state no other test may share;
+ * `platformModerator` holds the platform MODERATOR role and no seat anywhere.
+ */
+type TestPersona = Persona | 'stranger' | 'platformModerator';
 
 type TestFixtures = {
   offMachineRequests: string[];
@@ -135,7 +138,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   ],
 
   tokens: async ({ stack }, use) => {
-    await use({ ...stack.personas, stranger: mintToken({ sub: randomUUID() }) });
+    await use({
+      ...stack.personas,
+      stranger: mintToken({ sub: randomUUID() }),
+      platformModerator: mintToken({ sub: randomUUID(), role: 'moderator' }),
+    });
   },
 
   signIn: async ({ context, tokens, baseURL }, use) => {
