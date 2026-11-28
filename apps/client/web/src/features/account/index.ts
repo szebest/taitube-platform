@@ -11,6 +11,7 @@ export { ChannelPermissions } from './components/channel-permissions/channel-per
 export { ClearHistoryRow } from './components/clear-history-row/clear-history-row';
 export { LazyIdentitySwitcherSheet } from './components/identity-switcher-sheet/identity-switcher-sheet.lazy';
 export { HiddenRecommendationsRow } from './components/hidden-recommendations-row/hidden-recommendations-row';
+export { PartyControlsRow } from './components/party-controls-row/party-controls-row';
 export { LanguageRow } from './components/language-row/language-row';
 export { LazySignInDialog } from './components/sign-in-dialog/sign-in-dialog.lazy';
 export { ReplayIntent } from './components/replay-intent/replay-intent';

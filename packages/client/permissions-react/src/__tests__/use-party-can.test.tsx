@@ -71,6 +71,16 @@ describe('@vp/permissions-react: usePartyCan', () => {
       gate: { kind: 'role', action: 'update', role: { key: null, position: 50 } },
       allowed: false,
     },
+    {
+      scenario: 'putting a held permission in a role',
+      gate: { kind: 'grant', permission: 'chat.moderate' },
+      allowed: true,
+    },
+    {
+      scenario: 'putting a permission they lack in a role',
+      gate: { kind: 'grant', permission: 'queue.add' },
+      allowed: false,
+    },
   ])('answers $scenario', ({ gate, allowed }) => {
     expect(answer(gate)).toContain(allowed ? 'YES' : 'NO');
   });

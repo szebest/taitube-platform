@@ -29,6 +29,9 @@ export interface PartyQueueItemProps extends ComponentPropsWithRef<'li'> {
   addedBy: string;
   current?: boolean;
   onRemove?: () => void;
+  /** Reorder, for `queue.reorder`; an end of the queue leaves its own direction out. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export function PartyQueueItem({
@@ -37,6 +40,8 @@ export function PartyQueueItem({
   addedBy,
   current = false,
   onRemove,
+  onMoveUp,
+  onMoveDown,
   className,
   ...props
 }: PartyQueueItemProps) {
@@ -67,6 +72,28 @@ export function PartyQueueItem({
             : tOr('party.queueAddedBy', { name: addedBy }, '')}
         </span>
       </span>
+      <PartyCan gate={{ kind: 'permission', permission: 'queue.reorder' }}>
+        {onMoveUp && (
+          <IconButton
+            size="sm"
+            variant="ghost"
+            aria-label={tOr('party.queueMoveUp', { title }, '')}
+            onClick={onMoveUp}
+          >
+            <Icon name="chevron-down" className="rotate-180" />
+          </IconButton>
+        )}
+        {onMoveDown && (
+          <IconButton
+            size="sm"
+            variant="ghost"
+            aria-label={tOr('party.queueMoveDown', { title }, '')}
+            onClick={onMoveDown}
+          >
+            <Icon name="chevron-down" />
+          </IconButton>
+        )}
+      </PartyCan>
       {onRemove && (
         <PartyCan gate={{ kind: 'permission', permission: 'queue.remove' }}>
           <IconButton
