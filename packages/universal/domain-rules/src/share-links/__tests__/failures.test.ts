@@ -2,6 +2,9 @@ import { isInputFailure } from '@kit/errors';
 import { ErrorCodes } from '@vp/errors';
 import { invalidShareLink, shareLinkExpired, shareLinkLimit, shareLinkNotFound } from '../failures';
 
+const VIDEO = { targetType: 'video', targetId: 'v1' } as const;
+const PLAYLIST = { targetType: 'playlist', targetId: 'p1' } as const;
+
 describe('@vp/domain-rules: share link failures', () => {
   it.each([
     {
@@ -9,12 +12,12 @@ describe('@vp/domain-rules: share link failures', () => {
       expected: { code: ErrorCodes.SHARE_LINK_NOT_FOUND, linkId: 'l1' },
     },
     {
-      failure: shareLinkExpired('v1'),
-      expected: { code: ErrorCodes.SHARE_LINK_EXPIRED, videoId: 'v1' },
+      failure: shareLinkExpired(VIDEO),
+      expected: { code: ErrorCodes.SHARE_LINK_EXPIRED, ...VIDEO },
     },
     {
-      failure: shareLinkLimit('v1'),
-      expected: { code: ErrorCodes.SHARE_LINK_LIMIT, videoId: 'v1', limit: 50 },
+      failure: shareLinkLimit(PLAYLIST),
+      expected: { code: ErrorCodes.SHARE_LINK_LIMIT, ...PLAYLIST, limit: 50 },
     },
   ])('names $expected.code', ({ failure, expected }) => {
     expect(failure).toMatchObject(expected);

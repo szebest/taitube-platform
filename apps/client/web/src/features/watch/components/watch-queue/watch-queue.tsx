@@ -40,7 +40,7 @@ export function WatchQueue({ video }: WatchQueueProps) {
     ...playlistQueryOptions(api, list ?? ''),
     enabled: list !== undefined,
   });
-  const { videos, playlistId } =
+  const { videos, playlistId, segments } =
     held.current === undefined && held.videos.length === 0
       ? getOpenedSession(
           { video, list, startTime: undefined, autoplay: false, shareToken: undefined },
@@ -116,6 +116,7 @@ export function WatchQueue({ video }: WatchQueueProps) {
                 current={queued.id === videoId}
                 playlist={playlistId ? { id: playlistId, index } : undefined}
                 episode={episodes.get(queued.id) ?? undefined}
+                segment={segments[queued.id]}
               />
             </Queue.Item>
           ))}

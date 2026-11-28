@@ -18,10 +18,10 @@ import type {
   PlaybackControl,
   PlaybackDefaults,
   PlaybackQuality,
-  PlaybackRange,
   TaitubePlayerProps,
 } from '#app/lib/player/taitube-player-props';
 import { CaptionsContext, useCaptions, useCaptionsContext } from './hooks/use-captions';
+import { useRangePlayback } from './hooks/use-range-playback';
 
 export const AUTO_QUALITY = 'auto';
 
@@ -29,16 +29,6 @@ const { Player: VideoPlayer, usePlayer } = createPlayer({
   features: [...videoFeatures, liveFeature],
   displayName: 'TaitubeVideoPlayer',
 });
-
-const MS_PER_SECOND = 1000;
-const SEEK_TOLERANCE_SECONDS = 0.5;
-
-function isOutside(range: PlaybackRange, currentTime: number): boolean {
-  return (
-    currentTime >= range.endMs / MS_PER_SECOND ||
-    currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS
-  );
-}
 
 export interface VideoJsEngineProps extends TaitubePlayerProps {
   /** The skin, drawn over the video inside the element that goes fullscreen. */
@@ -69,12 +59,10 @@ export function VideoJsEngine({
   const channel = useOfferedPlayerChannel();
   const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);
 
-  const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
+  const rangePlayback = useRangePlayback({ range, loop, startTime, onEnded });
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (startAt) {
-      currentTarget.currentTime = startAt;
-    }
+    rangePlayback.onLoadedMetadata(currentTarget);
 
     const speed = control?.speed ?? defaults?.speed;
     if (speed !== undefined) {
@@ -88,18 +76,15 @@ export function VideoJsEngine({
 
   const handleTimeUpdate = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     const { currentTime, duration } = currentTarget;
-    if (range && isOutside(range, currentTime)) {
-      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
-    }
+    rangePlayback.onTimeUpdate(currentTarget);
     onTimeUpdate?.({ currentTime, duration });
   };
 
   const handleEnded = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (range) {
-      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
-      void currentTarget.play();
+    if (rangePlayback.onVideoEnded(currentTarget)) {
       return;
     }
+
     onEnded?.({ duration: currentTarget.duration });
     channel?.end();
   };
@@ -141,9 +126,13 @@ export function VideoJsEngine({
             autoPlay={control && !control.paused}
             className={vertical ? 'size-full object-cover' : 'size-full object-contain'}
             onLoadedMetadata={handleLoadedMetadata}
-            onPlaying={({ currentTarget: { currentTime, duration } }) =>
-              onPlay?.({ currentTime, duration })
-            }
+            onPlaying={({ currentTarget }) => {
+              rangePlayback.onPlaying(currentTarget);
+              onPlay?.({
+                currentTime: currentTarget.currentTime,
+                duration: currentTarget.duration,
+              });
+            }}
             onPause={({ currentTarget: { currentTime, duration } }) =>
               onPause?.({ currentTime, duration })
             }

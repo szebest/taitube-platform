@@ -78,7 +78,7 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   onNext?: () => void;
   control?: PlaybackControl;
   startTime?: number;
-  /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */
+  /** Starts at `startMs` and stops at `endMs`, telling `onEnded`; with `loop` it goes back to `startMs` instead. It wins over `startTime`. */
   range?: PlaybackRange;
   /** Where a video starts: the speed, quality, captions and stats overlay the viewer chose to begin every video with. */
   defaults?: PlaybackDefaults;

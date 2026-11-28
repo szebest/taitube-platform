@@ -3,7 +3,11 @@ import { updatePlaylist } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { playlistDetail } from '#app/__tests__/library-fixtures';
-import { renderPlaylist, VIDEOS } from '#app/features/library/__tests__/render-playlist';
+import {
+  chooseFromMore,
+  renderPlaylist,
+  VIDEOS,
+} from '#app/features/library/__tests__/render-playlist';
 
 describe('apps/client/web: the playlist details form', () => {
   it('edits the details in place', async () => {
@@ -15,7 +19,7 @@ describe('apps/client/web: the playlist details form', () => {
       }),
     ]);
 
-    await user.click(await screen.findByRole('button', { name: 'Edit details' }));
+    await chooseFromMore(user, 'Edit details');
     const title = screen.getByRole('textbox', { name: 'Title' });
     await user.clear(title);
     await user.type(title, 'Night trips');
@@ -34,7 +38,7 @@ describe('apps/client/web: the playlist details form', () => {
   it('leaves the details as they were on cancel', async () => {
     const { user } = await renderPlaylist();
 
-    await user.click(await screen.findByRole('button', { name: 'Edit details' }));
+    await chooseFromMore(user, 'Edit details');
     await user.clear(screen.getByRole('textbox', { name: 'Title' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 

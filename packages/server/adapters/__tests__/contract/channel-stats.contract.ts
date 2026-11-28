@@ -42,6 +42,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
           devices: [],
           shareLinks: [],
           experiments: [],
+          playlists: [],
         })
       );
 

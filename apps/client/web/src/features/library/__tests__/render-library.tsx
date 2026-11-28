@@ -7,12 +7,15 @@ import {
   createPlaylist,
   deleteComment,
   deletePlaylist,
+  type FollowedPlaylistView,
   getPlaylist,
   listChannelVideos,
+  listFollowedPlaylists,
   listLikedVideos,
   listMyClips,
   listMyComments,
   listMyPlaylists,
+  listPlaylistCollaborators,
   listSearchHistory,
   listWatchHistory,
   type PlaylistView,
@@ -49,6 +52,8 @@ export interface LibraryApi {
   uploads?: VideoSummary[];
   /** The viewer's own clips. */
   clips?: ReturnType<typeof clip>[];
+  /** The playlists the viewer follows. */
+  followed?: FollowedPlaylistView[];
   /** How many rows an answer holds; the rest come with the cursor. */
   pageSize?: number;
   historyPaused?: boolean;
@@ -76,6 +81,7 @@ export function libraryApi({
   details = [],
   uploads,
   clips = [],
+  followed = [],
   pageSize = 30,
   historyPaused = false,
   calls = [],
@@ -149,6 +155,10 @@ export function libraryApi({
         ]
       : []),
     asked(listMyClips, () => HttpResponse.json({ items: clips, nextCursor: null })),
+    mockEndpoint(listFollowedPlaylists, (info) =>
+      HttpResponse.json(pageOf(followed, cursorOf(info), pageSize))
+    ),
+    mockEndpoint(listPlaylistCollaborators, () => HttpResponse.json({ items: [] })),
     asked(removeWatchHistoryEntry, NO_CONTENT),
     asked(clearWatchHistory, NO_CONTENT),
     asked(removeSearchHistoryEntry, NO_CONTENT),

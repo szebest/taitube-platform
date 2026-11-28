@@ -43,6 +43,7 @@ import { createExportProcessor } from './stages/exports/export-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
 import { notificationProcessors } from './stages/notifications/notification-processors';
+import { playlistNotifications } from './stages/notifications/playlist-notifications';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
@@ -100,6 +101,7 @@ export const notify = (d: StageDeps): StageProcessor => {
       now: d.now,
       webhookDispatcher: d.webhookDispatcher,
     }),
+    ...playlistNotifications({ repositories, logger, now: d.now }),
     [EXPORT_DATA]: consuming(
       ExportJob,
       createExportProcessor({
