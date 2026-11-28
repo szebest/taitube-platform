@@ -2,7 +2,7 @@ import { type ChannelMembershipView, listMyMemberships } from '@vp/api-contracts
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { createQueryClient } from '../create-query-client';
-import { membershipKeys, membershipsQueryOptions } from '../membership-queries';
+import { membershipGrantsOf, membershipKeys, membershipsQueryOptions } from '../membership-queries';
 
 const MEMBERSHIP: ChannelMembershipView = {
   channelId: '0190c3a0-5e1d-7000-8000-00000000c002',
@@ -24,5 +24,11 @@ describe('@vp/queries: membership queries', () => {
     const { items } = await createQueryClient().fetchQuery(membershipsQueryOptions(api));
 
     expect(items.map(({ role }) => role)).toEqual(['moderator']);
+  });
+
+  it('hands the rules the owner and the role held, by channel id', () => {
+    expect(membershipGrantsOf([MEMBERSHIP])).toEqual({
+      [MEMBERSHIP.channelId]: { ownerId: MEMBERSHIP.ownerId, role: 'moderator' },
+    });
   });
 });

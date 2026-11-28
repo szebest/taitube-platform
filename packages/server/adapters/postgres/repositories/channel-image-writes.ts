@@ -7,6 +7,7 @@ import {
   channelImageReady,
   type ChannelImageKind,
   type ChannelImageUpload,
+  holdsChannelVersion,
   type PostImageUrls,
 } from '@vp/domain';
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
@@ -57,6 +58,7 @@ function heldVersion(
       return channel?.banner ?? 0;
     case 'playlist-cover':
     case 'post-image':
+    case 'page-image':
       return 0;
     default:
       return assertNever(kind, 'ChannelImageKind');
@@ -97,6 +99,7 @@ async function advanceChannel(
       );
     case 'playlist-cover':
     case 'post-image':
+    case 'page-image':
       return true;
     default:
       return assertNever(upload.kind, 'ChannelImageKind');
@@ -105,7 +108,7 @@ async function advanceChannel(
 
 /**
  * Moves the channel's version to the upload's when it is newer, and only then: the compare is in
- * the write, so a retried or late job cannot take an older image back. A playlist cover or a post image moves no
+ * the write, so a retried or late job cannot take an older image back. A playlist cover, a post image or a page image moves no
  * channel version and is always ready; the playlist takes a cover when its owner names the upload.
  */
 export async function commitUpload(
@@ -129,7 +132,7 @@ export async function commitUpload(
   if (!row) throw new Error('channel_image_uploads update returned no row');
 
   if (applied) {
-    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
+    if (holdsChannelVersion(upload.kind)) {
       await appendChannelAudit(tx, {
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,

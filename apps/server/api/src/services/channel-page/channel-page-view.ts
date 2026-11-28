@@ -141,7 +141,7 @@ export function assemblePage(input: {
   selection: PageSelection;
   context: ResolveContext;
   viewer: LayoutViewer;
-}): ChannelPageView {
+}): Omit<ChannelPageView, 'images'> {
   const { channelId, revision, selection, context, viewer } = input;
   const { tab } = selection;
   return {

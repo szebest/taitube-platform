@@ -11,7 +11,7 @@ layer T2 (it depends on `@kit/result`).
   `src/start.ts`. It makes a nonce per request, hands it to the render as `context.nonce`, and sets the CSP
   (`script-src 'nonce-…' 'strict-dynamic'`, `worker-src` and `manifest-src` `'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`,
   `X-Content-Type-Options` and `Referrer-Policy` on the response. `createSecurityHeadersMiddleware({ embeddablePrefix })` lets one path
-  prefix be framed by any site (`frame-ancestors *`, no `X-Frame-Options`): the viewer app's `/embed/`, through `clientAppRequestMiddlewareFor`.
+  prefix be framed by any site (`frame-ancestors *`, no `X-Frame-Options`): the viewer app's `/embed/`, through `clientAppRequestMiddlewareFor`. `draftPreview: { pathPrefix, framedBy }` does the same for one origin on a request under the prefix with `?preview=draft` (`frame-ancestors <origin>`, no `X-Frame-Options`, `Cache-Control: no-store`, `X-Robots-Tag: noindex`): the viewer app's channel page drawn inside the studio's preview pane.
 - `requestNonce()`: the nonce of the request being rendered, `undefined` on the client and outside a request.
   The app's router factory passes it to `ssr.nonce`, so every script Start renders carries it.
 - `clientAppRequestMiddleware`: the CSRF check (`Sec-Fetch-Site`, else `Origin`) on every server function

@@ -18,6 +18,7 @@ async function setUp() {
     layouts: repositories.channelLayouts,
     revisions: repositories.entityRevisions,
     sources: repositories.channelPageSources,
+    images: repositories.channelImages,
     paginator: new Paginator({ defaultLimit: 20, maxLimit: 50 }),
   });
   const auditActions = async () =>

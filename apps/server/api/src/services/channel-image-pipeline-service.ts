@@ -97,7 +97,7 @@ export interface ImageOwner {
 }
 
 /**
- * Avatars, banners, playlist covers and post images: the file goes into the private bucket by presigned PUT,
+ * Avatars, banners, playlist covers, post images and page images: the file goes into the private bucket by presigned PUT,
  * the crops come with the completion, and a job cuts the variants. The channel keeps its image
  * until that job says otherwise, so nothing here changes what a visitor sees. `prepare` and
  * `complete` are a channel's own images; a playlist cover is authorised by its playlist and comes
@@ -272,6 +272,7 @@ function decideCrops(
         ? ok({ kind, crop })
         : err(invalidField('crop', 'A playlist cover needs a 16:9 crop', {}));
     case 'post-image':
+    case 'page-image':
       return ok({ kind, crop: { x: 0, y: 0, width, height } });
     default:
       return assertNever(kind, 'ChannelImageKind');

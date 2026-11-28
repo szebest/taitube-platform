@@ -4,13 +4,16 @@ import {
   decideLayoutReferences,
   layoutReferences,
 } from '../layout-references.rule';
-import { contentSection, layoutWithHomeSections } from './layout-fixtures';
+import { contentSection, customTab, layoutWith, layoutWithHomeSections } from './layout-fixtures';
 
 const CHANNEL = '0195a1b2-0000-7000-8000-000000000001';
 const OWNER = '0195a1b2-0000-7000-8000-000000000002';
 const VIDEO = '0195a1b2-0000-7000-8000-0000000000a1';
 const PLAYLIST = '0195a1b2-0000-7000-8000-0000000000b1';
 const POST = '0195a1b2-0000-7000-8000-0000000000c1';
+const HEADER = '0195a1b2-0000-7000-8000-0000000000e1';
+const BACKGROUND = '0195a1b2-0000-7000-8000-0000000000e2';
+const INLINE = '0195a1b2-0000-7000-8000-0000000000e3';
 const OTHER_CHANNEL = '0195a1b2-0000-7000-8000-0000000000d1';
 
 const picked = layoutWithHomeSections(
@@ -68,5 +71,44 @@ describe('@vp/domain-rules: decideLayoutReferences', () => {
       kind,
       id,
     });
+  });
+
+  it('names the page images a header, a background and a rich text use, and holds them to the channel', () => {
+    const background = contentSection('lead');
+    const layout = layoutWith({
+      ...customTab('shows', 'shows', [
+        {
+          ...background,
+          presentation: { ...background.presentation, background: BACKGROUND },
+        },
+        {
+          kind: 'rich_text',
+          id: 'about',
+          body: `![Cast](page-image:${INLINE})`,
+          presentation: background.presentation,
+          visibility: background.visibility,
+        },
+      ]),
+      header: HEADER,
+    });
+    const fact = (id: string) => ({
+      kind: 'page-image' as const,
+      id,
+      channelId: CHANNEL,
+      ownerUserId: null,
+    });
+    const facts = [HEADER, BACKGROUND, INLINE].map(fact);
+    const BACKGROUND_FACT = fact(BACKGROUND);
+
+    expect(layoutReferences(layout).map(({ id }) => id)).toEqual([HEADER, BACKGROUND, INLINE]);
+    expectOk(decideLayoutReferences(layout, scope(facts)));
+    expect(
+      expectErr(
+        decideLayoutReferences(
+          layout,
+          scope([...facts.slice(0, 1), { ...BACKGROUND_FACT, channelId: OTHER_CHANNEL }])
+        )
+      )
+    ).toMatchObject({ code: 'LAYOUT_REFERENCE_INVALID', kind: 'page-image', id: BACKGROUND });
   });
 });

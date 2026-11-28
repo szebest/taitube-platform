@@ -1,8 +1,9 @@
 import { type Singleflight } from '@kit/concurrency';
-import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@kit/result';
+import { type Result, andThen, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@kit/result';
 import type { ChannelPageView } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type {
+  ChannelImageRepositoryPort,
   ChannelPageSourceRepositoryPort,
   WatchHistoryRepositoryPort,
 } from '@vp/core/repositories';
@@ -18,12 +19,14 @@ import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { uuidv7 } from 'uuidv7';
+import { pageImagesOf } from './channel-page-images';
 import { planPage } from './channel-page-plan';
 import { type PagePool, PagePoolSchema, loadPagePool } from './channel-page-pool';
 import { assemblePage, selectTab, watchCandidates } from './channel-page-view';
 
 export interface ChannelPageResolverDeps {
   sources: ChannelPageSourceRepositoryPort;
+  images: Pick<ChannelImageRepositoryPort, 'findReadyImages'>;
   history: Pick<WatchHistoryRepositoryPort, 'findMany'>;
   cache: Pick<CacheClient, 'get' | 'set'>;
   singleflight: Pick<Singleflight, 'do'>;
@@ -65,14 +68,15 @@ export class ChannelPageResolver {
       watchCandidates(selection.value.tab, pool, viewer)
     );
     if (isErr(watched)) return watched;
-    return ok(
-      assemblePage({
-        channelId: channel.id,
-        revision: request.revision,
-        selection: selection.value,
-        context: { layout, pool, seed: request.seed ?? uuidv7(), watched: watched.value },
-        viewer,
-      })
+    const page = assemblePage({
+      channelId: channel.id,
+      revision: request.revision,
+      selection: selection.value,
+      context: { layout, pool, seed: request.seed ?? uuidv7(), watched: watched.value },
+      viewer,
+    });
+    return andThen(await pageImagesOf(this.deps.images, channel.id, page.tab), (images) =>
+      ok({ ...page, images })
     );
   }
 

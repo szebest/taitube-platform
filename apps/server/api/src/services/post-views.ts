@@ -24,7 +24,7 @@ import {
 
 export interface PostViewDeps extends PostShareDeps {
   channels: Pick<ChannelRepositoryPort, 'findByIds'>;
-  images: Pick<ChannelImageRepositoryPort, 'findReadyPostImages'>;
+  images: Pick<ChannelImageRepositoryPort, 'findReadyImages'>;
   engagement: Pick<PostEngagementRepositoryPort, 'votedIndexes' | 'tallies'>;
 }
 
@@ -56,7 +56,7 @@ async function loadImages(
   }
   const found = await Promise.all(
     [...uploadsByChannel].map(([channelId, uploads]) =>
-      deps.images.findReadyPostImages(channelId, unique(uploads))
+      deps.images.findReadyImages('post-image', channelId, unique(uploads))
     )
   );
   const read = all(found);

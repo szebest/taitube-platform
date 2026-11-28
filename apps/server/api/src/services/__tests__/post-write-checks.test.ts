@@ -31,7 +31,7 @@ describe('apps/server/api/services: checkPayloadReferences', () => {
     { scenario: 'a close time past 30 days', days: 31, code: ErrorCodes.VALIDATION_FAILED },
   ])('refuses $scenario before reading any image', async ({ days, code }) => {
     const { channel, repositories } = await postsFixture();
-    const read = vi.spyOn(repositories.channelImages, 'findReadyPostImages');
+    const read = vi.spyOn(repositories.channelImages, 'findReadyImages');
     const payload: PostPayload = {
       kind: 'poll',
       question: 'q',

@@ -1,7 +1,11 @@
 import { createSecurityHeadersMiddleware, securityHeadersMiddleware } from '../security-headers';
 
-async function renderedHeaders(pathname = '/', middleware = securityHeadersMiddleware) {
-  const request = new Request(`http://localhost:5173${pathname}`);
+async function renderedHeaders(
+  pathname = '/',
+  middleware = securityHeadersMiddleware,
+  search = ''
+) {
+  const request = new Request(`http://localhost:5173${pathname}${search}`);
   const next = vi.fn().mockResolvedValue({
     request,
     pathname,
@@ -59,6 +63,39 @@ describe('@kit/security-headers: request middleware', () => {
 
       expect(headers?.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
       expect(headers?.get('X-Frame-Options')).toBe('DENY');
+    });
+  });
+
+  describe('with a draft preview', () => {
+    const middleware = createSecurityHeadersMiddleware({
+      draftPreview: { pathPrefix: '/channels/', framedBy: 'http://localhost:5174' },
+    });
+
+    it('lets the one origin frame a preview, and keeps it out of caches and indexes', async () => {
+      const { headers, nonce } = await renderedHeaders(
+        '/channels/creator',
+        middleware,
+        '?preview=draft&as=visitor'
+      );
+
+      expect(headers?.get('Content-Security-Policy')).toBe(
+        `script-src 'nonce-${nonce}' 'strict-dynamic'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors http://localhost:5174; form-action 'self'`
+      );
+      expect(headers?.has('X-Frame-Options')).toBe(false);
+      expect(headers?.get('Cache-Control')).toBe('no-store');
+      expect(headers?.get('X-Robots-Tag')).toBe('noindex');
+    });
+
+    it.each([
+      { path: '/channels/creator', search: '' },
+      { path: '/channels/creator', search: '?preview=live' },
+      { path: '/watch/abc', search: '?preview=draft' },
+    ])('lets no site frame $path$search', async ({ path, search }) => {
+      const { headers } = await renderedHeaders(path, middleware, search);
+
+      expect(headers?.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
+      expect(headers?.get('X-Frame-Options')).toBe('DENY');
+      expect(headers?.has('X-Robots-Tag')).toBe(false);
     });
   });
 });

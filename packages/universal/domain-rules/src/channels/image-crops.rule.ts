@@ -21,7 +21,7 @@ type CropsOf<K extends ChannelImageKind> = Extract<ImageCrops, { kind: K }>;
 
 /**
  * An avatar is cropped square, a banner once per target to that target's shape, a playlist cover
- * to a thumbnail's, a post image not at all: its crop is the whole image. Every crop lies inside
+ * to a thumbnail's, a post image or a page image not at all: the crop is the whole image. Every crop lies inside
  * the image the worker will read, so the job never meets a rectangle it cannot cut.
  */
 export function decideImageCrops(
@@ -37,7 +37,8 @@ export function decideImageCrops(
       case 'playlist-cover':
         return singleCrop(crops, image, PLAYLIST_COVER_ASPECT);
       case 'post-image':
-        return ok({ kind: 'post-image' as const, crop: { x: 0, y: 0, ...image } });
+      case 'page-image':
+        return ok({ kind: crops.kind, crop: { x: 0, y: 0, ...image } });
       default:
         return assertNever(crops, 'ImageCrops');
     }

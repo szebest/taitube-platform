@@ -1,5 +1,6 @@
 export * from './account-menu';
 export * from './analytics/stat-card';
+export * from './content-section';
 export * from './disclosure-control';
 export * from './identity/acting-as';
 export * from './identity/identity-row';

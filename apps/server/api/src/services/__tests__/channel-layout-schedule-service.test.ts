@@ -19,6 +19,7 @@ async function setUp() {
     layouts: repositories.channelLayouts,
     schedules: repositories.channelLayoutSchedules,
     sources: repositories.channelPageSources,
+    images: repositories.channelImages,
     now: () => NOW,
   });
   const publish = async (document: ChannelLayout) =>

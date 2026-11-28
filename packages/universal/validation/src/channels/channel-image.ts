@@ -1,5 +1,5 @@
 /** What a channel's own image routes take; a playlist cover comes through the playlist's. */
-export const CHANNEL_PAGE_IMAGE_KINDS = ['avatar', 'banner', 'post-image'] as const;
+export const CHANNEL_PAGE_IMAGE_KINDS = ['avatar', 'banner', 'post-image', 'page-image'] as const;
 
 export const CHANNEL_IMAGE_KINDS = [...CHANNEL_PAGE_IMAGE_KINDS, 'playlist-cover'] as const;
 

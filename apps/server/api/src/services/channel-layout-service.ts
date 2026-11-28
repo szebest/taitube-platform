@@ -6,6 +6,7 @@ import type {
   ChannelPageRevisionPageView,
 } from '@vp/api-contracts';
 import type {
+  ChannelImageRepositoryPort,
   ChannelLayoutRepositoryPort,
   ChannelPageSourceRepositoryPort,
   EntityRevisionRepository,
@@ -37,6 +38,7 @@ export interface ChannelLayoutServiceDeps {
   layouts: ChannelLayoutRepositoryPort;
   revisions: Pick<EntityRevisionRepository, 'list' | 'get'>;
   sources: Pick<ChannelPageSourceRepositoryPort, 'hydrate'>;
+  images: Pick<ChannelImageRepositoryPort, 'findReadyImages'>;
   paginator: Paginator;
 }
 

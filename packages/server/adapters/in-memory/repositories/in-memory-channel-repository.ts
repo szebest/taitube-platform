@@ -3,7 +3,7 @@ import { type Result, err, isErr, ok } from '@kit/result';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import {
   type Channel,
-  type ChannelImageKind,
+  type ChannelVersionedImageKind,
   type ChannelStats,
   type CreateChannelInput,
   type ImageCrops,
@@ -269,7 +269,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
    */
   advanceImageVersion(
     id: string,
-    kind: Exclude<ChannelImageKind, 'playlist-cover' | 'post-image'>,
+    kind: ChannelVersionedImageKind,
     version: number,
     crops: ImageCrops,
     defaultUrl: string

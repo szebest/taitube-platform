@@ -75,6 +75,7 @@ export async function setUpResolver() {
   const queries = () => Object.values(calls).reduce((sum, call) => sum + call.mock.calls.length, 0);
   const resolver = new ChannelPageResolver({
     sources: repositories.channelPageSources,
+    images: repositories.channelImages,
     history: repositories.watchHistory,
     cache,
     singleflight: new Singleflight(),

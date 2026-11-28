@@ -10,7 +10,7 @@ export interface RichTextLimits {
 
 type MarkdownNode = ReturnType<typeof fromMarkdown>['children'][number];
 
-const PAGE_IMAGE_REFERENCE =
+export const PAGE_IMAGE_REFERENCE =
   /^page-image:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 const ALLOWED_HEADING_DEPTHS: readonly number[] = [2, 3];
