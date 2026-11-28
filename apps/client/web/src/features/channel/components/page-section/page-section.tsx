@@ -1,9 +1,9 @@
+import { ContentSection } from '@kit/components';
 import { assertNever } from '@kit/result';
 import { BrandScope, PlatformIcon } from '@kit/ui';
 import { Link } from '@tanstack/react-router';
 import type { ChannelPageView, ResolvedSectionView } from '@vp/api-contracts';
 import { richTextTree } from '@vp/validation';
-import { ContentSection } from '#app/components/channel/content-section';
 import { RichTextView } from '#app/components/channel/rich-text-view';
 import { SectionBackdrop } from '#app/components/channel/section-backdrop';
 import { httpsUrl } from '#app/features/channel/utils/https-url';

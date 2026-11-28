@@ -1,6 +1,6 @@
 # ContentSection
 
-Location: `apps/client/web/src/components/channel/content-section/`, presentational and compound, built on [Shelf](shelf.md) for the shelf layout. It lives in web's kit because only web renders it; it moves to `@kit/components` when the studio's section preview needs it too.
+Location: `packages/platform/client/components/src/content-section/` (`@kit/components`, shared with the studio's section preview), presentational and compound, built on [Shelf](shelf.md) for the shelf layout.
 
 One section of a channel page, laid out as the creator chose. It is the single component over every layout of a content section, so a card never knows which layout holds it.
 
@@ -24,8 +24,10 @@ One section of a channel page, laid out as the creator chose. It is the single c
 
 ```ts
 // types.ts
-export type ContentSectionLayout = Extract<ResolvedSectionView, { kind: 'content' }>['layout'];
-export type ContentSectionDensity = ContentSectionView['presentation']['density'];
+export type ContentSectionLayout =
+  | { type: 'shelf' | 'list' | 'hero' | 'masonry' }
+  | { type: 'grid'; columns: number };
+export type ContentSectionDensity = 'compact' | 'comfortable';
 ```
 
 ```ts

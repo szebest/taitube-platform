@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- `ContentSection`: one section of a page as a shelf, a grid of two to six columns, a list, one hero item or a masonry, with the heading parts of the Shelf, for the viewer app and the studio's section preview.
+
 ## 0.4.0
 
 - `TimelineRangeEditor`, `TimelineControl`, `RangeControl`, `PositionControl`, `TimelineMarker` and `TimelineRange`: a range or a position over a video's frames, moved from the studio's kit since web draws it too.

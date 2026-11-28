@@ -33,7 +33,7 @@ function StorySection({ layout }: { layout: ContentSectionLayout }) {
 }
 
 const meta = {
-  title: 'Web/Channel/ContentSection',
+  title: 'Components/ContentSection',
   component: StorySection,
 } satisfies Meta<typeof StorySection>;
 

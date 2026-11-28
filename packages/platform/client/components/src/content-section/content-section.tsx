@@ -1,6 +1,6 @@
-import { Shelf, shelfStyles } from '@kit/components';
 import { cn, Slot } from '@kit/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
+import { Shelf, shelfStyles } from '../shelf';
 import { ContentSectionContext, useContentSection } from './content-section.context';
 import { GRID_COLUMN_CLASSES, contentSectionStyles } from './content-section.variants';
 import type {

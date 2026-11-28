@@ -1,26 +1,24 @@
 import { axeViolations } from '@kit/web-testing/dom';
 import { render, screen, within } from '@testing-library/react';
-import { AppProviders } from '#app/__tests__/providers';
 import { ContentSection } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import type { ContentSectionLayout } from '../types';
 
 const renderSection = (layout: ContentSectionLayout) =>
-  render(
-    <AppProviders>
-      <ContentSection.Root layout={layout} density="comfortable">
-        <ContentSection.Header>
-          <ContentSection.Title>Latest</ContentSection.Title>
-          <ContentSection.Subtitle>Fresh from the studio</ContentSection.Subtitle>
-          <ContentSection.Action asChild>
-            <a href="/channels/c/videos">See all</a>
-          </ContentSection.Action>
-        </ContentSection.Header>
-        <ContentSection.Items>
-          <ContentSection.Item>One</ContentSection.Item>
-          <ContentSection.Item>Two</ContentSection.Item>
-        </ContentSection.Items>
-      </ContentSection.Root>
-    </AppProviders>
+  renderWithCopy(
+    <ContentSection.Root layout={layout} density="comfortable">
+      <ContentSection.Header>
+        <ContentSection.Title>Latest</ContentSection.Title>
+        <ContentSection.Subtitle>Fresh from the studio</ContentSection.Subtitle>
+        <ContentSection.Action asChild>
+          <a href="/channels/c/videos">See all</a>
+        </ContentSection.Action>
+      </ContentSection.Header>
+      <ContentSection.Items>
+        <ContentSection.Item>One</ContentSection.Item>
+        <ContentSection.Item>Two</ContentSection.Item>
+      </ContentSection.Items>
+    </ContentSection.Root>
   );
 
 describe('apps/client/web: ContentSection', () => {
