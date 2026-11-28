@@ -11,7 +11,6 @@ export const pwa = {
   offlineDescription: dt(
     'Wczytany wcześniej kanał nadal działa. Reszta wróci po przywróceniu połączenia.'
   ),
-  offlineBannerDescription: dt('Wczytany wcześniej kanał nadal działa.'),
   offlineToastTitle: dt('Jesteś offline'),
   offlineToastDescription: dt('Wczytany wcześniej kanał pozostaje dostępny.'),
   offlineFeed: dt('Kanał'),

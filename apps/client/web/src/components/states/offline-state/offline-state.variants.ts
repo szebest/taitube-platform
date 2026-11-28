@@ -29,7 +29,8 @@ export const offlineStateStyles = tv({
         root: 'items-center gap-inline border-b-divider border-border bg-raised px-gutter-compact py-inline transition-[opacity,translate] duration-base ease-enter starting:opacity-0 motion-safe:starting:-translate-y-inline medium:px-gutter-medium',
         icon: 'size-icon-md',
         title: 'min-w-0 flex-1 truncate text-label',
-        description: 'hidden',
+        description:
+          'sr-only medium:not-sr-only medium:max-w-1/2 medium:truncate medium:text-body-sm',
         available: 'hidden',
         action: 'hidden',
       },

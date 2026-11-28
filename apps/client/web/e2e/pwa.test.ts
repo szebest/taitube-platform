@@ -163,9 +163,12 @@ test.describe('pwa: background sync', () => {
     await context.setOffline(true);
     await like.click();
 
-    await expect(page.locator('[data-slot="offline-state-description"]')).toHaveText(
-      '1 change will sync when the connection returns.'
-    );
+    const queued = page.locator('[data-slot="offline-state-description"]');
+    await expect(queued).toHaveText('1 change will sync when the connection returns.');
+    await expect(queued).toBeVisible();
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expect(page.getByRole('status').filter({ has: queued })).toBeAttached();
+    await expect.poll(async () => (await queued.boundingBox())?.width).toBeLessThanOrEqual(1);
 
     await context.setOffline(false);
     await cdp.send('ServiceWorker.dispatchSyncEvent', {

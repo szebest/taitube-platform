@@ -1,3 +1,4 @@
+import { axeViolations } from '@kit/web-testing/dom';
 import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -32,6 +33,7 @@ describe('apps/client/web: OfflineBanner', () => {
     const banner = document.querySelector('[data-slot="offline-state"][data-size="banner"]');
     expect(banner).toHaveTextContent('You are offline');
     expect(banner).toHaveAttribute('role', 'status');
+    expect(banner?.querySelector('[data-slot="offline-state-description"]')).toBeNull();
     expect(
       await screen.findByText('The feed you already loaded stays available.')
     ).toBeInTheDocument();
@@ -46,7 +48,7 @@ describe('apps/client/web: OfflineBanner', () => {
     );
   });
 
-  it('says how many changes will sync once the worker reports a queue', async () => {
+  it('shows the queued count from medium up and keeps it in the status region below', async () => {
     await openLive();
     connection(false);
 
@@ -54,8 +56,11 @@ describe('apps/client/web: OfflineBanner', () => {
     worker.postMessage({ type: 'pending', pending: 2 });
     worker.close();
 
-    expect(
-      await screen.findByText('2 changes will sync when the connection returns.')
-    ).toBeInTheDocument();
+    const count = await screen.findByText('2 changes will sync when the connection returns.');
+    expect(count).toBeVisible();
+    expect(count).toHaveClass('sr-only', 'medium:not-sr-only', 'medium:truncate');
+    expect(count).not.toHaveClass('hidden');
+    expect(count.closest('[role="status"]')).toHaveAttribute('data-size', 'banner');
+    expect(await axeViolations()).toEqual([]);
   });
 });
