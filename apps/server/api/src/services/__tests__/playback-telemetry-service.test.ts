@@ -17,6 +17,7 @@ const LINK = '00000000-0000-7000-8000-0000000000c9';
 const OTHER_LINK = '00000000-0000-7000-8000-0000000000ca';
 const OWNER = '00000000-0000-7000-8000-0000000000b1';
 const SHOWN = { experimentId: TEST, variantId: 'b' } as const;
+const LIST = '00000000-0000-7000-8000-0000000000f1';
 
 describe('PlaybackTelemetryService', () => {
   let viewBuffer: InMemoryViewBuffer;
@@ -183,6 +184,34 @@ describe('PlaybackTelemetryService', () => {
 
     expect((await batch())?.experiments.reduce((sum, row) => sum + row.starts, 0)).toBe(starts);
   });
+
+  it.each([
+    {
+      scenario: 'a start from a playlist',
+      event: { eventType: 'playback_start', playlistId: LIST },
+      plays: 1,
+    },
+    { scenario: 'a heartbeat from a playlist', event: { playlistId: LIST }, plays: 0 },
+    { scenario: 'a start from no playlist', event: { eventType: 'playback_start' }, plays: 0 },
+  ] as const)(
+    'counts $plays playlist play for $scenario, to the video too',
+    async ({ event, plays }) => {
+      await record(event);
+
+      expect((await batch())?.playlists ?? []).toEqual(
+        plays === 0
+          ? []
+          : [
+              expect.objectContaining({
+                playlistId: LIST,
+                videoId: VIDEO,
+                viewDate: '2026-03-10',
+                plays,
+              }),
+            ]
+      );
+    }
+  );
 
   it('buffers one impression per card shown, only for the test running on that video', async () => {
     expectOk(

@@ -2,6 +2,7 @@ import type { Result } from '@kit/result';
 import type {
   ExperimentMeasure,
   ExperimentVariantId,
+  PlaylistEvent,
   ViewBatch,
   ViewDate,
   ViewDevice,
@@ -36,9 +37,17 @@ export interface PlaybackWatch {
 }
 
 export interface ShareLinkOpen {
-  readonly videoId: string;
+  /** The video or playlist the link opens. */
+  readonly targetId: string;
   readonly linkId: string;
   /** The signed-in viewer's id, else something as ephemeral; counted once per link and day. */
+  readonly viewerKey: string;
+  readonly viewDate: ViewDate;
+}
+
+export interface PlaylistOpen {
+  readonly playlistId: string;
+  /** The signed-in viewer's id, else the tab's session key; counted once per playlist and day. */
   readonly viewerKey: string;
   readonly viewDate: ViewDate;
 }
@@ -48,6 +57,8 @@ export interface ExperimentEvent extends ExperimentShown {
   readonly viewDate: ViewDate;
   readonly measure: ExperimentMeasure;
 }
+
+export type PlaylistBufferEvent = PlaylistEvent & { readonly viewDate: ViewDate };
 
 /** `pending`: this event decided nothing, the session is short of the required seconds or already counted. */
 export type PlaybackWatchOutcome = 'counted' | 'duplicate' | 'pending';
@@ -63,7 +74,7 @@ export type ViewRecordOutcome = 'counted' | 'duplicate' | 'deferred' | 'dropped'
 
 /**
  * Where playback beacons accumulate between flushes, so a view costs no database connection.
- * `snapshot` moves the views, the device counts, the hourly views and the retention steps buffered so far under the batch id and hands back the batch still
+ * `snapshot` moves the views, the device counts, the hourly views, the retention steps and the playlist counts buffered so far under the batch id and hands back the batch still
  * pending from an earlier flush if one never released, which is what makes a crash mid-flush lose
  * nothing; `release` is called only once the batch is durable elsewhere.
  */
@@ -89,5 +100,11 @@ export interface ViewBufferPort {
   /** Adds one impression or start per event, in one round trip. */
   recordExperimentEvents(
     events: readonly ExperimentEvent[]
+  ): Promise<Result<void, CacheUnavailable>>;
+  /** One open per viewer, playlist and day, kept distinct as the link opens are. */
+  recordPlaylistOpen(open: PlaylistOpen): Promise<Result<ViewRecordOutcome, CacheUnavailable>>;
+  /** Adds one per event to its playlist's day, and a play to its video's day too, in one round trip. */
+  recordPlaylistEvents(
+    events: readonly PlaylistBufferEvent[]
   ): Promise<Result<void, CacheUnavailable>>;
 }

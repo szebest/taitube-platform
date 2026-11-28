@@ -1,5 +1,11 @@
 import type { VideoLifecycleEdge, VideoStatus, VideoVisibility } from '@vp/domain';
 import { z } from 'zod';
+import {
+  NOTIFY_PLAYLIST_INVITE,
+  NOTIFY_PLAYLIST_UPDATE,
+  type NotifyPlaylistInviteJob,
+  type NotifyPlaylistUpdateJob,
+} from './playlist-notifications';
 import { defaultJobOptions, stagePolicies } from './policies';
 
 /** The jobs on the `notify` queue that create notification rows, told apart by their name. */
@@ -118,6 +124,9 @@ const notificationJobIds = {
   partyInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PARTY_INVITE}`,
   teamInvite: (inviteId: string) => `${inviteId}--${NOTIFY_TEAM_INVITE}`,
   moderation: (eventId: string) => `${eventId}--${NOTIFY_MODERATION}`,
+  playlistInvite: (inviteId: string) => `${inviteId}--${NOTIFY_PLAYLIST_INVITE}`,
+  playlistUpdate: ({ playlistId, actorUserId, hour }: NotifyPlaylistUpdateJob) =>
+    `${playlistId}--${NOTIFY_PLAYLIST_UPDATE}--${actorUserId}--${hour}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
     `${videoId}--${NOTIFY_PROCESSING}--${outcome}`,
 };
@@ -194,6 +203,20 @@ export const moderationOutbox = (job: NotifyModerationJob) =>
     name: NOTIFY_MODERATION,
     data: job,
     jobId: notificationJobIds.moderation(job.eventId),
+  });
+
+export const playlistInviteOutbox = (job: NotifyPlaylistInviteJob) =>
+  notificationOutbox({
+    name: NOTIFY_PLAYLIST_INVITE,
+    data: job,
+    jobId: notificationJobIds.playlistInvite(job.inviteId),
+  });
+
+export const playlistUpdateOutbox = (job: NotifyPlaylistUpdateJob) =>
+  notificationOutbox({
+    name: NOTIFY_PLAYLIST_UPDATE,
+    data: job,
+    jobId: notificationJobIds.playlistUpdate(job),
   });
 
 const processingOutbox = (job: NotifyProcessingJob) =>

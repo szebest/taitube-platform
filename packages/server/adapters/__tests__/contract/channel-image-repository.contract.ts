@@ -3,6 +3,7 @@ import {
   AVATAR_DONE,
   BANNER_CROPS,
   BANNER_DONE,
+  DAY_MS,
   DEFAULT_URL,
   FIRST,
   SECOND,
@@ -61,31 +62,40 @@ export function describeChannelImageRepositoryContract(makeSubject: MakeReposito
     });
 
     describe('commit', () => {
-      it('moves the channel to the version, announces it and audits it', async () => {
-        await queue(FIRST);
+      it.each([
+        {
+          kind: 'banner',
+          moved: { bannerVersion: 1, bannerCrops: BANNER_CROPS, avatarVersion: 0 },
+        },
+        { kind: 'avatar', moved: { avatarVersion: 1, bannerVersion: 0, bannerCrops: null } },
+      ] as const)(
+        'moves the channel to the $kind version alone, announcing and auditing it',
+        async ({ kind, moved }) => {
+          await queue(FIRST, kind);
 
-        const commit = expectOk(await ctx.images.commit(FIRST, DEFAULT_URL));
+          const commit = expectOk(await ctx.images.commit(FIRST, DEFAULT_URL));
 
-        expect(commit).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
-        expect(await channel()).toMatchObject({
-          bannerVersion: 1,
-          bannerCrops: BANNER_CROPS,
-          avatarVersion: 0,
-        });
-        expect(await eventTypes()).toEqual(['channel.image.ready']);
-        expect(await auditActions()).toEqual(['channel.updated']);
-      });
+          expect(commit).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
+          expect(await channel()).toMatchObject(moved);
+          expect(await eventTypes()).toEqual(['channel.image.ready']);
+          expect(await auditActions()).toEqual(['channel.updated']);
+        }
+      );
 
-      it('moves an avatar without touching the banner', async () => {
-        await queue(FIRST, 'avatar');
+      it('readies every playlist cover beside the others, moving and auditing nothing', async () => {
+        await queue(FIRST, 'playlist-cover');
+        await queue(SECOND, 'playlist-cover');
 
-        expectOk(await ctx.images.commit(FIRST, DEFAULT_URL));
+        expectOk(await ctx.images.commit(SECOND, DEFAULT_URL));
+        const earlier = expectOk(await ctx.images.commit(FIRST, DEFAULT_URL));
 
-        expect(await channel()).toMatchObject({
-          avatarVersion: 1,
-          bannerVersion: 0,
-          bannerCrops: null,
-        });
+        expect(earlier).toMatchObject({ applied: true, upload: { status: 'ready', version: 1 } });
+        expect(await channel()).toMatchObject({ avatarVersion: 0, bannerVersion: 0 });
+        expect(await eventTypes()).toEqual(['channel.image.ready', 'channel.image.ready']);
+        expect(await auditActions()).toEqual([]);
+        expect(expectOk(await ctx.images.listPurgeable(new Date(Date.now() + DAY_MS), 10))).toEqual(
+          []
+        );
       });
 
       it('repeats its outcome for a committed upload and announces nothing more', async () => {

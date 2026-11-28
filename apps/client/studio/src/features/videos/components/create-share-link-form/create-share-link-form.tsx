@@ -31,7 +31,7 @@ export function CreateShareLinkForm({ videoId, active }: CreateShareLinkFormProp
     event.preventDefault();
     const decided = decideShareLink(
       { label, expiresIn: expiry },
-      { videoId, active, now: new Date() }
+      { target: { targetType: 'video', targetId: videoId }, active, now: new Date() }
     );
     if (isErr(decided)) {
       switch (decided.error.code) {

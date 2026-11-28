@@ -1,4 +1,10 @@
-import { AVATAR_SIZES, BANNER_TARGETS, BANNER_WIDTHS, POST_IMAGE_WIDTHS } from '@vp/domain';
+import {
+  AVATAR_SIZES,
+  BANNER_TARGETS,
+  BANNER_WIDTHS,
+  PLAYLIST_COVER_WIDTHS,
+  POST_IMAGE_WIDTHS,
+} from '@vp/domain';
 import {
   type ChannelImageCrops,
   defaultChannelImageVariant,
@@ -13,6 +19,8 @@ const BANNER = {
 };
 const AVATAR_CROPS: ChannelImageCrops = { kind: 'avatar', crop: CROP };
 const BANNER_CROPS: ChannelImageCrops = { kind: 'banner', crops: BANNER };
+const COVER_CROP = { x: 0, y: 0, width: 1600, height: 900 };
+const COVER_CROPS: ChannelImageCrops = { kind: 'playlist-cover', crop: COVER_CROP };
 const POST_CROP = { x: 0, y: 0, width: 3000, height: 2000 };
 const POST_CROPS: ChannelImageCrops = { kind: 'post-image', crop: POST_CROP };
 
@@ -43,6 +51,17 @@ describe('@vp/ffmpeg: channel image variants', () => {
   });
 
   it.each([
+    { width: 640, height: 360 },
+    { width: 1280, height: 720 },
+  ] as const)('cuts the playlist cover crop to $width x $height', (size) => {
+    expect(planChannelImageVariants(COVER_CROPS)).toContainEqual({
+      name: String(size.width),
+      crop: COVER_CROP,
+      ...size,
+    });
+  });
+
+  it.each([
     { width: 640, height: 426 },
     { width: 1280, height: 854 },
   ] as const)('cuts the post image whole to $width x $height keeping its aspect', (size) => {
@@ -56,6 +75,7 @@ describe('@vp/ffmpeg: channel image variants', () => {
   it.each([
     { crops: AVATAR_CROPS, count: AVATAR_SIZES.length },
     { crops: BANNER_CROPS, count: BANNER_TARGETS.length * BANNER_WIDTHS.length },
+    { crops: COVER_CROPS, count: PLAYLIST_COVER_WIDTHS.length },
     { crops: POST_CROPS, count: POST_IMAGE_WIDTHS.length },
   ])('plans $count variants for a $crops.kind with unique names', ({ crops, count }) => {
     const names = planChannelImageVariants(crops).map((variant) => variant.name);
@@ -65,6 +85,7 @@ describe('@vp/ffmpeg: channel image variants', () => {
   it.each([
     { crops: AVATAR_CROPS, variant: '128' },
     { crops: BANNER_CROPS, variant: 'desktop-1280' },
+    { crops: COVER_CROPS, variant: '1280' },
     { crops: POST_CROPS, variant: '1280' },
   ])('names $variant the default of a $crops.kind', ({ crops, variant }) => {
     expect(defaultChannelImageVariant(crops.kind)).toBe(variant);

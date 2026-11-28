@@ -4,6 +4,8 @@ import type {
   ExperimentEvent,
   PlaybackWatch,
   PlaybackWatchOutcome,
+  PlaylistBufferEvent,
+  PlaylistOpen,
   RetentionMilestone,
   ShareLinkOpen,
   ViewBufferPort,
@@ -29,8 +31,8 @@ export interface FallbackViewBufferConfig {
  * the memory that costs, and a view past it is dropped rather than failing the request.
  *
  * Draining is the flush's job and has a retry of its own, so `snapshot` and `release` go straight
- * to the primary. A retention step, a playback event's watch time, a share link open and a test
- * impression are statistics, not counts: while the primary is down they are not held.
+ * to the primary. A retention step, a playback event's watch time, a share link open, a test
+ * impression and a playlist event are statistics, not counts: while the primary is down they are not held.
  */
 export class FallbackViewBuffer implements ViewBufferPort {
   private readonly primary: ViewBufferPort;
@@ -92,6 +94,18 @@ export class FallbackViewBuffer implements ViewBufferPort {
     events: readonly ExperimentEvent[]
   ): Promise<Result<void, CacheUnavailable>> {
     return this.primary.recordExperimentEvents(events);
+  }
+
+  async recordPlaylistOpen(
+    open: PlaylistOpen
+  ): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    return this.primary.recordPlaylistOpen(open);
+  }
+
+  async recordPlaylistEvents(
+    events: readonly PlaylistBufferEvent[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    return this.primary.recordPlaylistEvents(events);
   }
 
   private async handBack(): Promise<void> {

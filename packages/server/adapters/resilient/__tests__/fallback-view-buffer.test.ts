@@ -118,7 +118,7 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('dropped');
   });
 
-  it('records retention, playback, link opens and test events through the primary alone', async () => {
+  it('records retention, playback, link opens, test and playlist events through the primary alone', async () => {
     expectOk(await buffer.recordRetention({ videoId: 'video-1', sessionId: 's1', percent: 5 }));
     expect(
       expectOk(
@@ -138,7 +138,7 @@ describe('FallbackViewBuffer', () => {
     expect(
       expectOk(
         await buffer.recordShareLinkOpen({
-          videoId: 'video-1',
+          targetId: 'video-1',
           linkId: 'link-1',
           viewerKey: 'viewer-1',
           viewDate: DAY,
@@ -156,6 +156,16 @@ describe('FallbackViewBuffer', () => {
         },
       ])
     );
+    expectOk(
+      await buffer.recordPlaylistOpen({
+        playlistId: 'list-1',
+        viewerKey: 'viewer-1',
+        viewDate: DAY,
+      })
+    );
+    expectOk(
+      await buffer.recordPlaylistEvents([{ measure: 'forks', playlistId: 'list-1', viewDate: DAY }])
+    );
 
     expect(expectOk(await primary.snapshot('batch'))).toMatchObject({
       counts: [{ views: 1, watchSeconds: 9 }],
@@ -163,6 +173,7 @@ describe('FallbackViewBuffer', () => {
       shareLinks: [{ linkId: 'link-1', viewDate: DAY, opens: 1 }],
       experiments: [{ experimentId: 'exp-1', variantId: 'b', impressions: 1 }],
       retention: [{ percent: 0 }, { percent: 5 }],
+      playlists: [{ playlistId: 'list-1', viewDate: DAY, opens: 1, forks: 1 }],
     });
   });
 

@@ -1,3 +1,4 @@
+import { TimelineRangeEditor } from '@kit/components';
 import { isErr } from '@kit/result';
 import { Button, Input, useToast } from '@kit/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import { validateChapters } from '@vp/domain-rules';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useState } from 'react';
 import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
-import { TimelineRangeEditor } from '#app/components/video/timeline-range-editor';
 import { isVersionConflict } from '#app/features/videos/api/is-version-conflict';
 import {
   replaceChaptersMutationOptions,

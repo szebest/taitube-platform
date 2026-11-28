@@ -72,6 +72,7 @@ describe('apps/client/web: en watch', () => {
     { key: 'watch.commentsSlowMode', args: { seconds: 12 }, expected: 'Wait 12 s' },
     { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
     { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
+    { key: 'watch.queueSegment', args: { start: '0:30', end: '1:45' }, expected: '0:30 to 1:45' },
     { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },
     { key: 'watch.queueCount', args: { count: 3 }, expected: '3 in the queue' },
     { key: 'watch.queuedToast', args: undefined, expected: 'Added to your queue' },

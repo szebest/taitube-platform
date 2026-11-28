@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema } from './pagination';
-import { PlaylistSchema } from './playlists';
+import { PlaylistSchema } from './playlist-resource';
 import { VideoSummarySchema } from './video-resource';
 
 const QueryTextSchema = z

@@ -55,6 +55,7 @@ function heldVersion(
       return channel?.avatar ?? 0;
     case 'banner':
       return channel?.banner ?? 0;
+    case 'playlist-cover':
     case 'post-image':
       return 0;
     default:
@@ -94,6 +95,7 @@ async function advanceChannel(
             .returning({ id: channels.id })
         ).length > 0
       );
+    case 'playlist-cover':
     case 'post-image':
       return true;
     default:
@@ -103,8 +105,8 @@ async function advanceChannel(
 
 /**
  * Moves the channel's version to the upload's when it is newer, and only then: the compare is in
- * the write, so a retried or late job cannot take an older image back. A post image has no
- * channel version to move and is always ready.
+ * the write, so a retried or late job cannot take an older image back. A playlist cover or a post image moves no
+ * channel version and is always ready; the playlist takes a cover when its owner names the upload.
  */
 export async function commitUpload(
   tx: PostgresDatabase,
@@ -127,7 +129,7 @@ export async function commitUpload(
   if (!row) throw new Error('channel_image_uploads update returned no row');
 
   if (applied) {
-    if (upload.kind !== 'post-image') {
+    if (upload.kind !== 'playlist-cover' && upload.kind !== 'post-image') {
       await appendChannelAudit(tx, {
         channelId: upload.channelId,
         actorUserId: upload.uploadedBy,

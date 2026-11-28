@@ -48,12 +48,12 @@ describe('adapters/postgres/scoping: accessible-by adapter', () => {
       expect(sqlParams(scope)).toEqual(['unlisted', 'public']);
     });
 
-    it('widens the scope to the playlists the user owns', () => {
+    it('widens the scope to the playlists the user owns or sits on', () => {
       const scope = playlistReadScope(standardUser);
       expect(sqlText(scope)).toBe(
-        '("playlists"."owner_id" = $1 or "playlists"."visibility" = $2 or "playlists"."visibility" = $3)'
+        '((select "playlist_collaborators"."user_id" from "playlist_collaborators" where "playlist_collaborators"."playlist_id" = "playlists"."id" and "playlist_collaborators"."user_id" = $1) = $2 or "playlists"."owner_id" = $3 or "playlists"."visibility" = $4 or "playlists"."visibility" = $5)'
       );
-      expect(sqlParams(scope)).toEqual(['usr-123', 'unlisted', 'public']);
+      expect(sqlParams(scope)).toEqual(['usr-123', 'usr-123', 'usr-123', 'unlisted', 'public']);
     });
 
     it('imposes no restriction for an admin', () => {

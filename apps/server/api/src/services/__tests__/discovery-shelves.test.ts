@@ -65,6 +65,7 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
       devices: [],
       shareLinks: [],
       experiments: [],
+      playlists: [],
     });
 
   beforeEach(async () => {

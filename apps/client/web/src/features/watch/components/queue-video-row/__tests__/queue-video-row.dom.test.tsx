@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
 import { account, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { renderWatch } from '#app/__tests__/render-watch';
+import { QUEUED, renderSegmentedPlaylistWatch, renderWatch } from '#app/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
@@ -90,5 +90,16 @@ describe('apps/client/web: queue video row', () => {
     if (menu) await user.click(menu);
 
     expect(screen.queryAllByRole('menuitem').map((item) => item.textContent)).toEqual(items);
+  });
+
+  it.each([
+    { scenario: 'a segment', segmented: [1], chip: '00:30 to 01:45' },
+    { scenario: 'no segment', segmented: [], chip: null },
+  ])('shows a queued video with $scenario as its range', async ({ segmented, chip }) => {
+    await renderSegmentedPlaylistWatch(segmented);
+
+    const row = await rowOf(`Queued ${QUEUED[0]}`);
+
+    expect(row.querySelector('[data-slot=queue-segment]')?.textContent ?? null).toBe(chip);
   });
 });

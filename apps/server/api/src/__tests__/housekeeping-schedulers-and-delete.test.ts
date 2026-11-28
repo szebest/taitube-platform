@@ -62,6 +62,7 @@ describe('housekeeping schedulers and video deletion', () => {
       { id: 'purge-exports', repeat: { pattern: '30 * * * *' } },
       { id: 'prune-revisions', repeat: { pattern: '30 4 * * *' } },
       { id: 'purge-generations', repeat: { pattern: '45 * * * *' } },
+      { id: 'purge-playlist-activity', repeat: { pattern: '45 4 * * *' } },
       { id: 'publish-due-posts', repeat: { pattern: '* * * * *' } },
       { id: 'flush-video-views', repeat: { every: 10_000 } },
     ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
@@ -89,6 +90,7 @@ describe('housekeeping schedulers and video deletion', () => {
         'purge-exports',
         'purge-generations',
         'purge-handle-history',
+        'purge-playlist-activity',
         'purge-screening-evidence',
         'purge-search-history',
         'reconcile-captions',

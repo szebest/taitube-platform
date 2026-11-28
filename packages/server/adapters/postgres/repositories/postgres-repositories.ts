@@ -24,7 +24,10 @@ import { PostgresLiveStreamRepository } from './postgres-live-stream-repository'
 import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPickRepository } from './postgres-pick-repository';
-import { PostgresPlaylistRepository } from './postgres-playlist-repository';
+import {
+  type PlaylistRepositories,
+  createPlaylistRepositories,
+} from './postgres-playlist-repositories';
 import { PostgresRecommendationFeedbackRepository } from './postgres-recommendation-feedback-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
@@ -87,7 +90,12 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
   declare readonly comments: CommentRepositories['comments'];
   declare readonly commentModeration: CommentRepositories['commentModeration'];
   declare readonly commentReports: CommentRepositories['commentReports'];
-  readonly playlists: PostgresPlaylistRepository;
+  declare readonly playlists: PlaylistRepositories['playlists'];
+  declare readonly playlistCollaborators: PlaylistRepositories['playlistCollaborators'];
+  declare readonly playlistActivity: PlaylistRepositories['playlistActivity'];
+  declare readonly smartPlaylists: PlaylistRepositories['smartPlaylists'];
+  declare readonly playlistLibrary: PlaylistRepositories['playlistLibrary'];
+  declare readonly playlistStats: PlaylistRepositories['playlistStats'];
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
   readonly notifications: PostgresNotificationRepository;
@@ -138,7 +146,7 @@ export class PostgresRepositories extends PostgresVideoToolsRepositories impleme
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
-    this.playlists = new PostgresPlaylistRepository(db);
+    Object.assign(this, createPlaylistRepositories(db));
     this.watchHistory = new PostgresWatchHistoryRepository(db);
     this.userPreferences = new PostgresUserPreferencesRepository(db);
     this.notifications = new PostgresNotificationRepository(db);
