@@ -17,6 +17,10 @@ import type { InMemoryCommentModerationRepository } from './in-memory-comment-mo
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import {
+  type ContentLinkRepositories as ContentLinks,
+  contentLinksOf,
+} from './in-memory-content-link-providers';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import { type AccountDataRepositories, accountDataOf } from './in-memory-export-providers';
@@ -104,6 +108,10 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly fingerprints: InMemoryFingerprintRepository;
   readonly clips: InMemoryClipRepository;
   declare readonly channelFeatured: ChannelContent['channelFeatured'];
+  declare readonly contentLinks: ContentLinks['contentLinks'];
+  declare readonly contentLinkDismissals: ContentLinks['contentLinkDismissals'];
+  declare readonly contentLinkStats: ContentLinks['contentLinkStats'];
+  declare readonly videoEndScreens: ContentLinks['videoEndScreens'];
   readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
   declare readonly channelImages: ChannelContent['channelImages'];
   declare readonly channelPages: ChannelContent['channelPages'];
@@ -157,6 +165,7 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.fingerprints = c.get(Repo.fingerprints);
     this.clips = c.get(Repo.clips);
     Object.assign(this, channelContentOf(c));
+    Object.assign(this, contentLinksOf(c));
     this.channelHandleHistory = c.get(Repo.channelHandleHistory);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);

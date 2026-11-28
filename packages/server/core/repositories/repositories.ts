@@ -17,6 +17,9 @@ import type { CommentModerationRepositoryPort } from './comment-moderation-repos
 import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentSettingsRepositoryPort } from './comment-settings-repository';
+import type { ContentLinkDismissalRepositoryPort } from './content-link-dismissal-repository';
+import type { ContentLinkRepositoryPort } from './content-link-repository';
+import type { ContentLinkStatsRepositoryPort } from './content-link-stats-repository';
 import type { DataExportRepositoryPort } from './data-export-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EntityRevisionRepository } from './entity-revision-repository';
@@ -53,6 +56,7 @@ import type { UserPreferencesRepositoryPort } from './user-preferences-repositor
 import type { UserRepository } from './user-repository';
 import type { VideoChapterRepository } from './video-chapter-repository';
 import type { VideoCorrectionRepository } from './video-correction-repository';
+import type { VideoEndScreenRepositoryPort } from './video-end-screen-repository';
 import type { VideoExperimentRepository } from './video-experiment-repository';
 import type { VideoGenerationRepository } from './video-generation-repository';
 import type { VideoPasswordRepository } from './video-password-repository';
@@ -126,6 +130,10 @@ export interface Repositories {
   videoExperiments: VideoExperimentRepository;
   videoGenerations: VideoGenerationRepository;
   channelFeatured: ChannelFeaturedRepositoryPort;
+  contentLinks: ContentLinkRepositoryPort;
+  contentLinkDismissals: ContentLinkDismissalRepositoryPort;
+  contentLinkStats: ContentLinkStatsRepositoryPort;
+  videoEndScreens: VideoEndScreenRepositoryPort;
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
   channelImages: ChannelImageRepositoryPort;
   channelPages: ChannelPageRepositoryPort;

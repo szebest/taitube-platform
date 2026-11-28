@@ -18,6 +18,9 @@ import type { InMemoryCommentModerationRepository } from './in-memory-comment-mo
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryCommentSettingsRepository } from './in-memory-comment-settings-repository';
+import type { InMemoryContentLinkDismissalRepository } from './in-memory-content-link-dismissal-repository';
+import type { InMemoryContentLinkRepository } from './in-memory-content-link-repository';
+import type { InMemoryContentLinkStatsRepository } from './in-memory-content-link-stats-repository';
 import type { InMemoryDataExportRepository } from './in-memory-data-export-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEntityRevisionRepository } from './in-memory-entity-revision-repository';
@@ -52,6 +55,7 @@ import type { InMemoryUserPreferencesRepository } from './in-memory-user-prefere
 import type { InMemoryUserRepository } from './in-memory-user-repository';
 import type { InMemoryVideoChapterRepository } from './in-memory-video-chapter-repository';
 import type { InMemoryVideoCorrectionRepository } from './in-memory-video-correction-repository';
+import type { InMemoryVideoEndScreenRepository } from './in-memory-video-end-screen-repository';
 import type { InMemoryVideoExperimentRepository } from './in-memory-video-experiment-repository';
 import type { InMemoryVideoGenerationRepository } from './in-memory-video-generation-repository';
 import type { InMemoryVideoPasswordRepository } from './in-memory-video-password-repository';
@@ -117,6 +121,10 @@ export const Repo = {
   videoExperiments: token<InMemoryVideoExperimentRepository>('videoExperiments'),
   videoGenerations: token<InMemoryVideoGenerationRepository>('videoGenerations'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
+  contentLinks: token<InMemoryContentLinkRepository>('contentLinks'),
+  contentLinkDismissals: token<InMemoryContentLinkDismissalRepository>('contentLinkDismissals'),
+  contentLinkStats: token<InMemoryContentLinkStatsRepository>('contentLinkStats'),
+  videoEndScreens: token<InMemoryVideoEndScreenRepository>('videoEndScreens'),
   channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
   channelImages: token<InMemoryChannelImageRepository>('channelImages'),
   channelPages: token<InMemoryChannelPageRepository>('channelPages'),
