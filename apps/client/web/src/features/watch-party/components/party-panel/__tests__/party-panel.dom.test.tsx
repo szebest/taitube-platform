@@ -3,11 +3,19 @@ import { userEvent } from '@testing-library/user-event';
 import {
   assignWatchPartyRole,
   kickWatchPartyMember,
+  type PersonalControlView,
+  putWatchPartyControl,
   type WatchPartyRoleView,
 } from '@vp/api-contracts';
 import type { WatchPartyViewer } from '@vp/permissions';
 import type { PartyChatLine, WatchPartyState } from '@vp/queries';
-import { apiServer, mockEndpoint, PARTY_OWNER_KEY, PARTY_VIEWER_KEY } from '@vp/web-testing';
+import {
+  apiServer,
+  mockEndpoint,
+  PARTY_ID,
+  PARTY_OWNER_KEY,
+  PARTY_VIEWER_KEY,
+} from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { PartyRoom, type PartyRoomTab } from '#app/components/party/party-room';
 import { partyState } from '#app/features/watch-party/__tests__/party-state';
@@ -17,6 +25,23 @@ import { PartyPanel } from '../party-panel';
 const MODERATOR_ROLE_ID = '0190c3a0-5e1d-7000-8000-000000009401';
 const BRUNO_KEY = 'user:0190c3a0-5e1d-7000-8000-000000009103';
 const MUTED_ROLE_ID = '0190c3a0-5e1d-7000-8000-000000009402';
+const VOICE_MUTED_ROLE_ID = '0190c3a0-5e1d-7000-8000-000000009403';
+const LINE_ID = '0190c3a0-5e1d-7000-8000-000000009511';
+const LINE_ID_2 = '0190c3a0-5e1d-7000-8000-000000009512';
+
+const CONTROL = (overrides: Partial<PersonalControlView> = {}): PersonalControlView => ({
+  targetKey: BRUNO_KEY,
+  roomId: PARTY_ID,
+  voiceMuted: false,
+  volume: 100,
+  hideMessages: false,
+  hideReactions: false,
+  hideAvatar: false,
+  hideRequests: false,
+  blockInvites: false,
+  favourite: false,
+  ...overrides,
+});
 
 const ROLE = (overrides: Partial<WatchPartyRoleView>): WatchPartyRoleView => ({
   id: MODERATOR_ROLE_ID,
@@ -72,14 +97,21 @@ function renderPanel(
   {
     tab = 'chat',
     viewer = partyViewer(['chat.post']),
-  }: { tab?: PartyRoomTab; viewer?: WatchPartyViewer } = {}
+    voice = false,
+    controls = [],
+  }: {
+    tab?: PartyRoomTab;
+    viewer?: WatchPartyViewer;
+    voice?: boolean;
+    controls?: PersonalControlView[];
+  } = {}
 ) {
   const send = vi.fn(() => true);
   const onSignIn = vi.fn();
-  renderParty(
+  const view = renderParty(
     <PartyRoom.Root>
       <PartyPanel
-        roomId="room-1"
+        roomId={PARTY_ID}
         socket={{
           state: partyState(state),
           serverNow: () => 0,
@@ -89,15 +121,21 @@ function renderPanel(
         tab={tab}
         onTabChange={vi.fn()}
         onSignIn={onSignIn}
+        voice={voice}
       />
     </PartyRoom.Root>,
-    viewer
+    viewer,
+    controls
   );
 
-  return { send, onSignIn };
+  return { send, onSignIn, unmount: view.unmount };
 }
 
 describe('apps/client/web: PartyPanel', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it('shows the chat lines, with the author role badges in their colours, and the system lines apart', () => {
     const moderator = ROLE({});
     const state = partyState();
@@ -234,6 +272,147 @@ describe('apps/client/web: PartyPanel', () => {
     await vi.waitFor(() =>
       expect(assigned).toEqual([{ roleId: MUTED_ROLE_ID, body: { expiresIn: '10m' } }])
     );
+  });
+
+  it('mutes a member in voice with the voice-muted role, never the chat-muted one', async () => {
+    const chatMuted = ROLE({
+      id: MUTED_ROLE_ID,
+      key: 'chat_muted',
+      kind: 'restrict',
+      colour: null,
+      position: 520,
+    });
+    const voiceMuted = ROLE({
+      id: VOICE_MUTED_ROLE_ID,
+      key: 'voice_muted',
+      kind: 'restrict',
+      colour: null,
+      position: 510,
+    });
+    const assigned: unknown[] = [];
+    apiServer.use(
+      mockEndpoint(assignWatchPartyRole, ({ params }) => {
+        assigned.push(params.roleId);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    renderPanel(
+      { ...withBruno(), roles: [chatMuted, voiceMuted] },
+      { tab: 'people', voice: true, viewer: partyViewer(['voice.moderate'], { topPosition: 50 }) }
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options for Bruno' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Mute in voice' }));
+    await userEvent.keyboard('{ArrowRight}{Enter}');
+
+    await vi.waitFor(() => expect(assigned).toEqual([VOICE_MUTED_ROLE_ID]));
+  });
+
+  it("hides a member's lines for the viewer until Show anyway reveals one", async () => {
+    renderPanel(
+      {
+        ...withBruno(),
+        lines: [
+          LINE({
+            id: LINE_ID,
+            author: { memberKey: BRUNO_KEY, name: 'Bruno', avatarUrl: null },
+            body: 'Secret',
+          }),
+          LINE({
+            id: LINE_ID_2,
+            author: { memberKey: BRUNO_KEY, name: 'Bruno', avatarUrl: null },
+            body: 'Again',
+          }),
+        ],
+      },
+      { controls: [CONTROL({ hideMessages: true })] }
+    );
+
+    expect(await screen.findAllByText('Hidden message')).toHaveLength(2);
+    expect(screen.queryByText('Secret')).not.toBeInTheDocument();
+
+    const [firstShow] = screen.getAllByRole('button', { name: 'Show anyway' }).slice(0, 1);
+    await userEvent.click(firstShow ?? screen.getByRole('button', { name: 'Show anyway' }));
+
+    expect(screen.getByText('Secret')).toBeInTheDocument();
+    expect(screen.queryByText('Again')).not.toBeInTheDocument();
+  });
+
+  it('saves a room control for an account in this room, and an everywhere one for everywhere', async () => {
+    const saved: unknown[] = [];
+    apiServer.use(
+      mockEndpoint(putWatchPartyControl, async ({ request }) => {
+        saved.push(await request.json());
+        return HttpResponse.json({ items: [] });
+      })
+    );
+    renderPanel(withBruno(), { tab: 'people' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options for Bruno' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'In this room' }));
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Hide messages' }));
+
+    await vi.waitFor(() =>
+      expect(saved).toEqual([
+        expect.objectContaining({ targetKey: BRUNO_KEY, roomId: PARTY_ID, hideMessages: true }),
+      ])
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options for Bruno' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Everywhere' }));
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Block invites' }));
+
+    await vi.waitFor(() =>
+      expect(saved[1]).toEqual(
+        expect.objectContaining({ targetKey: BRUNO_KEY, roomId: null, blockInvites: true })
+      )
+    );
+  });
+
+  it('marks a hidden member in the roster and clears it with one click', async () => {
+    const saved: unknown[] = [];
+    apiServer.use(
+      mockEndpoint(putWatchPartyControl, async ({ request }) => {
+        saved.push(await request.json());
+        return HttpResponse.json({ items: [] });
+      })
+    );
+    renderPanel(withBruno(), { tab: 'people', controls: [CONTROL({ hideMessages: true })] });
+
+    expect(await screen.findByText('Hidden by you')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Undo for Bruno' }));
+
+    await vi.waitFor(() =>
+      expect(saved).toEqual([
+        expect.objectContaining({ targetKey: BRUNO_KEY, roomId: PARTY_ID, hideMessages: false }),
+      ])
+    );
+  });
+
+  it("keeps a guest's room-only controls in the browser, across a reload, with no everywhere scope", async () => {
+    const guest: Partial<WatchPartyState> = {
+      you: { memberKey: 'guest:aGuestIdOfSixteenChars', kind: 'guest', roleIds: [] },
+    };
+    const first = renderPanel(
+      { ...withBruno(), ...guest },
+      { tab: 'people', viewer: partyViewer([], { kind: 'guest' }) }
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options for Bruno' }));
+    expect(screen.getByRole('menuitem', { name: 'Everywhere (needs an account)' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    await userEvent.click(screen.getByRole('menuitem', { name: 'In this room' }));
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Hide messages' }));
+    first.unmount();
+
+    renderPanel(
+      { ...withBruno(), ...guest },
+      { tab: 'people', viewer: partyViewer([], { kind: 'guest' }) }
+    );
+
+    expect(await screen.findByText('Hidden by you')).toBeInTheDocument();
   });
 
   it('lists the queue, naming who added each item, and says when it is empty', () => {

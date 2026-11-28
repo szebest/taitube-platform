@@ -24,6 +24,7 @@ describe('apps/client/web: the settings layout', () => {
       'Notifications',
       'Language',
       'Accounts',
+      'Party controls',
     ]);
   });
 

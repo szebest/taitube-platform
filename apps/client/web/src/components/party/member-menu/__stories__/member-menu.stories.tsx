@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { NO_PERSONAL_CONTROL } from '@vp/domain';
 import { PartyPermissionsProvider } from '@vp/permissions-react';
 import { withPartyIntl } from '#app/__tests__/with-party-intl';
-import { MemberMenu } from '..';
+import { MemberMenu, MemberPersonalControls } from '..';
 
 const ROLES = [
   { id: 'r-dj', name: 'DJ', key: 'dj', position: 20, assigned: true },
@@ -51,3 +52,15 @@ type Story = StoryObj<typeof meta>;
 export const Moderator: Story = {};
 export const WithVoice: Story = { args: { voice: true } };
 export const OwnerTransfer: Story = { args: { canTransfer: true } };
+
+const personalControls = (everywhereAllowed: boolean) => (
+  <MemberPersonalControls
+    room={{ ...NO_PERSONAL_CONTROL, hideMessages: true }}
+    everywhere={NO_PERSONAL_CONTROL}
+    everywhereAllowed={everywhereAllowed}
+    onChange={() => undefined}
+  />
+);
+
+export const WithPersonalControls: Story = { args: { personalControls: personalControls(true) } };
+export const GuestPersonalControls: Story = { args: { personalControls: personalControls(false) } };

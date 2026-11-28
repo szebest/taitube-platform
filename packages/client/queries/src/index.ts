@@ -48,6 +48,7 @@ export * from './use-tab-identity';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';
+export * from './watch-party-controls-queries';
 export * from './watch-party-queries';
 export {
   type PartyChatLine,

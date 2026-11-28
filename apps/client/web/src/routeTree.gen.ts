@@ -35,6 +35,7 @@ import { Route as SettingsAccessibilityRouteImport } from './routes/settings/acc
 import { Route as SettingsAccountsRouteImport } from './routes/settings/accounts';
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications';
+import { Route as SettingsPartyControlsRouteImport } from './routes/settings/party-controls';
 import { Route as SettingsPlaybackRouteImport } from './routes/settings/playback';
 import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy';
 import { Route as ShortsVideoIdRouteImport } from './routes/shorts.$videoId';
@@ -179,6 +180,11 @@ const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => SettingsRoute,
 } as any);
+const SettingsPartyControlsRoute = SettingsPartyControlsRouteImport.update({
+  id: '/party-controls',
+  path: '/party-controls',
+  getParentRoute: () => SettingsRoute,
+} as any);
 const SettingsPlaybackRoute = SettingsPlaybackRouteImport.update({
   id: '/playback',
   path: '/playback',
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/party-controls': typeof SettingsPartyControlsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/party-controls': typeof SettingsPartyControlsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/settings/accounts': typeof SettingsAccountsRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/party-controls': typeof SettingsPartyControlsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
+    | '/settings/party-controls'
     | '/settings/playback'
     | '/settings/privacy'
     | '/shorts/$videoId'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
+    | '/settings/party-controls'
     | '/settings/playback'
     | '/settings/privacy'
     | '/shorts/$videoId'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/settings/accounts'
     | '/settings/language'
     | '/settings/notifications'
+    | '/settings/party-controls'
     | '/settings/playback'
     | '/settings/privacy'
     | '/shorts/$videoId'
@@ -713,6 +725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsNotificationsRouteImport;
       parentRoute: typeof SettingsRoute;
     };
+    '/settings/party-controls': {
+      id: '/settings/party-controls';
+      path: '/party-controls';
+      fullPath: '/settings/party-controls';
+      preLoaderRoute: typeof SettingsPartyControlsRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
     '/settings/playback': {
       id: '/settings/playback';
       path: '/playback';
@@ -842,6 +861,7 @@ interface SettingsRouteChildren {
   SettingsAccountsRoute: typeof SettingsAccountsRoute;
   SettingsLanguageRoute: typeof SettingsLanguageRoute;
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute;
+  SettingsPartyControlsRoute: typeof SettingsPartyControlsRoute;
   SettingsPlaybackRoute: typeof SettingsPlaybackRoute;
   SettingsPrivacyRoute: typeof SettingsPrivacyRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
@@ -854,6 +874,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAccountsRoute: SettingsAccountsRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
+  SettingsPartyControlsRoute: SettingsPartyControlsRoute,
   SettingsPlaybackRoute: SettingsPlaybackRoute,
   SettingsPrivacyRoute: SettingsPrivacyRoute,
   SettingsIndexRoute: SettingsIndexRoute,

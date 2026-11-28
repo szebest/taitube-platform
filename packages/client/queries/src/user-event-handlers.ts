@@ -5,12 +5,12 @@ import { VIDEO_LIFECYCLE_EDGES, type VideoStatus } from '@vp/domain';
 import { creatorCommentKeys } from './comment-queries';
 import { notificationKeys, setUnreadCount } from './notification-queries';
 import { videoKeys } from './video-queries';
+import { watchPartyControlsKey } from './watch-party-controls-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
 const LIVE_KEY = ['live'] as const;
-const PARTY_CONTROLS_KEY = ['watch-party-controls'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
 
 const TRANSCODING: readonly VideoStatus[] = VIDEO_LIFECYCLE_EDGES.package.from;
@@ -102,7 +102,7 @@ function applyPartyControlsUpdated(
   _payload: UserEventPayloads['party.controls.updated'],
   queryClient: QueryClient
 ) {
-  void queryClient.invalidateQueries({ queryKey: PARTY_CONTROLS_KEY });
+  void queryClient.invalidateQueries({ queryKey: watchPartyControlsKey });
 }
 
 /**
