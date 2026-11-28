@@ -81,6 +81,19 @@ export async function react(
   return ok();
 }
 
+const PLAYBACK_REQUEST = { needs: 'playback.request', to: 'playback.control' } as const;
+
+/** What asking takes and who hears it, per kind: a request to speak goes to whoever moderates voice. */
+const REQUEST_ROUTES = {
+  seek: PLAYBACK_REQUEST,
+  skip: PLAYBACK_REQUEST,
+  start: PLAYBACK_REQUEST,
+  speak: { needs: 'voice.join', to: 'voice.moderate' },
+} as const satisfies Record<
+  RequestFrame['kind'],
+  { needs: WatchPartyPermission; to: WatchPartyPermission }
+>;
+
 /** Reaches only the sockets whose holder may act on it. */
 export async function requestPlayback(
   deps: WatchPartyDeps,
@@ -91,7 +104,8 @@ export async function requestPlayback(
   const seated = await loadSeated(deps.context, roomId, caller);
   if (isErr(seated)) return seated;
   const { context, memberKey } = seated.value;
-  const held = requireRoomPermission(context.ability, 'playback.request');
+  const route = REQUEST_ROUTES[kind];
+  const held = requireRoomPermission(context.ability, route.needs);
   if (isErr(held)) return held;
   const spent = await consumeBudget(
     deps.gate,
@@ -100,7 +114,7 @@ export async function requestPlayback(
     deps.config.budgets.request
   );
   if (isErr(spent)) return spent;
-  const sent = await deps.broadcaster.toHolders(roomId, 'playback.control', {
+  const sent = await deps.broadcaster.toHolders(roomId, route.to, {
     type: 'request',
     from: memberKey,
     kind,

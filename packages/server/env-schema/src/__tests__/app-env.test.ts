@@ -97,6 +97,8 @@ describe('packages/env-schema: the environment contract', () => {
     LIVE_HOOK_SECRET: '',
     WATCH_PARTY_GUEST_SALT: '',
     VIDEO_ACCESS_SECRET: '',
+    LIVEKIT_API_KEY: '',
+    LIVEKIT_API_SECRET: '',
   };
 
   function refusals(env: Record<string, string>): [string, string][] {
@@ -123,6 +125,8 @@ describe('packages/env-schema: the environment contract', () => {
       ['LIVE_HOOK_SECRET', 'holds a credential this repo ships for local use'],
       ['WATCH_PARTY_GUEST_SALT', 'holds a credential this repo ships for local use'],
       ['VIDEO_ACCESS_SECRET', 'holds a credential this repo ships for local use'],
+      ['LIVEKIT_API_KEY', 'holds a credential this repo ships for local use'],
+      ['LIVEKIT_API_SECRET', 'holds a credential this repo ships for local use'],
     ]);
   });
 
@@ -146,6 +150,11 @@ describe('packages/env-schema: the environment contract', () => {
     {
       key: 'WATCH_PARTY_GUEST_SALT',
       value: 'change-me-party-salt',
+      message: 'holds a credential this repo ships for local use',
+    },
+    {
+      key: 'LIVEKIT_API_SECRET',
+      value: 'change-me-livekit-secret-0123456789abcdef',
       message: 'holds a credential this repo ships for local use',
     },
     {
@@ -228,13 +237,20 @@ describe('packages/env-schema: the environment contract', () => {
     { key: 'WATCH_PARTY_MAX_MEMBERS' as const, raw: '2', expected: 2 },
     { key: 'WATCH_PARTY_MAX_OPEN_PER_USER' as const, raw: undefined, expected: 3 },
     { key: 'WATCH_PARTY_MAX_OPEN_PER_USER' as const, raw: '1', expected: 1 },
+    { key: 'WATCH_PARTY_VOICE_ENABLED' as const, raw: undefined, expected: false },
+    { key: 'WATCH_PARTY_VOICE_ENABLED' as const, raw: 'true', expected: true },
+    { key: 'WATCH_PARTY_VOICE_MAX_SPEAKERS' as const, raw: undefined, expected: 12 },
+    { key: 'WATCH_PARTY_VOICE_MAX_SPEAKERS' as const, raw: '4', expected: 4 },
   ])('reads $key $raw as $expected', ({ key, raw, expected }) => {
     expect(SHAPE[key].parse(raw)).toBe(expected);
   });
 
-  it('gives WATCH_PARTY_GUEST_SALT no default', () => {
-    const unset = SHAPE.WATCH_PARTY_GUEST_SALT.safeParse(undefined);
+  it.each(['WATCH_PARTY_GUEST_SALT', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET'] as const)(
+    'gives %s no default',
+    (key) => {
+      const unset = SHAPE[key].safeParse(undefined);
 
-    expect(unset.success ? unset.data : undefined).toBeUndefined();
-  });
+      expect(unset.success ? unset.data : undefined).toBeUndefined();
+    }
+  );
 });

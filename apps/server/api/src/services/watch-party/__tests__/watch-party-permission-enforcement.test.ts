@@ -6,6 +6,9 @@ import {
 } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { PartyCaller } from '../party-caller';
+import { voiceOn } from '../voice/__tests__/voice-fixture';
+import { removeFromVoice } from '../voice/voice-moderation';
+import { mintVoiceToken } from '../voice/voice-token';
 import { pinChat, removeChat, sendChat } from '../watch-party-chat';
 import { runCommand } from '../watch-party-commands';
 import { WatchPartyInviteService } from '../watch-party-invite-service';
@@ -183,6 +186,26 @@ const ENFORCEMENT: Readonly<Partial<Record<WatchPartyPermission, Enforcement>>> 
     attempt: async (party, caller) =>
       outcomeOf(await sendChat(party.deps, ROOM_ID, caller, 'second')),
     refusal: { code: ErrorCodes.WATCH_PARTY_SLOW_MODE },
+  },
+  'voice.join': {
+    attempt: async (party, caller) =>
+      outcomeOf(await mintVoiceToken((await voiceOn(party)).voice, ROOM_ID, caller, true)),
+  },
+  'voice.speak': {
+    alongside: ['voice.join'],
+    attempt: async (party, caller) => {
+      const room = await voiceOn(party);
+      const minted = await mintVoiceToken(room.voice, ROOM_ID, caller, false);
+      if (!minted.ok) return outcomeOf(minted);
+      room.gateway.join(minted.value.token);
+      return room.gateway.publish(`party:${ROOM_ID}`, keyOf(MEMBER))
+        ? { ok: true }
+        : { ok: false, error: { code: MISSING, permission: 'voice.speak' } };
+    },
+  },
+  'voice.moderate': {
+    attempt: async (party, caller) =>
+      outcomeOf(await removeFromVoice((await voiceOn(party)).voice, ROOM_ID, caller, keyOf(OTHER))),
   },
   'members.invite': {
     attempt: async (party, caller) =>

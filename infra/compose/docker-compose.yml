@@ -17,6 +17,8 @@ x-app-env: &app-env
   S3_FORCE_PATH_STYLE: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   LIVE_GATEWAY_API_URL: http://mediamtx:9997
+  LIVEKIT_API_URL: http://livekit:7880
+  WATCH_PARTY_VOICE_ENABLED: ${WATCH_PARTY_VOICE_ENABLED:-false}
 
 services:
   postgres:
@@ -349,6 +351,23 @@ services:
       - "8889:8889"
       - "8189:8189/udp"
       - "127.0.0.1:8554:8554"
+    restart: on-failure
+
+  # ---- watch party voice (profile: voice): the SFU, off unless WATCH_PARTY_VOICE_ENABLED=true ----
+  livekit:
+    image: livekit/livekit-server:v1.13.11@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20
+    profiles:
+      - voice
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: on-failure
 
   hls-test-page:

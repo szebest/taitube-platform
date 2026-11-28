@@ -5,6 +5,7 @@ import type {
   WatchPartyBufferPolicy,
   WatchPartyCloseReason,
   WatchPartyIdleClose,
+  WatchPartyVoiceMode,
   WatchPartyJoinPath,
   WatchPartyPhase,
   WatchPartyPlayback,
@@ -53,6 +54,7 @@ export const watchPartyRooms = pgTable(
     autoplay: boolean('autoplay').notNull().default(true),
     skipVotePercent: integer('skip_vote_percent').notNull().default(50),
     idleClose: text('idle_close').$type<WatchPartyIdleClose>().notNull().default('15m'),
+    voiceMode: text('voice_mode').$type<WatchPartyVoiceMode>().notNull().default('open'),
     language: text('language'),
     accent: text('accent'),
     scheduledFor: timestamptz('scheduled_for'),
@@ -109,6 +111,10 @@ export const watchPartyRooms = pgTable(
       check(
         'watch_party_rooms_slow_mode_check',
         sql`${table.slowModeSeconds} IN (0, 5, 10, 30, 60)`
+      ),
+      check(
+        'watch_party_rooms_voice_mode_check',
+        sql`${table.voiceMode} IN ('open', 'push_to_talk')`
       ),
       check('watch_party_rooms_skip_vote_check', sql`${table.skipVotePercent} BETWEEN 1 AND 100`),
     ];

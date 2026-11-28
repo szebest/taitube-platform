@@ -9,5 +9,11 @@ nodes:
   - containerPort: 9000
     hostPort: 9000
     protocol: TCP
+  - containerPort: 7881
+    hostPort: 7881
+    protocol: TCP
+  - containerPort: 7882
+    hostPort: 7882
+    protocol: UDP
 - role: worker
 - role: worker

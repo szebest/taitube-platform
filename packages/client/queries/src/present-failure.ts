@@ -86,6 +86,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.QUEUE_UNAVAILABLE:
     case ErrorCodes.STORAGE_UNAVAILABLE:
     case ErrorCodes.LIVE_GATEWAY_UNAVAILABLE:
+    case ErrorCodes.WATCH_PARTY_VOICE_UNAVAILABLE:
     case ErrorCodes.LIVE_INGEST_UNAVAILABLE:
       return 'server';
     case ErrorCodes.UPLOAD_TOO_LARGE:
@@ -160,6 +161,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WATCH_PARTY_QUEUE_FULL:
     case ErrorCodes.WATCH_PARTY_STATE_STALE:
     case ErrorCodes.WATCH_PARTY_ROLE_LIMIT:
+    case ErrorCodes.WATCH_PARTY_VOICE_SPEAKERS_FULL:
     case ErrorCodes.CHANNEL_INVITE_NOT_PENDING:
     case ErrorCodes.CHANNEL_INVITE_ALREADY_PENDING:
     case ErrorCodes.CHANNEL_MEMBER_EXISTS:

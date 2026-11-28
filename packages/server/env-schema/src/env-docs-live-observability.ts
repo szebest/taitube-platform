@@ -59,6 +59,48 @@ export const WATCH_PARTY_DOCS = groupDocs('watch-party', {
     visibility: 'secret',
     readBy: ['api'],
   },
+  WATCH_PARTY_VOICE_ENABLED: {
+    description:
+      'Switches watch party voice on: the voice routes, the room feature flag and the readiness check of the media server. Off, no media server is needed.',
+    example: 'true',
+    visibility: 'public',
+    readBy: ['api'],
+  },
+  LIVEKIT_URL: {
+    description:
+      'The WebSocket URL browsers use to reach the media server. It must be reachable from the viewer, not only from the cluster.',
+    example: 'wss://voice.taitube.local',
+    visibility: 'public',
+    readBy: ['api'],
+  },
+  LIVEKIT_API_URL: {
+    description:
+      'The media server API origin the API calls server to server. Unreachable, voice tokens are refused and readiness fails while voice is on.',
+    example: 'http://livekit:7880',
+    visibility: 'public',
+    readBy: ['api'],
+  },
+  LIVEKIT_API_KEY: {
+    description:
+      'The key that signs voice tokens and webhooks, as the media server knows it. Unset, voice is unavailable; production refuses the local value.',
+    example: '<random key>',
+    visibility: 'secret',
+    readBy: ['api', 'infra'],
+  },
+  LIVEKIT_API_SECRET: {
+    description:
+      'The secret paired with LIVEKIT_API_KEY. Unset, voice is unavailable; production refuses the local value.',
+    example: '<random 32 bytes>',
+    visibility: 'secret',
+    readBy: ['api', 'infra'],
+  },
+  WATCH_PARTY_VOICE_MAX_SPEAKERS: {
+    description:
+      'How many members may publish audio in one room; the next speaker joins as a listener and can request to speak. At least 1.',
+    example: '12',
+    visibility: 'public',
+    readBy: ['api'],
+  },
 });
 
 export const OBSERVABILITY_DOCS = groupDocs('observability', {

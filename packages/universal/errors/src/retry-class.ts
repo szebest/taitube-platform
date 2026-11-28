@@ -164,6 +164,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.WATCH_PARTY_CHAT_OFF]: 'permanent',
   [ErrorCodes.WATCH_PARTY_TICKET_INVALID]: 'permanent',
   [ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID]: 'permanent',
+  [ErrorCodes.WATCH_PARTY_VOICE_SPEAKERS_FULL]: 'permanent',
+  [ErrorCodes.WATCH_PARTY_VOICE_UNAVAILABLE]: 'transient',
   [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'permanent',
   [ErrorCodes.CHANNEL_INVITE_NOT_FOUND]: 'permanent',
   [ErrorCodes.CHANNEL_INVITE_NOT_PENDING]: 'permanent',

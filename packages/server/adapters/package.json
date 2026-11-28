@@ -68,6 +68,7 @@
     "test": "vp test run",
     "test:integration": "vp test run --config integration.config.ts",
     "test:perf": "vp test run --config perf.config.ts",
+    "test:voice": "vp test run --config voice.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -98,6 +99,7 @@
     "bullmq": "^6.3.11",
     "drizzle-orm": "^0.45.4",
     "ioredis": "^6.0.0",
+    "livekit-server-sdk": "^2.20.1",
     "onnxruntime-node": "^1.31.1",
     "postgres": "^3.4.9",
     "uuidv7": "^1.2.1",

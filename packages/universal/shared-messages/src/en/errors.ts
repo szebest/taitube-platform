@@ -121,6 +121,8 @@ export const errors = {
   watchPartyRoleLimit: dt('This party already has as many roles as it can hold.'),
   watchPartySlowMode: dt('Slow mode is on: wait a moment before you send another message.'),
   watchPartyChatOff: dt('Chat is off in this party.'),
+  watchPartyVoiceSpeakersFull: dt('Speakers are full. You joined as a listener.'),
+  watchPartyVoiceUnavailable: dt('Voice is temporarily unavailable. Try again shortly.'),
   watchPartyTicketInvalid: dt('Your party connection expired. Reconnect to keep watching.'),
   watchPartyCredentialInvalid: dt('Your guest seat expired. Join the party again.'),
   handleChangeTooSoon: dt(

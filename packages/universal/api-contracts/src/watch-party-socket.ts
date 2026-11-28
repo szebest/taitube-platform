@@ -1,5 +1,6 @@
 import {
   MEMBER_KINDS,
+  ROSTER_VOICE_STATES,
   WATCH_PARTY_CLOSE_REASONS,
   WATCH_PARTY_REACTIONS,
   WATCH_PARTY_RATES,
@@ -49,6 +50,7 @@ export const WatchPartyClientFrameSchema = z.discriminatedUnion('type', [
     kind: z.enum(WATCH_PARTY_REQUEST_KINDS),
     positionMs: PositionSchema.optional(),
   }),
+  frame('voice.mute', { muted: z.boolean() }),
   frame('chat.send', { message: z.string().max(CHAT_MESSAGE_BOUNDS.maxLength * 4) }),
   frame('chat.remove', { id: z.uuid() }),
   frame('chat.pin', { id: z.uuid().nullable() }),
@@ -119,6 +121,7 @@ const WatchPartyBroadcastSchema = z.discriminatedUnion('type', [
     memberKey: MemberKeySchema,
     rolesVersion: z.number().int(),
   }),
+  z.object({ type: z.literal('voice'), state: z.enum(ROSTER_VOICE_STATES) }),
   z.object({ type: z.literal('closed'), reason: z.enum(WATCH_PARTY_CLOSE_REASONS) }),
 ]);
 

@@ -2,7 +2,6 @@ import { assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { WatchPartyPreviewView } from '@vp/api-contracts';
 import {
   type MemberKind,
-  PENDING_ENFORCEMENT,
   type RosterPreview,
   type RosterPreviewMember,
   toRosterPreview,
@@ -173,7 +172,7 @@ export async function previewRoom(
 
   return ok({
     ...view.value,
-    features: { voice: PENDING_ENFORCEMENT.length === 0 },
+    features: { voice: deps.voiceEnabled },
     roster: { ...roster.value, faces: [...roster.value.faces] },
     viewer: {
       memberKey: context.memberKey,

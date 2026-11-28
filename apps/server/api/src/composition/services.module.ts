@@ -246,6 +246,7 @@ export function registerServices(c: Container): Container {
           postgres: c.get(Adapters.DbClient),
           redis: c.get(Adapters.Cache),
           s3: c.get(Adapters.Storage),
+          ...(config().voice.enabled ? { voice: c.get(Adapters.VoiceGateway) } : {}),
         })
     )
     .provide(

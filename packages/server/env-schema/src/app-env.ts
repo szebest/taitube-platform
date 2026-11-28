@@ -176,6 +176,18 @@ const WatchPartyEnvSchema = z.object({
   WATCH_PARTY_GUEST_SALT: secret(),
 });
 
+const VoiceEnvSchema = z.object({
+  WATCH_PARTY_VOICE_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((val) => val === 'true'),
+  LIVEKIT_URL: z.url().default('ws://localhost:7880'),
+  LIVEKIT_API_URL: z.url().default('http://localhost:7880'),
+  LIVEKIT_API_KEY: secret(),
+  LIVEKIT_API_SECRET: secret(),
+  WATCH_PARTY_VOICE_MAX_SPEAKERS: z.coerce.number().int().min(1).default(12),
+});
+
 const TRACE_SAMPLERS = [
   'always_on',
   'always_off',
@@ -201,6 +213,7 @@ const AppEnvShape = z.object({
   ...PipelineEnvSchema.shape,
   ...LiveEnvSchema.shape,
   ...WatchPartyEnvSchema.shape,
+  ...VoiceEnvSchema.shape,
   ...OtelEnvSchema.shape,
 });
 
@@ -215,6 +228,8 @@ const FEATURE_SECRET_KEYS = [
   'LIVE_HOOK_SECRET',
   'WATCH_PARTY_GUEST_SALT',
   'VIDEO_ACCESS_SECRET',
+  'LIVEKIT_API_KEY',
+  'LIVEKIT_API_SECRET',
 ] as const satisfies readonly (keyof ParsedEnv)[];
 
 function productionIssues(env: ParsedEnv): { key: string; message: string }[] {

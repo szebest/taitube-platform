@@ -1,4 +1,5 @@
 import type { Container } from '@kit/composition';
+import { Adapters } from '@vp/adapters/composition';
 import { Services } from './service-tokens';
 
 /** What `app.services` hands the routes: every service, resolved once the container is built. */
@@ -92,5 +93,8 @@ export function registerServiceSet(c: Container): Container {
     watchPartyInviteService: c.get(Services.WatchPartyInviteService),
     watchPartyControlsService: c.get(Services.WatchPartyControlsService),
     watchPartySocketService: c.get(Services.WatchPartySocketService),
+    watchPartyVoiceService: c.get(Adapters.Config).voice.enabled
+      ? c.get(Services.WatchPartyVoiceService)
+      : null,
   }));
 }

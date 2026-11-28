@@ -165,7 +165,7 @@ k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres,
 	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
 		kind get clusters | grep -q "^$(CLUSTER_NAME)$$" || kind create cluster --name $(CLUSTER_NAME) --config infra/k8s/kind-config.yaml; \
 	else \
-		k3d cluster list | grep -q "^$(CLUSTER_NAME) " || k3d cluster create $(CLUSTER_NAME) --agents 2 -p "3000:80@loadbalancer" -p "9000:9000@loadbalancer"; \
+		k3d cluster list | grep -q "^$(CLUSTER_NAME) " || k3d cluster create $(CLUSTER_NAME) --agents 2 -p "3000:80@loadbalancer" -p "9000:9000@loadbalancer" -p "7880:7880@loadbalancer" -p "7881:7881@loadbalancer" -p "7882:7882/udp@loadbalancer"; \
 	fi
 	@echo "Installing/upgrading in-cluster Helm releases..."
 	helm repo add bitnami https://charts.bitnami.com/bitnami --force-update || true

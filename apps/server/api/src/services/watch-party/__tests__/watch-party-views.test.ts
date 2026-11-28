@@ -25,6 +25,7 @@ const room = (overrides: Partial<WatchPartyRoom> = {}): WatchPartyRoom => ({
   autoplay: true,
   skipVotePercent: 50,
   idleClose: '15m',
+  voiceMode: 'open',
   language: null,
   accent: null,
   scheduledFor: null,

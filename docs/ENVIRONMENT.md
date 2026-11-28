@@ -51,6 +51,8 @@ ADMIN_TOKEN=change-me-32-bytes-random
 VIDEO_ACCESS_SECRET=change-me-video-access
 LIVE_HOOK_SECRET=change-me-live-hook
 WATCH_PARTY_GUEST_SALT=change-me-party-salt
+LIVEKIT_API_KEY=change-me-livekit-key
+LIVEKIT_API_SECRET=change-me-livekit-secret-0123456789abcdef
 ```
 
 ## Core
@@ -186,6 +188,12 @@ Room limits and guest hashing.
 | `WATCH_PARTY_MAX_MEMBERS` | integer >= 2 | `200` | - | no | api | The ceiling on a room capacity; a room with none set holds this many. At least 2. | `200` |
 | `WATCH_PARTY_MAX_OPEN_PER_USER` | integer >= 1 | `3` | - | no | api | How many open rooms one owner holds before creating another is refused. | `3` |
 | `WATCH_PARTY_GUEST_SALT` | string | *unset* | - | yes | api | Keys the guest IP hash kept for a ban. Unset, guest joins are switched off; production refuses the local value. | `<random 32 bytes>` |
+| `WATCH_PARTY_VOICE_ENABLED` | true \| false | `false` | - | no | api | Switches watch party voice on: the voice routes, the room feature flag and the readiness check of the media server. Off, no media server is needed. | `true` |
+| `LIVEKIT_URL` | url | `ws://localhost:7880` | - | no | api | The WebSocket URL browsers use to reach the media server. It must be reachable from the viewer, not only from the cluster. | `wss://voice.taitube.local` |
+| `LIVEKIT_API_URL` | url | `http://localhost:7880` | - | no | api | The media server API origin the API calls server to server. Unreachable, voice tokens are refused and readiness fails while voice is on. | `http://livekit:7880` |
+| `LIVEKIT_API_KEY` | string | *unset* | - | yes | api, infra | The key that signs voice tokens and webhooks, as the media server knows it. Unset, voice is unavailable; production refuses the local value. | `<random key>` |
+| `LIVEKIT_API_SECRET` | string | *unset* | - | yes | api, infra | The secret paired with LIVEKIT_API_KEY. Unset, voice is unavailable; production refuses the local value. | `<random 32 bytes>` |
+| `WATCH_PARTY_VOICE_MAX_SPEAKERS` | integer >= 1 | `12` | - | no | api | How many members may publish audio in one room; the next speaker joins as a listener and can request to speak. At least 1. | `12` |
 
 ## Observability
 

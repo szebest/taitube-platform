@@ -54,6 +54,8 @@ export interface WatchPartyDeps {
   readonly broadcaster: WatchPartyBroadcaster;
   readonly context: WatchPartyContextLoader;
   readonly config: WatchPartyConfig;
+  /** `WATCH_PARTY_VOICE_ENABLED`: a room advertises voice only while the media server is in use. */
+  readonly voiceEnabled: boolean;
   readonly secrets: WatchPartySecrets;
   /** The web origin invite links point at. */
   readonly webUrl: string;

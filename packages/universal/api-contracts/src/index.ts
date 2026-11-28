@@ -72,6 +72,7 @@ import * as watchPartyMembers from './watch-party-members';
 import * as watchPartyQueue from './watch-party-queue';
 import * as watchPartyRoles from './watch-party-roles';
 import * as watchPartySocket from './watch-party-socket';
+import * as watchPartyVoice from './watch-party-voice';
 import * as webhooks from './webhooks';
 
 export * from './account-security';
@@ -155,6 +156,7 @@ export * from './watch-party-queue';
 export * from './watch-party-resource';
 export * from './watch-party-roles';
 export * from './watch-party-socket';
+export * from './watch-party-voice';
 export * from './webhooks';
 
 export const contracts = {
@@ -232,6 +234,7 @@ export const contracts = {
   watchPartyQueue,
   watchPartyRoles,
   watchPartySocket,
+  watchPartyVoice,
   webhooks,
 } as const;
 

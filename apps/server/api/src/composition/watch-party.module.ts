@@ -27,6 +27,7 @@ import {
 } from '../services/index';
 import { PatternHub } from '../services/pattern-hub';
 import { Poller } from '../services/poller';
+import { VoiceEnforcement, WatchPartyVoiceService } from '../services/watch-party/voice/index';
 import { Services } from './service-tokens';
 
 const TOKEN_BYTES = 32;
@@ -59,6 +60,7 @@ export function registerWatchPartyServices(c: Container): Container {
       broadcaster: c.get(Services.WatchPartyBroadcaster),
       context: c.get(Services.WatchPartyContextLoader),
       config: config.watchParties,
+      voiceEnabled: config.voice.enabled,
       secrets: secrets(config.watchParties.guestSalt),
       webUrl: config.webUrl,
       cdn: config.cdn,
@@ -136,6 +138,30 @@ export function registerWatchPartyServices(c: Container): Container {
     .provide(Services.WatchPartyOwnerGrace, (c) => new OwnerGrace(deps(c)), {
       dispose: (grace) => grace.close(),
     })
+    .provide(
+      Services.WatchPartyVoiceEnforcement,
+      (c) =>
+        new VoiceEnforcement({
+          repositories: c.get(Adapters.Repositories),
+          broadcaster: c.get(Services.WatchPartyBroadcaster),
+          logger: c.get(Services.Logger),
+          now: () => new Date(),
+          gateway: c.get(Adapters.VoiceGateway),
+          hub: c.get(Services.WatchPartyHub),
+          maxSpeakers: c.get(Adapters.Config).voice.maxSpeakers,
+        }),
+      { dispose: (enforcement) => enforcement.close() }
+    )
+    .provide(
+      Services.WatchPartyVoiceService,
+      (c) =>
+        new WatchPartyVoiceService({
+          ...deps(c),
+          gateway: c.get(Adapters.VoiceGateway),
+          voice: c.get(Adapters.Config).voice,
+          enforcement: c.get(Services.WatchPartyVoiceEnforcement),
+        })
+    )
     .provide(
       Services.WatchPartySocketService,
       (c) =>

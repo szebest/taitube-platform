@@ -8,4 +8,5 @@ export * from './conflict-failures';
 export * from './retry-class';
 export * from './webhook-failures';
 export * from './live-failures';
+export * from './voice-failures';
 export * from './watch-party-failures';

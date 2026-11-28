@@ -74,6 +74,7 @@ import { watchPartyMembersRoutes } from './watch-party-members';
 import { watchPartyQueueRoutes } from './watch-party-queue';
 import { watchPartyRolesRoutes } from './watch-party-roles';
 import { watchPartySocketRoutes } from './watch-party-socket';
+import { watchPartyVoiceRoutes } from './watch-party-voice';
 import { webhooksRoutes } from './webhooks';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
@@ -150,6 +151,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   watchPartyInvitesRoutes,
   watchPartyControlsRoutes,
   watchPartySocketRoutes,
+  watchPartyVoiceRoutes,
 ];
 
 /** The dev key is derived from a committed seed, so its JWKS is served in dev mode and nowhere else. */

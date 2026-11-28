@@ -76,6 +76,7 @@ function patchOf(
     autoplay: body.autoplay,
     skipVotePercent: body.skipVotePercent,
     idleClose: body.idleClose,
+    voiceMode: body.voiceMode,
     language: body.language,
     accent: body.accent,
     scheduledFor: checked.scheduledFor,

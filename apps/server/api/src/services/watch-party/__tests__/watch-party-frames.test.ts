@@ -18,6 +18,7 @@ function senderOf(overrides: Partial<FrameSender> = {}) {
     ability: getWatchPartyPermissions(null, toWatchPartyViewer(null)),
     direct: (frame) => direct.push(frame),
     patch: (change) => patches.push(change),
+    selfMute: (muted) => patches.push({ selfMute: muted }),
     ...overrides,
   };
   return { sender, direct, patches };
@@ -99,6 +100,31 @@ describe('room frames', () => {
     });
 
     expect(start).toHaveBeenCalledTimes(waits);
+  });
+
+  it('hands a self-mute to the sender only for a member who may join voice', async () => {
+    const { socketDeps } = await socketRoom();
+    const may = senderOf({
+      ability: getWatchPartyPermissions(
+        null,
+        toWatchPartyViewer({
+          kind: 'user',
+          isOwner: false,
+          effective: { permissions: ['voice.join'], topPosition: 1 },
+        })
+      ),
+    });
+    const denied = senderOf();
+
+    expectOk(await answerFrame(socketDeps, may.sender, { type: 'voice.mute', muted: true }));
+    const refused = await answerFrame(socketDeps, denied.sender, {
+      type: 'voice.mute',
+      muted: true,
+    });
+
+    expect(may.patches).toEqual([{ selfMute: true }]);
+    expect(expectErr(refused).code).toBe(ErrorCodes.WATCH_PARTY_PERMISSION_MISSING);
+    expect(denied.patches).toEqual([]);
   });
 
   it('acknowledges drift stats and records the drift and the hard seeks', async () => {
