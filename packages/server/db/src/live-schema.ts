@@ -41,7 +41,6 @@ export const liveStreams = pgTable(
       .default('public'),
     overlayToken: text('overlay_token').unique(),
     controlToken: text('control_token').unique(),
-    currentViewers: integer('current_viewers').notNull().default(0),
     chatSlowModeSeconds: integer('chat_slow_mode_seconds').notNull().default(0),
     chatSubscribersOnly: boolean('chat_subscribers_only').notNull().default(false),
     markers: jsonb('markers').$type<LiveMarker[]>().notNull().default([]),

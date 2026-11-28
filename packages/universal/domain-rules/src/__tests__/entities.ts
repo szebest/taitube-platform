@@ -236,7 +236,6 @@ export function aLiveStream(overrides: Partial<LiveStream> = {}): LiveStream {
     archiveVisibility: 'public',
     overlayToken: 'overlay-1',
     controlToken: 'control-1',
-    currentViewers: 0,
     chatSlowModeSeconds: 0,
     chatSubscribersOnly: false,
     markers: [],

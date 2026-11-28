@@ -37,7 +37,6 @@ describe('@vp/domain: live stream', () => {
       archiveVisibility: 'private',
       overlayToken: 'overlay',
       controlToken: 'control',
-      currentViewers: 12,
       chatSlowModeSeconds: 30,
       chatSubscribersOnly: true,
       markers: [{ offsetMs: 1000, label: 'start' }],
