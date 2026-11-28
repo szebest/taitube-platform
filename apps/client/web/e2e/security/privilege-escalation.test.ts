@@ -1,6 +1,7 @@
 import type { APIRequestContext } from '@playwright/test';
 import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
 import { CHANNEL_ATTEMPTS } from './channel-attempts';
+import { PAGE_ATTEMPTS } from './channel-page-attempts';
 import { ME_ATTEMPTS } from './me-attempts';
 import { TEAM_REFUSED } from './team-video-attempts';
 import { TOKEN_ATTEMPTS } from './token-attempts';
@@ -109,6 +110,7 @@ const ATTEMPTS: Attempt[] = [
     target: 'watchable',
   },
   ...CHANNEL_ATTEMPTS,
+  ...PAGE_ATTEMPTS,
   ...TOKEN_ATTEMPTS,
   { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
   {

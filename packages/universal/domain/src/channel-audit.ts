@@ -94,7 +94,17 @@ type ChannelAuditEvent =
       targetType: 'settings';
       targetId: string;
       meta: { policy: LinkPolicy };
-    };
+    }
+  | { action: 'page.draft_saved'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
+  | { action: 'page.published'; targetType: 'page'; targetId: string; meta: PageVersionMeta }
+  | { action: 'page.scheduled'; targetType: 'page'; targetId: string; meta: PageScheduleMeta }
+  | {
+      action: 'page.schedule_cancelled';
+      targetType: 'page';
+      targetId: string;
+      meta: PageScheduleMeta;
+    }
+  | { action: 'page.restored'; targetType: 'page'; targetId: string; meta: PageRestoreMeta };
 
 /** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
 type InviteMeta = {
@@ -119,6 +129,11 @@ type UserMeta = Record<never, never>;
 type PostMeta = { kind: PostKind };
 
 type LinkMeta = { relation: ContentLinkRelation; status: ContentLinkStatus };
+type PageVersionMeta = { version: number };
+
+type PageScheduleMeta = { scheduleId: string; publishAt: string };
+
+type PageRestoreMeta = { version: number; fromVersion: number };
 
 type BanMeta = { expiresAt: string | null };
 
@@ -205,6 +220,11 @@ const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
   'link.suggested': true,
   'link.accepted': true,
   'link.policy_changed': true,
+  'page.draft_saved': true,
+  'page.published': true,
+  'page.scheduled': true,
+  'page.schedule_cancelled': true,
+  'page.restored': true,
 };
 
 export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
@@ -226,3 +246,20 @@ export type ChannelAuditEntry = ChannelAuditEvent & {
   actorTokenId: string | null;
   createdAt: Date;
 };
+
+export function scheduleAppliedAudit(schedule: {
+  channelId: string;
+  createdBy: string | null;
+}): ((version: number) => NewChannelAuditEntry) | null {
+  const { channelId, createdBy } = schedule;
+  return createdBy
+    ? (version) => ({
+        channelId,
+        actorUserId: createdBy,
+        action: 'page.published',
+        targetType: 'page',
+        targetId: channelId,
+        meta: { version },
+      })
+    : null;
+}

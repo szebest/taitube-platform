@@ -25,6 +25,7 @@ const CRON_SCHEDULERS = [
   { id: 'purge-generations', pattern: '45 * * * *' },
   { id: 'purge-playlist-activity', pattern: '45 4 * * *' },
   { id: 'publish-due-posts', pattern: '* * * * *' },
+  { id: 'promote-layout-schedules', pattern: '* * * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
 export interface HousekeepingScheduleSettings {

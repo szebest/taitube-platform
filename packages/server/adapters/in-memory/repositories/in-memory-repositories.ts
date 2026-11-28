@@ -3,7 +3,6 @@ import type { Clock } from './clock';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
-import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import {
@@ -113,9 +112,12 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   declare readonly contentLinkDismissals: ContentLinks['contentLinkDismissals'];
   declare readonly contentLinkStats: ContentLinks['contentLinkStats'];
   declare readonly videoEndScreens: ContentLinks['videoEndScreens'];
-  readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
+  declare readonly channelHandleHistory: ChannelContent['channelHandleHistory'];
   declare readonly channelImages: ChannelContent['channelImages'];
   declare readonly channelPages: ChannelContent['channelPages'];
+  declare readonly channelLayouts: ChannelContent['channelLayouts'];
+  declare readonly channelLayoutSchedules: ChannelContent['channelLayoutSchedules'];
+  declare readonly channelPageSources: ChannelContent['channelPageSources'];
   declare readonly channelPosts: ChannelContent['channelPosts'];
   declare readonly postEngagement: ChannelContent['postEngagement'];
   readonly picks: InMemoryPickRepository;
@@ -167,7 +169,6 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.clips = c.get(Repo.clips);
     Object.assign(this, channelContentOf(c));
     Object.assign(this, contentLinksOf(c));
-    this.channelHandleHistory = c.get(Repo.channelHandleHistory);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);

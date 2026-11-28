@@ -23,6 +23,10 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.shareLinkOpenDedup('l1', '2026-03-10'), 'taitube:views:link-dedup:l1:20260310'],
     [CacheKeys.playlistOpenDedup('p1', '2026-03-10'), 'taitube:views:playlist-dedup:p1:20260310'],
     [CacheKeys.smartPlaylistPage('p1', 'f1'), 'taitube:playlists:smart:p1:f1'],
+    [
+      CacheKeys.channelPagePool('c1', 3, 'guest', 'pl|en'),
+      'taitube:channels:c1:page:3:guest:pl|en',
+    ],
     [CacheKeys.hourlyViewBuffer, 'taitube:views:hourly:buffer'],
     [CacheKeys.hourlyViewFlushBatch('b1'), 'taitube:views:hourly:flush:b1'],
     [CacheKeys.retentionBuffer, 'taitube:retention:buffer'],

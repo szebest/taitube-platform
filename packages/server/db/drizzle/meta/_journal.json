@@ -353,6 +353,13 @@
       "breakpoints": true
     },
     {
+      "idx": 50,
+      "version": "7",
+      "when": 1795813206841,
+      "tag": "0050_channel_page_builder",
+      "breakpoints": true
+    },
+    {
       "idx": 54,
       "version": "7",
       "when": 1795825568254,

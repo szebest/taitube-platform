@@ -26,6 +26,7 @@ describe('@vp/domain-rules: decideChannelTask', () => {
     ['read-library', ['owner', 'manager', 'editor']],
     ['read-inbox', ['owner', 'manager', 'moderator']],
     ['edit-channel', ['owner', 'manager', 'editor']],
+    ['edit-page', ['owner', 'manager', 'editor']],
     ['pin-content', ['owner', 'manager', 'editor']],
     ['upload', ['owner', 'manager', 'editor']],
     ['read-team', ['owner', 'manager']],

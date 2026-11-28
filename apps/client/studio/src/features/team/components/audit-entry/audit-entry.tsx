@@ -126,6 +126,11 @@ function AuditDetail({ entry }: { entry: AuditEntryView }) {
     case 'link.suggested':
     case 'link.accepted':
     case 'link.policy_changed':
+    case 'page.draft_saved':
+    case 'page.published':
+    case 'page.scheduled':
+    case 'page.schedule_cancelled':
+    case 'page.restored':
       return null;
     default:
       return assertNever(entry, 'ChannelAuditAction');

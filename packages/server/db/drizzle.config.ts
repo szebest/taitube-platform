@@ -26,6 +26,7 @@ export default defineConfig({
     './src/watch-parties-schema.ts',
     './src/watch-party-activity-schema.ts',
     './src/channel-team-schema.ts',
+    './src/channel-layout-schema.ts',
     './src/screening-schema.ts',
     './src/channel-identity-schema.ts',
     './src/exports-schema.ts',

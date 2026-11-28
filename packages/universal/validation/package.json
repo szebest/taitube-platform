@@ -23,7 +23,8 @@
     "@kit/errors": "workspace:*",
     "@kit/result": "workspace:*",
     "@kit/validation": "workspace:*",
-    "@vp/errors": "workspace:*"
+    "@vp/errors": "workspace:*",
+    "mdast-util-from-markdown": "^2.1.0"
   },
   "devDependencies": {
     "@kit/testing": "workspace:*",

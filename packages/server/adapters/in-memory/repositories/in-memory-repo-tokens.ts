@@ -4,13 +4,9 @@ import type { InMemoryApiTokenRepository } from './in-memory-api-token-repositor
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
-import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
-import type { InMemoryChannelHandleHistoryRepository } from './in-memory-channel-handle-history-repository';
-import type { InMemoryChannelImageRepository } from './in-memory-channel-image-repository';
+import { ChannelContentRepo } from './in-memory-channel-content-tokens';
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
-import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
-import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
@@ -36,7 +32,6 @@ import type { InMemoryPlaylistCollaboratorRepository } from './in-memory-playlis
 import type { InMemoryPlaylistLibraryRepository } from './in-memory-playlist-library-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import type { InMemoryPlaylistStatsRepository } from './in-memory-playlist-stats-repository';
-import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -70,6 +65,7 @@ import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
 /** One token per repository, named after the key it is held under. */
 export const Repo = {
+  ...ChannelContentRepo,
   events: token<InMemoryEventRepository>('events'),
   renditions: token<InMemoryRenditionRepository>('renditions'),
   steps: token<InMemoryStepRepository>('steps'),
@@ -121,18 +117,12 @@ export const Repo = {
   videoPasswords: token<InMemoryVideoPasswordRepository>('videoPasswords'),
   videoExperiments: token<InMemoryVideoExperimentRepository>('videoExperiments'),
   videoGenerations: token<InMemoryVideoGenerationRepository>('videoGenerations'),
-  channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   contentLinks: token<InMemoryContentLinkRepository>('contentLinks'),
   contentRefs: token<InMemoryContentRefDirectory>('contentRefs'),
   contentLinkDismissals: token<InMemoryContentLinkDismissalRepository>('contentLinkDismissals'),
   contentLinkStats: token<InMemoryContentLinkStatsRepository>('contentLinkStats'),
   videoEndScreens: token<InMemoryVideoEndScreenRepository>('videoEndScreens'),
-  channelHandleHistory: token<InMemoryChannelHandleHistoryRepository>('channelHandleHistory'),
-  channelImages: token<InMemoryChannelImageRepository>('channelImages'),
-  channelPages: token<InMemoryChannelPageRepository>('channelPages'),
-  channelPosts: token<InMemoryChannelPostRepository>('channelPosts'),
   videoThreads: token<InMemoryVideoThreadRepository>('videoThreads'),
-  postEngagement: token<InMemoryPostEngagement>('postEngagement'),
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),
   liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),

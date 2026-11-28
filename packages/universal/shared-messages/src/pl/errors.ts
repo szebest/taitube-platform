@@ -1,6 +1,7 @@
 import { dt } from '../engine';
 import { channelErrors } from './errors-channels';
 import { commentErrors } from './errors-comments';
+import { layoutErrors } from './errors-layout';
 import { linkErrors } from './errors-links';
 import { playlistErrors } from './errors-playlists';
 import { postErrors } from './errors-posts';
@@ -32,6 +33,7 @@ export const errors = {
   ...channelErrors,
   ...postErrors,
   ...linkErrors,
+  ...layoutErrors,
   ...commentErrors,
   ...playlistErrors,
   reportNotFound: dt('To zgłoszenie nie istnieje.'),

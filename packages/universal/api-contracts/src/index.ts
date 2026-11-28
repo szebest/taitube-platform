@@ -9,6 +9,8 @@ import * as captions from './captions';
 import * as categories from './categories';
 import * as channelFeatured from './channel-featured';
 import * as channelIdentity from './channel-identity';
+import * as channelPage from './channel-page';
+import * as channelPageStudio from './channel-page-studio';
 import * as channelPlaylists from './channel-playlists';
 import * as channelRestrictions from './channel-restrictions';
 import * as channelTeam from './channel-team';
@@ -94,6 +96,9 @@ export * from './captions';
 export * from './categories';
 export * from './channel-featured';
 export * from './channel-identity';
+export * from './channel-layout';
+export * from './channel-page';
+export * from './channel-page-studio';
 export * from './channel-images';
 export * from './channel-playlists';
 export * from './channel-restrictions';
@@ -191,6 +196,8 @@ export const contracts = {
   channelExports,
   channelFeatured,
   channelIdentity,
+  channelPage,
+  channelPageStudio,
   channelPlaylists,
   channelRestrictions,
   channelTeam,

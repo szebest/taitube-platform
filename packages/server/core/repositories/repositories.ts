@@ -7,8 +7,11 @@ import type { ChannelFeaturedRepositoryPort } from './channel-featured-repositor
 import type { ChannelHandleHistoryRepositoryPort } from './channel-handle-history-repository';
 import type { ChannelImageRepositoryPort } from './channel-image-repository';
 import type { ChannelInviteRepositoryPort } from './channel-invite-repository';
+import type { ChannelLayoutRepositoryPort } from './channel-layout-repository';
+import type { ChannelLayoutScheduleRepositoryPort } from './channel-layout-schedule-repository';
 import type { ChannelMemberRepositoryPort } from './channel-member-repository';
 import type { ChannelPageRepositoryPort } from './channel-page-repository';
+import type { ChannelPageSourceRepositoryPort } from './channel-page-source-repository';
 import type { ChannelPostRepositoryPort } from './channel-post-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ChannelUserRestrictionRepositoryPort } from './channel-user-restriction-repository';
@@ -139,6 +142,9 @@ export interface Repositories {
   channelHandleHistory: ChannelHandleHistoryRepositoryPort;
   channelImages: ChannelImageRepositoryPort;
   channelPages: ChannelPageRepositoryPort;
+  channelLayouts: ChannelLayoutRepositoryPort;
+  channelLayoutSchedules: ChannelLayoutScheduleRepositoryPort;
+  channelPageSources: ChannelPageSourceRepositoryPort;
   channelPosts: ChannelPostRepositoryPort;
   postEngagement: PostEngagementRepositoryPort;
   videoThreads: VideoThreadRepositoryPort;
