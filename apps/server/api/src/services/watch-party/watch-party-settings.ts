@@ -19,6 +19,7 @@ import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine, logChange, systemLineFor } from './watch-party-moderation-effects';
 import { requirePrincipal, type Unauthenticated } from './watch-party-principals';
+import { remindersFor } from './watch-party-reminders';
 import { checkRoomInput, type InvalidRoomInput } from './watch-party-room-input';
 import { presentRoom } from './watch-party-room-views';
 import { refreshSearchText } from './watch-party-search-text';
@@ -147,7 +148,8 @@ export async function updateRoom(
     patchOf(body, checked.value, passwordHash.value),
     body.version,
     line,
-    deps.now()
+    deps.now(),
+    remindersFor(context.room, checked.value.scheduledFor, deps.now())
   );
   if (isErr(written)) return written;
   const applied = appliedRoom(written.value, roomId, body.version);

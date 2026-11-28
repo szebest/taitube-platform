@@ -18,7 +18,6 @@ export interface RepositoriesSubject {
   /** Ordering specs place a playlist's last change in the past rather than waiting on a clock. */
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
   /** Hiding a room is a moderation write no port exposes yet; discovery specs hide one directly. */
-  hideWatchParty(id: string, at: Date): Promise<void>;
   /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
   ageNotifications(ms: number): Promise<void>;
   /**
@@ -88,7 +87,6 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
       if (!stored) throw new Error(`playlist ${id} is not there to backdate`);
       stored.updatedAt = updatedAt;
     },
-    hideWatchParty: async (id, at) => repositories.watchPartyRooms.markHidden(id, at),
     ageNotifications: async (ms) => repositories.notifications.age(ms),
     spreadAcrossMicroseconds: async () => {},
     reset: async () => {

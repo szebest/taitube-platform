@@ -79,6 +79,7 @@ import { watchPartyGuestsRoutes } from './watch-party-guests';
 import { watchPartyInvitesRoutes } from './watch-party-invites';
 import { watchPartyMembersRoutes } from './watch-party-members';
 import { watchPartyQueueRoutes } from './watch-party-queue';
+import { watchPartyReportsRoutes } from './watch-party-reports';
 import { watchPartyRolesRoutes } from './watch-party-roles';
 import { watchPartySocketRoutes } from './watch-party-socket';
 import { webhooksRoutes } from './webhooks';
@@ -163,6 +164,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   watchPartyQueueRoutes,
   watchPartyInvitesRoutes,
   watchPartyControlsRoutes,
+  watchPartyReportsRoutes,
   watchPartySocketRoutes,
 ];
 

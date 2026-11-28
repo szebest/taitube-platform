@@ -7,7 +7,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@kit/primitives';
-import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
+import { NOTIFICATION_RETENTION_DAYS, WATCH_PARTY_START_GRACE_MS } from '@vp/domain';
 export * from './screening-tuning';
 
 /**
@@ -229,5 +229,9 @@ export const WATCH_PARTY = {
   scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
   messageRetentionDays: 7,
   closedRoomRetentionDays: 30,
-  sweep: { intervalMs: MS_PER_MINUTE, batchSize: 200, scheduledStartGraceMs: MS_PER_HOUR },
+  sweep: {
+    intervalMs: MS_PER_MINUTE,
+    batchSize: 200,
+    scheduledStartGraceMs: WATCH_PARTY_START_GRACE_MS,
+  },
 } as const;

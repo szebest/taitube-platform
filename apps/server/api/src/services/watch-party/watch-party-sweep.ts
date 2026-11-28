@@ -7,6 +7,7 @@ import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, logChange } from './watch-party-moderation-effects';
 import { handOverAbsentOwner } from './watch-party-owner-grace';
 import { advanceRoom, announceQueue } from './watch-party-playback';
+import { startOrExpire } from './watch-party-scheduled-start';
 import { addToTally, emptyTally, publishTally, type SweepTally } from './watch-party-sweep-gauges';
 
 type SweepDeps = Pick<
@@ -140,6 +141,12 @@ export class WatchPartySweep {
     const available = await this.skipUnavailable(room);
     if (isErr(available)) return available;
 
+    const scheduled = await startOrExpire(this.deps, room, present.value.length, nowMs, (reason) =>
+      this.close(room.id, reason)
+    );
+    if (isErr(scheduled)) return scheduled;
+    if (scheduled.value === 'closed') return ok('closed');
+
     if (present.value.length === 0) {
       this.ownerAbsentSince.delete(room.id);
       return this.closeIfIdle(room, nowMs);
@@ -172,18 +179,24 @@ export class WatchPartySweep {
     nowMs: number
   ): Promise<Result<'kept' | 'closed', SweepFailure>> {
     const reason = idleCloseReason(room, nowMs, this.deps.config.sweep.scheduledStartGraceMs);
-    if (reason === null) return ok('kept');
+    return reason === null ? ok('kept') : this.close(room.id, reason);
+  }
+
+  private async close(
+    roomId: string,
+    reason: WatchPartyCloseReason
+  ): Promise<Result<'kept' | 'closed', SweepFailure>> {
     const written = await this.deps.repositories.watchPartyRooms.close(
-      room.id,
+      roomId,
       reason,
       null,
       this.deps.now()
     );
     if (isErr(written)) return written;
     if (written.value.type !== 'applied') return ok('kept');
-    logChange(this.deps, { roomId: room.id, actorKey: 'system', action: `close.${reason}` });
-    await announce(this.deps, room.id, { type: 'closed', reason });
-    await this.deps.discovery.closed(room.id);
+    logChange(this.deps, { roomId, actorKey: 'system', action: `close.${reason}` });
+    await announce(this.deps, roomId, { type: 'closed', reason });
+    await this.deps.discovery.closed(roomId);
     return ok('closed');
   }
 

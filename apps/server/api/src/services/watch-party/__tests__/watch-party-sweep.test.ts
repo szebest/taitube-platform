@@ -29,6 +29,8 @@ async function present(party: Party, ...keys: string[]) {
   }
 }
 
+const sweepOf = (party: Party) => new WatchPartySweep(party.deps);
+
 const roomWith = (overrides: Partial<WatchPartyRoom>) => ({
   idleClose: '15m' as const,
   scheduledFor: null,
@@ -78,8 +80,6 @@ describe('idleCloseReason', () => {
 });
 
 describe('the watch party sweep', () => {
-  const sweepOf = (party: Party) => new WatchPartySweep(party.deps);
-
   it('records who is present and leaves a room with people in it open', async () => {
     const party = await socketRoom();
     await present(party, keyOf(OWNER));

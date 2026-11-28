@@ -1,7 +1,9 @@
-import { ok, type Result } from '@kit/result';
+import { isErr, map, ok, type Result } from '@kit/result';
 import type {
   DiscoverableRoom,
+  NewOutboxInput,
   NewSystemLine,
+  OutboxRepository,
   OwnerTransfer,
   PlaybackChange,
   RoomWrite,
@@ -38,11 +40,12 @@ function definedOnly<T extends object>(patch: T): Partial<T> {
 export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositoryPort {
   constructor(
     private readonly store: InMemoryWatchPartyStore,
-    private readonly lookups: DiscoveryLookups
+    private readonly lookups: DiscoveryLookups,
+    private readonly outbox: Pick<OutboxRepository, 'enqueue'>
   ) {}
 
   async create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>> {
-    const { room, roles, owner, queue } = seed;
+    const { room, roles, owner, queue, reminders = [] } = seed;
     const created: WatchPartyRoom = {
       ...room,
       phase: room.playback.phase,
@@ -83,7 +86,8 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
         removedAt: null,
       });
     }
-    return ok(copyOf(created));
+    const queued = await this.enqueueAll(reminders);
+    return map(queued, () => copyOf(created));
   }
 
   async findById(id: string): Promise<Result<WatchPartyRoom | null, DatabaseUnavailable>> {
@@ -116,32 +120,28 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
     return ok();
   }
 
-  /** Hiding a room is a moderation write no port exposes yet; discovery specs hide one directly. */
-  markHidden(id: string, at: Date): void {
-    const room = this.store.rooms.get(id);
-    if (room) this.store.rooms.set(id, { ...room, hiddenAt: at });
-  }
-
   async updateSettings(
     id: string,
     patch: SettingsPatch,
     expectedVersion: number,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    reminders: readonly NewOutboxInput[] = []
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return ok(
-      this.apply(
-        id,
-        (room) => room.version === expectedVersion,
-        (room) => ({
-          ...room,
-          ...definedOnly(patch),
-          version: room.version + 1,
-          updatedAt: at,
-        }),
-        line
-      )
+    const written = this.apply(
+      id,
+      (room) => room.version === expectedVersion,
+      (room) => ({
+        ...room,
+        ...definedOnly(patch),
+        version: room.version + 1,
+        updatedAt: at,
+      }),
+      line
     );
+    if (written.type !== 'applied') return ok(written);
+    const queued = await this.enqueueAll(reminders);
+    return map(queued, () => written);
   }
 
   async commitPlayback(
@@ -266,6 +266,16 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
 
   clear(): void {
     this.store.clear();
+  }
+
+  private async enqueueAll(
+    items: readonly NewOutboxInput[]
+  ): Promise<Result<void, DatabaseUnavailable>> {
+    for (const item of items) {
+      const queued = await this.outbox.enqueue(item);
+      if (isErr(queued)) return queued;
+    }
+    return ok();
   }
 
   private apply(

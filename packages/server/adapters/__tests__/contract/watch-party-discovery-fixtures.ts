@@ -5,6 +5,7 @@ import {
   type WatchPartyDiscoveryFilters,
   type WatchPartyDiscoveryQuery,
   watchPartySearchText,
+  REPORTS_TO_HIDE_ROOM,
 } from '@vp/domain';
 import {
   CATEGORY_GAMING_ID,
@@ -18,6 +19,7 @@ import {
   VIDEO_IDS,
 } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
+import { accountId, numberedId } from './watch-party-activity-fixtures';
 import { AT, later, OTHER_KEY, OWNER_KEY, roomSeed } from './watch-party-fixtures';
 
 export const NOW = later(10);
@@ -193,6 +195,36 @@ async function seedRoom(subject: RepositoriesSubject, plan: RoomPlan): Promise<v
   if (plan.close) expectOk(await repositories.watchPartyRooms.close(id, 'owner', null, AT));
 }
 
+/** The real hide path: the third open room report from a distinct account takes the room out of the list. */
+async function hideByReports(subject: RepositoriesSubject, roomId: string): Promise<void> {
+  const { repositories } = subject;
+  for (let n = 3; n < 3 + REPORTS_TO_HIDE_ROOM; n++) {
+    const reporterId = accountId(n);
+    expectOk(
+      await repositories.users.upsert({
+        id: reporterId,
+        email: `reporter${n}@video-pipeline.local`,
+      })
+    );
+    expectOk(
+      await repositories.watchPartyReports.file(
+        {
+          id: numberedId(13, n),
+          roomId,
+          reporterId,
+          targetKey: null,
+          context: 'room',
+          reason: 'spam',
+          details: null,
+          createdAt: AT,
+        },
+        REPORTS_TO_HIDE_ROOM,
+        AT
+      )
+    );
+  }
+}
+
 /** Every plan above as rooms, the videos they play, the hidden and the banned-from one. */
 export async function seedDiscoveryWorld(subject: RepositoriesSubject): Promise<void> {
   const { repositories } = subject;
@@ -205,7 +237,7 @@ export async function seedDiscoveryWorld(subject: RepositoriesSubject): Promise<
   ];
   for (const video of videos) await subject.seedVideo(publicVideo(video));
   for (const plan of PLANS) await seedRoom(subject, plan);
-  await subject.hideWatchParty(room(10), AT);
+  await hideByReports(subject, room(10));
   expectOk(
     await repositories.watchPartyMembers.ban(
       {

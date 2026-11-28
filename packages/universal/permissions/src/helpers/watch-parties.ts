@@ -63,6 +63,15 @@ export function canCreateWatchParty(user: UserContext | null): boolean {
   return getUserPermissions(user).can('create', 'WatchParty');
 }
 
+export function canReportWatchParty(user: UserContext | null, room: WatchPartyResource): boolean {
+  return getUserPermissions(user).can('report', subject('WatchParty', { ...room }));
+}
+
+export function canModerateWatchParties(user: UserContext | null): boolean {
+  const ability = getUserPermissions(user);
+  return ability.can('close', 'WatchParty') && ability.can('restore', 'WatchParty');
+}
+
 export function canReadWatchParty(user: UserContext | null, room: WatchPartyResource): boolean {
   return getUserPermissions(user).can('read', subject('WatchParty', { ...room }));
 }

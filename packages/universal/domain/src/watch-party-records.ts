@@ -119,3 +119,24 @@ export interface PersonalControlRecord extends PersonalControl {
   readonly userId: string;
   readonly updatedAt: Date;
 }
+
+export const WATCH_PARTY_REPORT_REASONS = ['spam', 'abuse', 'sexual', 'violence', 'other'] as const;
+export type WatchPartyReportReason = (typeof WATCH_PARTY_REPORT_REASONS)[number];
+
+export const WATCH_PARTY_REPORT_CONTEXTS = ['room', 'chat', 'voice'] as const;
+export type WatchPartyReportContext = (typeof WATCH_PARTY_REPORT_CONTEXTS)[number];
+
+/** Open room reports from distinct accounts that take a room out of discovery until a moderator restores it. */
+export const REPORTS_TO_HIDE_ROOM = 3;
+
+export interface WatchPartyReport {
+  readonly id: string;
+  readonly roomId: string;
+  readonly reporterId: string;
+  /** A member key; `null` reports the room itself. */
+  readonly targetKey: string | null;
+  readonly context: WatchPartyReportContext;
+  readonly reason: WatchPartyReportReason;
+  readonly details: string | null;
+  readonly createdAt: Date;
+}

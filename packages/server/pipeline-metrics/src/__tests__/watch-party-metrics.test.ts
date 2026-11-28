@@ -19,6 +19,8 @@ describe('createWatchPartyMetrics', () => {
     metrics.watchPartyFanoutSeconds.observe(0.02);
     metrics.watchPartyChatMessagesTotal.inc({ source: 'app', outcome: 'sent' });
     metrics.watchPartyInvitesTotal.inc({ outcome: 'folded' });
+    metrics.watchPartyReportsTotal.inc({ outcome: 'hidden' });
+    metrics.watchPartyScheduledStartsTotal.inc({ outcome: 'started' });
     metrics.watchPartyClockSkewSeconds.set(0.01);
 
     const scrape = await registry.metrics();
@@ -39,6 +41,8 @@ describe('createWatchPartyMetrics', () => {
         'watch_party_fanout_seconds_count 1',
         'watch_party_chat_messages_total{source="app",outcome="sent"} 1',
         'watch_party_invites_total{outcome="folded"} 1',
+        'watch_party_reports_total{outcome="hidden"} 1',
+        'watch_party_scheduled_starts_total{outcome="started"} 1',
         'watch_party_clock_skew_seconds 0.01',
       ])
     );

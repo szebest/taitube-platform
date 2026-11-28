@@ -2,6 +2,7 @@ import { MS_PER_HOUR } from '@kit/primitives';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { WATCH_PARTY_PERMISSIONS_VERSION } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
+import { NOTIFY_PARTY_REMINDER } from '@vp/job-contracts';
 import { createRoom } from '../watch-party-create';
 import { OWNER_KEY, setUpCreate } from './watch-party-create-fixture';
 import {
@@ -244,4 +245,54 @@ describe('apps/server/api/services: createRoom', () => {
     clock.advance(MS_PER_HOUR);
     expectOk(await create());
   });
+
+  it.each([
+    {
+      scenario: 'a scheduled room',
+      scheduledFor: 60,
+      autoStart: undefined,
+      expectedAutoStart: true,
+      reminders: 2,
+    },
+    {
+      scenario: 'a scheduled room that opts out of auto start',
+      scheduledFor: 60,
+      autoStart: false,
+      expectedAutoStart: false,
+      reminders: 2,
+    },
+    {
+      scenario: 'a room scheduled inside ten minutes',
+      scheduledFor: 6,
+      autoStart: undefined,
+      expectedAutoStart: true,
+      reminders: 1,
+    },
+    {
+      scenario: 'a room with no schedule',
+      scheduledFor: null,
+      autoStart: undefined,
+      expectedAutoStart: false,
+      reminders: 0,
+    },
+  ])(
+    'queues the reminders of $scenario and starts it itself: $expectedAutoStart',
+    async ({ scheduledFor, autoStart, expectedAutoStart, reminders }) => {
+      const { create, repositories, deps } = await setUpCreate();
+      const startsAt =
+        scheduledFor === null
+          ? null
+          : new Date(deps.now().getTime() + scheduledFor * 60_000).toISOString();
+
+      const view = expectOk(await create(partyBody({ scheduledFor: startsAt, autoStart })));
+
+      expect(view.autoStart).toBe(expectedAutoStart);
+      const queued = expectOk(await repositories.outbox.claimBatch(10));
+      expect(
+        queued.filter(
+          ({ payload }) => payload.type === 'queue' && payload.job.name === NOTIFY_PARTY_REMINDER
+        )
+      ).toHaveLength(reminders);
+    }
+  );
 });

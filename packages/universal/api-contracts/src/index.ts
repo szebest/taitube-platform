@@ -75,9 +75,11 @@ import * as watchParties from './watch-parties';
 import * as watchPartyControls from './watch-party-controls';
 import * as watchPartyDiscovery from './watch-party-discovery';
 import * as watchPartyGuests from './watch-party-guests';
+import * as watchPartyInterest from './watch-party-interest';
 import * as watchPartyInvites from './watch-party-invites';
 import * as watchPartyMembers from './watch-party-members';
 import * as watchPartyQueue from './watch-party-queue';
+import * as watchPartyReports from './watch-party-reports';
 import * as watchPartyRoles from './watch-party-roles';
 import * as watchPartySocket from './watch-party-socket';
 import * as webhooks from './webhooks';
@@ -167,9 +169,11 @@ export * from './watch-parties';
 export * from './watch-party-controls';
 export * from './watch-party-discovery';
 export * from './watch-party-guests';
+export * from './watch-party-interest';
 export * from './watch-party-invites';
 export * from './watch-party-members';
 export * from './watch-party-queue';
+export * from './watch-party-reports';
 export * from './watch-party-resource';
 export * from './watch-party-roles';
 export * from './watch-party-socket';
@@ -251,9 +255,11 @@ export const contracts = {
   watchPartyControls,
   watchPartyDiscovery,
   watchPartyGuests,
+  watchPartyInterest,
   watchPartyInvites,
   watchPartyMembers,
   watchPartyQueue,
+  watchPartyReports,
   watchPartyRoles,
   watchPartySocket,
   webhooks,
