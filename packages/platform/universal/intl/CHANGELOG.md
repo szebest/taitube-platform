@@ -33,6 +33,10 @@
   collapses past `max` into the caller's plural `more` branches (no copy of its own; `max` without `more` fails
   to compile and declines), and its `parts`, through `runParts`, return a `ListDetail`. A kind may define
   `parts` beside `render`.
+- `duration` takes `days` (whole days instead of 24-hour hours) and the fallback renders them; the fallback is held to
+  the native `Intl.DurationFormat` over 17 locales, 6 option sets and 6 durations.
+- New kinds `initials`, `capitalize`, `timeZone` and `isolate`, in `formatKinds`, and `parseDecimal(text, context)`, which
+  reads a typed number by the locale's grouping, decimal and numerals and returns a `Result`.
 
 ## 0.4.0
 

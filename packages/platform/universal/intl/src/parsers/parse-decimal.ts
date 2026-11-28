@@ -49,6 +49,7 @@ function canonical(text: string, { digitOf }: Symbols): string {
  * The number a person typed, read by the viewer's locale: its grouping and decimal symbols and
  * its numerals (`1 234,5` in `pl` and `1,234.5` in `en` are both `1234.5`). Grouping, when
  * typed, must be the locale's own, so `12,3,4` is declined instead of read as `1234`.
+ * @public
  */
 export function parseDecimal(text: string, context: FormatContext): Result<number, FormatFailure> {
   const decline = (reason: string) => err(unrenderable('parseDecimal', `${text}: ${reason}`));

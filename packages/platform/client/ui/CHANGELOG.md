@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0
+## 0.5.0
 
 - `MoreDisclosure`: inline text that opens a popover on click, tap, keyboard focus and a resting mouse (`pointerType`
   mouse only, after `openDelay`), and closes on Escape, an outside press, blur and the mouse leaving. It prints no

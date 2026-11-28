@@ -4,13 +4,13 @@
 ## @kit/components
 export const AccountMenu: MenuParts & { Trigger: typeof AccountMenuTrigger; Item: typeof AccountMenuItem; }
 export interface AccountMenuTriggerProps extends ComponentPropsWithRef<'button'> {
-    name: string;
+    initials: string;
     imageUrl?: string | null;
     accent?: AccentRingAccent;
 }
-export const ActingAs: { Root: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Avatar: ({ name, imageUrl, accent }: ActingAsAvatarProps) => JSX.Element; Label: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Switch: (props: ComponentPropsWithRef<"button">) => JSX.Element; }
+export const ActingAs: { Root: ({ className, ...props }: ComponentPropsWithRef<"p">) => JSX.Element; Avatar: ({ initials, imageUrl, accent }: ActingAsAvatarProps) => JSX.Element; Label: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Switch: (props: ComponentPropsWithRef<"button">) => JSX.Element; }
 export interface ActingAsAvatarProps {
-    name: string;
+    initials: string;
     imageUrl?: string | null;
     accent: AccentRingAccent;
 }
@@ -51,9 +51,9 @@ export interface ErrorStateRootProps extends ComponentPropsWithRef<'div'> {
     retrying?: boolean;
 }
 export const IDENTITY_ITEM: "data-identity-item"
-export const IdentityRow: { Root: ({ current, expired, className, ...props }: IdentityRowRootProps) => JSX.Element; Avatar: ({ name, imageUrl, accent }: IdentityRowAvatarProps) => JSX.Element; Text: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Name: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Detail: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Unread: (props: ComponentPropsWithRef<"span">) => JSX.Element; Check: ({ className }: { className?: string; }) => JSX.Element; }
+export const IdentityRow: { Root: ({ current, expired, className, ...props }: IdentityRowRootProps) => JSX.Element; Avatar: ({ initials, imageUrl, accent }: IdentityRowAvatarProps) => JSX.Element; Text: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Name: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Detail: ({ className, ...props }: ComponentPropsWithRef<"span">) => JSX.Element; Unread: (props: ComponentPropsWithRef<"span">) => JSX.Element; Check: ({ className }: { className?: string; }) => JSX.Element; }
 export interface IdentityRowAvatarProps {
-    name: string;
+    initials: string;
     imageUrl?: string | null;
     accent?: AccentRingAccent;
 }
