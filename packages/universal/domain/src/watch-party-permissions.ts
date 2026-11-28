@@ -100,9 +100,6 @@ export const WATCH_PARTY_PERMISSIONS_VERSION = Math.max(
   ...WATCH_PARTY_PERMISSIONS.map((entry) => entry.since)
 );
 
-/** Permissions the server's enforcement spec asks no case of yet: a new entry names itself here until its case lands. */
-export const PENDING_ENFORCEMENT: readonly WatchPartyPermission[] = [];
-
 /** A guest's permissions are clamped to these after every role and every row, whatever the database says. */
 export const GUEST_CEILING: readonly WatchPartyPermission[] = ['voice.join'];
 

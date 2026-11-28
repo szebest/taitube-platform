@@ -282,7 +282,11 @@ export function toAppConfig(env: AppEnv): AppConfig {
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
     }),
-    watchParties: watchPartyConfig(env),
+    watchParties: watchPartyConfig({
+      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
+      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
+      guestSalt: env.WATCH_PARTY_GUEST_SALT,
+    }),
     voice: voiceConfig(env),
     worker: {
       stage: env.WORKER_STAGE,

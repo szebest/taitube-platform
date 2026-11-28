@@ -1,14 +1,7 @@
 import { expectOk } from '@kit/testing/result';
-import {
-  PENDING_ENFORCEMENT,
-  WATCH_PARTY_PERMISSIONS,
-  type WatchPartyPermission,
-} from '@vp/domain';
+import { WATCH_PARTY_PERMISSIONS, type WatchPartyPermission } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { PartyCaller } from '../party-caller';
-import { voiceOn } from '../voice/__tests__/voice-fixture';
-import { removeFromVoice } from '../voice/voice-moderation';
-import { mintVoiceToken } from '../voice/voice-token';
 import { pinChat, removeChat, sendChat } from '../watch-party-chat';
 import { runCommand } from '../watch-party-commands';
 import { WatchPartyInviteService } from '../watch-party-invite-service';
@@ -101,7 +94,7 @@ async function abilityOf(party: Party, caller: PartyCaller) {
   return expectOk(await party.deps.context.load(ROOM_ID, caller)).ability;
 }
 
-const ENFORCEMENT: Readonly<Partial<Record<WatchPartyPermission, Enforcement>>> = {
+const ENFORCEMENT: Readonly<Record<WatchPartyPermission, Enforcement>> = {
   'playback.control': {
     before: (party) => party.play().then(() => undefined),
     attempt: command('pause'),
@@ -268,13 +261,7 @@ describe('each permission is enforced on the server', () => {
   it.each(WATCH_PARTY_PERMISSIONS.map(({ id }) => ({ id })))(
     '$id refuses a member without it and lets one with it through',
     async ({ id }) => {
-      const enforcement = ENFORCEMENT[id];
-      if (enforcement === undefined) {
-        expect(PENDING_ENFORCEMENT).toContain(id);
-        return;
-      }
-      expect(PENDING_ENFORCEMENT).not.toContain(id);
-      const { alongside = [], before, attempt, refusal } = enforcement;
+      const { alongside = [], before, attempt, refusal } = ENFORCEMENT[id];
 
       const without = await socketRoom({ preset: 'public', members: [MEMBER, OTHER] });
       await stripMember(without);

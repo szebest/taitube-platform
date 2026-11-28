@@ -354,6 +354,11 @@ components:
             - 1h
             - 24h
             - never
+        voiceMode:
+          type: string
+          enum:
+            - open
+            - push_to_talk
         language:
           type:
             - string
@@ -460,6 +465,7 @@ components:
         - autoplay
         - skipVotePercent
         - idleClose
+        - voiceMode
         - language
         - accent
         - scheduledFor
@@ -2034,6 +2040,11 @@ components:
             - 1h
             - 24h
             - never
+        voiceMode:
+          type: string
+          enum:
+            - open
+            - push_to_talk
         language:
           type:
             - string
@@ -2215,6 +2226,7 @@ components:
         - autoplay
         - skipVotePercent
         - idleClose
+        - voiceMode
         - language
         - accent
         - scheduledFor
@@ -2277,6 +2289,28 @@ components:
         - blockInvites
         - favourite
       description: What the viewer chose about one member, for themselves only
+    WatchPartyVoiceTokenInput:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The WebSocket URL to connect to
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+          description: When the token stops admitting a join
+        canSpeak:
+          type: boolean
+          description: 'false: a listener, whatever the roles say'
+      required:
+        - url
+        - token
+        - expiresAt
+        - canSpeak
+      description: What a client needs to join the room voice
     BannerLink:
       type: object
       properties:
@@ -2619,6 +2653,11 @@ components:
             - 1h
             - 24h
             - never
+        voiceMode:
+          type: string
+          enum:
+            - open
+            - push_to_talk
         language:
           type:
             - string
@@ -2726,6 +2765,7 @@ components:
         - autoplay
         - skipVotePercent
         - idleClose
+        - voiceMode
         - language
         - accent
         - scheduledFor
@@ -4351,6 +4391,11 @@ components:
             - 1h
             - 24h
             - never
+        voiceMode:
+          type: string
+          enum:
+            - open
+            - push_to_talk
         language:
           type:
             - string
@@ -4535,6 +4580,7 @@ components:
         - autoplay
         - skipVotePercent
         - idleClose
+        - voiceMode
         - language
         - accent
         - scheduledFor
@@ -4599,6 +4645,29 @@ components:
         - favourite
       additionalProperties: false
       description: What the viewer chose about one member, for themselves only
+    WatchPartyVoiceToken:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The WebSocket URL to connect to
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+          description: When the token stops admitting a join
+        canSpeak:
+          type: boolean
+          description: 'false: a listener, whatever the roles say'
+      required:
+        - url
+        - token
+        - expiresAt
+        - canSpeak
+      additionalProperties: false
+      description: What a client needs to join the room voice
 paths:
   /healthz:
     get:
@@ -33448,6 +33517,8 @@ paths:
                             - WATCH_PARTY_CHAT_OFF
                             - WATCH_PARTY_TICKET_INVALID
                             - WATCH_PARTY_CREDENTIAL_INVALID
+                            - WATCH_PARTY_VOICE_SPEAKERS_FULL
+                            - WATCH_PARTY_VOICE_UNAVAILABLE
                             - PLAYLIST_IS_SMART
                             - PLAYLIST_NOT_SMART
                             - PLAYLIST_HAS_COLLABORATORS
@@ -85754,6 +85825,11 @@ paths:
                     - 1h
                     - 24h
                     - never
+                voiceMode:
+                  type: string
+                  enum:
+                    - open
+                    - push_to_talk
                 language:
                   anyOf:
                     - type: string
@@ -86288,6 +86364,11 @@ paths:
                     - 1h
                     - 24h
                     - never
+                voiceMode:
+                  type: string
+                  enum:
+                    - open
+                    - push_to_talk
                 language:
                   anyOf:
                     - type: string
@@ -93058,6 +93139,462 @@ paths:
                     type: string
                     enum:
                       - CACHE_UNAVAILABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/watch-parties/{id}/voice/token:
+    post:
+      summary: Voice token
+      tags:
+        - Watch parties
+      description: 'Mints a ten-minute join token whose grants follow the caller roles: voice.join to listen, voice.speak to publish audio, a guest never publishes. With the speaker list full, a caller who could speak gets 409 and asks again with listenOnly.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                listenOnly:
+                  type: boolean
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchPartyVoiceToken'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_PERMISSION_MISSING
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_VOICE_SPEAKERS_FULL
+                      - WATCH_PARTY_CLOSED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '503':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_VOICE_UNAVAILABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/watch-parties/{id}/voice/members/{memberKey}/remove:
+    post:
+      summary: Remove from voice
+      tags:
+        - Watch parties
+      description: Disconnects a member below you from voice only (voice.moderate); they stay in the room and may join voice again.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            pattern: ^(user|discord|guest):[A-Za-z0-9_-]{1,64}$
+          in: path
+          name: memberKey
+          required: true
+          description: '`user:<uuid>`, `discord:<snowflake>` or `guest:<id>`'
+      responses:
+        '204':
+          description: Default Response
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_PERMISSION_MISSING
+                      - WATCH_PARTY_ROLE_ESCALATION
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '503':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - WATCH_PARTY_VOICE_UNAVAILABLE
                     description: Machine-readable error code
                   instance:
                     type: string
