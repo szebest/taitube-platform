@@ -62,3 +62,11 @@ dt('{price:number}', { number: { price: { maximumFractionDigits: 'one' } } });
 
 // @ts-expect-error UnknownPreset: date has no presets
 dt('{when:date}', { date: { when: 'compact' } });
+
+const prices = dt('From {names:list}', {
+  list: { names: { item: { kind: 'money' }, max: 2, more: { other: '{?} more' } } },
+});
+expectTypeOf<ParamsOf<typeof prices>>().toEqualTypeOf<{ readonly names: readonly number[] }>();
+
+// @ts-expect-error a collapsed list needs its more copy
+dt('In {names:list}', { list: { names: { max: 2 } } });

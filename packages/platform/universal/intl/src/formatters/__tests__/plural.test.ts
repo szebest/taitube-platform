@@ -1,8 +1,8 @@
 import { contextFor } from '../../__tests__/fixtures';
-import { pluralCategory } from '../plural';
+import { createIntl } from '../../create-intl';
 
 function category(locale: string, count: number, type?: Intl.PluralRuleType) {
-  const selected = pluralCategory(count, contextFor(locale), type);
+  const selected = createIntl(contextFor(locale)).call('pluralCategory', count, { type });
   return selected.ok ? selected.value : selected.error.code;
 }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Breaking: `AccountMenu.Trigger`, `ActingAs.Avatar` and `IdentityRow.Avatar` take `initials` instead of `name`: the caller renders the `initials` kind of `@kit/intl`, so the monogram follows the viewer's language and whole graphemes.
+
 ## 0.3.0
 
 - `SpriteStrip`, `spriteFrameStyle`, `SpriteSheet` and `SpriteStripShade`: the frames of a video side by side from its thumbnail sprite sheet, with an optional shade outside a range.

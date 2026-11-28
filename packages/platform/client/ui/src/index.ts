@@ -62,6 +62,7 @@ export * from './primitives/input';
 export * from './primitives/kbd';
 export * from './primitives/label';
 export * from './primitives/logo';
+export * from './primitives/more-disclosure';
 export * from './primitives/platform-icon';
 export * from './primitives/popover';
 export * from './primitives/progress';

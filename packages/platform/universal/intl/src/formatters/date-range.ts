@@ -1,26 +1,32 @@
 import { andThen, map } from '@kit/result';
+import { DATE_RESOLUTION, resolveDateOptions } from '../format-instant';
 import { parseInstant } from '../inputs';
-import { withOptions } from '../with-options';
-import { DATE_OPTION_KEYS, type DateOptions, dateFormatOptions } from './date';
+import { type TaggedOf, defineKind, optionKeys } from '../kind';
+import { DATE_TIME_OPTION_KEYS, type DateTimeOptions } from './date-time';
 
-export interface DateRangeValue {
-  readonly type: 'dateRange';
-  readonly value: readonly [string, string];
-  readonly options?: DateOptions;
-}
+const isStringPair = (value: unknown): value is readonly [string, string] =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  value.every((end: unknown) => typeof end === 'string');
 
-export const dateRange = withOptions<DateRangeValue>(
-  'dateRange',
-  DATE_OPTION_KEYS,
-  (value, context) => {
-    const [start, end] = value.value;
-    const options = { ...dateFormatOptions(value.options), timeZone: context.timeZone };
+export const dateRange = defineKind({
+  name: 'dateRange',
+  arg: isStringPair,
+  options: optionKeys<DateTimeOptions>(DATE_TIME_OPTION_KEYS),
+  render: ([start, end], options, context) => {
+    const intlOptions = {
+      timeZone: context.timeZone,
+      ...resolveDateOptions(options ?? {}, DATE_RESOLUTION),
+    };
     return andThen(parseInstant('dateRange', start), (from) =>
       andThen(parseInstant('dateRange', end), (to) =>
-        map(context.cache.dateTimeFormat(context.locale, options), (format) =>
+        map(context.cache.dateTimeFormat(context.locale, intlOptions), (format) =>
           format.formatRange(from, to)
         )
       )
     );
-  }
-);
+  },
+});
+
+/** @public */
+export type DateRangeValue = TaggedOf<typeof dateRange>;

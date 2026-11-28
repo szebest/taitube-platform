@@ -13,6 +13,7 @@ type Story = StoryObj<typeof meta>;
 const ROWS = [
   {
     name: 'Ada Lovelace',
+    initials: 'AL',
     detail: '@ada',
     accent: 1,
     current: true,
@@ -21,6 +22,7 @@ const ROWS = [
   },
   {
     name: 'Analytical Engines',
+    initials: 'AE',
     detail: '@engines',
     accent: 3,
     current: false,
@@ -29,6 +31,7 @@ const ROWS = [
   },
   {
     name: 'Byron Reads',
+    initials: 'BR',
     detail: 'Session expired, sign in',
     accent: 5,
     current: false,
@@ -43,7 +46,7 @@ export const States: Story = {
       {ROWS.map((row) => (
         <li key={row.name}>
           <IdentityRow.Root current={row.current} expired={row.expired}>
-            <IdentityRow.Avatar name={row.name} accent={row.accent} />
+            <IdentityRow.Avatar initials={row.initials} accent={row.accent} />
             <IdentityRow.Text>
               <IdentityRow.Name>{row.name}</IdentityRow.Name>
               <IdentityRow.Detail>{row.detail}</IdentityRow.Detail>

@@ -29,6 +29,29 @@ describe('@kit/i18n: createTranslator', () => {
     });
   });
 
+  it('hands a list back as parts that join to what t renders', () => {
+    const translator = translatorFor('en');
+    const args = { names: ['Action', 'Comedy', 'Drama', 'Horror'] };
+    const parts = translator.parts('videos.genres', args);
+    const joined =
+      parts.ok &&
+      parts.value.map((part) => (part.type === 'text' ? part.text : part.detail.text)).join('');
+
+    expect(parts).toEqual({
+      ok: true,
+      value: [
+        { type: 'text', text: 'In ' },
+        {
+          type: 'list',
+          name: 'names',
+          detail: expect.objectContaining({ hidden: ['Drama', 'Horror'], total: 4 }),
+        },
+      ],
+    });
+    expect(translator.t('videos.genres', args)).toEqual({ ok: true, value: joined });
+    expect(translator.partsOr('videos.genres', args, [])).toEqual(parts.ok && parts.value);
+  });
+
   it('renders a message that takes no arguments with none', () => {
     expect(translatorFor('en').t('errors.forbidden')).toEqual({ ok: true, value: 'Not allowed.' });
   });

@@ -40,7 +40,11 @@ export function IdentityEntryRow({
 
   return (
     <IdentityRow.Root current={entry.current} expired={entry.expired}>
-      <IdentityRow.Avatar name={entry.name} imageUrl={entry.avatarUrl} accent={entry.accent} />
+      <IdentityRow.Avatar
+        initials={unwrapOr(format({ type: 'initials', value: entry.name }), '')}
+        imageUrl={entry.avatarUrl}
+        accent={entry.accent}
+      />
       <IdentityRow.Text>
         <IdentityRow.Name>{entry.name}</IdentityRow.Name>
         {detail && <IdentityRow.Detail>{detail}</IdentityRow.Detail>}

@@ -1,22 +1,22 @@
-import type { PresetTable } from '@kit/intl';
-import type { ConfigKey, EntryOf, Kind } from './kind';
+import type { ArgOf, FormatKinds, OptionsOf, PresetTable } from '@kit/intl';
+import type { ConfigKey, EntryOf, MessageKind } from './kind';
 import type { InvalidParamName, IsCamelCase } from './params';
 import type { Placeholder } from './template';
 
 /** What an engine was defined with, as types: its kinds by name, its presets, its param names. */
 export interface EngineTypes {
-  readonly kinds: { readonly [name: string]: Kind };
+  readonly kinds: { readonly [name: string]: MessageKind };
   readonly presets: PresetTable;
   readonly params: string;
 }
 
-type KindsByName<Kinds extends readonly Kind[]> = {
+type KindsByName<Kinds extends readonly MessageKind[]> = {
   readonly [K in Kinds[number] as K['name']]: K;
 };
 
 /** The types of the engine `defineEngine` builds from these kinds, presets and param names. */
 export interface EngineOf<
-  Kinds extends readonly Kind[],
+  Kinds extends readonly MessageKind[],
   Presets extends PresetTable,
   Params extends readonly string[],
 > {
@@ -41,8 +41,8 @@ export type MissingConfig<Template extends string> = `MissingConfig<'${Template}
 export type PlaceholderInBranch<Token extends string> = `PlaceholderInBranch<'${Token}'>`;
 
 type KindAt<E extends EngineTypes, K> = K extends keyof E['kinds'] ? E['kinds'][K] : never;
-type ArgOfKind<Kd extends Kind> = NonNullable<Kd['types']>['arg'];
-type OptionsOfKind<Kd extends Kind> = NonNullable<Kd['types']>['options'];
+type ArgOfKind<Kd extends MessageKind> = ArgOf<Kd>;
+type OptionsOfKind<Kd extends MessageKind> = OptionsOf<Kd>;
 type PresetNames<E extends EngineTypes, K> = K extends keyof E['presets']
   ? keyof E['presets'][K] & string
   : never;
@@ -181,10 +181,22 @@ export type CheckConfig<C, P extends readonly Placeholder[], E extends EngineTyp
 
 type EntryIn<C, K, N> = K extends keyof C ? (N extends keyof C[K] ? C[K][N] : never) : never;
 
+/** The argument of a `@kit/intl` kind by name, `unknown` for one only the app's registry holds. */
+type FormatArg<K> = K extends FormatKinds[number]['name']
+  ? ArgOf<Extract<FormatKinds[number], { readonly name: K }>>
+  : unknown;
+
+/** An entry naming `item: { kind }` takes a list of that kind's arguments: `item: { kind: 'money' }`, numbers. */
+type ItemsOr<Entry, Arg> = [Entry] extends [never]
+  ? Arg
+  : Entry extends { readonly item: { readonly kind: infer K } }
+    ? readonly FormatArg<K>[]
+    : Arg;
+
 type ArgFor<H extends Placeholder, C, E extends EngineTypes> = H['kind'] extends string
   ? [ArgOfKind<KindAt<E, H['kind']>>] extends [ConfigKey]
     ? keyof EntryIn<C, H['kind'], H['name']> & string
-    : ArgOfKind<KindAt<E, H['kind']>>
+    : ItemsOr<EntryIn<C, H['kind'], H['name']>, ArgOfKind<KindAt<E, H['kind']>>>
   : string | number;
 
 /** The argument object a template asks for, one field per placeholder name, typed by its kind. */
@@ -192,13 +204,26 @@ export type ArgsFor<P extends readonly Placeholder[], C, E extends EngineTypes> 
   readonly [H in P[number] as H['name']]: ArgFor<H, C, E>;
 };
 
-/** Presets whose options each fit their kind's, for kinds the engine lists. */
-export type PresetsFor<Presets, Kinds extends readonly Kind[]> = {
+/** Exactly the kind's options: a key the kind does not take fails, named. */
+type OwnOptions<Entry, Options> = {
+  readonly [O in keyof Entry]: O extends keyof Options
+    ? Options[O]
+    : Fails<UnknownOption<O & string>>;
+};
+
+/** `default` holds the kind's options; a locale overrides some of them, and nothing else. */
+type PresetEntry<Entry, Options, Locale> = OwnOptions<Entry, Options> &
+  (Locale extends 'default' ? Options : Partial<Options>);
+
+/** Presets whose options each fit their kind's, for kinds the engine lists; a locale overrides part of `default`. */
+export type PresetsFor<Presets, Kinds extends readonly MessageKind[]> = {
   readonly [K in keyof Presets]: K extends Kinds[number]['name']
     ? {
         readonly [N in keyof Presets[K]]: {
-          readonly [L in keyof Presets[K][N]]: OptionsOfKind<
-            Extract<Kinds[number], { readonly name: K }>
+          readonly [L in keyof Presets[K][N]]: PresetEntry<
+            Presets[K][N][L],
+            OptionsOfKind<Extract<Kinds[number], { readonly name: K }>>,
+            L
           >;
         };
       }

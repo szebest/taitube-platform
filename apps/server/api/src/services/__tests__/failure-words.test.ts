@@ -1,13 +1,19 @@
 import type { Translator } from '@kit/i18n';
 import { unrenderable } from '@kit/intl';
-import { err, ok } from '@kit/result';
+import { err, map, ok } from '@kit/result';
 import { ErrorCodes } from '@vp/errors';
 import type { SharedCatalogue } from '@vp/shared-messages';
 import { FailureWords } from '../failure-words';
 
 function translator(words: string | null): Translator<SharedCatalogue> {
   const rendered = words === null ? err(unrenderable('t', 'no copy')) : ok(words);
-  return { t: () => rendered, tOr: (_key, _args, fallback) => words ?? fallback };
+  return {
+    t: () => rendered,
+    parts: () => map(rendered, (text) => [{ type: 'text', text }]),
+    tOr: (_key, _args, fallback) => words ?? fallback,
+    partsOr: (_key, _args, fallback) =>
+      words === null ? fallback : [{ type: 'text', text: words }],
+  };
 }
 
 const words = new FailureWords(

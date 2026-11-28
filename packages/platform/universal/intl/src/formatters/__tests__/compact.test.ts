@@ -1,8 +1,13 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { compact } from '../compact';
+import {
+  formatText,
+  ARABIC_INDIC_DIGIT,
+  ASCII_DIGIT,
+  contextFor,
+  format,
+} from '../../__tests__/fixtures';
 
 function render(locale: string, value: number) {
-  const rendered = compact({ type: 'count', value }, contextFor(locale));
+  const rendered = format({ type: 'count', value }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -24,5 +29,12 @@ describe('@kit/intl: compact', () => {
 
   it('declines an unsupported locale', () => {
     expect(render('xx', 10)).toBe('FORMAT_UNSUPPORTED_LOCALE');
+  });
+
+  it.each([
+    { options: { roundingMode: 'floor', maximumFractionDigits: 1 }, value: 1560, expected: '1.5K' },
+    { options: { signDisplay: 'always' }, value: 12_000, expected: '+12K' },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'count', value, options })).toBe(expected);
   });
 });

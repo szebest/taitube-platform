@@ -8,7 +8,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [119: Playlists and lists - collaboration, segments, sections, smart playlists, watch lists, import and export](119-playlists-customisation-and-collaboration.md)
-- [171: Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md)
 - [176: Live chat replay on the watch page of a recording](176-live-chat-replay-on-the-watch-page-of-a-recording.md)
 - [178: Dependency majors - postgres 4, jsdom 31, jest-dom 8 and the OpenTelemetry 0.3 line](178-dependency-majors-postgres-4-jsdom-31-jest-dom-8-opentelemetry.md)
 - [179: Scheduled video publishing - one scheduling mechanism for videos, posts and page layouts](179-scheduled-video-publishing.md)
@@ -184,7 +183,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 145 | [Stories and visual baselines for the app kit folders that have none](145-kit-stories-and-visual-baselines.md) | 5 - Developer experience & growth | S | 131 | — | done |
 | 146 | [Word-level caption timestamps so per-cue edges meet 100 ms](146-word-level-caption-timestamps.md) | 5 - Developer experience & growth | S | 139 | — | blocked |
 | 170 | [Platform packages - reusable, app-independent, extractable; the app registers its data through injection tokens](170-platform-packages-open-closed-extractable.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 82, 85, 86, 87, 88, 131 | 48, 171 | done |
-| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | ready |
+| 171 | [Intl formatters - one open contract, lists that collapse into "and N more" with a tooltip, richer formatters, a duration conformance suite](171-intl-formatters-open-extensible-list-more-tooltip-and-duration-conformance.md) | 5 - Developer experience & growth | XL (one PR, ordered commits, see *Delivery*) | 170 | — | in-progress |
 | 172 | [One ECMAScript baseline per tier - presets, a browser floor, a guard, and the cleanup it enables](172-ecmascript-baseline-per-tier-presets-browser-floor-and-cleanup.md) | 5 - Developer experience & growth | M (one PR, ordered commits, see *Delivery*) | 85, 110 | — | done |
 | 176 | [Live chat replay on the watch page of a recording](176-live-chat-replay-on-the-watch-page-of-a-recording.md) | 5 - Developer experience & growth | S | 76 | — | ready |
 | 177 | [Drop the unused live_streams.current_viewers column](177-drop-the-unused-live-streams-current-viewers-column.md) | 5 - Developer experience & growth | S | 119, 120 | — | blocked |

@@ -1,12 +1,12 @@
 import { contextFor } from '../../__tests__/fixtures';
-import { truncate } from '../truncate';
+import { createIntl } from '../../create-intl';
 
 const FAMILY = '👨‍👩‍👧‍👦';
 const CAFE = 'Café';
 const TOKYO = '東京都渋谷区';
 
 function cut(text: string, max: number, locale = 'en') {
-  const cutText = truncate(text, max, contextFor(locale));
+  const cutText = createIntl(contextFor(locale)).call('truncate', text, { maxGraphemes: max });
   return cutText.ok ? cutText.value : cutText.error.code;
 }
 
@@ -41,5 +41,29 @@ describe('@kit/intl: truncate', () => {
 
   it.each([0, 1.5])('declines a limit of %d', (max) => {
     expect(cut('text', max)).toBe('FORMAT_UNRENDERABLE');
+  });
+
+  it.each([
+    { options: { maxGraphemes: 8, ellipsis: '...' }, text: 'abcdefghijkl', expected: 'abcde...' },
+    {
+      options: { maxGraphemes: 9, position: 'middle' },
+      text: 'holiday-photo-final.png',
+      expected: 'holi….png',
+    },
+    {
+      options: { maxGraphemes: 9, boundary: 'word' },
+      text: 'Hello wonderful world',
+      expected: 'Hello…',
+    },
+    {
+      options: { maxGraphemes: 12, position: 'middle', boundary: 'word' },
+      text: 'Hello wonderful world',
+      expected: 'Hello…world',
+    },
+    { options: { maxGraphemes: 1, ellipsis: '...' }, text: 'abc', expected: 'FORMAT_UNRENDERABLE' },
+  ] as const)('takes $options', ({ options, text, expected }) => {
+    const cutText = createIntl(contextFor('en')).call('truncate', text, options);
+
+    expect(cutText.ok ? cutText.value : cutText.error.code).toBe(expected);
   });
 });

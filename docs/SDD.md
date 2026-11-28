@@ -812,8 +812,8 @@ would grow its own helper, and no home for the copy that renders a failure code 
 
 - **A formatter is `(value, context) => Result<string, FormatFailure>`.** The value is a tagged union with one
   literal `type` per kind (`{ type: 'count', value: 1200 }`), not a key-as-tag shape (`{ count: 1200 }`), so the
-  dispatcher is an exhaustive `switch` and no `'x' in value` probe is needed; `FORMAT_KINDS` and the union are
-  held equal at compile time. The four failures are `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`,
+  dispatcher is a lookup in the registry of kinds (`defineKind`) and no `'x' in value` probe is needed; the union is
+  derived from that registry. The four failures are `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`,
   `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
@@ -821,7 +821,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
   `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
   handed to `IntlProvider`; the zone and the clock are read in `@kit/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
-  option type is derived from them; `withOptions` declines an unnamed key instead of letting `Intl` ignore it.
+  option type is derived from them; `optionKeys` declines an unnamed key instead of letting `Intl` ignore it.
 - **`Intl` objects are memoised by an `IntlCache` value**, per `(locale, kind, options)`, bounded per kind, with
   failures cached too. The cache is created by the owner of its lifetime: `IntlProvider` makes one per locale
   in the browser. This departs from the ticket 87 note, which asked for the cache in the container:

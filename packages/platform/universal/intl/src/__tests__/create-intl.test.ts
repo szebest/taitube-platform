@@ -1,5 +1,8 @@
+import { map, ok } from '@kit/result';
 import { createIntl } from '../create-intl';
+import { formatKinds } from '../format-value';
 import { createIntlCache } from '../intl-cache';
+import { defineKind, optionKeys } from '../kind';
 import { contextFor } from './fixtures';
 
 const FIXED = {
@@ -16,7 +19,7 @@ describe('@kit/intl: createIntl', () => {
       intl.format({ type: 'relative', value: '2026-09-19T18:30:00.000Z' }),
       intl.format({ type: 'calendarDay', value: '2026-09-22T06:00:00.000Z' }),
       intl.format({ type: 'dateTime', value: '2026-09-22T06:00:00.000Z' }),
-      intl.format({ type: 'money', value: 1250, units: 'minor' }),
+      intl.format({ type: 'money', value: 1250, options: { units: 'minor' } }),
       intl.format({ type: 'count', value: 1_234_567 }),
     ];
 
@@ -33,14 +36,42 @@ describe('@kit/intl: createIntl', () => {
     }
   });
 
-  it('binds the plural rules, the collator and truncation to its context', () => {
+  it('binds the kinds whose output is not text to its context', () => {
     const intl = createIntl(contextFor('sv'));
-    const compare = intl.collator();
+    const compare = intl.call('collator', undefined);
 
-    expect(intl.pluralCategory(1)).toEqual({ ok: true, value: 'one' });
+    expect(intl.call('pluralCategory', 1)).toEqual({ ok: true, value: 'one' });
     expect(compare.ok && ['Ö', 'Z', 'A'].sort(compare.value)).toEqual(['A', 'Z', 'Ö']);
-    expect(intl.truncate('abcdef', 3)).toEqual({ ok: true, value: 'ab…' });
+    expect(intl.call('truncate', 'abcdef', { maxGraphemes: 3 })).toEqual(ok('ab…'));
     expect(intl.context.locale).toBe('sv');
+  });
+
+  it('formats a kind an app registers, which composes a built-in one through its context', () => {
+    const shout = defineKind({
+      name: 'shout',
+      arg: (value): value is number => typeof value === 'number',
+      options: optionKeys<{ readonly marks?: number }>(['marks']),
+      render: (value, options, context) =>
+        map(
+          context.format({ type: 'number', value }),
+          (digits) => `${digits}${'!'.repeat(options?.marks ?? 1)}`
+        ),
+    });
+    const intl = createIntl(contextFor('en'), [...formatKinds, shout]);
+
+    expect(intl.format({ type: 'shout', value: 1500, options: { marks: 2 } })).toEqual(
+      ok('1,500!!')
+    );
+  });
+
+  it.each([
+    { scenario: 'a kind it does not register', value: { type: 'rating', value: 5 } },
+    { scenario: 'a kind whose output is not text', value: { type: 'collator', value: undefined } },
+  ])('declines $scenario', ({ value }) => {
+    const intl = createIntl(contextFor('en'));
+
+    // @ts-expect-error neither is a text kind of the built-in registry
+    expect(intl.format(value)).toMatchObject({ ok: false, error: { code: 'FORMAT_WRONG_KIND' } });
   });
 
   it('constructs no Intl object across 1,000 repeat formats', () => {

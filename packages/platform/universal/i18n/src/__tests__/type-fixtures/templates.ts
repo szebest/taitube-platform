@@ -1,3 +1,4 @@
+import type { ListItem } from '@kit/intl';
 import type { ParamsOf } from '../../message';
 import { defineParams } from '../../params';
 import { engine } from '../fixtures';
@@ -9,7 +10,7 @@ const greeting = dt('Hi {name}, {count:number} new in {names:list} since {when:d
 expectTypeOf<ParamsOf<typeof greeting>>().toEqualTypeOf<{
   readonly name: string | number;
   readonly count: number;
-  readonly names: readonly string[];
+  readonly names: readonly ListItem[];
   readonly when: string;
 }>();
 

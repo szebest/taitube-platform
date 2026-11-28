@@ -1,3 +1,4 @@
+import { runKind } from '@kit/intl';
 import { ok } from '@kit/result';
 import { enumKind } from '../enum';
 import { contextFor } from './context';
@@ -6,9 +7,7 @@ const LABELS = { ready: 'Ready', failed: 'Failed' };
 
 describe('@kit/i18n: enumKind', () => {
   it('renders the label of its key', () => {
-    expect(enumKind.format('{state:enum}', 'failed', LABELS, contextFor('en'))).toEqual(
-      ok('Failed')
-    );
+    expect(runKind(enumKind, 'failed', LABELS, contextFor('en'))).toEqual(ok('Failed'));
   });
 
   it.each([
@@ -16,7 +15,7 @@ describe('@kit/i18n: enumKind', () => {
     { scenario: 'no labels', value: 'ready', entry: undefined },
     { scenario: 'labels that are not text', value: 'ready', entry: { ready: 1 } },
   ])('fails on $scenario', ({ value, entry }) => {
-    expect(enumKind.format('{state:enum}', value, entry, contextFor('en'))).toEqual(
+    expect(runKind(enumKind, value, entry, contextFor('en'))).toEqual(
       expect.objectContaining({ ok: false })
     );
   });

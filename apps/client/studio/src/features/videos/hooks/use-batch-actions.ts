@@ -13,8 +13,6 @@ import {
 
 type DoneMessage = 'studio.batchDeleted' | 'studio.batchUpdated';
 
-const FAILURES_LISTED = 5;
-
 export function useBatchActions() {
   const api = useApi();
   const toast = useToast();
@@ -23,7 +21,7 @@ export function useBatchActions() {
   const edit = useMutation(editVideosMutationOptions(api));
 
   const describeFailures = (videos: readonly BatchVideo[], { failed }: BatchOutcome) => {
-    const lines = failed.slice(0, FAILURES_LISTED).map(({ id, code }) =>
+    const lines = failed.map(({ id, code }) =>
       tOr(
         'studio.batchFailure',
         {
@@ -38,11 +36,7 @@ export function useBatchActions() {
         ''
       )
     );
-    const more = failed.length - FAILURES_LISTED;
-    return [
-      ...lines,
-      ...(more > 0 ? [tOr('studio.batchFailureMore', { count: more }, '')] : []),
-    ].join('; ');
+    return tOr('studio.batchFailures', { failures: lines }, '');
   };
 
   const report = (videos: readonly BatchVideo[], outcome: BatchOutcome, done: DoneMessage) => {

@@ -8,7 +8,7 @@ export interface PublishedAt {
 /** `3 days ago` to read, never `in 2 minutes`, and the exact date and time for the `title` beside it. */
 export function publishedAt(iso: string, now?: string): PublishedAt {
   return {
-    relative: { type: 'relative', value: iso, now, options: { pastOnly: true } },
+    relative: { type: 'relative', value: iso, options: { now, pastOnly: true } },
     absolute: { type: 'dateTime', value: iso },
   };
 }

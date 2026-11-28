@@ -1,8 +1,8 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type BytesValue, bytes, scale } from '../bytes';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { type BytesValue } from '../bytes';
 
 function render(locale: string, value: number, options?: BytesValue['options']) {
-  const rendered = bytes({ type: 'bytes', value, options }, contextFor(locale));
+  const rendered = format({ type: 'bytes', value, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -26,14 +26,10 @@ describe('@kit/intl: bytes', () => {
   });
 
   it.each([
-    { value: 999, expected: { amount: 999, unit: 'a' } },
-    { value: 1500, expected: { amount: 1.5, unit: 'b' } },
-    { value: 5_000_000_000, expected: { amount: 5000, unit: 'c' } },
-    { value: -2000, expected: { amount: -2, unit: 'b' } },
-  ])(
-    'scales $value to the largest unit it reaches, the last one capping it',
-    ({ value, expected }) => {
-      expect(scale(value, 1000, ['a', 'b', 'c'])).toEqual(expected);
-    }
-  );
+    { options: { minUnit: 'kilobyte' }, value: 512, expected: '0.5 kB' },
+    { options: { minimumFractionDigits: 2 }, value: 4_500_000, expected: '4.50 MB' },
+    { options: { roundingMode: 'floor' }, value: 4_990_000, expected: '4.9 MB' },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'bytes', value, options })).toBe(expected);
+  });
 });

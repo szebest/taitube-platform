@@ -1,10 +1,9 @@
-import { ARABIC_INDIC_DIGIT, NOW, contextFor } from '../../__tests__/fixtures';
+import { ARABIC_INDIC_DIGIT, NOW, contextFor, format, formatText } from '../../__tests__/fixtures';
 import {
   DAY as DAY_SECONDS,
   HOUR as HOUR_SECONDS,
   MILLISECONDS_PER_SECOND,
 } from '../../time-spans';
-import { relative } from '../relative';
 
 const HOUR = HOUR_SECONDS * MILLISECONDS_PER_SECOND;
 const DAY = DAY_SECONDS * MILLISECONDS_PER_SECOND;
@@ -14,7 +13,7 @@ function ago(ms: number): string {
 }
 
 function render(locale: string, value: string, now?: string, context = contextFor(locale)) {
-  const rendered = relative({ type: 'relative', value, now }, context);
+  const rendered = format({ type: 'relative', value, options: { now } }, context);
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -30,6 +29,29 @@ describe('@kit/intl: relative', () => {
   ])('picks the unit for $value in $locale', ({ locale, value, expected }) => {
     expect(render(locale, value)).toBe(expected);
   });
+
+  it.each([
+    { locale: 'en', seconds: 3570, expected: '1 hour ago' },
+    { locale: 'en', seconds: -3570, expected: 'in 1 hour' },
+    { locale: 'pl', seconds: 3570, expected: '1 godzinę temu' },
+    { locale: 'pl', seconds: -3570, expected: 'za 1 godzinę' },
+    { locale: 'en', seconds: 90, expected: '2 minutes ago' },
+    { locale: 'en', seconds: -90, expected: 'in 2 minutes' },
+  ])(
+    'rounds $seconds s the same way either side of now, in the unit it rounds to, in $locale',
+    ({ locale, seconds, expected }) => {
+      const rendered = format(
+        {
+          type: 'relative',
+          value: ago(seconds * MILLISECONDS_PER_SECOND),
+          options: { numeric: 'always' },
+        },
+        contextFor(locale)
+      );
+
+      expect(rendered).toEqual({ ok: true, value: expected });
+    }
+  );
 
   it('writes Arabic-Indic digits in ar-EG', () => {
     expect(render('ar-EG', ago(3 * DAY))).toMatch(ARABIC_INDIC_DIGIT);
@@ -47,7 +69,7 @@ describe('@kit/intl: relative', () => {
   ])(
     'with pastOnly $pastOnly reads an instant ahead of now as $expected',
     ({ pastOnly, expected }) => {
-      const ahead = relative(
+      const ahead = format(
         { type: 'relative', value: ago(-2 * HOUR), options: { pastOnly } },
         contextFor('en')
       );
@@ -60,7 +82,7 @@ describe('@kit/intl: relative', () => {
     { pastOnly: false, expected: '3 days ago' },
     { pastOnly: true, expected: '3 days ago' },
   ])('with pastOnly $pastOnly leaves a past instant as $expected', ({ pastOnly, expected }) => {
-    const past = relative(
+    const past = format(
       { type: 'relative', value: ago(3 * DAY), options: { pastOnly } },
       contextFor('en')
     );
@@ -73,4 +95,31 @@ describe('@kit/intl: relative', () => {
       'FORMAT_UNRENDERABLE'
     );
   });
+
+  it.each([
+    { options: { minUnit: 'minute' }, seconds: 20, expected: 'this minute' },
+    { options: { maxUnit: 'day' }, seconds: 400 * 86_400, expected: '400 days ago' },
+    { options: { thresholds: { minute: 90 } }, seconds: 75, expected: '75 seconds ago' },
+    { options: { thresholds: { minute: 90 } }, seconds: 100, expected: '2 minutes ago' },
+  ] as const)('takes $options for $seconds s', ({ options, seconds, expected }) => {
+    const value = ago(seconds * MILLISECONDS_PER_SECOND);
+
+    expect(formatText({ type: 'relative', value, options })).toBe(expected);
+  });
+
+  it.each([
+    { now: '2026-03-31T12:00:00.000Z', value: '2026-02-28T12:00:00.000Z', expected: 'last month' },
+    { now: '2026-03-27T12:00:00.000Z', value: '2026-02-28T12:00:00.000Z', expected: '4 weeks ago' },
+    {
+      now: '2027-09-21T12:00:00.000Z',
+      value: '2026-09-22T12:00:00.000Z',
+      expected: '11 months ago',
+    },
+    { now: '2027-09-22T12:00:00.000Z', value: '2026-09-22T12:00:00.000Z', expected: 'last year' },
+  ] as const)(
+    'counts calendar months and years from $now to $value',
+    ({ now, value, expected }) => {
+      expect(formatText({ type: 'relative', value, options: { now } })).toBe(expected);
+    }
+  );
 });

@@ -1,6 +1,11 @@
 import { createIntlCache } from '../intl-cache';
+import { WITHOUT_DURATION_FORMAT } from './fixtures';
 
 describe('@kit/intl: the Intl cache', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('hands back the same instance for the same locale and options, whatever their order', () => {
     const cache = createIntlCache();
     const first = cache.numberFormat('en', { maximumFractionDigits: 1, notation: 'compact' });
@@ -93,20 +98,33 @@ describe('@kit/intl: the Intl cache', () => {
     expect(build().ok).toBe(true);
   });
 
-  it('builds the duration fallback when the engine ships no Intl.DurationFormat', () => {
-    const native = Reflect.get(Intl, 'DurationFormat');
-    Reflect.deleteProperty(Intl, 'DurationFormat');
-    try {
-      const built = createIntlCache().durationFormat('en', {
-        style: 'digital',
-        hoursDisplay: 'auto',
-      });
+  it('builds the duration fallback from an environment without Intl.DurationFormat', () => {
+    const built = createIntlCache(WITHOUT_DURATION_FORMAT).durationFormat('en', {
+      style: 'digital',
+      hoursDisplay: 'auto',
+    });
 
-      expect(built.ok && built.value.format({ hours: 0, minutes: 12, seconds: 45 })).toBe('12:45');
-      expect(built.ok && built.value).not.toBeInstanceOf(native);
-    } finally {
-      Reflect.set(Intl, 'DurationFormat', native);
-    }
+    expect(built.ok && built.value.format({ hours: 0, minutes: 12, seconds: 45 })).toBe('12:45');
+    expect(built.ok && built.value).not.toBeInstanceOf(Reflect.get(Intl, 'DurationFormat'));
+  });
+
+  it('builds what a descriptor it was handed describes, once per locale and options', () => {
+    const cache = createIntlCache();
+    const create = vi.fn((locale: string, options: Intl.NumberFormatOptions) => {
+      return new Intl.NumberFormat(locale, options);
+    });
+    const descriptor = {
+      name: 'Probe',
+      create,
+      supportedLocalesOf: (locales: string[]) => Intl.NumberFormat.supportedLocalesOf(locales),
+      is: (value: unknown): value is Intl.NumberFormat => value instanceof Intl.NumberFormat,
+    };
+
+    const first = cache.get(descriptor, 'de', { useGrouping: false });
+    const again = cache.get(descriptor, 'de', { useGrouping: false });
+
+    expect(first.ok && again.ok && first.value === again.value).toBe(true);
+    expect(create).toHaveBeenCalledTimes(1);
   });
 
   it('knows the currencies the engine can render, and nothing it cannot', () => {

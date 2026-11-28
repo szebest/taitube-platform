@@ -1,4 +1,6 @@
 import { AccountMenu, jumpToIdentityItem } from '@kit/components';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { COMPACT_QUERY, useMediaQuery } from '@kit/ui';
 import { type ReactNode, useState } from 'react';
 import { useAccount } from '../session-provider';
@@ -30,6 +32,7 @@ export function AccountSwitcher({ children, ...items }: AccountSwitcherProps) {
   const [open, setOpen] = useState(false);
   const { show, pending } = useIdentitySwitcher();
   const { entries, current } = useIdentityChoices(false);
+  const { format } = useFormat();
 
   if (!account) return null;
 
@@ -51,7 +54,7 @@ export function AccountSwitcher({ children, ...items }: AccountSwitcherProps) {
   return (
     <AccountMenu.Root open={open} onOpenChange={onOpenChange}>
       <AccountMenu.Trigger
-        name={shown.name}
+        initials={unwrapOr(format({ type: 'initials', value: shown.name }), '')}
         imageUrl={shown.avatarUrl}
         accent={entries.length > 1 ? shown.accent : undefined}
         onPointerEnter={preload}

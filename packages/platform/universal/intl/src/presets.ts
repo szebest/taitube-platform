@@ -3,11 +3,11 @@ import { err, ok, type Result } from '@kit/result';
 import { type FormatFailure, unrenderable } from './failures';
 
 /**
- * One named option set: `default`, and any locale (`pl`, `pl-PL`) that needs its own.
+ * One named option set: `default`, and any locale (`pl`, `pl-PL`) that overrides some of it.
  * @public
  */
 export type Preset<Options> = { readonly default: Options } & {
-  readonly [locale: string]: Options;
+  readonly [locale: string]: Partial<Options>;
 };
 
 /** Per kind name, per preset name, the preset. */
@@ -38,14 +38,19 @@ function presetOptions(
 ): Resolved {
   const preset = presets[kind]?.[name];
   if (preset === undefined) return err(unrenderable(kind, `no preset ${name}`));
-  const locale = chain.find((tag) => preset[tag] !== undefined);
-  return ok(locale === undefined ? preset.default : preset[locale]);
+  const overrides = chain.toReversed().map((tag) => preset[tag]);
+  return ok(overrides.reduce<unknown>(layer, preset.default));
+}
+
+function layer(base: unknown, override: unknown): unknown {
+  if (override === undefined) return base;
+  return isRecord(base) && isRecord(override) ? { ...base, ...override } : override;
 }
 
 /**
- * A config entry as its kind receives it: a preset name becomes that preset's options for the
- * first locale of the chain that has its own, else `default`; `{ preset, ...overrides }` lays the
- * overrides over them; anything else is inline options, passed as written.
+ * A config entry as its kind receives it: a preset name becomes that preset's `default` with each
+ * locale of the chain that overrides it laid over, most specific last; `{ preset, ...overrides }`
+ * lays the overrides over them; anything else is inline options, passed as written.
  */
 export function resolveEntry(
   presets: PresetTable,

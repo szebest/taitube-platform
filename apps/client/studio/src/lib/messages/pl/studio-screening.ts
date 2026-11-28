@@ -1,4 +1,4 @@
-import { dt } from '@vp/shared-messages';
+import { dt, listMore } from '@vp/shared-messages';
 
 export const studioScreening = {
   adminTabScreening: dt('Wstrzymane i oflagowane'),
@@ -68,7 +68,9 @@ export const studioScreening = {
   screeningFrameAt: dt('Klatka w {time}, wynik {score}'),
   screeningFlaggedShare: dt('Próbkowane klatki powyżej progu: {share}'),
   screeningSignals: dt('Trafienia w metadanych'),
-  screeningProfanity: dt('Dopasowane słowa'),
+  screeningProfanity: dt('Dopasowane słowa: {names:list}', {
+    list: { names: { type: 'conjunction', max: 5, more: listMore.pl } },
+  }),
   screeningAppealHeading: dt('Odwołanie twórcy'),
   screeningDecisionNote: dt('Podany powód: {note}'),
   screeningApprove: dt('Zatwierdź'),

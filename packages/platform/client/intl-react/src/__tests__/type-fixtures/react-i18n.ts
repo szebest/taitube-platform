@@ -15,7 +15,9 @@ const { dt, createI18n } = defineEngine({
   params: defineParams(['count'] as const),
 });
 
-const source = { videos: { title: dt('Videos') } } as const;
+const source = {
+  videos: { title: dt('Videos'), views: dt('{count:number}') },
+} as const;
 const otherSource = { comments: { title: dt('Comments') } } as const;
 
 const videos = createReactI18n(createI18n<typeof source>());
@@ -41,3 +43,12 @@ expectTypeOf(
 
 // @ts-expect-error the engine's i18n, not a bare catalogue
 createReactI18n(source);
+
+const { Message } = videos;
+
+void Message({ id: 'videos.title', args: {} });
+void Message({ id: 'videos.views', args: { count: 2 } });
+// @ts-expect-error the placeholder's argument is missing
+void Message({ id: 'videos.views', args: {} });
+// @ts-expect-error a key of another app's catalogue
+void Message({ id: 'comments.title', args: {} });

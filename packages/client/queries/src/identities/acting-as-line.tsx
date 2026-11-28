@@ -1,4 +1,6 @@
 import { ActingAs } from '@kit/components';
+import { useFormat } from '@kit/intl-react';
+import { unwrapOr } from '@kit/result';
 import { Button, Callout } from '@kit/ui';
 import { useT } from '../intl/shared-words';
 import { useIdentitySwitcher } from './identity-switcher-provider';
@@ -26,6 +28,7 @@ export function ActingAsLine({ action, guard }: ActingAsLineProps) {
   const { tOr } = useT();
   const { show } = useIdentitySwitcher();
   const { entries, current } = useIdentityChoices(false);
+  const { format } = useFormat();
 
   if (guard.changed) {
     return (
@@ -44,7 +47,11 @@ export function ActingAsLine({ action, guard }: ActingAsLineProps) {
 
   return (
     <ActingAs.Root>
-      <ActingAs.Avatar name={current.name} imageUrl={current.avatarUrl} accent={current.accent} />
+      <ActingAs.Avatar
+        initials={unwrapOr(format({ type: 'initials', value: current.name }), '')}
+        imageUrl={current.avatarUrl}
+        accent={current.accent}
+      />
       <ActingAs.Label>{tOr(ACTION_WORDS[action], { name: current.name }, '')}</ActingAs.Label>
       <ActingAs.Switch onClick={() => show('switcher')}>
         {tOr('accounts.switch', {}, '')}

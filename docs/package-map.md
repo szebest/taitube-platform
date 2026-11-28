@@ -59,7 +59,7 @@ scope (platform or app) and the tier are the directory and the layer is `vp.laye
 | `@vp/permissions-react` | `packages/client/permissions-react` | app | client | T7 | `@kit/permissions`, `@kit/result`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@kit/components` | `packages/platform/client/components` | platform | client | T7 | `@kit/design-tokens`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@kit/forms` | `packages/platform/client/forms` | platform | client | T7 | `@kit/errors`, `@kit/result`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/validation`, `@kit/vite-preset`, `@kit/web-testing` |
-| `@kit/intl-react` | `packages/platform/client/intl-react` | platform | client | T7 | `@kit/i18n`, `@kit/intl`, `@kit/result`, `@kit/runtime` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
+| `@kit/intl-react` | `packages/platform/client/intl-react` | platform | client | T7 | `@kit/i18n`, `@kit/intl`, `@kit/result`, `@kit/runtime`, `@kit/ui` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset` |
 | `@kit/web-telemetry` | `packages/platform/client/web-telemetry` | platform | client | T7 | `@kit/result` | `@kit/testing`, `@kit/tsconfig`, `@kit/vite-preset`, `@kit/web-testing` |
 | `@vp/core` | `packages/server/core` | app | server | T7 | `@kit/errors`, `@kit/ports`, `@kit/result`, `@vp/domain`, `@vp/errors`, `@vp/permissions` | `@kit/testing`, `@kit/tsconfig` |
 | `@vp/db` | `packages/server/db` | app | server | T7 | `@kit/result`, `@vp/domain`, `@vp/job-contracts`, `@vp/storage`, `@vp/validation` | `@kit/testing`, `@kit/tsconfig`, `@vp/testing-fixtures` |

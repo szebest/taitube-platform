@@ -32,6 +32,9 @@ const isSentence = (text: string): boolean =>
   !isClassList(text) &&
   (/\p{L}{2,}\s+\p{L}+/u.test(text) || /\p{L}[.!?\u2026]$/u.test(text.trim()));
 
+const isBranchCopy = (node: ts.Node): boolean =>
+  ts.isStringLiteralLike(node) && node.text.includes('{?}') && /\p{L}/u.test(node.text);
+
 function textOf(node: ts.Node): string | undefined {
   if (ts.isStringLiteralLike(node)) return node.text;
   if (ts.isTemplateExpression(node)) {
@@ -81,6 +84,7 @@ function copyIn(file: string, source: string): string[] {
       found.push(`${file}: JSX text ${node.text.trim()}`);
     }
     if (value !== undefined && isSentence(value)) found.push(`${file}: copy ${value}`);
+    if (isBranchCopy(node)) found.push(`${file}: plural branch ${node.getText()}`);
     ts.forEachChild(node, visit);
   };
   visit(parseSource(file, source));
@@ -127,6 +131,7 @@ describe('architecture: platform packages ship no copy', () => {
       source: "export const a = { label: 're-upload the file' };",
     },
     { shape: 'a label property', source: "export const a = { label: 'Sign in to continue' };" },
+    { shape: 'a plural branch', source: "export const more = { other: 'and {?} more' };" },
     { shape: 'a title property', source: "export const a = { title: 'Something went wrong.' };" },
     {
       shape: 'a message template',
@@ -143,6 +148,7 @@ describe('architecture: platform packages ship no copy', () => {
     },
     { shape: 'a token', source: "export const a = { label: 'player.close', title: 'close' };" },
     { shape: 'a constant', source: "export const a = { message: 'MISSING_PROVIDER' };" },
+    { shape: 'the count token', source: "const COUNT = '{?}';" },
     {
       shape: 'a sentence under another property',
       source: "export const a = { note: 'Not shown to users' };",

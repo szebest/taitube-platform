@@ -28,6 +28,8 @@ words it prints itself through `useUiCopy()` and takes product words as children
 Every component is imported by both apps (`tests/architecture/shared-components-used-by-both-apps.test.ts`). How to
 add one: [docs/standards/design-system.md](../../../../docs/standards/design-system.md).
 
+List rendering lives in `@kit/intl-react` (`<Message>`, `<FormatList>`), which may import `@kit/ui`; this package cannot import it.
+
 ## What does not belong here
 
 - A component one app alone renders: it goes in that app's kit (`apps/client/<app>/src/components/`).

@@ -6,12 +6,18 @@ export interface ActiveLocale<Locale extends string, Catalogue> {
     readonly locale: Locale;
     readonly catalogues: Readonly<Record<string, Catalogue>>;
 }
-export function Format({ value, fallback }: FormatProps): React.JSX.Element
+export function Format({ value, fallback }: FormatProps): JSX.Element
+export function FormatList({ value, options, moreTooltip, fallback }: FormatListProps): JSX.Element
+export interface FormatListProps extends Pick<ListPartViewProps, 'moreTooltip'> {
+    readonly value: readonly ListItem[];
+    readonly options?: ListOptions;
+    readonly fallback?: string;
+}
 export interface FormatProps {
     readonly value: FormatValue;
     readonly fallback?: string;
 }
-export function IntlProvider({ locale, timeZone, currency, now, clock, children, }: IntlProviderProps): React.JSX.Element
+export function IntlProvider({ locale, timeZone, currency, now, clock, children, }: IntlProviderProps): JSX.Element
 export interface IntlProviderProps {
     readonly locale: string;
     readonly timeZone?: string;
@@ -19,6 +25,11 @@ export interface IntlProviderProps {
     readonly now?: string;
     readonly clock: Clock;
     readonly children: ReactNode;
+}
+export function ListPartView({ detail, moreTooltip }: ListPartViewProps): JSX.Element
+export interface ListPartViewProps {
+    readonly detail: ListDetail;
+    readonly moreTooltip?: false | MoreTooltip;
 }
 export interface LocaleStore<Locale extends string, Catalogue> {
     activate(locale: Locale): Promise<void>;
@@ -29,9 +40,23 @@ export interface LocaleStoreOptions<Locale extends string, Catalogue> {
     readonly fallbackLocale: Locale;
     readonly load: (locale: Locale) => Promise<Catalogue>;
 }
+export interface MessageProps<App, K extends MessageKey<App>> extends Pick<ListPartViewProps, 'moreTooltip'> {
+    readonly id: K;
+    readonly args: ArgsOf<App, K>;
+    readonly fallback?: string;
+}
+export interface MoreTooltip {
+    readonly trigger?: (more: string) => ReactNode;
+    readonly content?: (detail: ListDetail) => ReactNode;
+    readonly side?: Side;
+    readonly align?: Align;
+    readonly openDelay?: number;
+}
 export interface ReactI18n<App> {
     readonly TranslatorProvider: (props: TranslatorProviderProps<App>) => ReactNode;
     readonly useT: () => Translator<App>;
+    readonly useTParts: () => Translator<App>['parts'];
+    readonly Message: <K extends MessageKey<App>>(props: MessageProps<App, K>) => ReactNode;
 }
 export interface TranslatorProviderProps<App> {
     readonly catalogues: CatalogueSet<App>;
@@ -41,3 +66,4 @@ export function createLocaleStore<Locale extends string, Catalogue>({ fallbackLo
 export function createReactI18n<App extends CatalogueShape>(i18n: I18n<App>): ReactI18n<App>
 export function fallbackActiveLocale<Locale extends string, Catalogue>(fallbackLocale: Locale): ActiveLocale<Locale, Catalogue>
 export function useFormat(): IntlBinding
+export function useFormatParts(): (value: ListValue) => Result<ListDetail, FormatFailure>

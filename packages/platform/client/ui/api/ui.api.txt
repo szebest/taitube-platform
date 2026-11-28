@@ -247,6 +247,13 @@ export interface MenuItemProps extends Part<'Item'> {
 }
 export type MenuSize = Extract<ControlSize, 'sm' | 'md'>;
 export type MenuTone = Extract<ToneOption, 'neutral' | 'danger'>;
+export function MoreDisclosure({ content, side, align, openDelay, className, children, ...props }: MoreDisclosureProps): JSX.Element
+export interface MoreDisclosureProps extends Omit<ComponentPropsWithRef<'button'>, 'content'> {
+    content: ReactNode;
+    side?: Side;
+    align?: Align;
+    openDelay?: number;
+}
 export const ONE_YEAR_S: number
 export type Orientation = 'horizontal' | 'vertical';
 export const PLATFORM_ICON_NAMES: readonly PlatformIconName[]

@@ -1,21 +1,13 @@
-import { andThen, map } from '@kit/result';
-import { finite } from '../inputs';
-import { type OptionKeys, withOptions } from '../with-options';
-import { scale } from './bytes';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineScaledUnitKind } from '../number-kind';
 
 const BITRATE_OPTION_KEYS = [
+  'minimumFractionDigits',
   'maximumFractionDigits',
+  'roundingMode',
   'unitDisplay',
-] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
-
-type BitrateOptions = Pick<Intl.NumberFormatOptions, (typeof BITRATE_OPTION_KEYS)[number]>;
-
-/** In bits per second. */
-export interface BitrateValue {
-  readonly type: 'bitrate';
-  readonly value: number;
-  readonly options?: BitrateOptions;
-}
+  'minUnit',
+] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'minUnit'>;
 
 const BITRATE_UNITS = [
   'bit-per-second',
@@ -24,12 +16,18 @@ const BITRATE_UNITS = [
   'gigabit-per-second',
 ] as const;
 
-export const bitrate = withOptions<BitrateValue>('bitrate', BITRATE_OPTION_KEYS, (value, context) =>
-  andThen(finite('bitrate', value.value), (bitsPerSecond) => {
-    const { amount, unit } = scale(bitsPerSecond, 1000, BITRATE_UNITS);
-    const options = { maximumFractionDigits: 1, ...value.options, style: 'unit', unit } as const;
-    return map(context.cache.numberFormat(context.locale, options), (format) =>
-      format.format(amount)
-    );
-  })
-);
+type BitrateOptions = Pick<
+  Intl.NumberFormatOptions,
+  'minimumFractionDigits' | 'maximumFractionDigits' | 'roundingMode' | 'unitDisplay'
+> & { readonly minUnit?: (typeof BITRATE_UNITS)[number] };
+
+/** In bits per second. */
+export const bitrate = defineScaledUnitKind({
+  name: 'bitrate',
+  keys: BITRATE_OPTION_KEYS,
+  units: BITRATE_UNITS,
+  scaleBy: (display: Omit<Partial<BitrateOptions>, 'minUnit'>) => ({ step: 1000, display }),
+});
+
+/** @public */
+export type BitrateValue = TaggedOf<typeof bitrate>;

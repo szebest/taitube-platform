@@ -18,7 +18,7 @@ const { dt, defineCatalogue, createI18n } = engine;
 | Export | What it is |
 |---|---|
 | `defineEngine({ kinds, presets, params })` | the bound `{ dt, defineCatalogue, createI18n }`, typed by those three (`src/engine.ts`) |
-| `defineKind({ name, config, arg, options, render })` | a placeholder kind; `number`, `date`, `list`, `plural`, `enum` are written with it (`src/kinds/`) |
+| `messageKind(kind, 'optional' \| 'required')` | a `@kit/intl` kind as a placeholder kind; `number`, `date` and `list` are `@kit/intl`'s, `plural` and `enum` are written with its `defineKind` here (`src/kinds/`) |
 | `definePresets({ <kind>: { <name>: { default, <locale>... } } })` | named option sets, resolved per locale; lives in `@kit/intl` (`src/presets.ts`), which the engine and a server render share |
 | `defineParams([...] as const)` | the closed vocabulary of placeholder names (`src/params.ts`) |
 | `createI18n<AppCatalogue>()` | `createTranslator`, `fromRegistry`, `providers`, typed by the catalogue the app registers |
@@ -36,7 +36,7 @@ composition root):
 ## 2. Invariants
 
 1. **The template is the type.** `dt('{count:plural} views', ...)` makes `count` a required `number`; a kind's `arg`
-   guard types its argument (`{x:date}` an ISO string, `{x:list}` a string array, `{x:enum}` one of the keys its
+   guard types its argument (`{x:date}` an ISO string, `{x:list}` a list of items, or of its `item` kind's values, `{x:enum}` one of the keys its
    labels declare), `{x}` takes text or a number. A missing or misspelt argument is a compile error.
 2. **The placeholder grammar is flat.** `{name}` or `{name:kind}` and nothing nested; `ParseTemplate` (types) and
    `placeholders` (run time) read it the same way. A plural's branches live in its config and select through
@@ -58,8 +58,8 @@ composition root):
    which compares each message's params both ways: a renamed, dropped, added or retyped argument fails in the file
    of the locale that drifted.
 9. **`t` is typed by the app's catalogue**, never one of this package: `createI18n<AppCatalogue>()`.
-10. **Extend, never edit.** A new kind is `defineKind` in the app, a new option set a preset; the engine is not
-    edited for either.
+10. **Extend, never edit.** A new kind is `@kit/intl`'s `defineKind` in the app, listed with `messageKind`, a new
+    option set a preset; the engine is not edited for either. Its `context.format` resolves presets.
 11. **Platform strictness.** No `any`, no type assertion except `as const`, no non-null `!`, no `@ts-ignore`. Every
     public generic has a type-level spec under `src/__tests__/type-fixtures/` (run by `typecheck`), including a second
     engine with its own kinds and presets.

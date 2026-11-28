@@ -12,12 +12,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const ROWS = [
-  { name: 'Ada Lovelace', handle: '@ada', accent: 1 },
-  { name: 'Analytical Engines', handle: '@engines', accent: 2 },
-  { name: 'Notes on the Engine', handle: '@notes', accent: 3 },
-  { name: 'Byron Reads', handle: '@byron', accent: 4 },
-  { name: 'Poetry Hour', handle: '@poetry', accent: 5 },
-  { name: 'The Lab', handle: '@lab', accent: 6 },
+  { name: 'Ada Lovelace', initials: 'AL', handle: '@ada', accent: 1 },
+  { name: 'Analytical Engines', initials: 'AE', handle: '@engines', accent: 2 },
+  { name: 'Notes on the Engine', initials: 'NO', handle: '@notes', accent: 3 },
+  { name: 'Byron Reads', initials: 'BR', handle: '@byron', accent: 4 },
+  { name: 'Poetry Hour', initials: 'PH', handle: '@poetry', accent: 5 },
+  { name: 'The Lab', initials: 'TL', handle: '@lab', accent: 6 },
 ] as const;
 
 export const Searchable: Story = {
@@ -33,7 +33,7 @@ export const Searchable: Story = {
               {ROWS.map((row, index) => (
                 <IdentitySwitcher.Item key={row.handle} value={row.handle}>
                   <IdentityRow.Root current={index === 0}>
-                    <IdentityRow.Avatar name={row.name} accent={row.accent} />
+                    <IdentityRow.Avatar initials={row.initials} accent={row.accent} />
                     <IdentityRow.Text>
                       <IdentityRow.Name>{row.name}</IdentityRow.Name>
                       <IdentityRow.Detail>{row.handle}</IdentityRow.Detail>

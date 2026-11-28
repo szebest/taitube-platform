@@ -1,8 +1,8 @@
 import { createRegistry } from '@kit/di';
-import { definePresets } from '@kit/intl';
+import { defineKind, definePresets, optionKeys } from '@kit/intl';
 import { err, ok } from '@kit/result';
 import { defineEngine } from '../engine';
-import { defineKind } from '../kind';
+import { messageKind } from '../kind';
 import { defineParams } from '../params';
 import {
   catalogues,
@@ -62,20 +62,21 @@ describe('@kit/i18n: defineEngine', () => {
   });
 
   it('renders a kind and a preset an app registers, with no edit to the engine', () => {
-    const initials = defineKind({
-      name: 'initials',
-      config: 'optional',
-      arg: (value): value is string => typeof value === 'string',
-      options: (value): value is { readonly separator: string } =>
-        typeof value === 'object' && value !== null,
-      render: (value, options) =>
-        ok(
-          value
-            .split(' ')
-            .map((word) => word.charAt(0))
-            .join(options?.separator ?? '')
-        ),
-    });
+    const initials = messageKind(
+      defineKind({
+        name: 'initials',
+        arg: (value): value is string => typeof value === 'string',
+        options: optionKeys<{ readonly separator?: string }>(['separator']),
+        render: (value, options) =>
+          ok(
+            value
+              .split(' ')
+              .map((word) => word.charAt(0))
+              .join(options?.separator ?? '')
+          ),
+      }),
+      'optional'
+    );
     const second = defineEngine({
       kinds: [initials],
       presets: definePresets({ initials: { dotted: { default: { separator: '.' } } } }),

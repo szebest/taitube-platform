@@ -1,20 +1,12 @@
-import { definePresets, type MoneyValue } from '@kit/intl';
+import { definePresets, money } from '@kit/intl';
 import { defineEngine } from '../../engine';
-import { defineKind, isRecord } from '../../kind';
+import { messageKind } from '../../kind';
 import { numberKind, pluralKind } from '../../kinds';
 import type { ParamsOf } from '../../message';
 import { defineParams } from '../../params';
 import { engine } from '../fixtures';
 
-type MoneyOptions = NonNullable<MoneyValue['options']>;
-
-const moneyKind = defineKind({
-  name: 'money',
-  config: 'optional',
-  arg: (value): value is number => typeof value === 'number',
-  options: (value): value is MoneyOptions => isRecord(value),
-  render: (value, options, { intl }) => intl.format({ type: 'money', value, options }),
-});
+const moneyKind = messageKind(money, 'optional');
 
 const second = defineEngine({
   kinds: [numberKind, pluralKind, moneyKind],
@@ -41,7 +33,7 @@ second.dt('{amount:money}', { money: { amount: 'euro' } });
 second.dt('{amount:money}', { money: { amount: 'dollar' } });
 
 // @ts-expect-error UnknownOption: money takes MoneyOptions, not number options
-second.dt('{amount:money}', { money: { amount: { notation: 'compact' } } });
+second.dt('{amount:money}', { money: { amount: { minimumIntegerDigits: 3 } } });
 
 // @ts-expect-error UnknownKind: the second app registers no enum
 second.dt('{amount:enum}', { enum: { amount: {} } });
@@ -66,5 +58,20 @@ defineEngine({
   kinds: [numberKind],
   // @ts-expect-error UnknownKind: presets for a kind the engine does not list
   presets: definePresets({ money: { euro: { default: { currency: 'EUR' } } } }),
+  params: defineParams(['amount'] as const),
+});
+
+defineEngine({
+  kinds: [numberKind],
+  presets: definePresets({
+    number: { tight: { default: { notation: 'compact' }, pl: { maximumFractionDigits: 0 } } },
+  }),
+  params: defineParams(['amount'] as const),
+});
+
+defineEngine({
+  kinds: [numberKind],
+  // @ts-expect-error a locale overrides only its own kind's options
+  presets: definePresets({ number: { tight: { default: {}, pl: { currency: 'PLN' } } } }),
   params: defineParams(['amount'] as const),
 });

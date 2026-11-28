@@ -6,11 +6,12 @@ import {
   type Unrenderable,
   unrenderable,
 } from '@kit/intl';
-import { err, type Result, unwrapOr } from '@kit/result';
+import { andThen, err, ok, type Result, unwrapOr } from '@kit/result';
 import type { ArgsOf, LooseCatalogue, LooseCatalogueSet, MessageKey } from './catalogue';
 import { findMessage } from './catalogue';
-import type { Kind } from './kind';
-import { renderMessage } from './render';
+import type { MessageKind } from './kind';
+import type { AnyMessage } from './message';
+import { type MessagePart, renderMessage, renderParts } from './render';
 
 export type MissingMessage = Unrenderable & { readonly key: string };
 
@@ -22,13 +23,24 @@ type ArgsTuple<App, K> = keyof ArgsOf<App, K> extends never
 
 export interface Translator<App> {
   t<K extends MessageKey<App>>(key: K, ...args: ArgsTuple<App, K>): Result<string, MessageFailure>;
+  /** `t` as parts, for a UI that renders a list's "and N more" as more than text; joined, it is `t`. */
+  parts<K extends MessageKey<App>>(
+    key: K,
+    ...args: ArgsTuple<App, K>
+  ): Result<readonly MessagePart[], MessageFailure>;
   tOr<K extends MessageKey<App>>(key: K, args: ArgsOf<App, K>, fallback: string): string;
+  /** `parts` with the arguments positional like `tOr`'s, and `fallback` for a message that cannot render. */
+  partsOr<K extends MessageKey<App>>(
+    key: K,
+    args: ArgsOf<App, K>,
+    fallback: readonly MessagePart[]
+  ): readonly MessagePart[];
 }
 
 export interface TranslatorScope {
   readonly intl: IntlBinding;
   readonly catalogues: LooseCatalogueSet;
-  readonly kinds: ReadonlyMap<string, Kind>;
+  readonly kinds: ReadonlyMap<string, MessageKind>;
   readonly presets: PresetTable;
 }
 
@@ -55,16 +67,24 @@ export function createTranslator<App>({
   };
   const scope = { intl, kinds, presets, chain: ancestors };
 
-  const render = (key: string, args: unknown): Result<string, MessageFailure> => {
-    for (const locale of chain) {
-      const message = findMessage(byLocale[locale], key);
-      if (message !== undefined) return renderMessage(message, args, scope);
-    }
-    return err(missingMessage(key, chain));
+  const find = (key: string): Result<AnyMessage, MessageFailure> => {
+    const found = chain
+      .map((locale) => findMessage(byLocale[locale], key))
+      .find((message) => message !== undefined);
+    return found === undefined ? err(missingMessage(key, chain)) : ok(found);
   };
+
+  const render = (key: string, args: unknown): Result<string, MessageFailure> =>
+    andThen(find(key), (message) => renderMessage(message, args, scope));
 
   return {
     t: (key, ...[args]) => render(key, args),
+    parts: (key, ...[args]) => andThen(find(key), (message) => renderParts(message, args, scope)),
+    partsOr: (key, args, fallback) =>
+      unwrapOr(
+        andThen(find(key), (message) => renderParts(message, args, scope)),
+        fallback
+      ),
     tOr: (key, args, fallback) => unwrapOr(render(key, args), fallback),
   };
 }

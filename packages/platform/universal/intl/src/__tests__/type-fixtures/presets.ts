@@ -27,3 +27,11 @@ definePresets({ number: { compact: { notation: 'compact' } } });
 definePresets({ number: { default: { notation: 'compact' } } });
 
 expectTypeOf(presets.number).not.toHaveProperty('tight');
+
+const _partialLocale: Preset<{ readonly a: number; readonly b: number }> = {
+  default: { a: 1, b: 2 },
+  pl: { b: 3 },
+};
+
+// @ts-expect-error a locale overrides an option of the preset's own kind, nothing else
+const _foreignOverride: Preset<{ readonly a: number }> = { default: { a: 1 }, pl: { c: 3 } };

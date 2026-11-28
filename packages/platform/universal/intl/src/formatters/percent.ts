@@ -1,31 +1,32 @@
-import { andThen, map } from '@kit/result';
-import { finite } from '../inputs';
-import { type OptionKeys, withOptions } from '../with-options';
+import { ok } from '@kit/result';
+import { type OptionKeys, type TaggedOf } from '../kind';
+import { defineNumberKind } from '../number-kind';
 
 const PERCENT_OPTION_KEYS = [
   'minimumFractionDigits',
   'maximumFractionDigits',
+  'maximumSignificantDigits',
+  'roundingMode',
   'signDisplay',
-] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
+  'input',
+] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'input'>;
 
-type PercentOptions = Pick<Intl.NumberFormatOptions, (typeof PERCENT_OPTION_KEYS)[number]>;
+type PercentOptions = Pick<
+  Intl.NumberFormatOptions,
+  Exclude<(typeof PERCENT_OPTION_KEYS)[number], 'input'>
+> & { readonly input?: 'points' | 'fraction' };
 
-/** In percentage points: `7` renders as 7%, not 700%. */
-export interface PercentValue {
-  readonly type: 'percent';
-  readonly value: number;
-  readonly options?: PercentOptions;
-}
+/** In percentage points, `7` rendering as 7%, not 700%; `input: 'fraction'` reads `0.07` as 7%. */
+export const percent = defineNumberKind({
+  name: 'percent',
+  keys: PERCENT_OPTION_KEYS,
+  defaults: { maximumFractionDigits: 1 },
+  transform: (value, { input = 'points', ...display }: Partial<PercentOptions>) =>
+    ok({
+      amount: input === 'points' ? value / 100 : value,
+      format: { ...display, style: 'percent' },
+    }),
+});
 
-export const percent = withOptions<PercentValue>('percent', PERCENT_OPTION_KEYS, (value, context) =>
-  andThen(finite('percent', value.value), (points) =>
-    map(
-      context.cache.numberFormat(context.locale, {
-        maximumFractionDigits: 1,
-        ...value.options,
-        style: 'percent',
-      }),
-      (format) => format.format(points / 100)
-    )
-  )
-);
+/** @public */
+export type PercentValue = TaggedOf<typeof percent>;

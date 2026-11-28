@@ -62,6 +62,6 @@ describe('apps/client/studio: ScreeningFinding', () => {
     );
     expect(screen.getByText('Sampled frames over the threshold: 25%')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Metadata hits' })).toHaveTextContent('Too many links');
-    expect(screen.getByText('Matched words: darn')).toBeInTheDocument();
+    expect(screen.getByText(/Matched words:/)).toHaveTextContent('Matched words: darn');
   });
 });

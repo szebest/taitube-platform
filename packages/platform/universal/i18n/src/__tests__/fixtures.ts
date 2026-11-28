@@ -31,6 +31,9 @@ export const source = {
       plural: { count: { one: '{?} view', other: '{?} views', formatter: 'compact' } },
     }),
     categories: dt('In {names:list}'),
+    genres: dt('In {names:list}', {
+      list: { names: { max: 2, more: { one: '{?} more', other: '{?} more' } } },
+    }),
     state: dt('{state:enum}', { enum: { state: { ready: 'Ready', failed: 'Failed' } } }),
   },
   errors: { forbidden: dt('Not allowed.') },

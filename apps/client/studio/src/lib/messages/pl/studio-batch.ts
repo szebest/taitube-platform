@@ -1,4 +1,4 @@
-import { dt } from '@vp/shared-messages';
+import { dt, listMore } from '@vp/shared-messages';
 
 export const studioBatch = {
   batchDeleted: dt('{count:plural}', {
@@ -26,7 +26,9 @@ export const studioBatch = {
   ),
   batchFailed: dt('Nic nie zostało zmienione. Spróbuj ponownie.'),
   batchFailure: dt('{title} ({code}): {reason}'),
-  batchFailureMore: dt('i {count:number} więcej'),
+  batchFailures: dt('{failures:list}', {
+    list: { failures: { type: 'conjunction', max: 5, more: listMore.pl } },
+  }),
   batchBarLabel: dt('Akcje dla zaznaczonych filmów'),
   batchAction: dt('{field:enum}', {
     enum: {

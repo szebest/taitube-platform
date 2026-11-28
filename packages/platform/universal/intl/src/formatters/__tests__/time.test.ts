@@ -1,10 +1,10 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type TimeValue, time } from '../time';
+import { formatText, ARABIC_INDIC_DIGIT, contextFor, format } from '../../__tests__/fixtures';
+import { type TimeValue } from '../time';
 
 const ISO = '2026-09-22T18:30:00.000Z';
 
 function render(locale: string, options?: TimeValue['options'], timeZone = 'UTC') {
-  const rendered = time({ type: 'time', value: ISO, options }, contextFor(locale, { timeZone }));
+  const rendered = format({ type: 'time', value: ISO, options }, contextFor(locale, { timeZone }));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -23,5 +23,17 @@ describe('@kit/intl: time', () => {
 
   it('renders in the context zone', () => {
     expect(render('en-GB', { style: 'short' }, 'Europe/Stockholm')).toMatch(/^20:30$/);
+  });
+
+  it.each([
+    { options: { timeZone: 'Asia/Tokyo' }, expected: '3:30 AM' },
+    {
+      options: { hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3 },
+      expected: '6:30:00.000 PM',
+    },
+  ] as const)('takes $options', ({ options, expected }) => {
+    expect(formatText({ type: 'time', value: ISO, options }, 'en-US').replace(/\s/gu, ' ')).toBe(
+      expected
+    );
   });
 });

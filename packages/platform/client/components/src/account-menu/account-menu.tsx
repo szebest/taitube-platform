@@ -3,21 +3,9 @@ import type { ComponentPropsWithRef } from 'react';
 import { AccentRing, type AccentRingAccent } from '../identity/accent-ring';
 import { accountMenuStyles } from './account-menu.variants';
 
-const INITIALS = 2;
-
-/** Up to two initials of `name`, the monogram an avatar shows until its picture loads. */
-export function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter((word) => word !== '')
-    .slice(0, INITIALS)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join('');
-}
-
 export interface AccountMenuTriggerProps extends ComponentPropsWithRef<'button'> {
-  /** The viewer's channel name, drawn as its initials until the picture loads. */
-  name: string;
+  /** The monogram the avatar shows until the picture loads: the viewer's `initials` kind, rendered by the caller. */
+  initials: string;
   imageUrl?: string | null;
   /** The ring of the identity the tab acts as; none in a browser of one account and one channel. */
   accent?: AccentRingAccent;
@@ -25,7 +13,7 @@ export interface AccountMenuTriggerProps extends ComponentPropsWithRef<'button'>
 
 /** The header avatar that opens the account menu. */
 export function AccountMenuTrigger({
-  name,
+  initials,
   imageUrl,
   accent,
   className,
@@ -35,7 +23,7 @@ export function AccountMenuTrigger({
   const avatar = (
     <Avatar.Root size="md">
       {imageUrl ? <Avatar.Image src={imageUrl} alt="" /> : null}
-      <Avatar.Fallback aria-hidden="true">{initialsOf(name)}</Avatar.Fallback>
+      <Avatar.Fallback aria-hidden="true">{initials}</Avatar.Fallback>
     </Avatar.Root>
   );
 

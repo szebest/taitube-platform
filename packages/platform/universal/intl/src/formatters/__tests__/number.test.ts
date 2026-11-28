@@ -1,8 +1,14 @@
-import { ARABIC_INDIC_DIGIT, ASCII_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { number, numberFormatOptions } from '../number';
+import {
+  formatText,
+  ARABIC_INDIC_DIGIT,
+  ASCII_DIGIT,
+  contextFor,
+  format,
+} from '../../__tests__/fixtures';
+import { numberFormatOptions } from '../number';
 
 function render(locale: string, value: number, options = {}) {
-  return number({ type: 'number', value, options }, contextFor(locale));
+  return format({ type: 'number', value, options }, contextFor(locale));
 }
 
 describe('@kit/intl: number', () => {
@@ -45,7 +51,7 @@ describe('@kit/intl: number', () => {
   });
 
   it('declines an option it does not allow', () => {
-    const declined = number(
+    const declined = format(
       // @ts-expect-error currency formatting is money's job, not number's
       { type: 'number', value: 1, options: { currency: 'SEK' } },
       contextFor('en')
@@ -55,5 +61,18 @@ describe('@kit/intl: number', () => {
       ok: false,
       error: { code: 'FORMAT_UNKNOWN_OPTION', option: 'currency' },
     });
+  });
+
+  it.each([
+    { options: { roundingMode: 'floor', maximumFractionDigits: 0 }, value: 2.7, expected: '2' },
+    {
+      options: { trailingZeroDisplay: 'stripIfInteger', minimumFractionDigits: 2 },
+      value: 5,
+      expected: '5',
+    },
+    { options: { maximumSignificantDigits: 2 }, value: 1234, expected: '1,200' },
+    { options: { minimumSignificantDigits: 4 }, value: 5, expected: '5.000' },
+  ] as const)('takes $options', ({ options, value, expected }) => {
+    expect(formatText({ type: 'number', value, options })).toBe(expected);
   });
 });

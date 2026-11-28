@@ -10,8 +10,7 @@ describe('@vp/intl-formats: publishedAt', () => {
       relative: {
         type: 'relative',
         value: THREE_DAYS_EARLIER,
-        now: NOW,
-        options: { pastOnly: true },
+        options: { now: NOW, pastOnly: true },
       },
       absolute: { type: 'dateTime', value: THREE_DAYS_EARLIER },
     });

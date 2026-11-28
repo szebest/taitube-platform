@@ -1,8 +1,8 @@
 import type { TokenGroup } from '@kit/design-tokens';
 import { Badge, Button } from '@kit/ui';
 import { ChoiceCards } from '#app/components/settings/choice-cards';
+import { useSetName } from '#app/features/account/hooks/use-set-name';
 import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
-import { setName } from '#app/features/account/utils/set-name';
 import { useT } from '#app/lib/messages';
 import { SettingItem } from '../setting-item/setting-item';
 import { SetPreview } from '../token-group-map/token-group-map';
@@ -15,6 +15,7 @@ export type TokenGroupRowProps = { group: TokenGroup };
 export function TokenGroupRow({ group }: TokenGroupRowProps) {
   const { sets, defaultSet, override, choose, reset } = useTokenOverride(group);
   const { tOr } = useT();
+  const setName = useSetName();
   const label = tOr('settings.rowLabel', { row: group }, '');
 
   return (

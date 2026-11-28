@@ -1,8 +1,8 @@
-import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type DurationValue, duration } from '../duration';
+import { ARABIC_INDIC_DIGIT, contextFor, format, formatText } from '../../__tests__/fixtures';
+import { type DurationValue } from '../duration';
 
 function render(locale: string, value: number, options?: DurationValue['options']) {
-  const rendered = duration({ type: 'duration', value, options }, contextFor(locale));
+  const rendered = format({ type: 'duration', value, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }
 
@@ -53,5 +53,23 @@ describe('@kit/intl: duration', () => {
 
   it.each([-1, Number.NaN])('declines %d seconds', (value) => {
     expect(render('en', value)).toBe('FORMAT_UNRENDERABLE');
+  });
+
+  it.each([
+    {
+      value: 3_753_000,
+      options: { unit: 'milliseconds', style: 'words' },
+      expected: '1 hr, 2 min, 33 sec',
+    },
+    { value: 3753, options: { style: 'words', maxUnits: 2 }, expected: '1 hr, 2 min' },
+    { value: 3753, options: { style: 'words', maxUnits: 1 }, expected: '1 hr' },
+    { value: 600, options: { style: 'words', maxUnits: 1 }, expected: '10 min' },
+    { value: 765, options: { hoursDisplay: 'always' }, expected: '0:12:45' },
+    { value: 93_600, options: { style: 'words', days: true }, expected: '1 day, 2 hr' },
+    { value: 93_600, options: { style: 'words' }, expected: '26 hr' },
+    { value: 93_600, options: { style: 'words', days: true, maxUnits: 1 }, expected: '1 day' },
+    { value: 765, options: { maxUnits: 0, style: 'words' }, expected: 'FORMAT_UNRENDERABLE' },
+  ] as const)('takes $options for $value', ({ value, options, expected }) => {
+    expect(formatText({ type: 'duration', value, options })).toBe(expected);
   });
 });
