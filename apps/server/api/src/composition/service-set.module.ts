@@ -1,9 +1,10 @@
 import type { Container } from '@kit/composition';
+import { registerFailureWords } from './failure-words.module';
 import { Services } from './service-tokens';
 
 /** What `app.services` hands the routes: every service, resolved once the container is built. */
 export function registerServiceSet(c: Container): Container {
-  return c.provide(Services.ServiceSet, (c) => ({
+  return registerFailureWords(c).provide(Services.ServiceSet, (c) => ({
     videoService: c.get(Services.VideoService),
     creatorStudioService: c.get(Services.CreatorStudioService),
     videoBulkEditService: c.get(Services.VideoBulkEditService),
@@ -83,6 +84,7 @@ export function registerServiceSet(c: Container): Container {
     sseService: c.get(Services.SseService),
     sseHub: c.get(Services.SseHub),
     readiness: c.get(Services.Readiness),
+    failureWords: c.get(Services.FailureWords),
     queueBoard: c.get(Services.QueueBoard),
     watchPartyService: c.get(Services.WatchPartyService),
     watchPartyGuestService: c.get(Services.WatchPartyGuestService),

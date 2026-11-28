@@ -45,7 +45,7 @@ export async function liveChatRoutes(app: FastifyInstance): Promise<void> {
         const connection = await connecting;
         if (!isOk(connection)) return;
         const { ref, result } = await connection.value.receive(socketText(raw));
-        sendSocketResult(socket, request.url, result, ref);
+        sendSocketResult(socket, request, result, ref);
       });
       socket.on('close', async () => {
         const connection = await connecting;
@@ -53,7 +53,7 @@ export async function liveChatRoutes(app: FastifyInstance): Promise<void> {
       });
       void connecting.then((connection) => {
         if (isOk(connection)) return;
-        sendSocketResult(socket, request.url, connection);
+        sendSocketResult(socket, request, connection);
         socket.close(SERVER_ERROR);
       });
     }

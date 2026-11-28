@@ -65,6 +65,7 @@ describe('apps/server/api/composition: services module', () => {
       'creatorStudioService',
       'currentPickService',
       'dlqService',
+      'failureWords',
       'feedService',
       'homeService',
       'liveChatService',

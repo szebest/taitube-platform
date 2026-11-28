@@ -81,7 +81,9 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
   **narrow** a union deliberately - `CategoryService.listActive` drops `CacheUnavailable` because the cache
   service falls through to the repository - and that narrowing is now visible in the signature.
 - A route hands the `Result` to `sendResult`, the only unwrap point in `apps/server/api`, or on an open
-  WebSocket to `sendSocketResult`, which sends a failure as an `error` frame with the same `Problem`. Default mapping, a
+  WebSocket to `sendSocketResult`, which sends a failure as an `error` frame with the same `Problem`. The default
+  `Problem`'s `detail` is the code's `ERROR_COPY` words in the caller's locale (`?locale`, then `Accept-Language`),
+  rendered by `app.services.failureWords` through the clients' message engine. Default mapping, a
   per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
   [docs/standards/error-handling.md](../../../docs/standards/error-handling.md).
 - `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, Fastify's own 4xx

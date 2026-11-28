@@ -31,7 +31,7 @@ export async function liveCompanionRoutes(app: FastifyInstance): Promise<void> {
       if (hello) send(hello);
       socket.on('message', async (raw) => {
         const { ref, result } = await liveCompanionService.receive(token, socketText(raw));
-        sendSocketResult(socket, request.url, result, ref);
+        sendSocketResult(socket, request, result, ref);
       });
     }
   );

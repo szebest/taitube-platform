@@ -1,7 +1,9 @@
+import { Container } from '@kit/composition';
 import { databaseUnavailable } from '@kit/errors';
 import { err, ok } from '@kit/result';
 import { expectOk } from '@kit/testing/result';
 import { DevTokenVerifier } from '@vp/adapters/auth';
+import { registerAdapters } from '@vp/adapters/composition';
 import { InMemoryPartyGuestSessions, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import { getDevJwks, mintToken } from '@vp/dev-identity';
@@ -9,6 +11,7 @@ import { apiTokenRefused } from '@vp/domain-rules';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import fastify, { type FastifyInstance } from 'fastify';
 import { seedTeamMember } from '../../__tests__/test-app';
+import { registerServices, Services } from '../../composition/services.module';
 import { channelServiceDeps } from '../../services/__tests__/service-deps';
 import { ChannelService } from '../../services/channel-service';
 import { RequestIdentity } from '../../services/request-identity';
@@ -55,6 +58,8 @@ async function appWith(
   guestSessions = new InMemoryPartyGuestSessions()
 ): Promise<FastifyInstance> {
   const app = fastify({ logger: false });
+  const services = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
+  app.decorate('services', services.get(Services.ServiceSet));
   registerErrorHandler(app);
   await app.register(registerAuth, {
     identity,
