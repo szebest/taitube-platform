@@ -1,5 +1,5 @@
 import { andThen, err, ok } from '@kit/result';
-import { type User, USER } from '../context';
+import { USER } from '../context';
 import { unrenderable } from '../failures';
 import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 import { referenceInstant } from '../reference-instant';
@@ -24,7 +24,7 @@ export interface TimeZoneOptions {
   readonly at?: string;
 }
 
-const isZone = (value: unknown): value is string | User => typeof value === 'string';
+const isZone = (value: unknown): value is string => typeof value === 'string';
 
 /** An IANA zone as the viewer reads it: `Central European Summer Time`, `CEST` or `GMT+2`. `USER` is the viewer's own. */
 export const timeZone = defineKind({

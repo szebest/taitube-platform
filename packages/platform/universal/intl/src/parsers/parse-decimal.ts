@@ -4,7 +4,7 @@ import { type FormatFailure, unrenderable } from '../failures';
 
 const BIDI_MARKS = /[‎‏؜]/g;
 const WHITESPACE = /\s/;
-const MINUS_SIGNS = new Set(['-', '−']);
+const MINUS_SIGNS: ReadonlySet<string> = new Set(['-', '−']);
 const ONLY_DIGITS = /^\d*$/;
 const DIGITS = 10;
 

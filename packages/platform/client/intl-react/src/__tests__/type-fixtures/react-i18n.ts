@@ -46,9 +46,9 @@ createReactI18n(source);
 
 const { Message } = videos;
 
-Message({ id: 'videos.title', args: {} });
-Message({ id: 'videos.views', args: { count: 2 } });
+void Message({ id: 'videos.title', args: {} });
+void Message({ id: 'videos.views', args: { count: 2 } });
 // @ts-expect-error the placeholder's argument is missing
-Message({ id: 'videos.views', args: {} });
+void Message({ id: 'videos.views', args: {} });
 // @ts-expect-error a key of another app's catalogue
-Message({ id: 'comments.title', args: {} });
+void Message({ id: 'comments.title', args: {} });

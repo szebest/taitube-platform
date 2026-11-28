@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0
+## 0.5.0
 
 - Breaking: `AccountMenu.Trigger`, `ActingAs.Avatar` and `IdentityRow.Avatar` take `initials` instead of `name`: the caller renders the `initials` kind of `@kit/intl`, so the monogram follows the viewer's language and whole graphemes.
 

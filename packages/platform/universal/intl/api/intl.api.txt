@@ -59,6 +59,7 @@ export const FormatErrorCodes: { readonly FORMAT_UNSUPPORTED_LOCALE: "FORMAT_UNS
 export type FormatFailure = UnsupportedLocale | UnknownOption | WrongKind | Unrenderable;
 export type FormatInput = string | number | AnyTaggedValue;
 export type FormatKinds = typeof formatKinds;
+export const FormatPresets: Token<Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>>
 export type FormatValue = FormatValueOf<FormatKinds>;
 export type FormatValueOf<Kinds extends readonly Kind[]> = string | number | TaggedValueOf<Kinds>;
 export interface InitialsOptions {
@@ -219,7 +220,6 @@ export type Unrenderable = FailureOf<typeof FormatErrorCodes.FORMAT_UNRENDERABLE
 export type UnsupportedLocale = FailureOf<typeof FormatErrorCodes.FORMAT_UNSUPPORTED_LOCALE, {
     locale: string;
 }>;
-export type User = typeof USER;
 export type WrongKind = FailureOf<typeof FormatErrorCodes.FORMAT_WRONG_KIND, {
     formatter: string;
     received: string;
@@ -260,7 +260,7 @@ export const percent: Readonly<{ input: (value: number, options: unknown, contex
 export const plainDate: Kind<"plainDate", string, PlainDateOptions, string, never>
 export const pluralCategory: Kind<"pluralCategory", number, PluralOptions, Intl.LDMLPluralRule, never>
 export const relative: Kind<"relative", string, RelativeOptions, string, never>
-export function resolveCurrency(formatter: string, requested: string | User | undefined, context: FormatContext): Result<string, FormatFailure>
+export function resolveCurrency(formatter: string, requested: string | undefined, context: FormatContext): Result<string, FormatFailure>
 export function resolveEntry(presets: PresetTable, kind: string, entry: unknown, chain: readonly string[]): Resolved
 export function runKind<Arg, Options, Out>(kind: Kind<string, Arg, Options, Out>, arg: unknown, options: unknown, context: KindContext, label?: string): Result<Out, FormatFailure>
 export function runParts<Arg, Options, Parts>(kind: Kind<string, Arg, Options, unknown, Parts>, arg: unknown, options: unknown, context: KindContext, label?: string): Result<Parts, FormatFailure>

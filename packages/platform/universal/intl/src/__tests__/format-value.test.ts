@@ -1,6 +1,7 @@
 import { type FormatValue, formatKinds } from '../format-value';
 import { NOW, contextFor, format } from './fixtures';
 
+const byName = (a: string, b: string) => a.localeCompare(b);
 const ISO = '2026-09-19T18:30:00.000Z';
 
 const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
@@ -51,7 +52,7 @@ describe('@kit/intl: formatValue', () => {
       .map(({ name }) => name)
       .filter((name) => !['collator', 'pluralCategory'].includes(name));
 
-    expect([...routed].sort()).toEqual([...textKinds].sort());
+    expect([...routed].sort(byName)).toEqual([...textKinds].sort(byName));
   });
 
   it('declines an unsupported locale with a failure, not a throw', () => {

@@ -58,7 +58,7 @@ function fallbackText(locale: string, options: DurationFormatOptions, duration: 
   return fallback.ok && fallback.value.format(duration);
 }
 
-describe.skipIf(!DurationFormat)('@kit/intl: the fallback against the native constructor', () => {
+describe('@kit/intl: the fallback against the native constructor', () => {
   it.each(cases)(
     'renders $duration as $options in $locale exactly as the native path does',
     ({ locale, options, duration }) => {
