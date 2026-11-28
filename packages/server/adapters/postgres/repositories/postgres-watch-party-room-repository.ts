@@ -22,7 +22,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { listDiscoverableRooms, writeSearchText } from './watch-party-discovery-query';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';
-import { insertOutbox, insertSystemLine } from './watch-party-writes';
+import { insertOutbox, toRoom, writeRoom } from './watch-party-writes';
 
 const {
   watchPartyRooms: rooms,
@@ -31,11 +31,6 @@ const {
   watchPartyMemberRoles: memberRoles,
   watchPartyQueueItems: queue,
 } = schema;
-
-function toRoom(row: typeof rooms.$inferSelect): WatchPartyRoom {
-  const { trendScore: _trendScore, searchText: _searchText, ...room } = row;
-  return room;
-}
 
 export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -144,7 +139,8 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     at: Date,
     reminders: readonly NewOutboxInput[] = []
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return this.write(
+    return writeRoom(
+      this.db,
       'updateWatchPartySettings',
       id,
       line,
@@ -167,7 +163,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     change: PlaybackChange
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     const { expected, playback, playedItemId, currentVideoId, line, at } = change;
-    return this.write('commitWatchPartyPlayback', id, line, async (tx) => {
+    return writeRoom(this.db, 'commitWatchPartyPlayback', id, line, async (tx) => {
       const updated = await tx
         .update(rooms)
         .set({
@@ -206,7 +202,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     line: NewSystemLine | null,
     at: Date
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return this.write('closeWatchPartyRoom', id, line, (tx) =>
+    return writeRoom(this.db, 'closeWatchPartyRoom', id, line, (tx) =>
       tx
         .update(rooms)
         .set({ status: 'closed', closedReason: reason, closedAt: at, updatedAt: at })
@@ -236,7 +232,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     transfer: OwnerTransfer
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     const { fromKey, toKey, expectedRolesVersion, cohostRoleId, line, at } = transfer;
-    return this.write('transferWatchPartyOwner', id, line, async (tx) => {
+    return writeRoom(this.db, 'transferWatchPartyOwner', id, line, async (tx) => {
       const updated = await tx
         .update(rooms)
         .set({
@@ -294,30 +290,6 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
           return true;
         }),
       databaseUnavailable.during('upgradeWatchPartyRoles')
-    );
-  }
-
-  /** One compare-and-set in a transaction; the system line is written only when it applied. */
-  private async write(
-    operation: string,
-    id: string,
-    line: NewSystemLine | null,
-    update: (tx: PostgresDatabase) => Promise<(typeof rooms.$inferSelect)[]>,
-    outbound: readonly NewOutboxInput[] = []
-  ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return fromPromise(
-      () =>
-        this.db.transaction(async (tx): Promise<RoomWrite> => {
-          const [applied] = await update(tx);
-          if (applied) {
-            if (line) await insertSystemLine(tx, id, line);
-            await insertOutbox(tx, outbound);
-            return { type: 'applied', room: toRoom(applied) };
-          }
-          const [current] = await tx.select().from(rooms).where(eq(rooms.id, id));
-          return current ? { type: 'stale', room: toRoom(current) } : { type: 'missing' };
-        }),
-      databaseUnavailable.during(operation)
     );
   }
 }

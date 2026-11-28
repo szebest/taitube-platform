@@ -51,6 +51,7 @@
 1 apps/server/api/src/services/watch-party/watch-party-invite-service.ts
 1 apps/server/api/src/services/watch-party/watch-party-owner-grace.ts
 1 apps/server/api/src/services/watch-party/watch-party-playback.ts
+3 apps/server/api/src/services/watch-party/watch-party-scheduled-start.ts
 2 apps/server/api/src/services/watch-party/watch-party-seated-actions.ts
 1 apps/server/api/src/services/watch-party/watch-party-service.ts
 1 apps/server/api/src/services/watch-party/watch-party-settings.ts
