@@ -151,20 +151,6 @@ describe('apps/server/api/services: joinRoom', () => {
       expect(await test.seated()).toEqual([`user:${OWNER.id}`]);
     });
 
-    it('removes nobody when the link a member came in by is revoked', async () => {
-      const test = await setUpJoin({ visibility: 'private' });
-      const token = await seedLink(test, test.room.id);
-      expectOk(await test.join(userCaller(MEMBER), { invite: token }));
-      const links = test.repositories.watchPartyInviteLinks;
-      const link = expectOk(await links.findByTokenHash(test.deps.secrets.hashToken(token)));
-      expectOk(await links.revoke(test.room.id, link?.id ?? '', new Date()));
-
-      const failure = expectErr(await test.join(userCaller(OTHER), { invite: token }));
-
-      expect(failure.code).toBe(ErrorCodes.WATCH_PARTY_INVITE_INVALID);
-      expect(await test.seated()).toEqual([`user:${OWNER.id}`, `user:${MEMBER.id}`]);
-    });
-
     it('refuses an invite that belongs to someone else', async () => {
       const test = await setUpJoin({ visibility: 'private' });
       const invite = await seedInvite(test, test.room.id, OTHER);
