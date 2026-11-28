@@ -61,6 +61,7 @@ import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
 import { type AccountServiceSet, AccountServices } from './account-tokens';
+import { type ChannelPageServiceSet, ChannelPageServices } from './channel-page-tokens';
 import { type CommentServiceSet, CommentServices } from './comment-tokens';
 import { type IntegrationServiceSet, IntegrationServices } from './integration-tokens';
 import { type PlaylistServiceSet, PlaylistServices } from './playlist-tokens';
@@ -77,7 +78,8 @@ export interface ServiceSet
     AccountServiceSet,
     WatchPartyServiceSet,
     PlaylistServiceSet,
-    PostServiceSet {
+    PostServiceSet,
+    ChannelPageServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
@@ -177,6 +179,7 @@ export const Services = {
   ...WatchPartyServices,
   ...PlaylistServices,
   ...PostServices,
+  ...ChannelPageServices,
   CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),

@@ -26,6 +26,8 @@ const CommentMetaSchema = z.object({
 });
 const PostMetaSchema = z.object({ kind: z.enum(POST_KINDS) });
 const NoMetaSchema = z.object({});
+const PageVersionMetaSchema = z.object({ version: z.number().int() });
+const PageScheduleMetaSchema = z.object({ scheduleId: z.uuid(), publishAt: z.iso.datetime() });
 const ExportMetaSchema = z.object({
   kind: z.enum(DATA_EXPORT_KINDS),
   format: z.enum(DATA_EXPORT_FORMATS),
@@ -98,6 +100,15 @@ const AuditEntrySchema = z.discriminatedUnion('action', [
   auditEntry('post.published', 'post', PostMetaSchema),
   auditEntry('post.updated', 'post', PostMetaSchema),
   auditEntry('post.deleted', 'post', PostMetaSchema),
+  auditEntry('page.draft_saved', 'page', PageVersionMetaSchema),
+  auditEntry('page.published', 'page', PageVersionMetaSchema),
+  auditEntry('page.scheduled', 'page', PageScheduleMetaSchema),
+  auditEntry('page.schedule_cancelled', 'page', PageScheduleMetaSchema),
+  auditEntry(
+    'page.restored',
+    'page',
+    z.object({ version: z.number().int(), fromVersion: z.number().int() })
+  ),
 ]);
 
 export const AuditPageSchema = z.object({
