@@ -113,6 +113,8 @@ export interface VideoWithDetails {
   steps: ProcessingStepRecord[];
   events: VideoEventRecord[];
   upload?: UploadRecord | null;
+  /** The broadcast this video records; null for every other video. */
+  liveStreamId: string | null;
 }
 
 /**

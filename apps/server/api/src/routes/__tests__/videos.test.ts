@@ -1,9 +1,16 @@
+import { expectOk } from '@kit/testing/result';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-identity';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing-fixtures';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import {
+  TOKENS,
+  bearer,
+  buildTestApp,
+  seedPrimaryChannel,
+  seedVideo,
+} from '../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
@@ -78,6 +85,45 @@ describe('video routes', () => {
     const res = await app.inject({ method: 'GET', url: `/v1/videos/${id}`, headers });
 
     expect(res.statusCode).toBe(status);
+  });
+
+  it.each([
+    { video: 'the recording of a stream', recording: true },
+    { video: 'a video that is no stream recording', recording: false },
+  ])('answers $video with its liveStreamId', async ({ recording }) => {
+    const streamId = '018f0000-0000-7000-8000-0000000000a1';
+    const recordingId = '018f0000-0000-7000-8000-0000000000a2';
+    const channelId = await seedPrimaryChannel(repositories, OWNER);
+    expectOk(
+      await repositories.liveStreams.ensureIdle(channelId, {
+        id: streamId,
+        streamKey: 'key',
+        overlayToken: 'o',
+        controlToken: 'c',
+      })
+    );
+    expectOk(
+      await repositories.liveStreams.goLive({
+        streamId,
+        video: {
+          id: recordingId,
+          ownerId: OWNER,
+          channelId,
+          visibility: 'public',
+          sourceKey: 'live/',
+        },
+        startedAt: new Date(),
+        outbox: [],
+      })
+    );
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/videos/${recording ? recordingId : PUBLIC_VIDEO}`,
+      headers: owner,
+    });
+
+    expect(res.json().liveStreamId).toBe(recording ? streamId : null);
   });
 
   it.each([

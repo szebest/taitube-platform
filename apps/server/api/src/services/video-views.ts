@@ -74,6 +74,7 @@ export interface VideoDetailView {
   shareLinkId?: string;
   experiment?: ExperimentTag;
   channel?: ChannelCard | null;
+  liveStreamId?: string | null;
   viewsCount: number;
   likesCount: number;
   dislikesCount: number;

@@ -24,9 +24,16 @@ export interface WatchPageProps {
   renderActions?: (video: Video) => ReactNode;
   /** What the loaded video's team sees between the engagement bar and the description, from the feature the route composes in. */
   renderCreatorStats?: (video: Video) => ReactNode;
+  /** The chat slot at the top of the aside, from the feature the route composes in; a video it renders nothing for gets no slot. */
+  renderChat?: (video: Video) => ReactNode;
 }
 
-export function WatchPage({ readOnServer, renderActions, renderCreatorStats }: WatchPageProps) {
+export function WatchPage({
+  readOnServer,
+  renderActions,
+  renderCreatorStats,
+  renderChat,
+}: WatchPageProps) {
   const { videoId } = useParams({ from: '/watch/$videoId' });
   const { t, list, s } = useSearch({ from: '/watch/$videoId' });
   const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
@@ -55,6 +62,7 @@ export function WatchPage({ readOnServer, renderActions, renderCreatorStats }: W
         discussion={<WatchDiscussion videoId={video.id} />}
         aside={
           <>
+            {renderChat?.(video)}
             <WatchTranscript videoId={video.id} />
             <WatchQueue key={video.id} video={video} />
           </>

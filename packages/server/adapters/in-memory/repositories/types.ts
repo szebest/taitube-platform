@@ -1,6 +1,7 @@
 import type {
   ChannelAuditRepositoryPort,
   EventRepository,
+  LiveStreamRepositoryPort,
   OutboxRepository,
   RenditionRepository,
   StepRepository,
@@ -38,6 +39,7 @@ export interface InMemoryVideoRepositoryOptions {
   outboxRepo?: OutboxRepository;
   userEventsRepo?: UserEventRepository;
   auditRepo?: Pick<ChannelAuditRepositoryPort, 'append'>;
+  liveStreamsRepo?: Pick<LiveStreamRepositoryPort, 'findByVideoId'>;
   now?: Clock;
 }
 

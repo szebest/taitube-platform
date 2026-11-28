@@ -91,6 +91,51 @@ test.describe('live', () => {
     await expect(chat.getByRole('link', { name: 'Sign in to chat' })).toBeVisible();
   });
 
+  test('a recording opened from search shows the replay of its broadcast chat', async ({
+    page,
+    stack,
+  }) => {
+    const { watchable } = stack.videos;
+    await page.route(new RegExp(`/v1/videos/${watchable.id}(\\?.*)?$`), async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      const response = await route.fetch();
+      return route.fulfill({
+        response,
+        json: { ...(await response.json()), liveStreamId: STREAM_ID },
+      });
+    });
+    await page.route(new RegExp(`/v1/live/${STREAM_ID}/chat/replay`), (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              id: '0190c3a0-5e1d-7000-8000-00000000e1a2',
+              author: {
+                userId: stack.team.ownerId,
+                handle: 'ines',
+                displayName: 'Ines',
+                avatarUrl: null,
+              },
+              message: 'Replayed from the broadcast',
+              offsetMs: 0,
+              createdAt: '2026-11-05T10:00:00.000Z',
+            },
+          ],
+        },
+        headers: ALLOW_ANY_ORIGIN,
+      })
+    );
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`/search?q=${encodeURIComponent(watchable.title)}`);
+
+    await page.getByRole('link', { name: watchable.title }).first().click();
+    await page.waitForURL(`/watch/${watchable.id}`);
+
+    const chat = page.getByRole('region', { name: 'Live chat' });
+    await expect(chat.getByRole('heading', { name: 'Chat replay' })).toBeVisible();
+    await expect(chat.getByText('Replayed from the broadcast')).toBeVisible();
+  });
+
   test('a broadcast that does not exist is not found', async ({ page }) => {
     const response = await page.goto('/live/0190c3a0-5e1d-7000-8000-00000000e1ff');
 

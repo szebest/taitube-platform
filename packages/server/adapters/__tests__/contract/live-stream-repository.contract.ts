@@ -77,6 +77,9 @@ export function describeLiveStreamRepositoryContract(makeSubject: MakeRepositori
         expectOk(await subject.repositories.events.findByVideoId(VIDEO_ID)).map((e) => e.type)
       ).toContain('video.live');
       expect(expectOk(await streams.findByVideoId(VIDEO_ID))?.id).toBe(STREAM_ID);
+      expect(
+        expectOk(await subject.repositories.videos.findWithDetails(VIDEO_ID))?.liveStreamId
+      ).toBe(STREAM_ID);
     });
 
     it('ends a broadcast and hands its key and tokens to the next idle stream', async () => {

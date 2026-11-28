@@ -89,6 +89,11 @@ export class InMemoryVideoRepository extends VideoRepository {
       : null;
   }
 
+  private async getLiveStreamId(id: string): Promise<string | null> {
+    if (!this.deps.liveStreamsRepo) return null;
+    return unwrapOr(await this.deps.liveStreamsRepo.findByVideoId(id), null)?.id ?? null;
+  }
+
   private async emitEvent(
     videoId: string,
     type: string,
@@ -105,13 +110,14 @@ export class InMemoryVideoRepository extends VideoRepository {
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
     const video = this.videosMap.get(id);
     if (!video) return ok(null);
-    const [renditions, steps, events, upload] = await Promise.all([
+    const [renditions, steps, events, upload, liveStreamId] = await Promise.all([
       this.getRenditions(id),
       this.getSteps(id),
       this.getEvents(id),
       this.getUpload(id),
+      this.getLiveStreamId(id),
     ]);
-    return ok({ video, renditions, steps, events, upload });
+    return ok({ video, renditions, steps, events, upload, liveStreamId });
   }
 
   async create(

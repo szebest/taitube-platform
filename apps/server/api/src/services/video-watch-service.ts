@@ -1,8 +1,8 @@
-import { type Result, err, ignore, isErr, ok } from '@kit/result';
+import { type Result, err, ignore, isErr, isOk, ok } from '@kit/result';
 import type { ViewBufferPort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import { type ShareLink, viewBucketsOf } from '@vp/domain';
-import { videoNotFound } from '@vp/domain-rules';
+import { decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
 import type { ExperimentOverlay } from './experiment-overlay';
 import type { GatedReadFailure, VideoAccess, VideoAccessGate } from './video-access-gate';
@@ -50,7 +50,12 @@ export class VideoWatchService {
     const { link } = gated.value;
     const viewerKey = viewer?.id ?? request.sessionKey;
     if (link && viewerKey !== null) await this.recordOpen(link, viewerKey);
-    const shown = link ? { ...view.value, shareLinkId: link.id } : view.value;
+    const replayable = isOk(decideVideoRead({ viewer, video: found.value.video, videoId }));
+    const shown = {
+      ...view.value,
+      ...(link && { shareLinkId: link.id }),
+      ...(!replayable && { liveStreamId: null }),
+    };
     return ok(await this.deps.experiments.applyOne(shown, request.sessionKey));
   }
 

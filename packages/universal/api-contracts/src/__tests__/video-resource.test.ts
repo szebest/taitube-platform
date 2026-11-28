@@ -1,4 +1,9 @@
-import { VideoIdParamSchema, VideoListResponseSchema, VideoSummarySchema } from '../video-resource';
+import {
+  VideoIdParamSchema,
+  VideoListResponseSchema,
+  VideoSchema,
+  VideoSummarySchema,
+} from '../video-resource';
 
 const summary = {
   id: '00000000-0000-7000-8000-0000000000f1',
@@ -29,5 +34,13 @@ describe('packages/api-contracts: video resource', () => {
 
   it('rejects a non-uuid video id', () => {
     expect(VideoIdParamSchema.safeParse({ id: '42' }).success).toBe(false);
+  });
+
+  it.each([
+    { liveStreamId: '00000000-0000-7000-8000-0000000000a1', ok: true },
+    { liveStreamId: null, ok: true },
+    { liveStreamId: 'not-a-uuid', ok: false },
+  ])('parses liveStreamId $liveStreamId as $ok', ({ liveStreamId, ok }) => {
+    expect(VideoSchema.shape.liveStreamId.safeParse(liveStreamId).success).toBe(ok);
   });
 });

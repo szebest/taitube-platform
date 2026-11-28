@@ -1,4 +1,4 @@
-import { err } from '@kit/result';
+import { err, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
@@ -15,6 +15,7 @@ const VIEWER: UserContext = { id: '00000000-0000-7000-8000-0000000004a2', role: 
 const VIDEO = '00000000-0000-7000-8000-0000000004a3';
 const LINK = '00000000-0000-7000-8000-0000000004a4';
 const TOKEN = 'linktokenlinktoken0001';
+const STREAM = '00000000-0000-7000-8000-0000000004a5';
 const NOW = Date.parse('2026-11-20T12:00:00.000Z');
 const PLAIN: WatchRequest = { shareToken: null, credential: null, sessionKey: null };
 
@@ -22,6 +23,7 @@ describe('apps/server/api/services: VideoWatchService', () => {
   let repositories: InMemoryRepositories;
   let viewBuffer: InMemoryViewBuffer;
   let service: VideoWatchService;
+  let channelId: string;
 
   const opens = async () =>
     expectOk(await viewBuffer.snapshot('opens'))?.shareLinks.map(({ linkId, opens }) => [
@@ -42,11 +44,12 @@ describe('apps/server/api/services: VideoWatchService', () => {
       viewBuffer,
       now: () => NOW,
     });
+    channelId = await seedPrimaryChannel(repositories, OWNER);
     expectOk(
       await repositories.videos.create({
         id: VIDEO,
         ownerId: OWNER,
-        channelId: await seedPrimaryChannel(repositories, OWNER),
+        channelId,
         title: 'Rough cut',
         visibility: 'private',
         status: 'READY',
@@ -127,4 +130,35 @@ describe('apps/server/api/services: VideoWatchService', () => {
       experiment: { id: test.id, variantId: 'b' },
     });
   });
+
+  it.each([
+    {
+      who: 'the owner',
+      viewer: { id: OWNER, role: 'CREATOR' } satisfies UserContext,
+      request: PLAIN,
+      liveStreamId: STREAM,
+    },
+    {
+      who: 'a link holder',
+      viewer: null,
+      request: { ...PLAIN, shareToken: TOKEN },
+      liveStreamId: null,
+    },
+  ])(
+    'names the recorded broadcast to $who only when its replay answers them',
+    async ({ viewer, request, liveStreamId }) => {
+      const seed = {
+        id: STREAM,
+        streamKey: 'key',
+        overlayToken: 'overlay',
+        controlToken: 'control',
+      };
+      const stream = expectOk(await repositories.liveStreams.ensureIdle(channelId, seed));
+      vi.spyOn(repositories.liveStreams, 'findByVideoId').mockResolvedValue(
+        ok({ ...stream, videoId: VIDEO })
+      );
+
+      expect(expectOk(await service.watch(viewer, VIDEO, request)).liveStreamId).toBe(liveStreamId);
+    }
+  );
 });

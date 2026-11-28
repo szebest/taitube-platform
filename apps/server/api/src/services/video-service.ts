@@ -193,6 +193,7 @@ export class VideoService {
     );
     view.likesCount = counts.likesCount;
     view.dislikesCount = counts.dislikesCount;
+    view.liveStreamId = details.liveStreamId;
 
     const channelOf = await loadChannelsOf(this.deps.channels, [view.channelId]);
     if (isErr(channelOf)) return channelOf;
