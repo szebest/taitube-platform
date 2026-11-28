@@ -1,5 +1,6 @@
 import { andThen, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
+  DiscoverableRoom,
   OwnerTransfer,
   PlaybackChange,
   RoomWrite,
@@ -9,10 +10,16 @@ import type {
   WatchPartyRoomSeed,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { renumberPositions, type WatchPartyCloseReason, type WatchPartyRoom } from '@vp/domain';
+import {
+  renumberPositions,
+  type WatchPartyCloseReason,
+  type WatchPartyDiscoveryQuery,
+  type WatchPartyRoom,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
+import { listDiscoverableRooms, writeSearchText } from './watch-party-discovery-query';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';
 import { insertSystemLine } from './watch-party-writes';
 
@@ -115,6 +122,16 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
       databaseUnavailable.during('listOpenWatchPartyRooms')
     );
     return map(found, (rows) => rows.map(toRoom));
+  }
+
+  listDiscoverable(
+    query: WatchPartyDiscoveryQuery
+  ): Promise<Result<DiscoverableRoom[], DatabaseUnavailable>> {
+    return listDiscoverableRooms(this.db, query);
+  }
+
+  setSearchText(id: string, text: string): Promise<Result<void, DatabaseUnavailable>> {
+    return writeSearchText(this.db, id, text);
   }
 
   async updateSettings(
@@ -272,10 +289,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     );
   }
 
-  /**
-   * One compare-and-set in a transaction: `update` returns the changed row or nothing. The system
-   * line is written only when it applied; nothing changed means the room is stale or gone.
-   */
+  /** One compare-and-set in a transaction; the system line is written only when it applied. */
   private async write(
     operation: string,
     id: string,

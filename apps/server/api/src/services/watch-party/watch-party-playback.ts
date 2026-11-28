@@ -12,10 +12,11 @@ import { dropUnavailable } from './watch-party-availability';
 import type { WatchPartyDeps } from './watch-party-deps';
 import { announce, announceLine } from './watch-party-moderation-effects';
 import { presentQueue } from './watch-party-queue-views';
+import { refreshSearchText } from './watch-party-search-text';
 
 type PlaybackDeps = Pick<
   WatchPartyDeps,
-  'repositories' | 'broadcaster' | 'logger' | 'now' | 'secrets' | 'cdn' | 'gate'
+  'repositories' | 'broadcaster' | 'logger' | 'now' | 'secrets' | 'cdn' | 'gate' | 'discovery'
 >;
 
 type StateReason = Extract<WatchPartyServerFrame, { type: 'state' }>['reason'];
@@ -61,11 +62,28 @@ export async function commitState(
 
   const committed = written.value.room;
   await announce(deps, room.id, stateFrame(committed, by, reason));
+  await announceToDiscovery(deps, room, committed);
   if (line) await announceLine(deps, room.id, line);
   if (committed.phase === 'playing' && committed.playback.anchorAt > at.getTime()) {
     await announce(deps, room.id, { type: 'countdown', startsAt: committed.playback.anchorAt });
   }
   return written;
+}
+
+/** The pill a card shows: pausing and resuming leave it where it is. */
+function pillOf({ phase }: Pick<WatchPartyRoom, 'phase'>): 'lobby' | 'now' | 'finished' {
+  if (phase === 'lobby' || phase === 'finished') return phase;
+  return 'now';
+}
+
+async function announceToDiscovery(
+  deps: PlaybackDeps,
+  before: WatchPartyRoom,
+  after: WatchPartyRoom
+): Promise<void> {
+  const moved = before.currentVideoId !== after.currentVideoId;
+  if (moved) await refreshSearchText(deps, after);
+  if (moved || pillOf(before) !== pillOf(after)) await deps.discovery.updated(after);
 }
 
 /**

@@ -73,6 +73,7 @@ import * as views from './views';
 import * as watchHistory from './watch-history';
 import * as watchParties from './watch-parties';
 import * as watchPartyControls from './watch-party-controls';
+import * as watchPartyDiscovery from './watch-party-discovery';
 import * as watchPartyGuests from './watch-party-guests';
 import * as watchPartyInvites from './watch-party-invites';
 import * as watchPartyMembers from './watch-party-members';
@@ -164,6 +165,7 @@ export * from './views';
 export * from './watch-history';
 export * from './watch-parties';
 export * from './watch-party-controls';
+export * from './watch-party-discovery';
 export * from './watch-party-guests';
 export * from './watch-party-invites';
 export * from './watch-party-members';
@@ -247,6 +249,7 @@ export const contracts = {
   watchHistory,
   watchParties,
   watchPartyControls,
+  watchPartyDiscovery,
   watchPartyGuests,
   watchPartyInvites,
   watchPartyMembers,

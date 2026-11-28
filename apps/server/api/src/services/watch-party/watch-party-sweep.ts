@@ -21,6 +21,7 @@ type SweepDeps = Pick<
   | 'secrets'
   | 'cdn'
   | 'gate'
+  | 'discovery'
 >;
 
 type SweepFailure = DatabaseUnavailable | CacheUnavailable;
@@ -98,6 +99,8 @@ export class WatchPartySweep {
       if (page.value.length < config.sweep.batchSize || afterId === null) break;
     }
     publishTally(gauges, this.deps.metrics);
+    const trended = await repositories.watchPartyHousekeeping.refreshTrendScores(at);
+    if (isErr(trended)) this.deps.logger.warn({ err: trended.error }, 'trend scores not refreshed');
     for (const roomId of this.ownerAbsentSince.keys()) {
       if (!seen.has(roomId)) this.ownerAbsentSince.delete(roomId);
     }
@@ -132,6 +135,7 @@ export class WatchPartySweep {
     );
     if (isErr(recorded)) return recorded;
     addToTally(gauges, room, present.value);
+    if (present.value.length !== room.presentCount) this.deps.discovery.countChanged(room.id);
 
     const available = await this.skipUnavailable(room);
     if (isErr(available)) return available;
@@ -179,6 +183,7 @@ export class WatchPartySweep {
     if (written.value.type !== 'applied') return ok('kept');
     logChange(this.deps, { roomId: room.id, actorKey: 'system', action: `close.${reason}` });
     await announce(this.deps, room.id, { type: 'closed', reason });
+    await this.deps.discovery.closed(room.id);
     return ok('closed');
   }
 

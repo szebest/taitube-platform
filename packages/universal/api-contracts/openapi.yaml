@@ -2277,6 +2277,155 @@ components:
         - blockInvites
         - favourite
       description: What the viewer chose about one member, for themselves only
+    WatchPartyCardInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        name:
+          type: string
+        owner:
+          type: object
+          properties:
+            memberKey:
+              type: string
+              pattern: ^(user|discord|guest):[A-Za-z0-9_-]{1,64}$
+              description: '`user:<uuid>`, `discord:<snowflake>` or `guest:<id>`'
+            name:
+              type: string
+            avatarUrl:
+              type:
+                - string
+                - 'null'
+          required:
+            - memberKey
+            - name
+            - avatarUrl
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCardInput'
+            - type: 'null'
+          description: Set when the room is hosted as a channel
+        hasPassword:
+          type: boolean
+        allowGuests:
+          type: boolean
+        capacity:
+          anyOf:
+            - type: integer
+              minimum: -9007199254740991
+              maximum: 9007199254740991
+            - type: 'null'
+        effectiveCapacity:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        language:
+          type:
+            - string
+            - 'null'
+        accent:
+          type:
+            - string
+            - 'null'
+        scheduledFor:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        phase:
+          type: string
+          enum:
+            - lobby
+            - playing
+            - paused
+            - finished
+        status:
+          type: string
+          enum:
+            - open
+            - closed
+        currentVideo:
+          anyOf:
+            - type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                title:
+                  type:
+                    - string
+                    - 'null'
+                durationMs:
+                  anyOf:
+                    - type: integer
+                      minimum: 0
+                      maximum: 9007199254740991
+                    - type: 'null'
+                thumbnailUrl:
+                  type:
+                    - string
+                    - 'null'
+                categoryId:
+                  anyOf:
+                    - type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    - type: 'null'
+              required:
+                - id
+                - title
+                - durationMs
+                - thumbnailUrl
+                - categoryId
+            - type: 'null'
+        queueLength:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        presentCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        roster:
+          $ref: '#/components/schemas/WatchPartyRosterPreviewInput'
+        playback:
+          $ref: '#/components/schemas/WatchPartyPlaybackInput'
+        serverNow:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          description: Epoch ms the playback snapshot was read at
+        createdAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+      required:
+        - id
+        - name
+        - owner
+        - channel
+        - hasPassword
+        - allowGuests
+        - capacity
+        - effectiveCapacity
+        - language
+        - accent
+        - scheduledFor
+        - phase
+        - status
+        - currentVideo
+        - queueLength
+        - presentCount
+        - roster
+        - playback
+        - serverNow
+        - createdAt
+      description: 'A listed room: every field the discovery filters read, so a client can match a room it was pushed'
     BannerLink:
       type: object
       properties:
@@ -4599,6 +4748,158 @@ components:
         - favourite
       additionalProperties: false
       description: What the viewer chose about one member, for themselves only
+    WatchPartyCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        name:
+          type: string
+        owner:
+          type: object
+          properties:
+            memberKey:
+              type: string
+              pattern: ^(user|discord|guest):[A-Za-z0-9_-]{1,64}$
+              description: '`user:<uuid>`, `discord:<snowflake>` or `guest:<id>`'
+            name:
+              type: string
+            avatarUrl:
+              type:
+                - string
+                - 'null'
+          required:
+            - memberKey
+            - name
+            - avatarUrl
+          additionalProperties: false
+        channel:
+          anyOf:
+            - $ref: '#/components/schemas/ChannelCard'
+            - type: 'null'
+          description: Set when the room is hosted as a channel
+        hasPassword:
+          type: boolean
+        allowGuests:
+          type: boolean
+        capacity:
+          anyOf:
+            - type: integer
+              minimum: -9007199254740991
+              maximum: 9007199254740991
+            - type: 'null'
+        effectiveCapacity:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        language:
+          type:
+            - string
+            - 'null'
+        accent:
+          type:
+            - string
+            - 'null'
+        scheduledFor:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        phase:
+          type: string
+          enum:
+            - lobby
+            - playing
+            - paused
+            - finished
+        status:
+          type: string
+          enum:
+            - open
+            - closed
+        currentVideo:
+          anyOf:
+            - type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                title:
+                  type:
+                    - string
+                    - 'null'
+                durationMs:
+                  anyOf:
+                    - type: integer
+                      minimum: 0
+                      maximum: 9007199254740991
+                    - type: 'null'
+                thumbnailUrl:
+                  type:
+                    - string
+                    - 'null'
+                categoryId:
+                  anyOf:
+                    - type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    - type: 'null'
+              required:
+                - id
+                - title
+                - durationMs
+                - thumbnailUrl
+                - categoryId
+              additionalProperties: false
+            - type: 'null'
+        queueLength:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        presentCount:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        roster:
+          $ref: '#/components/schemas/WatchPartyRosterPreview'
+        playback:
+          $ref: '#/components/schemas/WatchPartyPlayback'
+        serverNow:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          description: Epoch ms the playback snapshot was read at
+        createdAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+      required:
+        - id
+        - name
+        - owner
+        - channel
+        - hasPassword
+        - allowGuests
+        - capacity
+        - effectiveCapacity
+        - language
+        - accent
+        - scheduledFor
+        - phase
+        - status
+        - currentVideo
+        - queueLength
+        - presentCount
+        - roster
+        - playback
+        - serverNow
+        - createdAt
+      additionalProperties: false
+      description: 'A listed room: every field the discovery filters read, so a client can match a room it was pushed'
 paths:
   /healthz:
     get:
@@ -80804,6 +81105,150 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/watch-parties/events:
+    get:
+      summary: SSE stream of discovery changes
+      tags:
+        - Watch parties
+      description: Anonymous. party.counts (the present counts that changed, batched every 2 seconds), party.opened and party.updated (a card) and party.closed (an id). Four streams per IP.
+      security: []
+      responses:
+        '200':
+          description: 'text/event-stream: each frame is named by its type and carries its payload as data'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - party.counts
+                      payload:
+                        type: object
+                        properties:
+                          counts:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                presentCount:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 9007199254740991
+                              required:
+                                - id
+                                - presentCount
+                              additionalProperties: false
+                        required:
+                          - counts
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - party.opened
+                      payload:
+                        type: object
+                        properties:
+                          card:
+                            $ref: '#/components/schemas/WatchPartyCard'
+                        required:
+                          - card
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - party.updated
+                      payload:
+                        type: object
+                        properties:
+                          card:
+                            $ref: '#/components/schemas/WatchPartyCard'
+                        required:
+                          - card
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - party.closed
+                      payload:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        required:
+                          - id
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                description: 'text/event-stream: each frame is named by its type and carries its payload as data'
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/me/events:
     get:
       summary: SSE stream of the caller events
@@ -85980,6 +86425,222 @@ paths:
                     enum:
                       - VALIDATION_FAILED
                       - WATCH_PARTY_VIDEO_NOT_SHAREABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    get:
+      summary: Discover watch parties
+      tags:
+        - Watch parties
+      description: The open public rooms, filtered and sorted, a keyset page at a time. Private, unlisted, hidden and closed rooms never appear, nor rooms playing a video that is not public, nor one the caller is banned from. Counts move between pages, so a members walk can repeat a room.
+      parameters:
+        - schema:
+            type: string
+            maxLength: 200
+          in: query
+          name: q
+          required: false
+          description: Room name, owner handle or name, current video title; read as a web search
+        - schema:
+            default: all
+            type: string
+            enum:
+              - all
+              - now
+              - lobby
+              - scheduled
+          in: query
+          name: status
+          required: false
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: query
+          name: category
+          required: false
+          description: The current video's category
+        - schema:
+            type: string
+            pattern: ^[a-z]{2,3}$
+          in: query
+          name: language
+          required: false
+          description: The room's language, a BCP 47 primary subtag
+        - schema:
+            default: any
+            type: string
+            enum:
+              - any
+              - open
+              - password
+          in: query
+          name: access
+          required: false
+        - schema:
+            default: any
+            type: string
+            enum:
+              - any
+              - small
+              - medium
+              - large
+          in: query
+          name: size
+          required: false
+        - schema:
+            type: string
+          in: query
+          name: space
+          required: false
+          description: Only rooms with a seat free
+        - schema:
+            type: string
+          in: query
+          name: followed
+          required: false
+          description: Only rooms whose owner, or a member present, has a channel the caller subscribes to; ignored signed out
+        - schema:
+            type: string
+          in: query
+          name: creator
+          required: false
+          description: Only rooms hosted as a channel
+        - schema:
+            default: any
+            type: string
+            enum:
+              - any
+              - single
+              - playlist
+          in: query
+          name: kind
+          required: false
+        - schema:
+            default: members
+            type: string
+            enum:
+              - members
+              - newest
+              - starting_soon
+              - trending
+          in: query
+          name: sort
+          required: false
+          description: starting_soon lists scheduled rooms only
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Bound to the sort it was minted under
+        - schema:
+            default: 24
+            type: integer
+            minimum: 1
+            maximum: 48
+          in: query
+          name: limit
+          required: false
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WatchPartyCard'
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
                     description: Machine-readable error code
                   instance:
                     type: string

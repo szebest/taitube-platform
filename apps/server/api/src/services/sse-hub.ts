@@ -11,10 +11,11 @@ import {
   parseJson,
   tryCatch,
 } from '@kit/result';
-import { UserEventFrameSchema } from '@vp/api-contracts';
+import { UserEventFrameSchema, WatchPartyDiscoveryEventSchema } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import {
+  PARTIES_WILDCARD_CHANNEL,
   SseMessageEnvelope,
   USER_WILDCARD_CHANNEL,
   VIDEO_WILDCARD_CHANNEL,
@@ -22,7 +23,12 @@ import {
 } from '@vp/events';
 import type { PipelineMetrics } from '@vp/pipeline-metrics';
 import { SseConnection, type SseFrame, type SseResync } from './sse-connection';
-import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
+import {
+  type SseRegisterFailure,
+  type StreamLimit,
+  sseStreamLimitReached,
+  sseUnavailable,
+} from './sse-failures';
 import { userFrame, videoFrame } from './sse-frames';
 
 function frameOf(channel: string, message: unknown, logger: Logger): SseFrame | undefined {
@@ -39,6 +45,16 @@ function frameOf(channel: string, message: unknown, logger: Logger): SseFrame | 
       logger.warn(
         { channel, issues: parsed.error.issues },
         'dropped a user event the contract does not know'
+      );
+      return undefined;
+    }
+    case 'parties': {
+      const parsed = WatchPartyDiscoveryEventSchema.safeParse(message);
+      if (parsed.success) return { event: parsed.data.type, data: parsed.data };
+
+      logger.warn(
+        { channel, issues: parsed.error.issues },
+        'dropped a discovery event the contract does not know'
       );
       return undefined;
     }
@@ -62,6 +78,8 @@ export interface SseHubOptions {
 export interface RegisterConnectionOptions {
   channel: string;
   userId?: string;
+  /** Replaces the per-account budget a signed-in stream gets; a stream with neither has none. */
+  limit?: StreamLimit;
   resync?: SseResync;
   rawResponse: ServerResponse;
 }
@@ -78,7 +96,8 @@ export class SseHub {
   private readonly logger: Logger;
 
   private readonly connectionsByChannel = new Map<string, Set<SseConnection>>();
-  private readonly userConnectionCounts = new Map<string, number>();
+  private readonly slotCounts = new Map<string, number>();
+  private readonly slotKeys = new Map<SseConnection, string>();
   private activeConnections = 0;
   private isSubscribed = false;
   private isClosed = false;
@@ -121,6 +140,9 @@ export class SseHub {
     const user = await this.cache.psubscribe(USER_WILDCARD_CHANNEL, this.patternListener);
     if (isErr(user)) return user;
 
+    const parties = await this.cache.psubscribe(PARTIES_WILDCARD_CHANNEL, this.patternListener);
+    if (isErr(parties)) return parties;
+
     this.isSubscribed = true;
     return ok();
   }
@@ -133,12 +155,15 @@ export class SseHub {
 
     const { channel, userId, rawResponse, resync } = options;
 
-    if (userId) {
-      const currentCount = this.userConnectionCounts.get(userId) ?? 0;
-      if (currentCount >= this.maxConnectionsPerUser) {
-        return err(sseStreamLimitReached(userId, this.maxConnectionsPerUser));
+    const limit: StreamLimit | undefined =
+      options.limit ??
+      (userId ? { subject: 'user', key: userId, max: this.maxConnectionsPerUser } : undefined);
+    if (limit) {
+      const currentCount = this.slotCounts.get(limit.key) ?? 0;
+      if (currentCount >= limit.max) {
+        return err(sseStreamLimitReached(limit.subject, limit.key, limit.max));
       }
-      this.userConnectionCounts.set(userId, currentCount + 1);
+      this.slotCounts.set(limit.key, currentCount + 1);
     }
 
     const connection = new SseConnection({
@@ -158,6 +183,7 @@ export class SseHub {
       this.connectionsByChannel.set(channel, set);
     }
     set.add(connection);
+    if (limit) this.slotKeys.set(connection, limit.key);
     this.activeConnections++;
 
     this.metrics.sseConnections.inc({ channel_type: channelType(channel) });
@@ -178,12 +204,14 @@ export class SseHub {
       }
     }
 
-    if (connection.userId) {
-      const current = this.userConnectionCounts.get(connection.userId) ?? 1;
+    const slotKey = this.slotKeys.get(connection);
+    if (slotKey !== undefined) {
+      this.slotKeys.delete(connection);
+      const current = this.slotCounts.get(slotKey) ?? 1;
       if (current <= 1) {
-        this.userConnectionCounts.delete(connection.userId);
+        this.slotCounts.delete(slotKey);
       } else {
-        this.userConnectionCounts.set(connection.userId, current - 1);
+        this.slotCounts.set(slotKey, current - 1);
       }
     }
 
@@ -218,7 +246,7 @@ export class SseHub {
   }
 
   getUserConnectionCount(userId: string): number {
-    return this.userConnectionCounts.get(userId) ?? 0;
+    return this.slotCounts.get(userId) ?? 0;
   }
 
   async close(): Promise<void> {
@@ -231,7 +259,8 @@ export class SseHub {
       }
     }
     this.connectionsByChannel.clear();
-    this.userConnectionCounts.clear();
+    this.slotCounts.clear();
+    this.slotKeys.clear();
     this.activeConnections = 0;
 
     if (this.patternListener) {
@@ -241,6 +270,10 @@ export class SseHub {
       );
       ignore(
         await this.cache.punsubscribe(USER_WILDCARD_CHANNEL, this.patternListener),
+        'a cache that is already gone has nothing to unsubscribe from'
+      );
+      ignore(
+        await this.cache.punsubscribe(PARTIES_WILDCARD_CHANNEL, this.patternListener),
         'a cache that is already gone has nothing to unsubscribe from'
       );
       this.patternListener = undefined;

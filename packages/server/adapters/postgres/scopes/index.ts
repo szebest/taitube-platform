@@ -7,4 +7,5 @@ export * from './public-comment';
 export * from './rules-to-sql';
 export * from './soft-delete';
 export * from './traits';
+export * from './watch-party-list';
 export * from './where';

@@ -1,5 +1,6 @@
 import { ok, type Result } from '@kit/result';
 import type {
+  DiscoverableRoom,
   NewSystemLine,
   OwnerTransfer,
   PlaybackChange,
@@ -12,9 +13,11 @@ import {
   renumberPositions,
   WATCH_PARTY_PERMISSION_IDS,
   type WatchPartyCloseReason,
+  type WatchPartyDiscoveryQuery,
   type WatchPartyRoom,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { type DiscoveryLookups, discoverableRooms } from './in-memory-watch-party-discovery';
 import {
   assignmentKey,
   type InMemoryWatchPartyStore,
@@ -33,7 +36,10 @@ function definedOnly<T extends object>(patch: T): Partial<T> {
 }
 
 export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositoryPort {
-  constructor(private readonly store: InMemoryWatchPartyStore) {}
+  constructor(
+    private readonly store: InMemoryWatchPartyStore,
+    private readonly lookups: DiscoveryLookups
+  ) {}
 
   async create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>> {
     const { room, roles, owner, queue } = seed;
@@ -97,6 +103,23 @@ export class InMemoryWatchPartyRoomRepository implements WatchPartyRoomRepositor
       .filter((room) => room.ownerKey === ownerKey && room.status === 'open')
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1));
     return ok(open.map(copyOf));
+  }
+
+  async listDiscoverable(
+    query: WatchPartyDiscoveryQuery
+  ): Promise<Result<DiscoverableRoom[], DatabaseUnavailable>> {
+    return discoverableRooms(this.store, this.lookups, query);
+  }
+
+  async setSearchText(id: string, text: string): Promise<Result<void, DatabaseUnavailable>> {
+    if (this.store.rooms.has(id)) this.store.searchTexts.set(id, text);
+    return ok();
+  }
+
+  /** Hiding a room is a moderation write no port exposes yet; discovery specs hide one directly. */
+  markHidden(id: string, at: Date): void {
+    const room = this.store.rooms.get(id);
+    if (room) this.store.rooms.set(id, { ...room, hiddenAt: at });
   }
 
   async updateSettings(

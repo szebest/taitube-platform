@@ -303,6 +303,8 @@
       "LIVE_CHAT_WILDCARD_CHANNEL": "@vp/events",
       "liveChatChannel": "@vp/events",
       "liveStreamIdOfChat": "@vp/events",
+      "PARTIES_WILDCARD_CHANNEL": "@vp/events",
+      "partiesChannel": "@vp/events",
       "publishVideoEvent": "@vp/events",
       "PublishVideoEventOptions": "@vp/events",
       "roomIdOfWatchParty": "@vp/events",

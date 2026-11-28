@@ -219,6 +219,12 @@ export const WATCH_PARTY = {
   inviteCandidates: 20,
   reactionsFoldMs: 250,
   rosterBatchMs: 500,
+  discovery: {
+    listPerMinute: 60,
+    firstPageCacheSeconds: 5,
+    countsBatchMs: 2 * MS_PER_SECOND,
+    streamsPerIp: 4,
+  },
   buffering: { waitAfterMs: 1500, maxWaitMs: 10 * MS_PER_SECOND, maxRoomSize: 12 },
   scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
   messageRetentionDays: 7,

@@ -11,6 +11,8 @@ import type {
   RosterChange,
   WatchPartyBroadcaster,
   WatchPartyContextLoader,
+  WatchPartyDiscoveryFeed,
+  WatchPartyDiscoveryService,
   WatchPartySocketService,
   WatchPartyService,
   WatchPartyGuestService,
@@ -30,11 +32,14 @@ export interface WatchPartyServiceSet {
   watchPartyInviteService: WatchPartyInviteService;
   watchPartyControlsService: WatchPartyControlsService;
   watchPartySocketService: WatchPartySocketService;
+  watchPartyDiscoveryService: WatchPartyDiscoveryService;
 }
 
 export const WatchPartyServices = {
   WatchPartyBroadcaster: token<WatchPartyBroadcaster>('WatchPartyBroadcaster'),
   WatchPartyContextLoader: token<WatchPartyContextLoader>('WatchPartyContextLoader'),
+  WatchPartyDiscoveryFeed: token<WatchPartyDiscoveryFeed>('WatchPartyDiscoveryFeed'),
+  WatchPartyDiscoveryService: token<WatchPartyDiscoveryService>('WatchPartyDiscoveryService'),
   WatchPartyService: token<WatchPartyService>('WatchPartyService'),
   WatchPartyGuestService: token<WatchPartyGuestService>('WatchPartyGuestService'),
   WatchPartyRoleService: token<WatchPartyRoleService>('WatchPartyRoleService'),

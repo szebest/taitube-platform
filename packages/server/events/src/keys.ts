@@ -36,6 +36,7 @@ export const CacheKeys = defineKeyspace('taitube', (key) => ({
   liveChatBurst: (liveStreamId: string, userId: string) =>
     key('live', liveStreamId, 'chat', 'burst', userId),
   livePresence: (liveStreamId: string) => key('live', liveStreamId, 'presence'),
+  watchPartyDiscovery: (hash: string) => key('watch-party', 'discovery', hash),
   watchPartyTicket: (ticket: string) => key('watch-party', 'ticket', ticket),
   watchPartyBudget: (budget: string, scope: string) => key('watch-party', 'budget', budget, scope),
   watchPartySlowMode: (roomId: string, memberKey: string) =>
