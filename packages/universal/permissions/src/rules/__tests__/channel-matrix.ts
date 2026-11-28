@@ -16,7 +16,9 @@ type SubjectType =
   | 'ChannelExport'
   | 'Post'
   | 'PostStats'
-  | 'Thread';
+  | 'Thread'
+  | 'ContentLink'
+  | 'ContentLinkStats';
 
 interface Probe {
   type: SubjectType;
@@ -41,6 +43,7 @@ const comment = subject('Comment', {
 });
 const channel = subject('Channel', { id: CHANNEL_ID, userId: OWNER_ID, ownerId: OWNER_ID });
 const post = subject('Post', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
+const link = subject('ContentLink', { channelId: CHANNEL_ID, ownerId: OWNER_ID });
 const thread = subject('Thread', {
   channelId: CHANNEL_ID,
   ownerId: OWNER_ID,
@@ -102,6 +105,11 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
       action: 'read',
       target: subject('PostStats', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
     },
+    {
+      type: 'ContentLinkStats',
+      action: 'read',
+      target: subject('ContentLinkStats', { ownerId: OWNER_ID, channelId: CHANNEL_ID }),
+    },
   ],
   'video.edit': [
     { type: 'Video', action: 'update', target: privateVideo },
@@ -135,6 +143,11 @@ const CAPABILITY_PROBES: Record<ChannelCapability, Probe[]> = {
     action,
     target: post,
   })),
+  'content.link': [{ type: 'ContentLink', action: 'link', target: link }],
+  'link.approve': [
+    { type: 'ContentLink', action: 'approveLink', target: link },
+    { type: 'ContentLink', action: 'removeInboundLink', target: link },
+  ],
   'comment.heart': [{ type: 'Comment', action: 'heart', target: comment }],
   'comment.moderate': [
     { type: 'Comment', action: 'moderate', target: comment },

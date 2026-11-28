@@ -7,6 +7,7 @@ export * from './upload';
 export * from './category';
 export * from './playlist';
 export * from './post';
+export * from './content-link';
 export * from './thread';
 export * from './ability';
 export * from './analytics';

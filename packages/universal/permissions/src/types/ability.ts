@@ -13,6 +13,7 @@ import type {
 import type { ClipResource } from './clip';
 import type { CommentResource } from './comment';
 import type { ChannelUserResource, CommentSettingsResource } from './comment-moderation';
+import type { ContentLinkResource } from './content-link';
 import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
 import type { PlaylistInviteResource, PlaylistResource, PlaylistStatsResource } from './playlist';
@@ -53,7 +54,11 @@ export type AppAction =
   | 'manageItems'
   | 'manageCollaborators'
   | 'readActivity'
-  | 'restoreItem';
+  | 'restoreItem'
+  | 'link'
+  | 'approveLink'
+  | 'removeInboundLink'
+  | 'suggest';
 
 export type AppSubjects =
   | 'all'
@@ -69,6 +74,8 @@ export type AppSubjects =
       | (PostResource & ForcedSubject<'Post'>)
       | (PostResource & ForcedSubject<'PostStats'>)
       | (ThreadResource & ForcedSubject<'Thread'>)
+      | (ContentLinkResource & ForcedSubject<'ContentLink'>)
+      | (ContentLinkResource & ForcedSubject<'ContentLinkStats'>)
       | (PreferencesResource & ForcedSubject<'Preferences'>)
       | (CaptionResource & ForcedSubject<'Caption'>)
       | (NotificationResource & ForcedSubject<'Notification'>)
@@ -95,6 +102,8 @@ export type AppSubjects =
   | 'Post'
   | 'PostStats'
   | 'Thread'
+  | 'ContentLink'
+  | 'ContentLinkStats'
   | 'Queue'
   | 'Analytics'
   | 'VideoStats'

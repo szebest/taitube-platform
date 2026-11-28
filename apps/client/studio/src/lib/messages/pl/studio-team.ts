@@ -36,6 +36,8 @@ export const studioTeam = {
         'comment.pin': 'Przypina komentarze',
         'content.pin': 'Przypina wpisy i filmy w sekcji Zacznij tutaj',
         'post.manage': 'Publikuje, edytuje i usuwa wpisy',
+        'content.link': 'Łączy treści kanału',
+        'link.approve': 'Zatwierdza i usuwa linki z innych kanałów',
         'comment.heart': 'Dodaje serduszka do komentarzy',
         'comment.moderate': 'Moderuje komentarze',
         'comment.settings': 'Zmienia ustawienia komentarzy i zablokowane słowa',

@@ -36,6 +36,8 @@ export const studioTeam = {
         'comment.pin': 'Pin comments',
         'content.pin': 'Pin posts and Start here videos',
         'post.manage': 'Publish, edit and delete posts',
+        'content.link': 'Link content of the channel',
+        'link.approve': 'Approve and remove links from other channels',
         'comment.heart': 'Heart comments',
         'comment.moderate': 'Moderate comments',
         'comment.settings': 'Change comment settings and blocked words',
