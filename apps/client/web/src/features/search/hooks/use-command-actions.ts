@@ -4,6 +4,11 @@ import { useCan } from '@vp/permissions-react';
 import { useT } from '#app/lib/messages';
 import { APPEARANCE_MODES, type CommandAction, PLANNED_PAGES } from '../utils/command-actions';
 
+const PAGE_LABELS = {
+  history: 'search.openHistory',
+  parties: 'search.browseParties',
+} as const;
+
 /** Every action the palette can run: a theme and a mode each, the pages whose route exists, and the studio for a creator. */
 export function useCommandActions(): CommandAction[] {
   const router = useRouter();
@@ -26,7 +31,7 @@ export function useCommandActions(): CommandAction[] {
       kind: 'page',
       id,
       path,
-      label: tOr('search.openHistory', {}, ''),
+      label: tOr(PAGE_LABELS[id], {}, ''),
     })
   );
   const studio: CommandAction[] = canUpload

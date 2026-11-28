@@ -1,4 +1,5 @@
 import type {
+  WatchPartyCardView,
   WatchPartyPreviewView,
   WatchPartyServerFrame,
   WatchPartyView,
@@ -153,5 +154,55 @@ export function partyMembership(memberKey = PARTY_VIEWER_KEY) {
     joinedVia: 'link' as const,
     roleIds: [],
     permissions: [],
+  };
+}
+
+let cards = 0;
+
+/** A listed room as discovery returns it: a distinct id each call, open and playing. */
+export function partyCard(overrides: Partial<WatchPartyCardView> = {}): WatchPartyCardView {
+  cards += 1;
+  const at = Date.parse('2026-11-05T10:00:00.000Z');
+
+  return {
+    id: partyId(0x9300 + cards),
+    name: `Movie night ${cards}`,
+    owner: { memberKey: PARTY_OWNER_KEY, name: 'Ana', avatarUrl: null },
+    channel: null,
+    hasPassword: false,
+    allowGuests: true,
+    capacity: null,
+    effectiveCapacity: 200,
+    language: null,
+    accent: null,
+    scheduledFor: null,
+    phase: 'playing',
+    status: 'open',
+    currentVideo: {
+      id: VIDEO_ID,
+      title: 'Big Buck Bunny',
+      durationMs: 600_000,
+      thumbnailUrl: null,
+      categoryId: null,
+    },
+    queueLength: 1,
+    presentCount: 3,
+    roster: {
+      faces: [{ name: 'Ana', avatarUrl: null }],
+      others: 2,
+      discord: 0,
+      guests: 0,
+      total: 3,
+    },
+    playback: {
+      itemId: PARTY_ITEM_ID,
+      phase: 'playing',
+      positionMs: 60_000,
+      rate: 1,
+      anchorAt: at,
+    },
+    serverNow: at,
+    createdAt: new Date(at).toISOString(),
+    ...overrides,
   };
 }

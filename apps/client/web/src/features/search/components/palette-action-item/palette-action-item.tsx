@@ -8,11 +8,15 @@ import { useCommandPaletteStore } from '#app/lib/command-palette/command-palette
 import { STUDIO_URL } from '#app/lib/config';
 import { useT } from '#app/lib/messages';
 
-const ICONS: Record<CommandAction['kind'], IconId> = {
+const ICONS: Record<Exclude<CommandAction['kind'], 'page'>, IconId> = {
   theme: 'moon',
   mode: 'sun',
-  page: 'history',
   studio: 'upload',
+};
+
+const PAGE_ICONS: Record<Extract<CommandAction, { kind: 'page' }>['id'], IconId> = {
+  history: 'history',
+  parties: 'party',
 };
 
 export interface PaletteActionItemProps {
@@ -51,7 +55,7 @@ export function PaletteActionItem({ action }: PaletteActionItemProps) {
     <CommandPalette.Item
       value={`action:${action.kind}:${action.label}`}
       onSelect={run}
-      leading={<Icon name={ICONS[action.kind]} />}
+      leading={<Icon name={action.kind === 'page' ? PAGE_ICONS[action.id] : ICONS[action.kind]} />}
       meta={
         action.kind === 'studio' ? undefined : tOr('search.actionKind', { kind: action.kind }, '')
       }

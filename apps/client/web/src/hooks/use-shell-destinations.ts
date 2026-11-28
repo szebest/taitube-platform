@@ -10,6 +10,7 @@ export type ShellTarget =
         | '/shorts'
         | '/feed/trending'
         | '/live'
+        | '/parties'
         | '/subscriptions/videos'
         | '/feed/you'
         | '/feed/history'
@@ -68,6 +69,14 @@ export function useShellDestinations(): ShellDestinations {
     compact: false,
   };
 
+  const parties: ShellDestination = {
+    id: 'parties',
+    label: tOr('shell.parties', {}, ''),
+    icon: 'party',
+    target: { kind: 'page', to: '/parties' },
+    compact: false,
+  };
+
   const settings: ShellDestination = {
     id: 'settings',
     label: tOr('shell.settings', {}, ''),
@@ -77,7 +86,7 @@ export function useShellDestinations(): ShellDestinations {
   };
 
   if (!account) {
-    return { main: [home, shorts, trending, live, settings], you: [] };
+    return { main: [home, shorts, trending, live, parties, settings], you: [] };
   }
 
   const subscriptions: ShellDestination = {
@@ -89,7 +98,7 @@ export function useShellDestinations(): ShellDestinations {
   };
 
   return {
-    main: [home, shorts, subscriptions, trending, live, settings],
+    main: [home, shorts, subscriptions, trending, live, parties, settings],
     hub: {
       id: 'you',
       label: tOr('shell.you', {}, ''),

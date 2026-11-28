@@ -102,6 +102,77 @@ export const party = {
   discoveryOffline: dt('You are offline. Showing the last list.'),
   discoveryStartsAt: dt('Starts {time}'),
   discoveryInterested: dt('Interested'),
+  discoveryHeadTitle: dt('Watch parties'),
+  discoveryHeadDescription: dt('Join a watch party and watch together, in sync, with chat.'),
+  discoverySearch: dt('Search parties'),
+  discoverySearchLabel: dt('Search by room, host or video'),
+  discoveryFilters: dt('Filters'),
+  discoveryFiltersTitle: dt('Filter parties'),
+  discoveryApply: dt('Show parties'),
+  discoveryStatusLabel: dt('Status'),
+  discoveryStatus: dt('{status:enum}', {
+    enum: {
+      status: { all: 'All', now: 'Now playing', lobby: 'Lobby', scheduled: 'Scheduled' },
+    },
+  }),
+  discoverySortLabel: dt('Sort by'),
+  discoverySort: dt('{sort:enum}', {
+    enum: {
+      sort: {
+        members: 'Most watching',
+        newest: 'Newest',
+        starting_soon: 'Starting soon',
+        trending: 'Trending',
+      },
+    },
+  }),
+  discoveryCategory: dt('Category'),
+  discoveryAnyCategory: dt('Any category'),
+  discoveryLanguage: dt('Language'),
+  discoveryAnyLanguage: dt('Any language'),
+  discoveryLanguageName: dt('{language:enum}', {
+    enum: { language: { en: 'English', pl: 'Polski' } },
+  }),
+  discoveryAccess: dt('Access'),
+  discoveryAccessOption: dt('{kind:enum}', {
+    enum: { kind: { any: 'Any', open: 'Open', password: 'Password' } },
+  }),
+  discoverySize: dt('Size'),
+  discoverySizeOption: dt('{size:enum}', {
+    enum: {
+      size: {
+        any: 'Any',
+        small: 'Small, up to 10',
+        medium: 'Medium, 11 to 50',
+        large: 'Large, over 50',
+      },
+    },
+  }),
+  discoveryKind: dt('Queue'),
+  discoveryKindOption: dt('{kind:enum}', {
+    enum: { kind: { any: 'Any', single: 'One video', playlist: 'Playlist' } },
+  }),
+  discoverySpace: dt('Only with a free seat'),
+  discoveryFollowed: dt('From channels I follow'),
+  discoveryCreator: dt('Hosted by a channel'),
+  discoveryOthers: dt('+{count}'),
+  discoveryFromDiscord: dt('+{count} from Discord'),
+  discoveryGuests: dt('{count:plural}', {
+    plural: { count: { one: '+{?} guest', other: '+{?} guests' } },
+  }),
+  discoveryCapacity: dt('{present} / {capacity}'),
+  discoveryPlaylist: dt('{count:plural}', {
+    plural: { count: { one: 'Playlist, {?} video', other: 'Playlist, {?} videos' } },
+  }),
+  discoveryLocked: dt('Password protected'),
+  discoveryNoVideo: dt('No video yet'),
+  discoveryJoin: dt('Join'),
+  discoveryHostedBy: dt('{name} hosts'),
+  discoveryGrid: dt('Watch parties'),
+  discoveryLoadFailed: dt('Could not load the parties'),
+  discoveryLoadMoreFailed: dt('Could not load more parties'),
+  discoveryStarting: dt('Starting'),
+  discoveryStartFailed: dt('Could not start a party'),
   roomLayout: dt('Layout'),
   roomPresent: dt('{count:plural}', {
     plural: { count: { one: '{?} here', other: '{?} here' } },

@@ -8,6 +8,7 @@ export const shell = {
   home: dt('Home'),
   shorts: dt('Shorts'),
   live: dt('Live'),
+  parties: dt('Watch parties'),
   goTo: dt('Go to'),
   trending: dt('Trending'),
   subscriptions: dt('Subscriptions'),

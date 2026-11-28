@@ -8,6 +8,7 @@ export const shell = {
   home: dt('Główna'),
   shorts: dt('Shorts'),
   live: dt('Na żywo'),
+  parties: dt('Wspólne seanse'),
   goTo: dt('Przejdź do'),
   trending: dt('Na czasie'),
   subscriptions: dt('Subskrypcje'),

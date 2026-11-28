@@ -28,6 +28,7 @@ import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
 import { Route as LiveIndexRouteImport } from './routes/live.index';
 import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
+import { Route as PartiesIndexRouteImport } from './routes/parties.index';
 import { Route as PartiesRoomIdRouteImport } from './routes/parties.$roomId';
 import { Route as PostIdRouteImport } from './routes/post.$id';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
@@ -142,6 +143,11 @@ const LiveIndexRoute = LiveIndexRouteImport.update({
 const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
   id: '/live/$streamId',
   path: '/live/$streamId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PartiesIndexRoute = PartiesIndexRouteImport.update({
+  id: '/parties/',
+  path: '/parties/',
   getParentRoute: () => rootRouteImport,
 } as any);
 const PartiesRoomIdRoute = PartiesRoomIdRouteImport.update({
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/live/': typeof LiveIndexRoute;
+  '/parties/': typeof PartiesIndexRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/live': typeof LiveIndexRoute;
+  '/parties': typeof PartiesIndexRoute;
   '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/live/': typeof LiveIndexRoute;
+  '/parties/': typeof PartiesIndexRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/feed/history': typeof AuthedFeedHistoryRoute;
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/live/'
+    | '/parties/'
     | '/settings/'
     | '/upload/'
     | '/feed/history'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/live'
+    | '/parties'
     | '/settings'
     | '/upload'
     | '/feed/history'
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/live/'
+    | '/parties/'
     | '/settings/'
     | '/upload/'
     | '/_authed/feed/history'
@@ -525,6 +537,7 @@ export interface RootRouteChildren {
   PostIdRoute: typeof PostIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   LiveIndexRoute: typeof LiveIndexRoute;
+  PartiesIndexRoute: typeof PartiesIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
   UploadEditVideoIdRoute: typeof UploadEditVideoIdRoute;
 }
@@ -662,6 +675,13 @@ declare module '@tanstack/react-router' {
       path: '/live/$streamId';
       fullPath: '/live/$streamId';
       preLoaderRoute: typeof LiveStreamIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/parties/': {
+      id: '/parties/';
+      path: '/parties';
+      fullPath: '/parties/';
+      preLoaderRoute: typeof PartiesIndexRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/parties/$roomId': {
@@ -898,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostIdRoute: PostIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
+  PartiesIndexRoute: PartiesIndexRoute,
   UploadIndexRoute: UploadIndexRoute,
   UploadEditVideoIdRoute: UploadEditVideoIdRoute,
 };

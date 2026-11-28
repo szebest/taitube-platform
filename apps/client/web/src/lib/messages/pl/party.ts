@@ -113,6 +113,88 @@ export const party = {
   discoveryOffline: dt('Jesteś offline. Pokazujemy ostatnią listę.'),
   discoveryStartsAt: dt('Start {time}'),
   discoveryInterested: dt('Zainteresowany/a'),
+  discoveryHeadTitle: dt('Wspólne seanse'),
+  discoveryHeadDescription: dt(
+    'Dołącz do wspólnego seansu i oglądaj razem, w tym samym czasie, z czatem.'
+  ),
+  discoverySearch: dt('Szukaj seansów'),
+  discoverySearchLabel: dt('Szukaj po pokoju, gospodarzu lub filmie'),
+  discoveryFilters: dt('Filtry'),
+  discoveryFiltersTitle: dt('Filtruj seanse'),
+  discoveryApply: dt('Pokaż seanse'),
+  discoveryStatusLabel: dt('Stan'),
+  discoveryStatus: dt('{status:enum}', {
+    enum: {
+      status: { all: 'Wszystkie', now: 'Trwają', lobby: 'Poczekalnia', scheduled: 'Zaplanowane' },
+    },
+  }),
+  discoverySortLabel: dt('Sortuj'),
+  discoverySort: dt('{sort:enum}', {
+    enum: {
+      sort: {
+        members: 'Najwięcej oglądających',
+        newest: 'Najnowsze',
+        starting_soon: 'Wkrótce',
+        trending: 'Na fali',
+      },
+    },
+  }),
+  discoveryCategory: dt('Kategoria'),
+  discoveryAnyCategory: dt('Każda kategoria'),
+  discoveryLanguage: dt('Język'),
+  discoveryAnyLanguage: dt('Każdy język'),
+  discoveryLanguageName: dt('{language:enum}', {
+    enum: { language: { en: 'English', pl: 'Polski' } },
+  }),
+  discoveryAccess: dt('Dostęp'),
+  discoveryAccessOption: dt('{kind:enum}', {
+    enum: { kind: { any: 'Dowolny', open: 'Otwarty', password: 'Z hasłem' } },
+  }),
+  discoverySize: dt('Wielkość'),
+  discoverySizeOption: dt('{size:enum}', {
+    enum: {
+      size: {
+        any: 'Dowolna',
+        small: 'Mały, do 10',
+        medium: 'Średni, od 11 do 50',
+        large: 'Duży, ponad 50',
+      },
+    },
+  }),
+  discoveryKind: dt('Kolejka'),
+  discoveryKindOption: dt('{kind:enum}', {
+    enum: { kind: { any: 'Dowolna', single: 'Jeden film', playlist: 'Playlista' } },
+  }),
+  discoverySpace: dt('Tylko z wolnym miejscem'),
+  discoveryFollowed: dt('Z obserwowanych kanałów'),
+  discoveryCreator: dt('Prowadzone przez kanał'),
+  discoveryOthers: dt('+{count}'),
+  discoveryFromDiscord: dt('+{count} z Discorda'),
+  discoveryGuests: dt('{count:plural}', {
+    plural: {
+      count: { one: '+{?} gość', few: '+{?} gości', many: '+{?} gości', other: '+{?} gości' },
+    },
+  }),
+  discoveryCapacity: dt('{present} / {capacity}'),
+  discoveryPlaylist: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: 'Playlista, {?} film',
+        few: 'Playlista, {?} filmy',
+        many: 'Playlista, {?} filmów',
+        other: 'Playlista, {?} filmu',
+      },
+    },
+  }),
+  discoveryLocked: dt('Chronione hasłem'),
+  discoveryNoVideo: dt('Jeszcze bez filmu'),
+  discoveryJoin: dt('Dołącz'),
+  discoveryHostedBy: dt('Prowadzi {name}'),
+  discoveryGrid: dt('Wspólne seanse'),
+  discoveryLoadFailed: dt('Nie udało się wczytać seansów'),
+  discoveryLoadMoreFailed: dt('Nie udało się wczytać kolejnych seansów'),
+  discoveryStarting: dt('Uruchamianie'),
+  discoveryStartFailed: dt('Nie udało się zacząć seansu'),
   roomLayout: dt('Układ'),
   roomPresent: dt('{count:plural}', {
     plural: { count: { one: '{?} osoba', few: '{?} osoby', many: '{?} osób', other: '{?} osób' } },

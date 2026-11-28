@@ -44,6 +44,7 @@ export * from './use-failure-toast';
 export { useLiveChat } from './use-live-chat';
 export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';
 export * from './use-sign-out';
+export { useWatchPartyDiscoveryEvents } from './use-watch-party-discovery-events';
 export * from './use-tab-identity';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';

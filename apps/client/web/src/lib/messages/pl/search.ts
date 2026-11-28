@@ -59,6 +59,7 @@ export const search = {
     },
   }),
   openHistory: dt('Otwórz historię'),
+  browseParties: dt('Przeglądaj wspólne seanse'),
   uploadVideo: dt('Prześlij film'),
   actionKind: dt('{kind:enum}', {
     enum: { kind: { theme: 'motyw', mode: 'tryb', page: 'strona' } },

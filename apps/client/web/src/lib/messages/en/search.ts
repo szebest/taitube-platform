@@ -46,6 +46,7 @@ export const search = {
     },
   }),
   openHistory: dt('Open History'),
+  browseParties: dt('Browse watch parties'),
   uploadVideo: dt('Upload a video'),
   actionKind: dt('{kind:enum}', { enum: { kind: { theme: 'theme', mode: 'mode', page: 'page' } } }),
 } as const;
