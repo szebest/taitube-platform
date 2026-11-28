@@ -1,4 +1,14 @@
+import { createRequire } from 'node:module';
+import type Axe from 'axe-core';
 import { expect, type Page, test } from '../../../../tests/playwright/fixtures';
+
+declare global {
+  interface Window {
+    axe: typeof Axe;
+  }
+}
+
+const AXE_SOURCE = createRequire(import.meta.url).resolve('axe-core');
 
 const SYNC_TAG = 'workbox-background-sync:taitube-sync-v1';
 const MEDIA_CACHE = 'taitube-media-v1';
@@ -11,6 +21,16 @@ async function controlledAt(page: Page, path: string) {
   await expect
     .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
     .toBe(true);
+}
+
+async function bannerViolations(page: Page) {
+  await page.addScriptTag({ path: AXE_SOURCE });
+  return page.evaluate(async () => {
+    const { violations } = await window.axe.run('[data-slot="offline-state"]', {
+      runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'],
+    });
+    return violations.map(({ id }) => id);
+  });
 }
 
 function cachedUrls(page: Page, cacheName: string) {
@@ -166,9 +186,11 @@ test.describe('pwa: background sync', () => {
     const queued = page.locator('[data-slot="offline-state-description"]');
     await expect(queued).toHaveText('1 change will sync when the connection returns.');
     await expect(queued).toBeVisible();
+    expect(await bannerViolations(page)).toEqual([]);
     await page.setViewportSize({ width: 375, height: 812 });
     await expect(page.getByRole('status').filter({ has: queued })).toBeAttached();
     await expect.poll(async () => (await queued.boundingBox())?.width).toBeLessThanOrEqual(1);
+    expect(await bannerViolations(page)).toEqual([]);
 
     await context.setOffline(false);
     await cdp.send('ServiceWorker.dispatchSyncEvent', {
