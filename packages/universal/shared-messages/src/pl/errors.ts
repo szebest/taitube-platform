@@ -127,6 +127,8 @@ export const errors = {
   watchPartyRoleLimit: dt('Ta impreza ma już maksymalną liczbę ról.'),
   watchPartySlowMode: dt('Tryb powolny: odczekaj chwilę przed wysłaniem kolejnej wiadomości.'),
   watchPartyChatOff: dt('Czat na tej imprezie jest wyłączony.'),
+  watchPartyVoiceSpeakersFull: dt('Brak wolnych miejsc dla mówiących. Dołączasz jako słuchacz.'),
+  watchPartyVoiceUnavailable: dt('Głos jest chwilowo niedostępny. Spróbuj za chwilę.'),
   watchPartyTicketInvalid: dt(
     'Połączenie z imprezą wygasło. Połącz się ponownie, aby dalej oglądać.'
   ),

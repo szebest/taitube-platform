@@ -1,6 +1,7 @@
 import {
   WATCH_PARTY_BUFFER_POLICIES,
   WATCH_PARTY_IDLE_CLOSE,
+  WATCH_PARTY_VOICE_MODES,
   WATCH_PARTY_JOIN_STATES,
   WATCH_PARTY_LIMITS,
   WATCH_PARTY_PRESETS,
@@ -37,6 +38,7 @@ const SettingsSchema = z.object({
   autoplay: z.boolean(),
   skipVotePercent: z.number().int().min(skipVotePercent.min).max(skipVotePercent.max),
   idleClose: z.enum(WATCH_PARTY_IDLE_CLOSE),
+  voiceMode: z.enum(WATCH_PARTY_VOICE_MODES),
   language: z
     .string()
     .regex(/^[a-z]{2,3}$/)

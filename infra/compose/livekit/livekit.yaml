@@ -1,0 +1,34 @@
+# LiveKit, the SFU behind watch party voice (docs/SDD.md, the voice ADR). Local-first: it asks no one
+# for its address and uses no STUN or TURN server but its own, so a voice session never leaves this host.
+port: 7880
+log_level: info
+prometheus_port: 6789
+
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: false
+  node_ip: 127.0.0.1
+  stun_servers: []
+
+turn:
+  enabled: true
+  domain: localhost
+  udp_port: 3478
+
+redis:
+  address: redis:6379
+  password: vp
+
+keys:
+  change-me-livekit-key: change-me-livekit-secret-0123456789abcdef
+
+webhook:
+  api_key: change-me-livekit-key
+  urls:
+    - http://api:3000/v1/internal/voice/webhook
+
+room:
+  auto_create: true
+  empty_timeout: 60
+  departure_timeout: 20

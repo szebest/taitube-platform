@@ -28,6 +28,12 @@ patches:
       - op: add
         path: /stringData/WATCH_PARTY_GUEST_SALT
         value: "change-me-party-salt"
+      - op: add
+        path: /stringData/LIVEKIT_API_KEY
+        value: "change-me-livekit-key"
+      - op: add
+        path: /stringData/LIVEKIT_API_SECRET
+        value: "change-me-livekit-secret-0123456789abcdef"
   - target:
       kind: Deployment
       name: .*

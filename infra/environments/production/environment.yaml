@@ -37,6 +37,8 @@ secrets:
     - VIDEO_ACCESS_SECRET
     - LIVE_HOOK_SECRET
     - WATCH_PARTY_GUEST_SALT
+    - LIVEKIT_API_KEY
+    - LIVEKIT_API_SECRET
 health:
   readyzTimeoutSec: 300
   smoke: false

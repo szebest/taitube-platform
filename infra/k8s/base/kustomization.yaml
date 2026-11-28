@@ -21,6 +21,7 @@ resources:
   - worker-package.yaml
   - worker-notify.yaml
   - worker-housekeeping.yaml
+  - livekit.yaml
   - service-monitors.yaml
   - dashboards-configmaps.yaml
   - ingress.yaml

@@ -17,6 +17,7 @@ export * from './view-buffer';
 export * from './search-suggestion-index';
 export * from './webhook-dispatcher';
 export * from './live-gateway';
+export * from './voice-gateway';
 export * from './live-chat-gate';
 export * from './live-presence';
 export * from './frame-classifier';

@@ -60,7 +60,7 @@ describe('apps/server/api/services: previewRoom', () => {
     expect(view).toMatchObject({
       id: room.id,
       name: "Olivia Owner's watch party",
-      features: { voice: false },
+      features: { voice: true },
       roster: { faces: [], others: 0, discord: 0, guests: 0, total: 0 },
       viewer: {
         memberKey: null,
@@ -70,6 +70,14 @@ describe('apps/server/api/services: previewRoom', () => {
         actions: ['guest', 'sign_in'],
       },
     });
+  });
+
+  it('advertises voice only while the media server is in use', async () => {
+    const { preview, deps } = await setUpPreview();
+
+    const view = expectOk(await preview(ANONYMOUS, undefined, { ...deps, voiceEnabled: false }));
+
+    expect(view.features).toEqual({ voice: false });
   });
 
   it.each([

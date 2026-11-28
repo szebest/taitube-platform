@@ -9,6 +9,7 @@ import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../bullmq/connection';
 import { ScryptPasswordHasher } from '../crypto/scrypt-password-hasher';
+import { LiveKitVoiceGateway } from '../livekit/livekit-voice-gateway';
 import { MediaMtxLiveGateway } from '../mediamtx/mediamtx-live-gateway';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
@@ -172,6 +173,17 @@ export function registerFamily(c: Container): void {
           { apiUrl: config.live.gatewayApiUrl, timeoutMs: config.live.gatewayTimeoutMs },
           fetch
         )
+    )
+    .provide(
+      Adapters.VoiceGateway,
+      () =>
+        new LiveKitVoiceGateway({
+          type: 'connection',
+          apiUrl: config.voice.apiUrl,
+          apiKey: config.voice.apiKey ?? '',
+          apiSecret: config.voice.apiSecret ?? '',
+          timeoutMs: config.voice.gatewayTimeoutMs,
+        })
     )
     .provide(
       Adapters.CommentSlowMode,

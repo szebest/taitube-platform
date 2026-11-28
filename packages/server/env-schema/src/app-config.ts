@@ -29,6 +29,7 @@ import {
   WEB_VITALS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
+import { type VoiceConfig, voiceConfig } from './voice-config';
 import { type WatchPartyConfig, watchPartyConfig } from './watch-party-config';
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
@@ -136,6 +137,7 @@ export interface AppConfig {
   screening: ScreeningConfig;
   live: LiveConfig;
   watchParties: WatchPartyConfig;
+  voice: VoiceConfig;
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -280,11 +282,8 @@ export function toAppConfig(env: AppEnv): AppConfig {
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
     }),
-    watchParties: watchPartyConfig({
-      maxMembers: env.WATCH_PARTY_MAX_MEMBERS,
-      maxOpenPerUser: env.WATCH_PARTY_MAX_OPEN_PER_USER,
-      guestSalt: env.WATCH_PARTY_GUEST_SALT,
-    }),
+    watchParties: watchPartyConfig(env),
+    voice: voiceConfig(env),
     worker: {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,

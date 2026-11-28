@@ -31,6 +31,7 @@ export function partyRoom(overrides: Partial<WatchPartyView> = {}): WatchPartyVi
     autoplay: true,
     skipVotePercent: 50,
     idleClose: '15m',
+    voiceMode: 'open',
     language: null,
     accent: null,
     scheduledFor: null,

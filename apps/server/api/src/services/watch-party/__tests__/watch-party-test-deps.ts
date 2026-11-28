@@ -100,6 +100,7 @@ export function watchPartyTestDeps({ config, secrets }: WatchPartyTestOptions = 
     broadcaster: new WatchPartyBroadcaster(cache, () => clock.nowMs),
     context: new WatchPartyContextLoader({ repositories, now }),
     config: appConfig.watchParties,
+    voiceEnabled: appConfig.voice.enabled,
     secrets: { ...deterministicSecrets(appConfig.watchParties.guestSalt), ...secrets },
     webUrl: 'http://localhost:5173',
     cdn: asCdnBase('http://localhost:9000/public'),

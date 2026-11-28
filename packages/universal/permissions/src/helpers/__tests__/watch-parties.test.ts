@@ -119,7 +119,7 @@ describe('helpers/watch-parties: the room-scoped ability', () => {
 
   it.each<{
     holder: Holder;
-    action: 'kick' | 'ban' | 'mute' | 'assign' | 'moderate';
+    action: 'kick' | 'ban' | 'mute' | 'assign' | 'moderate' | 'voice';
     member: WatchPartyMemberSubject;
     allowed: boolean;
   }>([
@@ -152,6 +152,9 @@ describe('helpers/watch-parties: the room-scoped ability', () => {
       allowed: false,
     },
     { holder: 'member', action: 'moderate', member: memberAt(1), allowed: false },
+    { holder: 'moderator', action: 'voice', member: memberAt(0, { kind: 'guest' }), allowed: true },
+    { holder: 'moderator', action: 'voice', member: memberAt(800), allowed: false },
+    { holder: 'member', action: 'voice', member: memberAt(1), allowed: false },
   ])(
     '$holder may $action a member at $member.topPosition: $allowed',
     ({ holder, action, member, allowed }) => {
