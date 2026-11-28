@@ -19,7 +19,7 @@ const CommentReportQueueItemSchema = CommentReportSchema.extend({
   reporterId: z.uuid(),
   comment: z.object({
     id: z.uuid(),
-    videoId: z.uuid(),
+    videoId: z.uuid().nullable().describe('Null for a comment on a post'),
     authorId: z.uuid(),
     content: z.string(),
     removed: z.boolean().describe('The comment was removed, by this report or otherwise'),

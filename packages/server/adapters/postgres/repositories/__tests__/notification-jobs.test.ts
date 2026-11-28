@@ -18,7 +18,7 @@ describe('postgres: enqueueNotificationJobs', () => {
 
       await enqueueNotificationJobs(db, [
         ...transitionNotificationJobs(VIDEO_ID, 'package', 'private'),
-        commentOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
+        commentOutbox({ target: { type: 'video', id: VIDEO_ID }, commentId: COMMENT_ID }),
       ]);
 
       const rows = await db.select().from(schema.outbox);

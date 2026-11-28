@@ -74,10 +74,16 @@ describe('apps/server/api/services: ViewerActivityService', () => {
   });
 
   describe('my comments', () => {
+    const channelOfVideo = async (videoId: string) => {
+      const video = expectOk(await repositories.videos.findById(videoId));
+      if (!video) throw new Error(`no video ${videoId}`);
+      return video.channelId;
+    };
     const comment = async (id: string, videoId: string, parentId: string | null = null) =>
       repositories.comments.create({
         id,
-        videoId,
+        target: { type: 'video', id: videoId },
+        channelId: await channelOfVideo(videoId),
         authorId: VIEWER.id,
         authorChannelId: await seedPrimaryChannel(repositories, VIEWER.id),
         parentId,

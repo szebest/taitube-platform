@@ -7,6 +7,7 @@ import {
   VIDEO_IDS,
   publicVideo,
   seedOwners,
+  videoTarget,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -50,7 +51,8 @@ export function describeNotificationWithdrawalContract(makeSubject: MakeReposito
         expectOk(
           await comments.create({
             id,
-            videoId: VIDEO_IDS.a,
+            target: videoTarget(VIDEO_IDS.a),
+            channelId: OWNER_CHANNEL_ID,
             authorId: OWNER_ID,
             authorChannelId: OWNER_CHANNEL_ID,
             parentId: null,
@@ -70,7 +72,8 @@ export function describeNotificationWithdrawalContract(makeSubject: MakeReposito
       expect(expectOk(await notifications.withdrawUnread([first, second]))).toBe(1);
 
       const left = expectOk(await notifications.list(OTHER_OWNER_ID, { filter: 'all', limit: 10 }));
-      expect(left.map((row) => row.commentId).sort()).toEqual([first, third].sort());
+      expect(left).toHaveLength(2);
+      expect(left.map((row) => row.commentId)).toEqual(expect.arrayContaining([first, third]));
       const events = expectOk(await userEvents.listFrom(OTHER_OWNER_ID, 0, 50));
       expect(events.at(-1)).toMatchObject(
         notificationRead({ scope: 'ids', ids: unread ? [unread.id] : [] }, 1)

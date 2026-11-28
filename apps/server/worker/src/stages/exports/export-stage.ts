@@ -99,6 +99,8 @@ export function createExportProcessor(deps: ExportProcessorDeps) {
         return (after) => rows.comments(scope, after, pageSize);
       case 'videos':
         return (after) => rows.videos(scope, after, pageSize);
+      case 'posts':
+        return (after) => rows.posts(scope, after, pageSize);
       default:
         return assertNever(kind, 'DataExportKind');
     }

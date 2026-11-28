@@ -1,3 +1,4 @@
+import { token } from '@kit/di';
 import { err, ok, type Result } from '@kit/result';
 import { type FormatFailure, unrenderable } from './failures';
 
@@ -11,6 +12,9 @@ export type Preset<Options> = { readonly default: Options } & {
 
 /** Per kind name, per preset name, the preset. */
 export type PresetTable = Readonly<Record<string, Readonly<Record<string, Preset<unknown>>>>>;
+
+/** The app's named option sets per kind, from `definePresets`. */
+export const FormatPresets = token<PresetTable>('FormatPresets');
 
 /**
  * Named option sets, per kind: `definePresets({ number: { compact: { default: {...}, pl: {...} } } })`.

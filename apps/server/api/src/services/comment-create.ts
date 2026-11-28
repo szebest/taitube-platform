@@ -5,10 +5,12 @@ import type { CommentSlowModePort } from '@vp/core/ports';
 import type { ChannelMemberRepositoryPort, CommentRepositoryPort } from '@vp/core/repositories';
 import {
   type ActingChannel,
+  type CommentHost,
+  type CommentTarget,
   type CommentThread,
   type NewCommentModeration,
   PUBLISHED_AT_CREATION,
-  type Video,
+  commentVideoId,
   roleHas,
 } from '@vp/domain';
 import {
@@ -18,6 +20,9 @@ import {
   type CommentNotFound,
   type CommentsSlowMode,
   type CreateCommentFailure,
+  type PublicHostReadFailure,
+  commentHostTarget,
+  commentHostTraits,
   commentNotFound,
   commentsSlowMode,
   decideChannelTask,
@@ -29,7 +34,7 @@ import { looksLikeQuestion } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import { auditActor } from './audit-actor';
 import { type CommentGateLookups, loadCommentGate } from './comment-gate-context';
-import { type CommentLookupDeps, type PublicReadFailure, readableVideo } from './comment-lookup';
+import { type CommentLookupDeps, readableHost } from './comment-lookup';
 import { toCommentView } from './comment-views';
 
 export interface CommentCreateDeps extends CommentLookupDeps, CommentGateLookups {
@@ -44,10 +49,10 @@ export type CreateCommentServiceFailure =
   | CreateCommentFailure
   | CommentGateFailure
   | CommentsSlowMode
-  | PublicReadFailure
+  | PublicHostReadFailure
   | DatabaseUnavailable;
 
-function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentModeration {
+export function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentModeration {
   return {
     ...PUBLISHED_AT_CREATION,
     moderationState: verdict.decision === 'hold' ? 'held' : 'published',
@@ -58,7 +63,7 @@ function moderationOf(verdict: CommentGateVerdict, content: string): NewCommentM
 }
 
 /** A dead cache costs the limit for one comment, never the comment. */
-async function claimSlowMode(
+export async function claimSlowMode(
   deps: Pick<CommentCreateDeps, 'slowMode'>,
   channelId: string,
   authorId: string,
@@ -75,7 +80,7 @@ async function claimSlowMode(
 interface Pending {
   author: UserContext;
   acting: ActingChannel;
-  video: Video;
+  host: CommentHost;
   parentId: string | null;
   content: string;
   verdict: CommentGateVerdict;
@@ -83,17 +88,20 @@ interface Pending {
 
 async function store(
   deps: CommentCreateDeps,
-  { author, acting, video, parentId, content, verdict }: Pending
+  { author, acting, host, parentId, content, verdict }: Pending
 ): Promise<Result<CommentThread, DatabaseUnavailable | CommentNotFound>> {
   const held = verdict.decision === 'hold';
-  const moderators = held ? await moderatorsOf(deps, video.channelId, video.ownerId) : ok([]);
+  const { channelId, ownerId } = commentHostTraits(host);
+  const target = commentHostTarget(host);
+  const moderators = held ? await moderatorsOf(deps, channelId, ownerId) : ok([]);
   if (isErr(moderators)) return moderators;
 
   const id = uuidv7();
   const created = await deps.comments.create(
     {
       id,
-      videoId: video.id,
+      target,
+      channelId,
       authorId: author.id,
       authorChannelId: acting.channelId,
       parentId,
@@ -107,11 +115,11 @@ async function store(
       action: 'comment.posted',
       targetType: 'comment',
       targetId: id,
-      meta: { videoId: video.id },
+      meta: { videoId: commentVideoId(target) },
     }
   );
   if (isErr(created)) return created;
-  return created.value ? ok(created.value) : err(commentNotFound(parentId ?? video.id));
+  return created.value ? ok(created.value) : err(commentNotFound(parentId ?? target.id));
 }
 
 export async function moderatorsOf(
@@ -132,31 +140,32 @@ export async function createComment(
   deps: CommentCreateDeps,
   author: UserContext,
   acting: ActingChannel,
-  videoId: string,
+  target: CommentTarget,
   body: { content: string; parentId?: string }
 ): Promise<Result<CommentView, CreateCommentServiceFailure>> {
   const allowed = decideChannelTask({ user: author, acting, task: 'comment-as' });
   if (isErr(allowed)) return allowed;
-  const video = await readableVideo(deps, author, videoId);
-  if (isErr(video)) return video;
+  const host = await readableHost(deps, author, target);
+  if (isErr(host)) return host;
   const parentId = body.parentId ?? null;
   const parent = parentId ? await deps.comments.findVisible(author, parentId) : ok(null);
   if (isErr(parent)) return parent;
 
   const decided = decideCommentCreate({
     author,
-    video: video.value,
-    videoId,
+    host: host.value,
+    target,
     parent: parent.value,
     parentId,
     content: body.content,
   });
   if (isErr(decided)) return decided;
-  const { content, video: target } = decided.value;
-  const { channelId } = target;
+  const { content } = decided.value;
+  const traits = commentHostTraits(decided.value.host);
+  const { channelId } = traits;
 
   const now = new Date(deps.now());
-  const gate = await loadCommentGate(deps, author, acting.channelId, target, now);
+  const gate = await loadCommentGate(deps, author, acting.channelId, decided.value.host, now);
   if (isErr(gate)) return gate;
   const verdict = evaluateCommentGate(gate.value.settings, gate.value.context, content);
   if (isErr(verdict)) return verdict;
@@ -167,7 +176,7 @@ export async function createComment(
   const stored = await store(deps, {
     author,
     acting,
-    video: target,
+    host: decided.value.host,
     parentId: decided.value.parentId,
     content,
     verdict: verdict.value,
@@ -182,5 +191,5 @@ export async function createComment(
     return stored;
   }
 
-  return ok(toCommentView(stored.value, target, author));
+  return ok(toCommentView(stored.value, traits, author));
 }

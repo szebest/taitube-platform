@@ -10,6 +10,7 @@ export const API_SCOPES = [
   'exports:read',
   'exports:create',
   'webhooks:manage',
+  'posts:write',
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];

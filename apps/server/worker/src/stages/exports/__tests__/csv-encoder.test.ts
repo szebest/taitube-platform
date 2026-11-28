@@ -17,6 +17,7 @@ describe('worker/exports: csv encoder', () => {
     { scenario: 'a number', value: 12.5, cell: '12.5' },
     { scenario: 'a boolean', value: false, cell: 'false' },
     { scenario: 'null', value: null, cell: '' },
+    { scenario: 'an object', value: { a: 1 }, cell: '"{""a"":1}"' },
     { scenario: 'a list', value: ['a', 'b c'], cell: 'a|b c' },
     { scenario: 'a list starting with a formula', value: ['=x', 'y'], cell: "'=x|y" },
   ])('writes $scenario as a safe cell', ({ value, cell }) => {

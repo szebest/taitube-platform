@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | L |
 | Blocked by | 38 - User identity · 39 - Permissions · 42 - Threaded comments · 43 - Views buffer and creator analytics · 60 - Creator studio dashboard · 65 - Playback telemetry · 77 - Platform integrations and webhooks · 95 - Design system 2 · 98 - Realtime user event stream · 113 - Channel comment moderation · 117 - Channel team roles |
-| Blocks | — |
+| Blocks | 181 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** done

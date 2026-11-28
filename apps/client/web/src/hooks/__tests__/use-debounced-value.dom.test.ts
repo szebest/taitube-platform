@@ -24,10 +24,14 @@ describe('apps/client/web: useDebouncedValue', () => {
     });
 
     rerender({ value: 'b' });
-    act(() => vi.advanceTimersByTime(DELAY_MS - 1));
+    act(() => {
+      vi.advanceTimersByTime(DELAY_MS - 1);
+    });
     expect(result.current).toBe('a');
 
-    act(() => vi.advanceTimersByTime(1));
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(result.current).toBe('b');
   });
 
@@ -37,12 +41,18 @@ describe('apps/client/web: useDebouncedValue', () => {
     });
 
     rerender({ value: 'b' });
-    act(() => vi.advanceTimersByTime(DELAY_MS - 1));
+    act(() => {
+      vi.advanceTimersByTime(DELAY_MS - 1);
+    });
     rerender({ value: 'c' });
-    act(() => vi.advanceTimersByTime(DELAY_MS - 1));
+    act(() => {
+      vi.advanceTimersByTime(DELAY_MS - 1);
+    });
     expect(result.current).toBe('a');
 
-    act(() => vi.advanceTimersByTime(1));
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(result.current).toBe('c');
   });
 });

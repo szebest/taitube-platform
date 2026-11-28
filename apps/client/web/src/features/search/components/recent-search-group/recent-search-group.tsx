@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { Icon, IconButton } from '@kit/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
@@ -32,7 +33,10 @@ export function RecentSearchGroup() {
           leading={<Icon name="history" />}
           onSelect={() => {
             setOpen(false);
-            navigate({ to: '/search', search: { q: entry.query } });
+            ignoreRejection(
+              navigate({ to: '/search', search: { q: entry.query } }),
+              'a refused navigation leaves the viewer where they are'
+            );
           }}
         >
           <div>

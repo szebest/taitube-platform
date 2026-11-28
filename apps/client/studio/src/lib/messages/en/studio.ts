@@ -12,6 +12,7 @@ import { studioImages } from './studio-images';
 import { studioLive } from './studio-live';
 import { studioModeration } from './studio-moderation';
 import { studioPicks } from './studio-picks';
+import { studioPosts } from './studio-posts';
 import { studioScreening } from './studio-screening';
 import { studioSharing } from './studio-sharing';
 import { studioTeam } from './studio-team';
@@ -93,6 +94,7 @@ export const studio = {
   ...studioImages,
   ...studioLive,
   ...studioPicks,
+  ...studioPosts,
   ...studioScreening,
   ...studioTeam,
   copiedField: dt('Copied: {label}'),

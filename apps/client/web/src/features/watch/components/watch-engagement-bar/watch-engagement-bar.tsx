@@ -14,6 +14,7 @@ import { useReaction } from '#app/hooks/use-reaction';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { useT } from '#app/lib/messages';
 import { channelQueryOptions } from '#app/lib/query-keys/channel-keys';
+import { StartThreadAction } from '../start-thread-action/start-thread-action';
 
 function ChannelSection({ channelId, videoId }: { channelId: string; videoId: string }) {
   const api = useApi();
@@ -86,7 +87,7 @@ export interface WatchEngagementBarProps {
   renderActions?: (video: Video) => ReactNode;
 }
 
-/** The channel, Subscribe, the reactions, Share, Save, Add to queue and Play next under a video's title. */
+/** The channel, Subscribe, the reactions, Share, Save, Add to queue, Play next and Start a thread under a video's title. */
 export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarProps) {
   const { tOr } = useT();
 
@@ -106,6 +107,7 @@ export function WatchEngagementBar({ video, renderActions }: WatchEngagementBarP
         <ShareDialog video={video} />
         <SaveSection video={video} />
         <QueueSection video={video} />
+        <StartThreadAction videoId={video.id} variant="pill" />
         {renderActions?.(video)}
       </EngagementBar.Actions>
     </EngagementBar.Root>

@@ -13,5 +13,7 @@ expectTypeOf(andThenAsync(settled, (): Result<string, never> => ok('x'))).resolv
   Result<string, 'A'>
 >();
 
-// @ts-expect-error the step answers a Result, not a bare value
-andThenAsync(settled, (value) => value + 1);
+expectTypeOf(
+  // @ts-expect-error the step answers a Result, not a bare value
+  andThenAsync(settled, (value) => value + 1)
+).toBeObject();

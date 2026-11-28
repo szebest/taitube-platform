@@ -1,7 +1,12 @@
 import type { CaptionKind } from './captions';
 import type { ChannelCard } from './channel';
 import type { ChannelImageKind } from './channel-images';
-import type { Comment, CommentThread, CommentVideoSummary } from './comment';
+import {
+  type Comment,
+  type CommentThread,
+  type CommentVideoSummary,
+  commentVideoId,
+} from './comment';
 import type { DataExportFormat, DataExportKind } from './data-export';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
@@ -38,7 +43,7 @@ export type UserEvent =
         video: CommentVideoSummary;
       };
     }
-  | { type: 'comment.held'; payload: { commentId: string; videoId: string } }
+  | { type: 'comment.held'; payload: { commentId: string; videoId: string | null } }
   | {
       type: 'captions.ready';
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
@@ -150,8 +155,11 @@ export function commentCreated(thread: CommentThread, video: CommentVideoSummary
 }
 
 /** Ids only: a held comment is for moderators, who read it through the inbox. */
-export function commentHeld(comment: Pick<Comment, 'id' | 'videoId'>): UserEvent {
-  return { type: 'comment.held', payload: { commentId: comment.id, videoId: comment.videoId } };
+export function commentHeld(comment: Pick<Comment, 'id' | 'target'>): UserEvent {
+  return {
+    type: 'comment.held',
+    payload: { commentId: comment.id, videoId: commentVideoId(comment.target) },
+  };
 }
 
 export function captionsReady(

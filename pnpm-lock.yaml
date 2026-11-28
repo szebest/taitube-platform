@@ -670,6 +670,9 @@ importers:
       '@kit/errors':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/errors
+      '@kit/i18n':
+        specifier: workspace:*
+        version: link:../../../packages/platform/universal/i18n
       '@kit/intl':
         specifier: workspace:*
         version: link:../../../packages/platform/universal/intl
@@ -2498,6 +2501,9 @@ importers:
 
   packages/platform/universal/intl:
     dependencies:
+      '@kit/di':
+        specifier: workspace:*
+        version: link:../di
       '@kit/result':
         specifier: workspace:*
         version: link:../result

@@ -1,7 +1,7 @@
 import type { DatabaseUnavailable } from '@kit/errors';
 import { type Result, isErr, ok } from '@kit/result';
-import type { Comment, CommentEditWrite, Video } from '@vp/domain';
-import { type CommentGateFailure, evaluateCommentGate } from '@vp/domain-rules';
+import type { Comment, CommentEditWrite, CommentHost } from '@vp/domain';
+import { type CommentGateFailure, commentHostTraits, evaluateCommentGate } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
 import { looksLikeQuestion } from '@vp/validation';
 import { moderatorsOf, type CommentCreateDeps } from './comment-create';
@@ -18,14 +18,14 @@ export async function decideCommentEdit(
   deps: CommentCreateDeps,
   actor: UserContext,
   comment: Comment,
-  video: Video | null,
+  host: CommentHost | null,
   content: string
 ): Promise<Result<CommentEditWrite, CommentEditFailure>> {
   const edit: CommentEditWrite = { looksLikeQuestion: looksLikeQuestion(content) };
-  if (!video) return ok(edit);
+  if (!host) return ok(edit);
 
   const now = new Date(deps.now());
-  const gate = await loadCommentGate(deps, actor, comment.authorChannelId, video, now);
+  const gate = await loadCommentGate(deps, actor, comment.authorChannelId, host, now);
   if (isErr(gate)) return gate;
 
   const verdict = evaluateCommentGate(gate.value.settings, gate.value.context, content);
@@ -34,7 +34,8 @@ export async function decideCommentEdit(
   if (comment.moderationState !== 'published' || decision !== 'hold') return ok(edit);
   if (!(heldReason && disclosure)) return ok(edit);
 
-  const moderators = await moderatorsOf(deps, video.channelId, video.ownerId);
+  const { channelId, ownerId } = commentHostTraits(host);
+  const moderators = await moderatorsOf(deps, channelId, ownerId);
   if (isErr(moderators)) return moderators;
   return ok({
     ...edit,

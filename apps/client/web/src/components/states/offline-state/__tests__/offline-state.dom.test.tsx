@@ -84,7 +84,9 @@ describe('apps/client/web: OfflineState', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Back online');
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
 
-    act(() => vi.advanceTimersByTime(4000));
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
 
     expect(onDismiss).toHaveBeenCalledOnce();
     vi.useRealTimers();

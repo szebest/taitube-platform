@@ -6,7 +6,7 @@ import {
   channelUserRestrictions,
   commentRemovals,
 } from '../comment-moderation-schema';
-import { videoComments } from '../comments-schema';
+import { comments } from '../comments-schema';
 import { runMigrations } from '../migrate';
 import { videos } from '../schema';
 import { referenceFrom } from './foreign-key';
@@ -41,7 +41,7 @@ describe('db: comment moderation schema', () => {
     { table: commentRemovals, column: 'video_id', target: 'videos', onDelete: 'cascade' },
     { table: commentRemovals, column: 'author_id', target: 'users', onDelete: 'cascade' },
     { table: commentRemovals, column: 'removed_by', target: 'users', onDelete: 'set null' },
-    { table: videoComments, column: 'moderated_by', target: 'users', onDelete: 'set null' },
+    { table: comments, column: 'moderated_by', target: 'users', onDelete: 'set null' },
   ])(
     '$column of $table.name points at $target, on delete $onDelete',
     ({ table, column, target, onDelete }) => {
@@ -88,12 +88,13 @@ describe('db: comment moderation schema', () => {
       ],
     },
     {
-      table: videoComments,
+      table: comments,
       checks: [
-        'video_comments_moderation_state_check',
-        'video_comments_moderation_disclosure_check',
-        'video_comments_moderation_reason_check',
-        'video_comments_held_reason_check',
+        'comments_target_type_check',
+        'comments_moderation_state_check',
+        'comments_moderation_disclosure_check',
+        'comments_moderation_reason_check',
+        'comments_held_reason_check',
       ],
     },
   ])('guards $table.name in the database', ({ table, checks }) => {
@@ -101,8 +102,8 @@ describe('db: comment moderation schema', () => {
   });
 
   it('indexes only the comments that are not published', () => {
-    const index = getTableConfig(videoComments).indexes.find(
-      (candidate) => candidate.config.name === 'video_comments_moderation_idx'
+    const index = getTableConfig(comments).indexes.find(
+      (candidate) => candidate.config.name === 'comments_moderation_idx'
     );
 
     expect(index?.config.where).toBeDefined();

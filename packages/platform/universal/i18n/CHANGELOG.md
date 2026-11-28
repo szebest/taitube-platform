@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0
+## 0.4.0
 
 - Breaking: a placeholder kind is a `@kit/intl` kind with its requirement, `messageKind(kind, 'optional' | 'required')`.
   `defineKind`, `Kind`, `KindContext` and `Rendered` are removed and `describeValue` moves to `@kit/intl`;
@@ -15,7 +15,8 @@
 
 ## 0.2.0
 
-- `Preset`, `PresetTable`, `definePresets` and `resolveEntry` move to `@kit/intl`; `FormatPresets` stays.
+- Breaking: `Preset`, `PresetTable`, `definePresets`, `resolveEntry` and the `FormatPresets` token move to
+  `@kit/intl`, which re-exports none of them here. The package moves to layer T4.
 - `./contract` exports `describeI18nContract`, `I18nSubject` and `MakeI18nSubject`; vitest is a peer.
 
 ## 0.1.0

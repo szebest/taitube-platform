@@ -29,6 +29,7 @@ const ALLOWED: Record<DataExportKind, string[]> = {
   channel_analytics: ['owner', 'manager', 'analytics'],
   comments: ['owner', 'manager'],
   videos: ['owner', 'manager'],
+  posts: ['owner', 'manager'],
 };
 
 const ASKS = [

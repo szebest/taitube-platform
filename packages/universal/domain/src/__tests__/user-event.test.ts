@@ -40,7 +40,8 @@ describe('domain: user event', () => {
   it('announces a new comment with its author and the video it is on, and nothing more', () => {
     const thread: CommentThread = {
       id: 'c1',
-      videoId: 'v1',
+      target: { type: 'video', id: 'v1' },
+      channelId: 'ch',
       authorId: 'u2',
       authorChannelId: 'ch',
       parentId: null,
@@ -79,7 +80,7 @@ describe('domain: user event', () => {
   });
 
   it('announces a held comment by its ids, never its text or author', () => {
-    expect(commentHeld({ id: 'c1', videoId: 'v1' })).toEqual({
+    expect(commentHeld({ id: 'c1', target: { type: 'video', id: 'v1' } })).toEqual({
       type: 'comment.held',
       payload: { commentId: 'c1', videoId: 'v1' },
     });

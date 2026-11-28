@@ -10,6 +10,7 @@ import {
   VIDEO_IDS,
   idsOf,
   primaryChannelOf,
+  videoTarget,
 } from './fixtures';
 
 const STRANGER_ID = '00000000-0000-7000-8000-000000000f01';
@@ -21,7 +22,7 @@ const VIEWERS = {
 
 type ViewerKind = keyof typeof VIEWERS;
 
-const ROOT = { id: C.old, videoId: VIDEO_IDS.a };
+const ROOT = { id: C.old, target: videoTarget(VIDEO_IDS.a) };
 
 export function describeCommentPublicScopeContract(ctx: CommentContractContext): void {
   describe('public scope', () => {
@@ -53,7 +54,8 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       const created = expectOk(
         await ctx.comments.create({
           id,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: options.authorId ?? OTHER_OWNER_ID,
           authorChannelId: primaryChannelOf(options.authorId ?? OTHER_OWNER_ID),
           parentId: options.parentId ?? null,
@@ -72,7 +74,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
     const roots = async (viewer: CommentViewer) =>
       idsOf(
         expectOk(
-          await ctx.comments.listThreads(VIDEO_IDS.a, {
+          await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
             viewer,
             sort: 'newest',
             window: keyset(10),
@@ -124,7 +126,9 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       await write(C.liked, { state: 'held', authorId: OWNER_ID });
       await shadowBan();
 
-      const own = expectOk(await ctx.comments.listOwnNonPublic(VIDEO_IDS.a, OTHER_OWNER_ID));
+      const own = expectOk(
+        await ctx.comments.listOwnNonPublic(videoTarget(VIDEO_IDS.a), OTHER_OWNER_ID)
+      );
 
       expect(idsOf(own).sort()).toEqual([C.reply1, C.reply2, C.other].sort());
     });
@@ -134,9 +138,9 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       await shadowBan();
       await lift();
 
-      expect(expectOk(await ctx.comments.listOwnNonPublic(VIDEO_IDS.a, OTHER_OWNER_ID))).toEqual(
-        []
-      );
+      expect(
+        expectOk(await ctx.comments.listOwnNonPublic(videoTarget(VIDEO_IDS.a), OTHER_OWNER_ID))
+      ).toEqual([]);
     });
 
     it.each([
@@ -150,7 +154,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       await write(C.other, { parentId: C.old, state: 'hidden' });
 
       const [thread] = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: VIEWERS[viewer],
           sort: 'newest',
           window: keyset(10),
@@ -191,7 +195,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       await write(C.reply1, { parentId: C.old, state: 'held' });
 
       const [thread] = expectOk(
-        await ctx.comments.listThreads(VIDEO_IDS.a, {
+        await ctx.comments.listThreads(videoTarget(VIDEO_IDS.a), {
           viewer: VIEWERS.author,
           sort: 'newest',
           window: keyset(10),
@@ -205,7 +209,8 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
       const created = expectOk(
         await ctx.comments.create({
           id: C.old,
-          videoId: VIDEO_IDS.a,
+          target: videoTarget(VIDEO_IDS.a),
+          channelId: OWNER_CHANNEL_ID,
           authorId: OTHER_OWNER_ID,
           authorChannelId: OTHER_OWNER_CHANNEL_ID,
           parentId: null,
@@ -278,7 +283,7 @@ export function describeCommentPublicScopeContract(ctx: CommentContractContext):
         await write(C.old);
         await write(C.reply1, { state: 'held' });
 
-        expectOk(await ctx.comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }));
+        expectOk(await ctx.comments.remove({ id: C.reply1, target: videoTarget(VIDEO_IDS.a) }));
 
         expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
       });

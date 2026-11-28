@@ -122,6 +122,16 @@ export type CookieOptions = {
 };
 export const DEFAULT_APPEARANCE: { schema: 2; theme: string | null; mode: "system" | "dark" | "light" | "oled"; accent: string | null; customGround: string | null; customAccent: string | null; contrast: "auto" | "standard" | "more"; overrides: { typography?: string | undefined; fontSize?: string | undefined; spacing?: string | undefined; sizing?: string | undefined; radius?: string | undefined; border?: string | undefined; shadow?: string | undefined; ambient?: string | undefined; motion?: string | undefined; }; }
 export const DENSITIES: readonly ["comfortable", "compact"]
+export function DateTimePicker({ value, onValueChange, dateLabel, timeLabel, min, size, disabled, className, ...props }: DateTimePickerProps): JSX.Element
+export interface DateTimePickerProps extends Omit<ComponentPropsWithRef<'div'>, 'onChange' | 'defaultValue'> {
+    value: string;
+    onValueChange: (value: string) => void;
+    dateLabel: string;
+    timeLabel: string;
+    min?: string;
+    size?: InputSize;
+    disabled?: boolean;
+}
 export type Density = (typeof DENSITIES)[number];
 export const Dialog: { Root: FC<DialogProps>; Trigger: ForwardRefExoticComponent<DialogTriggerProps & RefAttributes<HTMLButtonElement>>; Content: ({ side, size, inline, className, children, ...props }: DialogContentProps) => JSX.Element; Header: ({ className, ...props }: ComponentPropsWithRef<"div">) => JSX.Element; Title: ({ className, ...props }: ComponentPropsWithRef<ForwardRefExoticComponent<DialogTitleProps & RefAttributes<HTMLHeadingElement>>>) => JSX.Element; Description: ({ className, ...props }: ComponentPropsWithRef<ForwardRefExoticComponent<DialogDescriptionProps & RefAttributes<HTMLParagraphElement>>>) => JSX.Element; Body: ({ className, ...props }: ComponentPropsWithRef<"div">) => JSX.Element; Footer: ({ className, ...props }: ComponentPropsWithRef<"div">) => JSX.Element; Close: ForwardRefExoticComponent<DialogCloseProps & RefAttributes<HTMLButtonElement>>; }
 export interface DialogContentProps extends ComponentPropsWithRef<typeof DialogPrimitive.Content> {

@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | XL (one stack of three slices, see *Delivery*) |
 | Blocked by | 05 - Single PUT upload · 11 - Multipart upload · 12 - Ladder flows · 16 - Retries, DLQ and re-process generations · 17 - Housekeeping · 43 - Views buffer and creator analytics · 44 - Creator studio video management · 57 - Production video player · 59 - Modern video watch page · 60 - Creator studio dashboard · 65 - Playback telemetry · 95 - Design system 2 · 105 - Clips · 111 - Captions and transcripts · 113 - Channel comment moderation · 117 - Channel team roles |
-| Blocks | 119, 120, 121, 122 |
+| Blocks | 119, 120, 121, 122, 179 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** done

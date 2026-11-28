@@ -1,44 +1,21 @@
-import { fromPromise, ignore, isOk } from '@kit/result';
-import { liveFeature, videoFeatures } from '@videojs/core/dom';
-import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
+import { fromPromise, ignoreRejection, isOk } from '@kit/result';
+import { Container, Gesture, Poster } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
-import {
-  type ReactNode,
-  type RefObject,
-  type SyntheticEvent,
-  useEffect,
-  useEffectEvent,
-  useRef,
-} from 'react';
-import { bufferedEndAt } from '#app/lib/player/buffered-end';
-import { findDefaultRendition } from '#app/lib/player/playback-defaults';
+import { type ReactNode, type SyntheticEvent, useRef } from 'react';
 import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
-import type { PlayerCommands, PlayerState } from '#app/lib/player/player-port';
-import type {
-  PlaybackControl,
-  PlaybackDefaults,
-  PlaybackQuality,
-  PlaybackRange,
-  TaitubePlayerProps,
-} from '#app/lib/player/taitube-player-props';
-import { CaptionsContext, useCaptions, useCaptionsContext } from './hooks/use-captions';
+import type { TaitubePlayerProps } from '#app/lib/player/taitube-player-props';
+import { ChannelBinding } from './components/channel-binding';
+import { PlaybackSync } from './components/playback-sync';
+import { QualityReport } from './components/quality-report';
+import { StartAtDefaultQuality } from './components/start-at-default-quality';
+import { CaptionsContext, useCaptions } from './hooks/use-captions';
+import { isOutside, rangeStartSeconds } from './playback-range';
+import { VideoPlayer } from './player';
 
-export const AUTO_QUALITY = 'auto';
-
-const { Player: VideoPlayer, usePlayer } = createPlayer({
-  features: [...videoFeatures, liveFeature],
-  displayName: 'TaitubeVideoPlayer',
-});
-
-const MS_PER_SECOND = 1000;
-const SEEK_TOLERANCE_SECONDS = 0.5;
-
-function isOutside(range: PlaybackRange, currentTime: number): boolean {
-  return (
-    currentTime >= range.endMs / MS_PER_SECOND ||
-    currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS
-  );
-}
+export { LiveEdgeButton } from './components/live-edge-button';
+export { AUTO_QUALITY, usePlayerState } from './hooks/use-player-state';
+export { usePlayerCommands } from './hooks/use-player-commands';
+export { usePlayerContainer } from './hooks/use-player-container';
 
 export interface VideoJsEngineProps extends TaitubePlayerProps {
   /** The skin, drawn over the video inside the element that goes fullscreen. */
@@ -69,7 +46,7 @@ export function VideoJsEngine({
   const channel = useOfferedPlayerChannel();
   const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);
 
-  const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
+  const startAt = range ? rangeStartSeconds(range) : startTime;
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     if (startAt) {
@@ -82,21 +59,24 @@ export function VideoJsEngine({
     }
 
     if (control && !control.paused) {
-      startPlaying(currentTarget);
+      ignoreRejection(
+        startPlaying(currentTarget),
+        'startPlaying reports a refused play through onPause itself'
+      );
     }
   };
 
   const handleTimeUpdate = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     const { currentTime, duration } = currentTarget;
     if (range && isOutside(range, currentTime)) {
-      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
+      currentTarget.currentTime = rangeStartSeconds(range);
     }
     onTimeUpdate?.({ currentTime, duration });
   };
 
   const handleEnded = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     if (range) {
-      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
+      currentTarget.currentTime = rangeStartSeconds(range);
       void currentTarget.play();
       return;
     }
@@ -168,246 +148,4 @@ export function VideoJsEngine({
       </CaptionsContext>
     </VideoPlayer>
   );
-}
-
-/** The media starts as the element's `autoPlay` and `muted` say; only a change after that is a command. */
-function PlaybackSync({ paused, muted, speed, captions }: PlaybackControl) {
-  const { play, pause, setMuted, setPlaybackRate } = usePlayerCommands();
-  const { state, commands } = useCaptionsContext();
-  const shown = state.captionsEnabled;
-  const applied = useRef({ paused, muted, speed });
-
-  useEffect(() => {
-    if (applied.current.paused === paused) {
-      return;
-    }
-
-    applied.current.paused = paused;
-    if (paused) {
-      pause();
-      return;
-    }
-
-    play();
-  }, [paused, play, pause]);
-
-  useEffect(() => {
-    if (applied.current.muted === muted) {
-      return;
-    }
-
-    applied.current.muted = muted;
-    setMuted(muted);
-  }, [muted, setMuted]);
-
-  useEffect(() => {
-    if (speed === undefined || applied.current.speed === speed) {
-      return;
-    }
-
-    applied.current.speed = speed;
-    setPlaybackRate(speed);
-  }, [speed, setPlaybackRate]);
-
-  useEffect(() => {
-    if (captions !== undefined && captions !== shown) {
-      commands.toggleCaptions();
-    }
-  }, [captions, shown, commands]);
-
-  return null;
-}
-
-function StartAtDefaultQuality({ quality }: Pick<PlaybackDefaults, 'quality'>) {
-  const { selectVideoRendition } = usePlayerCommands();
-  const renditions = usePlayerState((state) => state.renditions);
-  const listed = renditions.length > 0;
-
-  const applyQuality = useEffectEvent(() => {
-    const id = findDefaultRendition(renditions, quality);
-    if (id !== undefined) {
-      selectVideoRendition(id);
-    }
-  });
-
-  useEffect(() => {
-    if (listed) {
-      applyQuality();
-    }
-  }, [listed]);
-
-  return null;
-}
-
-function QualityReport({ onQualityChange }: Pick<TaitubePlayerProps, 'onQualityChange'>) {
-  const rendition = usePlayer((state) => state.activeVideoRendition);
-  const auto = usePlayer((state) => !state.videoRenditionList.some(({ selected }) => selected));
-
-  const report = useEffectEvent((quality: PlaybackQuality) => onQualityChange?.(quality));
-
-  useEffect(() => {
-    if (!rendition) {
-      return;
-    }
-
-    const { width, height, bitrate } = rendition;
-    report({ width, height, bitrate, auto });
-  }, [rendition, auto]);
-
-  return null;
-}
-
-function ChannelBinding({ videoRef }: { videoRef: RefObject<HTMLVideoElement | null> }) {
-  const channel = useOfferedPlayerChannel();
-  const { seek } = usePlayerCommands();
-  const fullscreen = usePlayerState((state) => state.fullscreen);
-  const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
-  const canPictureInPicture = usePlayerState((state) => state.canPictureInPicture);
-  const pictureInPicture = usePlayerState((state) => state.pictureInPicture);
-  const { requestPictureInPicture, exitPictureInPicture } = usePlayerCommands();
-
-  useEffect(() => channel?.attach(seek), [channel, seek]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!channel || !video) {
-      return;
-    }
-
-    const publishTime = () => channel.publish(video.currentTime);
-    publishTime();
-    video.addEventListener('timeupdate', publishTime);
-    video.addEventListener('seeked', publishTime);
-    const stopListening = () => {
-      video.removeEventListener('timeupdate', publishTime);
-      video.removeEventListener('seeked', publishTime);
-    };
-    return stopListening;
-  }, [channel, videoRef]);
-
-  useEffect(() => {
-    channel?.publishFullscreen(fullscreen);
-  }, [channel, fullscreen]);
-
-  useEffect(() => {
-    channel?.publishPictureInPicture({ available: canPictureInPicture, active: pictureInPicture });
-  }, [channel, canPictureInPicture, pictureInPicture]);
-
-  useEffect(
-    () =>
-      channel?.attachPictureInPicture(
-        pictureInPicture ? exitPictureInPicture : requestPictureInPicture
-      ),
-    [channel, pictureInPicture, requestPictureInPicture, exitPictureInPicture]
-  );
-
-  useEffect(() => {
-    channel?.publishCaptionTrack(captionTrackId);
-  }, [channel, captionTrackId]);
-
-  return null;
-}
-
-export interface LiveEdgeButtonProps {
-  /** The button's name: at the edge it says the stream is live, behind it that it goes back there. */
-  label: (atLiveEdge: boolean) => string;
-  children: (atLiveEdge: boolean) => ReactNode;
-}
-
-/** Shows whether a live stream plays at its live edge, and seeks back there when pressed. */
-export function LiveEdgeButton({ label, children }: LiveEdgeButtonProps) {
-  return (
-    <LiveButton
-      label={({ liveEdge }) => label(liveEdge)}
-      className="inline-flex h-control-md items-center rounded-control border-0 bg-transparent px-inline focus-ring"
-      render={(props, { liveEdge }) => (
-        <button type="button" {...props}>
-          {children(liveEdge)}
-        </button>
-      )}
-    />
-  );
-}
-
-/** Reads the playback state a skin draws; it re-renders only when the selected value changes. */
-export function usePlayerState<Selected>(select: (state: PlayerState) => Selected): Selected {
-  const { state: captions } = useCaptionsContext();
-
-  return usePlayer((state) =>
-    select({
-      paused: state.paused,
-      buffering: state.waiting,
-      ended: state.ended,
-      currentTime: state.currentTime,
-      duration: state.duration,
-      bufferedEnd: bufferedEndAt(state.buffered, state.currentTime),
-      volume: state.volume,
-      muted: state.muted,
-      playbackRate: state.playbackRate,
-      fullscreen: state.isFullscreen,
-      canFullscreen: state.fullscreenAvailability === 'available',
-      pictureInPicture: state.isPictureInPicture,
-      canPictureInPicture: state.pictureInPictureAvailability === 'available',
-      controlsVisible: state.controlsVisible,
-      renditions: state.videoRenditionList,
-      quality: state.videoRenditionList.find(({ selected }) => selected)?.id ?? AUTO_QUALITY,
-      activeHeight: state.activeVideoRendition?.height,
-      ...captions,
-    })
-  );
-}
-
-export function usePlayerCommands(): PlayerCommands {
-  const {
-    play,
-    pause,
-    seek,
-    setVolume,
-    setMuted,
-    setPlaybackRate,
-    selectVideoRendition,
-    requestFullscreen,
-    exitFullscreen,
-    requestPictureInPicture,
-    exitPictureInPicture,
-    requestControlsLock,
-  } = usePlayer();
-  const { commands } = useCaptionsContext();
-
-  return {
-    play,
-    pause,
-    seek,
-    setVolume,
-    setMuted,
-    setPlaybackRate,
-    selectVideoRendition,
-    requestFullscreen,
-    exitFullscreen,
-    requestPictureInPicture: async () => {
-      ignore(
-        await fromPromise(
-          async () => requestPictureInPicture(),
-          (cause) => cause
-        ),
-        'a refused picture in picture leaves the video where it is'
-      );
-    },
-    exitPictureInPicture: async () => {
-      ignore(
-        await fromPromise(
-          async () => exitPictureInPicture(),
-          (cause) => cause
-        ),
-        'a refused exit leaves the video in its window'
-      );
-    },
-    requestControlsLock,
-    ...commands,
-  };
-}
-
-/** The element that goes fullscreen: a menu portals into it, or fullscreen hides the menu. */
-export function usePlayerContainer(): HTMLElement | null {
-  return useContainer();
 }

@@ -1,6 +1,12 @@
 import type { DatabaseUnavailable } from '@kit/errors';
 import type { Result } from '@kit/result';
-import type { ChannelImageKind, ChannelImageUpload, ImageCrops } from '@vp/domain';
+import type {
+  ChannelImageKind,
+  ChannelImageUpload,
+  ImageCrops,
+  PostImageUrls,
+  PostImageVariants,
+} from '@vp/domain';
 
 export interface NewChannelImageUpload {
   id: string;
@@ -24,9 +30,10 @@ export interface ChannelImageCommit {
 }
 
 /**
- * The files behind a channel's avatar and banner and the versions they became. A version only
+ * The files behind a channel's avatar, banner and post images and the versions they became. A version only
  * moves forward: committing one that is not newer than the channel's current version changes
- * nothing visible, so a retried or late job cannot bring an old image back.
+ * nothing visible, so a retried or late job cannot bring an old image back. A post image has no
+ * current version: every one of a channel's ready post images stays `ready` beside the others.
  */
 export interface ChannelImageRepositoryPort {
   create(input: NewChannelImageUpload): Promise<Result<ChannelImageUpload, DatabaseUnavailable>>;
@@ -43,13 +50,20 @@ export interface ChannelImageRepositoryPort {
   /**
    * One write: the upload becomes `ready`, the channel's version moves to it when it is newer and
    * its `avatarUrl` or `bannerUrl` becomes `defaultUrl`, the address of the variant that stands for
-   * the image wherever only one is shown, and the uploader is told. Committing an upload that is already `ready` or `superseded` repeats
-   * that outcome and writes nothing more.
+   * the image wherever only one is shown, and the uploader is told. A post image touches no channel
+   * column: it becomes `ready` and keeps `variantUrls` for `findReadyPostImages`. Committing an
+   * upload that is already `ready` or `superseded` repeats that outcome and writes nothing more.
    */
   commit(
     id: string,
-    defaultUrl: string
+    defaultUrl: string,
+    variantUrls?: PostImageUrls
   ): Promise<Result<ChannelImageCommit | null, DatabaseUnavailable>>;
+  /** The ready post images of the channel among `uploadIds`; an id that is not one is left out. */
+  findReadyPostImages(
+    channelId: string,
+    uploadIds: readonly string[]
+  ): Promise<Result<PostImageVariants[], DatabaseUnavailable>>;
   /** The upload becomes `failed` and the uploader is told; the channel keeps its image. */
   fail(id: string, reason: string): Promise<Result<ChannelImageUpload | null, DatabaseUnavailable>>;
   /** Versions a newer one replaced, and files that never became one, oldest first. */

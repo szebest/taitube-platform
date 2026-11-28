@@ -40,9 +40,9 @@ export const moderateComment = defineEndpoint({
   path: '/v1/comments/:id/moderate',
   scope: 'comments:moderate',
   tag: TAG,
-  summary: 'Hold, approve, hide, unhide or remove a comment',
+  summary: 'Hold, approve, hide, unhide or remove a comment or a viewer thread',
   description:
-    'One endpoint for every comment action, decided by the caller permission on that action: the video owner, and members whose role moderates comments. A visible hold, hide or remove needs a reason and tells the author; a silent one tells nobody. Records the action in the channel audit log with the disclosure used. Remove deletes the comment and its replies.',
+    'One endpoint for every comment action, decided by the caller permission on that action: the video owner, and members whose role moderates comments. A visible hold, hide or remove needs a reason and tells the author; a silent one tells nobody. Records the action in the channel audit log with the disclosure used. Remove deletes the comment and its replies. The id may also be a viewer thread held by the gate, which is moderated the same way and answers with a null comment.',
   params: CommentIdParamSchema,
   body: CommentActionSchema,
   status: 200,
@@ -51,7 +51,7 @@ export const moderateComment = defineEndpoint({
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
-    404: [ErrorCodes.COMMENT_NOT_FOUND],
+    404: [ErrorCodes.COMMENT_NOT_FOUND, ErrorCodes.THREAD_NOT_FOUND],
     409: [ErrorCodes.MODERATION_NOT_APPLICABLE],
   },
 });

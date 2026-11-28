@@ -9,6 +9,7 @@ import type { InMemoryChannelImageRepository } from './in-memory-channel-image-r
 import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelPageRepository } from './in-memory-channel-page-repository';
+import type { InMemoryChannelPostRepository } from './in-memory-channel-post-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryChannelUserRestrictionRepository } from './in-memory-channel-user-restriction-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
@@ -27,6 +28,7 @@ import type { InMemoryNotificationRepository } from './in-memory-notification-re
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import type { InMemoryPostEngagement } from './in-memory-post-engagement-repository';
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -98,6 +100,8 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
   readonly channelHandleHistory: InMemoryChannelHandleHistoryRepository;
   readonly channelImages: InMemoryChannelImageRepository;
   readonly channelPages: InMemoryChannelPageRepository;
+  readonly channelPosts: InMemoryChannelPostRepository;
+  readonly postEngagement: InMemoryPostEngagement;
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
@@ -149,6 +153,8 @@ export class InMemoryRepositories extends InMemoryVideoToolsRepositories impleme
     this.channelHandleHistory = c.get(Repo.channelHandleHistory);
     this.channelImages = c.get(Repo.channelImages);
     this.channelPages = c.get(Repo.channelPages);
+    this.channelPosts = c.get(Repo.channelPosts);
+    this.postEngagement = c.get(Repo.postEngagement);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);

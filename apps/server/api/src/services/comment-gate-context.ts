@@ -7,8 +7,8 @@ import type {
   TrustedCommenterRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import type { CommentSettings, Video } from '@vp/domain';
-import type { CommentGateContext } from '@vp/domain-rules';
+import type { CommentHost, CommentSettings } from '@vp/domain';
+import { type CommentGateContext, commentHostTarget, commentHostTraits } from '@vp/domain-rules';
 import { isChannelTeamMember, type UserContext } from '@vp/permissions';
 
 /** An account with no row is as old as can be, so the age check never refuses it. */
@@ -28,17 +28,17 @@ export interface LoadedCommentGate {
 }
 
 /**
- * Everything `evaluateCommentGate` reads about the channel the video is on, in one lookup. Bans and
+ * Everything `evaluateCommentGate` reads about the channel the host is on, in one lookup. Bans and
  * trust name the account; a subscription names the channel `authorChannelId` the author writes as.
  */
 export async function loadCommentGate(
   lookups: CommentGateLookups,
   author: UserContext,
   authorChannelId: string,
-  video: Video,
+  host: CommentHost,
   now: Date
 ): Promise<Result<LoadedCommentGate, DatabaseUnavailable>> {
-  const { channelId } = video;
+  const { channelId, ownerId, commentsEnabled } = commentHostTraits(host);
   const [settings, restriction, trusted, subscribed, account] = await Promise.all([
     lookups.settings.get(channelId),
     lookups.restrictions.findActive(channelId, author.id, now),
@@ -56,11 +56,11 @@ export async function loadCommentGate(
     settings: settings.value,
     context: {
       now,
-      videoId: video.id,
+      targetId: commentHostTarget(host).id,
       channelId,
-      commentsEnabled: video.commentsEnabled ?? true,
+      commentsEnabled,
       restriction: restriction.value,
-      isTeamMember: isChannelTeamMember({ user: author, channelId, ownerId: video.ownerId }),
+      isTeamMember: isChannelTeamMember({ user: author, channelId, ownerId }),
       isSubscribed: subscribed.value,
       isTrusted: trusted.value,
       accountCreatedAt: account.value?.createdAt ?? oldestAccount(),

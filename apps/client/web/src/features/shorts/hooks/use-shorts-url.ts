@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect, useEffectEvent, useRef } from 'react';
 
@@ -32,7 +33,10 @@ export function useShortsUrl({ activeId, named, onExternal }: ShortsUrlOptions) 
     }
 
     written.current = id;
-    router.navigate({ to: '/shorts/$videoId', params: { videoId: id }, replace: true });
+    ignoreRejection(
+      router.navigate({ to: '/shorts/$videoId', params: { videoId: id }, replace: true }),
+      'a refused navigation leaves the viewer where they are'
+    );
   });
 
   const follow = useEffectEvent((id: string) => {

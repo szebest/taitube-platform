@@ -14,7 +14,7 @@ function gateway(...responses: Response[]) {
 }
 
 const calledUrls = (send: ReturnType<typeof vi.fn<typeof fetch>>) =>
-  send.mock.calls.map(([url]) => String(url));
+  send.mock.calls.map(([url]) => (url instanceof Request ? url.url : String(url)));
 
 describe('adapters/mediamtx: MediaMtxLiveGateway', () => {
   it.each([

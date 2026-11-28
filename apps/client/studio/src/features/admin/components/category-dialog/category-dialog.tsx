@@ -1,5 +1,5 @@
 import { useAppForm, validateWith } from '@kit/forms';
-import { fromPromise, isOk } from '@kit/result';
+import { fromPromise, ignoreRejection, isOk } from '@kit/result';
 import { Button, Field, Input, ResponsiveModal, Textarea, useToast, useUiCopy } from '@kit/ui';
 import { ApiError } from '@vp/api-client';
 import { validateCategoryName, validateSlug } from '@vp/validation';
@@ -101,7 +101,10 @@ export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDia
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            form.handleSubmit();
+            ignoreRejection(
+              form.handleSubmit(),
+              'onSubmit reports a failed save through its own toast'
+            );
           }}
         >
           <ResponsiveModal.Header>

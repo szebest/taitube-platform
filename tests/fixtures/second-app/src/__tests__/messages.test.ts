@@ -1,6 +1,6 @@
 import { createRegistry } from '@kit/di';
-import { Catalogues, FormatPresets } from '@kit/i18n';
-import { createIntl, createIntlCache, resolveEntry } from '@kit/intl';
+import { Catalogues } from '@kit/i18n';
+import { createIntl, createIntlCache, FormatPresets, resolveEntry } from '@kit/intl';
 import { SHOP_CATALOGUES, SHOP_PRESETS, shopI18n } from '../messages';
 
 const intlFor = (locale: string) =>

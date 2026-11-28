@@ -43,7 +43,9 @@ describe('apps/client/studio: useFeaturedDraft', () => {
   ])('$change', ({ apply, expected }) => {
     const { result } = renderHook(() => useFeaturedDraft(LIBRARY.slice(0, 2)));
 
-    act(() => apply(result.current));
+    act(() => {
+      apply(result.current);
+    });
 
     expect(idsOf(result.current.pins)).toEqual(expected.map((index) => at(index).id));
     expect(result.current.dirty).toBe(expected.join() !== '0,1');

@@ -33,11 +33,13 @@ expectTypeOf(videos.TranslatorProvider)
 // @ts-expect-error a key of another app's catalogue
 videos.useT().t('comments.title');
 
-videos.TranslatorProvider({
-  // @ts-expect-error the catalogues of another app
-  catalogues: { locale: 'en', source: otherSource, translations: {} },
-  children: null,
-});
+expectTypeOf(
+  videos.TranslatorProvider({
+    // @ts-expect-error the catalogues of another app
+    catalogues: { locale: 'en', source: otherSource, translations: {} },
+    children: null,
+  })
+).not.toBeAny();
 
 // @ts-expect-error the engine's i18n, not a bare catalogue
 createReactI18n(source);

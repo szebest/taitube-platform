@@ -14,8 +14,8 @@ options, render })`: `render(arg, options, context)` returns `Result<Out, Format
 kind `format` can show, and `context` is the `FormatContext` plus `format`, so a kind composes another by
 its tagged value without importing it.
 
-A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
-again on hydration. It depends on `@kit/result` only, and owns its four failure codes:
+A platform package (`packages/platform/`): no app vocabulary, platform dependencies only (`pnpm boundaries`). It is `universal`, layer T3, because ticket 89's server render runs it in Node and the browser runs it
+again on hydration. It depends on `@kit/result` and `@kit/di` only, and owns its four failure codes:
 `FormatErrorCodes` is the one place they are written, and the app spreads it into its error code set. The words around a value (the
 `views` in `1.2M views`) are copy and live in the app's catalogue, not here. The app's own tagged values
 (a view count, a video duration) live in the app.
@@ -65,7 +65,8 @@ the inverse for numbers and returns a `Result` like a formatter.
     `Intl.NumberFormat.formatToParts`, never a table, and declines grouping the locale does not use.
 14. **Presets are data the app registers.** `definePresets` freezes a table of named option sets per kind and
    `resolveEntry` resolves a name along the locale chain, then `default`, with `{ preset, ...overrides }` laid
-   over it. The message engine and a server render call the same function.
+   over it. The message engine and a server render call the same function. `FormatPresets` is the token the
+   app provides the table under; it has no default.
 
 ---
 

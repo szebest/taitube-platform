@@ -17,6 +17,11 @@ function withForgedRole(token: string): string {
   return `${header}.${forgedPayload}.${signature}`;
 }
 
+function withHeader(header: object): string {
+  const encode = (part: object) => Buffer.from(JSON.stringify(part)).toString('base64url');
+  return `${encode(header)}.${encode({})}.sig`;
+}
+
 describe('dev-token: jwt', () => {
   it('mints an EdDSA token for the dev key with the dev issuer and audience', () => {
     const [header, payload] = mintToken({ sub: SUB, role: 'admin', ttl: '8h' }).split('.');
@@ -54,6 +59,12 @@ describe('dev-token: jwt', () => {
       error: /audience/i,
     },
     { scenario: 'a token that is not three segments', token: 'a.b', error: /3 dot-separated/ },
+    {
+      scenario: 'a token signed with RS256',
+      token: withHeader({ alg: 'RS256' }),
+      error: /got "RS256"/,
+    },
+    { scenario: 'a token with no algorithm', token: withHeader({}), error: /got undefined/ },
   ])('refuses $scenario', ({ token, error }) => {
     expect(() => verifyToken(token)).toThrow(error);
   });

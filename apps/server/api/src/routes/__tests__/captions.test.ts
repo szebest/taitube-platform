@@ -126,6 +126,17 @@ describe('caption routes', () => {
     }
   );
 
+  it.each(['en', 'pl'])('words a hidden video and a missing one alike in %s', async (locale) => {
+    const ask = (id: string) => call('stranger', 'GET', `${captions(id)}?locale=${locale}`);
+
+    const hidden = await ask(PRIVATE_CAPTIONED);
+    const missing = await ask('00000000-0000-7000-8000-00000000cafe');
+
+    expect(hidden.statusCode).toBe(404);
+    expect(hidden.statusCode).toBe(missing.statusCode);
+    expect(hidden.json().detail).toBe(missing.json().detail);
+  });
+
   it('lists only ready, switched-on tracks to a viewer and everything to the owner', async () => {
     await seedTrack(ctx.repositories, { id: '00000000-0000-7000-8000-00000000cf02', kind: 'auto' });
     expectOk(await ctx.repositories.captions.setAutoCaptions(CAPTIONED, false));

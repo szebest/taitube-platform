@@ -1,5 +1,5 @@
 import { type Result, andThen, err, map, ok } from '@kit/result';
-import { type User, resolveCurrency } from '../context';
+import { resolveCurrency } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 import { type OptionKeys, type TaggedOf } from '../kind';
 import { type NumberInput, defineNumberKind } from '../number-kind';
@@ -19,7 +19,7 @@ type MoneyOptions = Pick<
   Intl.NumberFormatOptions,
   'currencyDisplay' | 'currencySign' | 'notation' | 'signDisplay' | 'trailingZeroDisplay'
 > & {
-  readonly currency?: string | User;
+  readonly currency?: string;
   readonly units?: 'minor' | 'major';
 };
 

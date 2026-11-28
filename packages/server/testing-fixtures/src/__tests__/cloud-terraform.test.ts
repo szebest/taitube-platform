@@ -156,9 +156,10 @@ describe('cloud infrastructure and Terraform', () => {
     const { locals } = await terraformFile(terraformDir, 'main.tf');
     const overlay = readFileSync(path.join(cloudOverlayDir, 'kustomization.yaml'), 'utf-8');
 
-    expect(overlay).toContain(
-      `path: /data/CORS_ORIGINS\n        value: "https://${locals[0]?.web_subdomain}.`
-    );
+    const subdomain = locals[0]?.web_subdomain;
+    if (typeof subdomain !== 'string') throw new Error('main.tf has no web_subdomain local');
+
+    expect(overlay).toContain(`path: /data/CORS_ORIGINS\n        value: "https://${subdomain}.`);
   });
 
   it('routes api.<domain> and studio.<domain> through the tunnel, one DNS record each', async () => {

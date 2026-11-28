@@ -5,12 +5,13 @@ import type {
   ChannelAnalyticsExportRow,
   CommentExportRow,
   ExportRowPage,
+  PostExportRow,
   VideoAnalyticsExportRow,
   VideoExportRow,
 } from '@vp/domain';
 import { z } from 'zod';
 import { channelDayRows, retentionRows, videoDailyRows } from './export-analytics-queries';
-import { commentRows, videoRows } from './export-catalogue-queries';
+import { commentRows, postRows, videoRows } from './export-catalogue-queries';
 import type { PostgresDatabase } from './types';
 
 const VideoAnalyticsCursor = z.discriminatedUnion('series', [
@@ -106,5 +107,12 @@ export class PostgresExportRowRepository implements ExportRowRepositoryPort {
       const rows = await videoRows(this.db, scope, createdKey(after), limit);
       return pageOf(rows, limit, ({ createdAt, videoId }) => ({ createdAt, id: videoId }));
     }, databaseUnavailable.during('exportVideos'));
+  }
+
+  async posts(scope: ExportScope, after: string | null, limit: number): Page<PostExportRow> {
+    return fromPromise(async () => {
+      const rows = await postRows(this.db, scope, createdKey(after), limit);
+      return pageOf(rows, limit, ({ createdAt, postId }) => ({ createdAt, id: postId }));
+    }, databaseUnavailable.during('exportPosts'));
   }
 }

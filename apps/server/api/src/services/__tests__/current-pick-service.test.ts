@@ -89,7 +89,7 @@ describe('apps/server/api/services: CurrentPickService', () => {
     { name: 'at its end', at: NOW + 14 * HOUR, source: 'fallback' },
   ])('reads $name as $source', async ({ at, source }) => {
     await schedule();
-    await world.store.clear();
+    world.store.clear();
     world.clock.now = at;
 
     expect(expectOk(await service.current()).data.source).toBe(source);

@@ -155,7 +155,7 @@ describe('apps/server/worker: stage registry', () => {
     {
       name: 'notify-comment',
       data: {
-        videoId: '018f0000-0000-7000-8000-000000000001',
+        target: { type: 'video', id: '018f0000-0000-7000-8000-000000000001' },
         commentId: '018f0000-0000-7000-8000-000000000002',
       },
     },
@@ -172,6 +172,7 @@ describe('apps/server/worker: stage registry', () => {
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
     },
     { name: 'notify-party-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
+    { name: 'notify-post-subscribers', data: { postId: '018f0001-0000-7000-8000-000000000001' } },
     { name: 'announce-live', data: { liveStreamId: '018f0000-0000-7000-8000-000000000003' } },
   ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {
     const processor = STAGE_REGISTRY.notify.createProcessor(deps());

@@ -15,7 +15,10 @@ const snapshot = (title: string): VideoMetadataSnapshot => ({
   commentsEnabled: true,
 });
 
-function revision(version: number, videoId: string = VIDEO_IDS.a): NewEntityRevision {
+function revision(
+  version: number,
+  videoId: string = VIDEO_IDS.a
+): NewEntityRevision<'video_metadata'> {
   return {
     entityType: 'video_metadata',
     entityId: videoId,

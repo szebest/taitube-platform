@@ -26,11 +26,11 @@ export class PostgresEntityRevisionRepository extends EntityRevisionRepository {
     );
   }
 
-  async list(
-    entityType: EntityRevisionType,
+  async list<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     { beforeVersion, limit }: ListRevisionsOptions
-  ): Promise<Result<EntityRevision[], DatabaseUnavailable>> {
+  ): Promise<Result<EntityRevision<T>[], DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -47,14 +47,14 @@ export class PostgresEntityRevisionRepository extends EntityRevisionRepository {
           .limit(limit + 1),
       databaseUnavailable.during('listEntityRevisions')
     );
-    return map(rows, (found) => found.map(toEntityRevision));
+    return map(rows, (found) => found.map((row) => toEntityRevision<T>(row)));
   }
 
-  async get(
-    entityType: EntityRevisionType,
+  async get<T extends EntityRevisionType>(
+    entityType: T,
     entityId: string,
     revisionId: string
-  ): Promise<Result<EntityRevision | null, DatabaseUnavailable>> {
+  ): Promise<Result<EntityRevision<T> | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -66,7 +66,7 @@ export class PostgresEntityRevisionRepository extends EntityRevisionRepository {
           .limit(1),
       databaseUnavailable.during('getEntityRevision')
     );
-    return map(rows, ([found]) => (found ? toEntityRevision(found) : null));
+    return map(rows, ([found]) => (found ? toEntityRevision<T>(found) : null));
   }
 
   async prune(keep: number): Promise<Result<number, DatabaseUnavailable>> {

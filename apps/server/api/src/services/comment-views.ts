@@ -1,8 +1,10 @@
 import type { CommentView, CreatorInboxCommentView } from '@vp/api-contracts';
-import type { CommentThread, CreatorInboxComment, Video } from '@vp/domain';
+import { type CommentThread, type CreatorInboxComment, commentVideoId } from '@vp/domain';
+import type { CommentHostTraits } from '@vp/domain-rules';
 import { type UserContext, canModerateComment } from '@vp/permissions';
 
-type CommentedVideo = Pick<Video, 'ownerId' | 'channelId'>;
+/** The channel the comment is filed under and the user who owns it: who moderates and who is the creator. */
+type CommentOwner = Pick<CommentHostTraits, 'ownerId' | 'channelId'>;
 
 type ModerationView = Pick<CommentView, 'status' | 'moderation'>;
 
@@ -14,7 +16,7 @@ const LOOKS_PUBLISHED: ModerationView = { status: 'published', moderation: null 
  */
 function moderationViewOf(
   thread: CommentThread,
-  video: CommentedVideo,
+  owner: CommentOwner,
   viewer: UserContext | null
 ): ModerationView {
   const { moderationState: state, moderationReason: reason } = thread;
@@ -24,8 +26,8 @@ function moderationViewOf(
     canModerateComment({
       user: viewer,
       action: 'hold',
-      videoOwnerId: video.ownerId,
-      videoChannelId: video.channelId,
+      videoOwnerId: owner.ownerId,
+      videoChannelId: owner.channelId,
     })
   ) {
     return {
@@ -48,14 +50,15 @@ function moderationViewOf(
 /** `isCreator` is a badge on the wire, never a permission; moderation asks `@vp/permissions`. */
 export function toCommentView(
   thread: CommentThread,
-  video: CommentedVideo,
+  owner: CommentOwner,
   viewer: UserContext | null
 ): CommentView {
-  const { id, videoId, parentId, content, isPinned, isEdited, likeCount, replyCount } = thread;
+  const { id, target, parentId, content, isPinned, isEdited, likeCount, replyCount } = thread;
   const { author, heartedAt, createdAt, updatedAt } = thread;
   return {
     id,
-    videoId,
+    target,
+    videoId: commentVideoId(target),
     parentId,
     content,
     isPinned,
@@ -63,17 +66,17 @@ export function toCommentView(
     likeCount,
     replyCount,
     heartedByCreator: heartedAt !== null,
-    ...moderationViewOf(thread, video, viewer),
-    author: { ...author, isCreator: author.userId === video.ownerId },
+    ...moderationViewOf(thread, owner, viewer),
+    author: { ...author, isCreator: author.userId === owner.ownerId },
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   };
 }
 
 export function toCreatorInboxCommentView(
-  { video: summary, ...thread }: CreatorInboxComment,
-  video: CommentedVideo,
+  { video, targetSummary, ...thread }: CreatorInboxComment,
+  owner: CommentOwner,
   viewer: UserContext
 ): CreatorInboxCommentView {
-  return { ...toCommentView(thread, video, viewer), video: summary };
+  return { ...toCommentView(thread, owner, viewer), video, targetSummary };
 }

@@ -17,7 +17,7 @@ function serve() {
       return HttpResponse.json(playlistDetail(CREATED, [], { title: 'Trips' }), { status: 201 });
     }),
     mockEndpoint(addPlaylistItem, async ({ params, request }) => {
-      writes.push(`add ${params.id} ${JSON.stringify(await request.json())}`);
+      writes.push(`add ${String(params.id)} ${JSON.stringify(await request.json())}`);
       return HttpResponse.json(playlistDetail(CREATED, []), { status: 201 });
     })
   );

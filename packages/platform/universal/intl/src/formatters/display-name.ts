@@ -1,5 +1,5 @@
 import { type Result, andThen, err, ok, tryCatch } from '@kit/result';
-import { type FormatContext, USER, type User, resolveCurrency } from '../context';
+import { type FormatContext, USER, resolveCurrency } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 import { type OptionKeys, type TaggedOf, defineKind, optionKeys } from '../kind';
 
@@ -15,10 +15,10 @@ export interface DisplayNameOptions {
   readonly languageDisplay?: Intl.DisplayNamesOptions['languageDisplay'];
 }
 
-const isCode = (value: unknown): value is string | User => typeof value === 'string';
+const isCode = (value: unknown): value is string => typeof value === 'string';
 
 function resolveCode(
-  code: string | User,
+  code: string,
   of: Intl.DisplayNamesType,
   context: FormatContext
 ): Result<string, FormatFailure> {

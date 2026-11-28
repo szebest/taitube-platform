@@ -57,7 +57,7 @@ describe('quarantine entries', () => {
   });
 
   it("excludes a spec by its absolute path, never another package's spec with the same tail", () => {
-    const [contracts = '', events = ''] = [
+    const [contracts, events] = [
       'packages/universal/api-contracts/src/__tests__/channels.test.ts',
       'packages/server/events/src/__tests__/channels.test.ts',
     ];

@@ -1,5 +1,5 @@
 import { type AnyProvider, provide, type Registry, type MissingProvider } from '@kit/di';
-import type { IntlBinding, PresetTable } from '@kit/intl';
+import { FormatPresets, type IntlBinding, type PresetTable } from '@kit/intl';
 import { andThen, map, type Result } from '@kit/result';
 import type { CatalogueSet, CatalogueShape, Translation } from './catalogue';
 import type {
@@ -16,7 +16,7 @@ import type {
 import type { MessageKind } from './kind';
 import type { AnyMessage, Message, MessageConfig } from './message';
 import type { ParseTemplate } from './template';
-import { Catalogues, FormatPresets, ParamVocabulary } from './tokens';
+import { Catalogues, ParamVocabulary } from './tokens';
 import { createTranslator, type Translator } from './translator';
 
 type ConfigArg<T extends string, C, E extends EngineTypes> = C &

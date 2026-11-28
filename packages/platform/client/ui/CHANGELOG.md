@@ -1,10 +1,14 @@
 # Changelog
 
-## 0.5.0
+## 0.6.0
 
 - `MoreDisclosure`: inline text that opens a popover on click, tap, keyboard focus and a resting mouse (`pointerType`
   mouse only, after `openDelay`), and closes on Escape, an outside press, blur and the mouse leaving. It prints no
   words: its trigger text and content come from the caller.
+
+## 0.4.0
+
+- `DateTimePicker`: the browser's date and time boxes side by side over one local `YYYY-MM-DDTHH:mm` string, each box named by a prop.
 
 ## 0.3.0
 

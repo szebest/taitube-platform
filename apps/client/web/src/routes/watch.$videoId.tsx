@@ -62,6 +62,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     list: validOrUndefined(UuidSchema),
     index: validOrUndefined(NonNegativeIntSchema),
     comment: validOrUndefined(UuidSchema),
+    tab: validOrUndefined(z.enum(['comments', 'threads'])),
+    thread: validOrUndefined(UuidSchema),
     s: validOrUndefined(ShareTokenSchema),
   }),
   loaderDeps: ({ search: { list, s } }) => ({ list, s }),

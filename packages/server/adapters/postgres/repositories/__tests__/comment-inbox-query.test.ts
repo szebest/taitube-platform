@@ -1,4 +1,3 @@
-import type { CommentThread } from '@vp/domain';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { creatorInboxFilterScope, toCreatorInboxComment } from '../comment-inbox-query';
 import { UNMODERATED } from './comment-row';
@@ -19,7 +18,7 @@ describe('comment inbox query', () => {
     { filter: 'reported' as const, mentions: ['exists', 'comment_reports'], params: [] },
     {
       filter: 'restricted' as const,
-      mentions: ['exists', 'channel_user_restrictions', '"videos"."channel_id"'],
+      mentions: ['exists', 'channel_user_restrictions', '"comments"."channel_id"'],
       params: [],
     },
   ])('narrows to $filter with a subquery', ({ filter, mentions, params: expected }) => {
@@ -31,35 +30,49 @@ describe('comment inbox query', () => {
     expect(params).toEqual(expected);
   });
 
-  it('keeps the video title out of the comment and puts it under video', () => {
-    const at = new Date('2026-03-01T12:00:00.000Z');
-    const row = {
-      id: 'c-1',
-      videoId: 'v-1',
-      authorId: 'u-1',
-      authorChannelId: 'ch-1',
-      parentId: null,
-      content: 'hi',
-      isPinned: false,
-      isEdited: false,
-      likeCount: 0,
-      heartedAt: null,
-      createdAt: at,
-      updatedAt: at,
-      deletedAt: null,
-      ...UNMODERATED,
-      handle: null,
-      displayName: null,
-      avatarUrl: null,
-      replyCount: 0,
-      videoTitle: 'Clip',
-    };
+  it.each([
+    {
+      type: 'video' as const,
+      video: { id: 'v-1', title: 'Clip' },
+    },
+    { type: 'post' as const, video: null },
+    { type: 'thread' as const, video: { id: 'v-9', title: 'On video' }, threadVideo: true },
+  ])(
+    'names a $type target and keeps the title out of the comment',
+    ({ type, video, threadVideo }) => {
+      const at = new Date('2026-03-01T12:00:00.000Z');
+      const row = {
+        id: 'c-1',
+        targetType: type,
+        targetId: 'v-1',
+        channelId: 'ch-owner',
+        authorId: 'u-1',
+        authorChannelId: 'ch-1',
+        parentId: null,
+        content: 'hi',
+        isPinned: false,
+        isEdited: false,
+        likeCount: 0,
+        heartedAt: null,
+        createdAt: at,
+        updatedAt: at,
+        deletedAt: null,
+        ...UNMODERATED,
+        handle: null,
+        displayName: null,
+        avatarUrl: null,
+        replyCount: 0,
+        targetTitle: 'Clip',
+        threadVideoId: threadVideo ? 'v-9' : null,
+        threadVideoTitle: threadVideo ? 'On video' : null,
+      };
 
-    const comment: CommentThread & { video: { id: string; title: string } } =
-      toCreatorInboxComment(row);
+      const comment = toCreatorInboxComment(row);
 
-    expect(comment.video).toEqual({ id: 'v-1', title: 'Clip' });
-    expect(comment).not.toHaveProperty('videoTitle');
-    expect(comment).not.toHaveProperty('deletedAt');
-  });
+      expect(comment.video).toEqual(video);
+      expect(comment.targetSummary).toEqual({ type, id: 'v-1', title: 'Clip' });
+      expect(comment).not.toHaveProperty('targetTitle');
+      expect(comment).not.toHaveProperty('deletedAt');
+    }
+  );
 });

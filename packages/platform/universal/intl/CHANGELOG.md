@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0
+## 0.6.0
 
 - Breaking: every formatter is a kind, `defineKind({ name, arg, options, render })`, and `createIntl(context, kinds?)`
   takes the registry (`formatKinds`, plus an app's own). `IntlBinding` is `{ context, format, call }`:
@@ -40,7 +40,9 @@
 
 ## 0.4.0
 
-- `Preset`, `PresetTable`, `definePresets` and `resolveEntry`, moved from `@kit/i18n`.
+- Breaking: the `User` type is removed; `USER` stays. `resolveCurrency`'s `requested`, `DisplayNameValue.value` and the money formatter's `currency` are typed `string`: the `User` member of the union was already absorbed by `string`, so no accepted value changes, and nothing else used the type.
+- `Preset`, `PresetTable`, `definePresets`, `resolveEntry` and the `FormatPresets` token, moved from `@kit/i18n`;
+  `@kit/di` is a dependency and the package moves to layer T3.
 
 ## 0.3.0
 

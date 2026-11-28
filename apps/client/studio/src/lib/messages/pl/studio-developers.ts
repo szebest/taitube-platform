@@ -100,6 +100,7 @@ export const studioDevelopers = {
         channel_analytics: 'Statystyki kanału',
         comments: 'Komentarze',
         videos: 'Filmy',
+        posts: 'Wpisy',
       },
     },
   }),

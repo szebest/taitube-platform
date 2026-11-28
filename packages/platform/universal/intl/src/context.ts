@@ -4,7 +4,6 @@ import type { IntlCache } from './intl-cache';
 
 /** Stands for the viewer's own locale or currency, resolved against the context at format time. */
 export const USER = 'user';
-export type User = typeof USER;
 
 /**
  * Everything a formatter may know about where and when it renders. The locale, the zone and the
@@ -21,7 +20,7 @@ export interface FormatContext {
 
 export function resolveCurrency(
   formatter: string,
-  requested: string | User | undefined,
+  requested: string | undefined,
   context: FormatContext
 ): Result<string, FormatFailure> {
   const currency = requested === undefined || requested === USER ? context.currency : requested;

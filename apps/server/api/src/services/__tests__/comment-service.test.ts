@@ -5,7 +5,7 @@ import { type Result, err, isOk, ok } from '@kit/result';
 import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
-import { DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
+import { type CommentTarget, DEFAULT_COMMENT_SETTINGS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { actingAsPrimary, seedPrimaryChannel } from '../../__tests__/test-app';
@@ -15,21 +15,23 @@ import { commentUpdateDeps, saveSettings } from './comment-deps';
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
 const VIEWER: UserContext = { id: '22222222-2222-7222-8222-222222222222', role: 'USER' };
 const VIDEO_ID = '33333333-3333-7333-8333-333333333333';
+const VIDEO_TARGET: CommentTarget = { type: 'video', id: VIDEO_ID };
 
 class MapCommentCache implements CommentCachePort {
   readonly pages = new Map<string, HotComments>();
   invalidation: Result<void, ReturnType<typeof cacheUnavailable>> = ok();
 
-  async getHot<E>(videoId: string, fetcher: () => Promise<Result<HotComments, E>>) {
-    const cached = this.pages.get(videoId);
+  async getHot<E>(target: CommentTarget, fetcher: () => Promise<Result<HotComments, E>>) {
+    const key = `${target.type}:${target.id}`;
+    const cached = this.pages.get(key);
     if (cached) return ok(cached);
     const fetched = await fetcher();
-    if (isOk(fetched)) this.pages.set(videoId, fetched.value);
+    if (isOk(fetched)) this.pages.set(key, fetched.value);
     return fetched;
   }
 
-  async invalidate(videoId: string) {
-    this.pages.delete(videoId);
+  async invalidate(target: CommentTarget) {
+    this.pages.delete(`${target.type}:${target.id}`);
     return this.invalidation;
   }
 }
@@ -59,7 +61,7 @@ describe('CommentService', () => {
       })
     );
     expectOk(
-      await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
+      await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_TARGET, {
         content: 'hello',
       })
     );
@@ -68,8 +70,8 @@ describe('CommentService', () => {
   it('serves the first top page from the hot cache after one read', async () => {
     const listThreads = vi.spyOn(repositories.comments, 'listThreads');
 
-    const first = expectOk(await service.listForVideo(null, VIDEO_ID, {}));
-    const second = expectOk(await service.listForVideo(null, VIDEO_ID, {}));
+    const first = expectOk(await service.list(null, VIDEO_TARGET, {}));
+    const second = expectOk(await service.list(null, VIDEO_TARGET, {}));
 
     expect(listThreads).toHaveBeenCalledTimes(1);
     expect(second).toEqual(first);
@@ -80,9 +82,9 @@ describe('CommentService', () => {
     const listThreads = vi.spyOn(repositories.comments, 'listThreads');
 
     await Promise.all([
-      service.listForVideo(null, VIDEO_ID, {}),
-      service.listForVideo(VIEWER, VIDEO_ID, {}),
-      service.listForVideo(OWNER, VIDEO_ID, {}),
+      service.list(null, VIDEO_TARGET, {}),
+      service.list(VIEWER, VIDEO_TARGET, {}),
+      service.list(OWNER, VIDEO_TARGET, {}),
     ]);
 
     expect(listThreads).toHaveBeenCalledTimes(1);
@@ -93,19 +95,19 @@ describe('CommentService', () => {
     { scenario: 'a page size other than the default', query: { limit: 5 } },
     { scenario: 'a legacy page', query: { page: 1 } },
   ])('reads $scenario straight from the repository', async ({ query }) => {
-    await service.listForVideo(null, VIDEO_ID, query);
+    await service.list(null, VIDEO_TARGET, query);
 
     expect(cache.pages.size).toBe(0);
   });
 
   it('answers COMMENT_NOT_FOUND when the root is removed before the reply lands', async () => {
-    const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+    const [root] = expectOk(await service.list(null, VIDEO_TARGET, {})).items;
     vi.spyOn(repositories.comments, 'create').mockResolvedValue(ok(null));
 
     const reply = await service.create(
       VIEWER,
       await actingAsPrimary(repositories, VIEWER.id),
-      VIDEO_ID,
+      VIDEO_TARGET,
       { content: 'late', parentId: root?.id }
     );
 
@@ -118,7 +120,7 @@ describe('CommentService', () => {
     const created = await service.create(
       VIEWER,
       await actingAsPrimary(repositories, VIEWER.id),
-      VIDEO_ID,
+      VIDEO_TARGET,
       { content: 'still saved' }
     );
 
@@ -142,14 +144,19 @@ describe('CommentService', () => {
       async ({ viewer, shown, total }) => {
         await holdEverything();
         const held = expectOk(
-          await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
-            content: 'later',
-          })
+          await service.create(
+            VIEWER,
+            await actingAsPrimary(repositories, VIEWER.id),
+            VIDEO_TARGET,
+            {
+              content: 'later',
+            }
+          )
         );
         expect(held.status).toBe('held');
 
-        const hot = expectOk(await service.listForVideo(viewer, VIDEO_ID, {}));
-        const newest = expectOk(await service.listForVideo(viewer, VIDEO_ID, { sort: 'newest' }));
+        const hot = expectOk(await service.list(viewer, VIDEO_TARGET, {}));
+        const newest = expectOk(await service.list(viewer, VIDEO_TARGET, { sort: 'newest' }));
 
         expect([hot.items.length, hot.total]).toEqual([shown, total]);
         expect([newest.items.length, newest.total]).toEqual([shown, total]);
@@ -157,17 +164,17 @@ describe('CommentService', () => {
     );
 
     it('counts a held reply on the public root it answers, for its author only', async () => {
-      const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+      const [root] = expectOk(await service.list(null, VIDEO_TARGET, {})).items;
       await holdEverything();
       expectOk(
-        await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_ID, {
+        await service.create(VIEWER, await actingAsPrimary(repositories, VIEWER.id), VIDEO_TARGET, {
           content: 'held reply',
           parentId: root?.id,
         })
       );
 
-      const author = expectOk(await service.listForVideo(VIEWER, VIDEO_ID, {}));
-      const anonymous = expectOk(await service.listForVideo(null, VIDEO_ID, {}));
+      const author = expectOk(await service.list(VIEWER, VIDEO_TARGET, {}));
+      const anonymous = expectOk(await service.list(null, VIDEO_TARGET, {}));
 
       expect(author.items.map((item) => item.replyCount)).toEqual([1]);
       expect(anonymous.items.map((item) => item.replyCount)).toEqual([0]);
@@ -175,18 +182,18 @@ describe('CommentService', () => {
   });
 
   it('purges the hot page once an edit is saved', async () => {
-    const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
-    expect(cache.pages.has(VIDEO_ID)).toBe(true);
+    const [root] = expectOk(await service.list(null, VIDEO_TARGET, {})).items;
+    expect(cache.pages.has(`video:${VIDEO_ID}`)).toBe(true);
 
     const edited = expectOk(await service.update(VIEWER, root?.id ?? '', 'rewritten'));
 
     expect(edited).toMatchObject({ content: 'rewritten', isEdited: true });
-    expect(cache.pages.has(VIDEO_ID)).toBe(false);
+    expect(cache.pages.has(`video:${VIDEO_ID}`)).toBe(false);
   });
 
   describe('hearts', () => {
     async function firstComment(): Promise<string> {
-      const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+      const [root] = expectOk(await service.list(null, VIDEO_TARGET, {})).items;
       if (!root) throw new Error('the seeded comment is missing');
       return root.id;
     }
@@ -198,7 +205,7 @@ describe('CommentService', () => {
 
       expect(hearted.heartedByCreator).toBe(true);
       expect(cache.pages.size).toBe(0);
-      expect(expectOk(await service.listForVideo(null, VIDEO_ID, {})).items[0]).toMatchObject({
+      expect(expectOk(await service.list(null, VIDEO_TARGET, {})).items[0]).toMatchObject({
         heartedByCreator: true,
       });
     });

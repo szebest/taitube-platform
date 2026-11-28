@@ -43,7 +43,7 @@ describe('apps/client/web: useCommentModeration', () => {
     apiServer.use(
       ...[pinComment, unpinComment].map((contract) =>
         mockEndpoint(contract, ({ request, params }) => {
-          sent.push(`${request.method} ${params.id}`);
+          sent.push(`${request.method} ${String(params.id)}`);
           return HttpResponse.json(comment());
         })
       )
@@ -83,7 +83,7 @@ describe('apps/client/web: useCommentModeration', () => {
       const sent: string[] = [];
       apiServer.use(
         mockEndpoint(liftRestriction, ({ request, params }) => {
-          sent.push(`${params.userId} ${request.headers.get('x-channel-id')}`);
+          sent.push(`${String(params.userId)} ${request.headers.get('x-channel-id')}`);
           return new HttpResponse(null, { status: 204 });
         })
       );

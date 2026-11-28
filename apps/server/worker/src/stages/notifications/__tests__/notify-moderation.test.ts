@@ -58,7 +58,8 @@ describe('apps/server/worker/stages: notify-moderation', () => {
     expectOk(
       await repositories.comments.create({
         id: COMMENT,
-        videoId: VIDEO,
+        target: { type: 'video', id: VIDEO },
+        channelId: CHANNEL_ID,
         authorId: AUTHOR,
         authorChannelId: channelOf(AUTHOR),
         parentId: null,

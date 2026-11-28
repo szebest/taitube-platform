@@ -15,8 +15,9 @@ export function resolveFrom<T>(providers: AnyProvider[], wanted: Token<T>): T {
 function cookieStoreOf(held: Readonly<Record<string, string>>): Pick<CookieStore, 'get'> {
   return {
     get: async (name) => {
-      const value = typeof name === 'string' ? held[name] : undefined;
-      return value === undefined ? null : { name: String(name), value };
+      const key = typeof name === 'string' ? name : name?.name;
+      const value = key === undefined ? undefined : held[key];
+      return key === undefined || value === undefined ? null : { name: key, value };
     },
   };
 }

@@ -268,7 +268,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
    */
   advanceImageVersion(
     id: string,
-    kind: ChannelImageKind,
+    kind: Exclude<ChannelImageKind, 'post-image'>,
     version: number,
     crops: ImageCrops,
     defaultUrl: string

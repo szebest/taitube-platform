@@ -14,6 +14,7 @@ import type {
 import {
   type ActingChannel,
   type ChannelUserRestriction,
+  type CommentTarget,
   type NewChannelUserRestriction,
   liftAudit,
   restrictionAudit,
@@ -156,7 +157,7 @@ export class ChannelRestrictionService {
     });
     if (isErr(written)) return written;
 
-    const aftermath = await this.settle(written.value.videoIds, ownerId, targetUserId, body.action);
+    const aftermath = await this.settle(written.value.targets, ownerId, targetUserId, body.action);
     if (isErr(aftermath)) return aftermath;
 
     const profiles = await profilesOf(this.deps.channels, [targetUserId]);
@@ -194,7 +195,7 @@ export class ChannelRestrictionService {
     if (isErr(lifted)) return lifted;
     if (!lifted.value.lifted) return err(restrictionNotFound(targetUserId));
 
-    await this.purge(lifted.value.videoIds);
+    await this.purge(lifted.value.targets);
     return ok();
   }
 
@@ -238,12 +239,12 @@ export class ChannelRestrictionService {
 
   /** What a shadow ban takes out of public reads leaves the cache and the bell too. */
   private async settle(
-    videoIds: readonly string[],
+    targets: readonly CommentTarget[],
     ownerId: string,
     userId: string,
     action: RestrictionActionBody['action']
   ): Promise<Result<void, DatabaseUnavailable>> {
-    await this.purge(videoIds);
+    await this.purge(targets);
     if (action !== 'shadow_ban') return ok();
 
     const comments = await this.deps.moderation.idsByAuthor(userId, ownerId);
@@ -252,10 +253,10 @@ export class ChannelRestrictionService {
     return isErr(withdrawn) ? withdrawn : ok();
   }
 
-  private async purge(videoIds: readonly string[]): Promise<void> {
-    for (const videoId of videoIds) {
+  private async purge(targets: readonly CommentTarget[]): Promise<void> {
+    for (const target of targets) {
       ignore(
-        await this.deps.commentCache.invalidate(videoId),
+        await this.deps.commentCache.invalidate(target),
         'the write is committed; the hot page expires on its own TTL'
       );
     }

@@ -31,6 +31,7 @@
     "@kit/concurrency": "workspace:*",
     "@kit/config": "workspace:*",
     "@kit/errors": "workspace:*",
+    "@kit/i18n": "workspace:*",
     "@kit/intl": "workspace:*",
     "@kit/keyspace": "workspace:*",
     "@kit/logger": "workspace:*",

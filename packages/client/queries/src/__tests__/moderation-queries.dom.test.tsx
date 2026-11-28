@@ -79,7 +79,7 @@ const REFRESHING = [
     variables: { commentId: COMMENT_ID, action: { action: 'hide', reason: 'spam' } },
     answer: () =>
       mockEndpoint(moderateComment, ({ request, params }) => {
-        asked.push(`${request.method} ${params.id}`);
+        asked.push(`${request.method} ${String(params.id)}`);
         return HttpResponse.json({ state: 'hidden', comment: comment() });
       }),
     request: `POST ${COMMENT_ID}`,
@@ -94,7 +94,9 @@ const REFRESHING = [
     },
     answer: () =>
       mockEndpoint(restrictUser, ({ request, params }) => {
-        asked.push(`${request.method} ${params.userId} ${request.headers.get('x-channel-id')}`);
+        asked.push(
+          `${request.method} ${String(params.userId)} ${request.headers.get('x-channel-id')}`
+        );
         return HttpResponse.json(RESTRICTION);
       }),
     request: `PUT ${COMMENT_AUTHOR_ID} ${CHANNEL_ID}`,
@@ -105,7 +107,9 @@ const REFRESHING = [
     variables: { channelId: CHANNEL_ID, userId: COMMENT_AUTHOR_ID },
     answer: () =>
       mockEndpoint(liftRestriction, ({ request, params }) => {
-        asked.push(`${request.method} ${params.userId} ${request.headers.get('x-channel-id')}`);
+        asked.push(
+          `${request.method} ${String(params.userId)} ${request.headers.get('x-channel-id')}`
+        );
         return new HttpResponse(null, { status: 204 });
       }),
     request: `DELETE ${COMMENT_AUTHOR_ID} ${CHANNEL_ID}`,

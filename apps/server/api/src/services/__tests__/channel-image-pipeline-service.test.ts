@@ -111,9 +111,12 @@ describe('ChannelImagePipelineService', () => {
       expect(expectErr(await prepare('avatar', request)).code).toBe(code);
     });
 
-    it('lets a banner be larger than an avatar may be', async () => {
-      expectOk(await prepare('banner', { sizeBytes: 3 * 1024 * 1024 }));
-    });
+    it.each(['banner', 'post-image'] as const)(
+      'lets a %s be larger than an avatar may be',
+      async (kind) => {
+        expectOk(await prepare(kind, { sizeBytes: 3 * 1024 * 1024 }));
+      }
+    );
 
     it('refuses a role that may not edit the channel', async () => {
       const failure = expectErr(
@@ -160,6 +163,19 @@ describe('ChannelImagePipelineService', () => {
       expect(expectOk(await repositories.channelImages.findById(uploadId))).toMatchObject({
         status: 'queued',
         crops: { kind: 'banner', crops: BANNER_CROPS },
+      });
+    });
+
+    it('takes a post image without a crop and cuts it whole', async () => {
+      const uploadId = await uploaded('post-image');
+
+      expectOk(
+        await service.complete(USER, ACTING, 'post-image', { uploadId, width: 3000, height: 2000 })
+      );
+
+      expect(expectOk(await repositories.channelImages.findById(uploadId))).toMatchObject({
+        status: 'queued',
+        crops: { kind: 'post-image', crop: { x: 0, y: 0, width: 3000, height: 2000 } },
       });
     });
 

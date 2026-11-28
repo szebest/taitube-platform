@@ -1,3 +1,4 @@
+import { ignoreRejection } from '@kit/result';
 import { Button, Field, Input } from '@kit/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import type { SubmitEvent } from 'react';
@@ -16,7 +17,10 @@ export function ModerationFilters() {
   const categories = useAdminCategories();
 
   const filter = (changes: Partial<typeof search>) =>
-    navigate({ search: (previous) => ({ ...previous, ...changes }) });
+    ignoreRejection(
+      navigate({ search: (previous) => ({ ...previous, ...changes }) }),
+      'a refused navigation leaves the viewer where they are'
+    );
 
   const searchTitles = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();

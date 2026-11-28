@@ -22,7 +22,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 function recordingFetch(makeResponse: () => Response) {
   const calls: { url: string; init: RequestInit }[] = [];
-  const fetchStub = async (url: string | URL | Request, init: RequestInit = {}) => {
+  const fetchStub = async (url: string | URL, init: RequestInit = {}) => {
     calls.push({ url: String(url), init });
     return makeResponse();
   };

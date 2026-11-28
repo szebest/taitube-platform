@@ -44,6 +44,17 @@ export const notifications = {
       },
     },
   }),
+  posted: dt('{name} dodaje nowy wpis'),
+  posts: dt('{count:plural} z kanału {name}', {
+    plural: {
+      count: {
+        one: '{?} nowy wpis',
+        few: '{?} nowe wpisy',
+        many: '{?} nowych wpisów',
+        other: '{?} nowego wpisu',
+      },
+    },
+  }),
   processingReady: dt('Twój film jest gotowy do obejrzenia'),
   processingFailed: dt('Nie udało się przetworzyć Twojego filmu'),
   processingHeld: dt('Twój film czeka na sprawdzenie przez moderatora'),

@@ -1,4 +1,5 @@
 import { SectionError } from '@kit/components';
+import { ignoreRejection } from '@kit/result';
 import { Icon, useMediaQuery } from '@kit/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useAccount } from '@vp/queries';
@@ -47,7 +48,10 @@ function Palette({ initialQuery }: { initialQuery: string }) {
 
   const search = (text: string) => {
     setOpen(false);
-    navigate({ to: '/search', search: { q: text } });
+    ignoreRejection(
+      navigate({ to: '/search', search: { q: text } }),
+      'a refused navigation leaves the viewer where they are'
+    );
   };
 
   const results = (heading: 'video' | 'channel' | 'playlist' | 'query', hits: PaletteResult[]) =>

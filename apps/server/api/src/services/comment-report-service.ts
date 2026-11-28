@@ -2,47 +2,40 @@ import { type DatabaseUnavailable } from '@kit/errors';
 import type { InvalidCursor, Paginator } from '@kit/pagination';
 import { type Result, err, isErr, map, ok } from '@kit/result';
 import type { CommentReportQueueItemView, CommentReportView } from '@vp/api-contracts';
-import type {
-  CommentReportRepositoryPort,
-  CommentRepositoryPort,
-  VideoRepository,
-} from '@vp/core/repositories';
+import type { CommentReportRepositoryPort } from '@vp/core/repositories';
 import type { CommentReportReason, CommentReportResolution } from '@vp/domain';
 import {
   type AuthorizationFailure,
   type CommentAlreadyReported,
   type CommentNotFound,
+  type PublicHostReadFailure,
   type ReportCommentFailure,
   type ResolveReportFailure,
   commentAlreadyReported,
   decideAdminAccess,
   decideCommentReport,
+  decideCommentHostRead,
   decideReportResolve,
-  decideVideoRead,
-  publicReadFailure,
+  publicHostReadFailure,
   reportAlreadyResolved,
 } from '@vp/domain-rules';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { uuidv7 } from 'uuidv7';
-import { commentWithVideo } from './comment-lookup';
+import { type CommentLookupDeps, commentWithHost } from './comment-lookup';
 import { toCommentReportQueueItemView, toCommentReportView } from './comment-report-views';
 import type { CommentService, DeleteCommentServiceFailure } from './comment-service';
 import { commentReportCursorPayload, decodeCommentReportCursor } from './cursor';
 
-export interface CommentReportServiceDeps {
-  comments: CommentRepositoryPort;
-  videos: VideoRepository;
+export interface CommentReportServiceDeps extends CommentLookupDeps {
   reports: CommentReportRepositoryPort;
   commentService: CommentService;
   paginator: Paginator;
 }
 
-type PublicReadFailure = ReturnType<typeof publicReadFailure>;
-
 export type ReportCommentServiceFailure =
   | ReportCommentFailure
-  | PublicReadFailure
+  | PublicHostReadFailure
   | CommentAlreadyReported
   | DatabaseUnavailable;
 
@@ -61,20 +54,20 @@ export class CommentReportService {
     commentId: string,
     body: { reason: CommentReportReason; note?: string }
   ): Promise<Result<CommentReportView, ReportCommentServiceFailure>> {
-    const found = await commentWithVideo(this.deps, commentId);
+    const found = await commentWithHost(this.deps, commentId);
     if (isErr(found)) return found;
-    const { comment, video } = found.value;
+    const { comment, host } = found.value;
 
-    if (video) {
-      const readable = decideVideoRead({ viewer: reporter, video, videoId: video.id });
-      if (isErr(readable)) return err(publicReadFailure(readable.error));
+    if (host) {
+      const readable = decideCommentHostRead(reporter, host);
+      if (isErr(readable)) return err(publicHostReadFailure(readable.error));
     }
 
     const decided = decideCommentReport({
       reporter,
       comment,
       commentId,
-      video,
+      host,
       reason: body.reason,
       note: body.note,
     });

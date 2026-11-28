@@ -23,6 +23,7 @@ describe('@vp/domain: api token', () => {
       'exports:read',
       'exports:create',
       'webhooks:manage',
+      'posts:write',
     ]);
   });
 

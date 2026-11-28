@@ -112,7 +112,10 @@ export function consumersByKey(
   return Object.fromEntries(
     [...usage]
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, files]) => [key, [...new Set([...files].map(ownerOf))].sort()])
+      .map(([key, files]) => [
+        key,
+        [...new Set([...files].map(ownerOf))].sort((a, b) => a.localeCompare(b)),
+      ])
   );
 }
 

@@ -141,9 +141,7 @@ export const commentRemovals = pgTable(
   {
     id: uuid('id').primaryKey(),
     channelId: channelRef(),
-    videoId: uuid('video_id')
-      .notNull()
-      .references(() => videos.id, { onDelete: 'cascade' }),
+    videoId: uuid('video_id').references(() => videos.id, { onDelete: 'cascade' }),
     authorId: userRef('author_id'),
     excerpt: text('excerpt').notNull(),
     reason: text('reason').notNull(),

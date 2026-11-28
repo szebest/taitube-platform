@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | XL (one stack of three slices, see *Delivery*) |
 | Blocked by | 46 - Playlists and watch history · 57 - Production video player · 59 - Modern video watch page · 73 - Playlist and history library · 95 - Design system 2 · 98 - Realtime user event stream · 99 - Notifications · 104 - Channel page data · 105 - Clips · 115 - Channel identity · 116 - Video management power tools |
-| Blocks | 121, 122 |
+| Blocks | 121, 122, 177 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** ready

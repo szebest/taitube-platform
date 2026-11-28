@@ -1,7 +1,8 @@
 import type { AnyFailure } from '@kit/errors';
 import type { Result } from '@kit/result';
-import { problemFor } from '@vp/api-contracts';
+import type { FastifyRequest } from 'fastify';
 import type { WebSocket } from 'ws';
+import { problemOf } from './send-result';
 
 /**
  * `sendResult` for a socket already open (SDD ADR-24): no status line is left to set, so a failure
@@ -10,7 +11,7 @@ import type { WebSocket } from 'ws';
  */
 export function sendSocketResult<T, E extends AnyFailure>(
   socket: Pick<WebSocket, 'send'>,
-  path: string,
+  request: FastifyRequest,
   result: Result<T, E>,
   ref?: string
 ): void {
@@ -19,7 +20,7 @@ export function sendSocketResult<T, E extends AnyFailure>(
     : {
         type: 'error',
         ...(ref === undefined ? {} : { ref }),
-        problem: problemFor(result.error, path),
+        problem: problemOf(request, result.error),
       };
   socket.send(JSON.stringify(frame));
 }

@@ -117,7 +117,8 @@ describe('worker/exports: export stage', () => {
     expectOk(
       await repositories.comments.create({
         id: uuidv7(),
-        videoId,
+        target: { type: 'video', id: videoId },
+        channelId,
         authorId: FAN_ID,
         authorChannelId: fanChannelId,
         parentId: null,

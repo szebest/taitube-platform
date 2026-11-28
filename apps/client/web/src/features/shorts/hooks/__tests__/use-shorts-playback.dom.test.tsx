@@ -27,10 +27,14 @@ describe('apps/client/web: useShortsPlayback', () => {
   ] as const)('flips $field with $action, and back', ({ action, field, after }) => {
     const { result } = renderHook(() => useShortsPlayback());
 
-    act(() => result.current[action]());
+    act(() => {
+      result.current[action]();
+    });
     expect(result.current[field]).toBe(after);
 
-    act(() => result.current[action]());
+    act(() => {
+      result.current[action]();
+    });
     expect(result.current[field]).toBe(!after);
   });
 
