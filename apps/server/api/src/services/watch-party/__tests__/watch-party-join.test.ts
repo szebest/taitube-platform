@@ -155,19 +155,9 @@ describe('apps/server/api/services: joinRoom', () => {
       const test = await setUpJoin({ visibility: 'private' });
       const token = await seedLink(test, test.room.id);
       expectOk(await test.join(userCaller(MEMBER), { invite: token }));
-      expectOk(
-        await test.repositories.watchPartyInviteLinks.revoke(
-          test.room.id,
-          (
-            expectOk(
-              await test.repositories.watchPartyInviteLinks.findByTokenHash(
-                test.deps.secrets.hashToken(token)
-              )
-            ) ?? { id: '' }
-          ).id,
-          new Date()
-        )
-      );
+      const links = test.repositories.watchPartyInviteLinks;
+      const link = expectOk(await links.findByTokenHash(test.deps.secrets.hashToken(token)));
+      expectOk(await links.revoke(test.room.id, link?.id ?? '', new Date()));
 
       const failure = expectErr(await test.join(userCaller(OTHER), { invite: token }));
 

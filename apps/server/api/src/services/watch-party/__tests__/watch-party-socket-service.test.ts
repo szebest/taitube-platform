@@ -107,7 +107,7 @@ describe('WatchPartySocketService', () => {
     expect(expectErr(banned).code).toBe(ErrorCodes.WATCH_PARTY_BANNED);
   });
 
-  it('refuses a Discord member banned by key, whatever path issued the ticket', async () => {
+  it('refuses a Discord member banned by key, whoever issued the credential', async () => {
     const { party, service } = await setUp();
     const key = `discord:${DISCORD_ID}`;
     expectOk(

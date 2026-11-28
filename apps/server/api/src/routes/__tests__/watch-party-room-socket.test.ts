@@ -3,6 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing-fixtures';
 import { dial, type SocketClient } from './socket-client';
 import { buildWatchPartyApp, type WatchPartyApp, type Who } from './watch-party-app';
+import { reader } from './watch-party-socket-reader';
 
 type Frame = WatchPartyServerFrame;
 type Hello = Extract<Frame, { type: 'hello' }>;
@@ -13,23 +14,6 @@ const MEMBER_KEY = `user:${SEEDED.otherUserId}`;
 interface Pod {
   world: WatchPartyApp;
   address: string;
-}
-
-/** Frames one socket heard, read in order: each wait starts after the frame the last one found. */
-function reader(client: SocketClient<Frame>) {
-  let seen = 0;
-  return async <T extends Frame['type']>(
-    type: T,
-    matches: (frame: Extract<Frame, { type: T }>) => boolean = () => true
-  ): Promise<Extract<Frame, { type: T }>> => {
-    for (;;) {
-      seen += 1;
-      const frame = (await client.next(seen))[seen - 1];
-      if (frame?.type === type && matches(frame as Extract<Frame, { type: T }>)) {
-        return frame as Extract<Frame, { type: T }>;
-      }
-    }
-  };
 }
 
 describe('the room socket', () => {
