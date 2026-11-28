@@ -17,6 +17,7 @@ export interface RepositoriesSubject {
   seedDraftPost(input: NewChannelPostInput): Promise<void>;
   /** Ordering specs place a playlist's last change in the past rather than waiting on a clock. */
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
+  /** Hiding a room is a moderation write no port exposes yet; discovery specs hide one directly. */
   /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
   ageNotifications(ms: number): Promise<void>;
   /**

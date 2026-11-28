@@ -1,9 +1,10 @@
 import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
+import { sendChat } from '../watch-party-chat';
 import { upgradeSeat } from '../watch-party-seat-upgrade';
 import { assignRole, banKey } from './watch-party-access-fixture';
 import { guestJoined, setUpGuests } from './watch-party-guest-fixture';
-import { GUEST_IP, MEMBER, OTHER, OWNER, reading } from './watch-party-test-deps';
+import { GUEST_IP, MEMBER, OTHER, OWNER, reading, userCaller } from './watch-party-test-deps';
 
 describe('apps/server/api/services: upgradeSeat', () => {
   async function guestWithSession() {
@@ -33,6 +34,21 @@ describe('apps/server/api/services: upgradeSeat', () => {
       `user:${MEMBER.id}`,
     ]);
     expect(expectOk(await world.guestSessions.resolve(world.credential, 60))).toBeNull();
+  });
+
+  it('leaves the playback where it was and lets the new member chat at once', async () => {
+    const world = await guestWithSession();
+    const rooms = world.repositories.watchPartyRooms;
+    const before = expectOk(await rooms.findById(world.room.id));
+
+    expectOk(await world.upgrade());
+
+    const after = expectOk(await rooms.findById(world.room.id));
+    expect(after?.playback).toEqual(before?.playback);
+    expect(after?.playbackVersion).toBe(before?.playbackVersion);
+    expect(
+      expectOk(await sendChat(world.deps, world.room.id, userCaller(MEMBER), 'right away'))
+    ).toEqual(expect.any(String));
   });
 
   it('tells the guest’s own socket who it is now', async () => {

@@ -122,6 +122,10 @@ describe('@vp/domain: effectivePermissions', () => {
   };
   const inTen = new Date(NOW.getTime() + 600_000);
   const tenAgo = new Date(NOW.getTime() - 600_000);
+  const bothMutes = [
+    { roleId: 'chat_muted', expiresAt: inTen },
+    { roleId: 'voice_muted', expiresAt: new Date(NOW.getTime() + 1_200_000) },
+  ];
 
   function effectiveOf(overrides: Partial<EffectivePermissionsInput> = {}) {
     return effectivePermissions({
@@ -165,6 +169,24 @@ describe('@vp/domain: effectivePermissions', () => {
         ],
       },
       permissions: without('voice.speak'),
+      top: 1,
+    },
+    {
+      scenario: 'both mutes with different expiries, neither lifted yet',
+      overrides: { assignments: [...bothMutes] },
+      permissions: without('chat.post', 'chat.react', 'voice.speak'),
+      top: 1,
+    },
+    {
+      scenario: 'the same two mutes once the chat one lifted on its own',
+      overrides: { assignments: [...bothMutes], now: new Date(NOW.getTime() + 900_000) },
+      permissions: without('voice.speak'),
+      top: 1,
+    },
+    {
+      scenario: 'the same two mutes once the voice one lifted too',
+      overrides: { assignments: [...bothMutes], now: new Date(NOW.getTime() + 1_500_000) },
+      permissions: FRIENDS_MEMBER,
       top: 1,
     },
     {

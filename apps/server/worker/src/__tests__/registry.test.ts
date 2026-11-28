@@ -172,6 +172,14 @@ describe('apps/server/worker: stage registry', () => {
       data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
     },
     { name: 'notify-party-invite', data: { inviteId: '018f0000-0000-7000-8000-000000000004' } },
+    {
+      name: 'notify-party-reminder',
+      data: {
+        roomId: '018f0000-0000-7000-8000-000000000004',
+        scheduledFor: '2026-03-01T13:00:00.000Z',
+        lead: 'start',
+      },
+    },
     { name: 'notify-post-subscribers', data: { postId: '018f0001-0000-7000-8000-000000000001' } },
     { name: 'announce-live', data: { liveStreamId: '018f0000-0000-7000-8000-000000000003' } },
   ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {

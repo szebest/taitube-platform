@@ -35,12 +35,14 @@ const NotificationPayloadSchema = z.object({
       name: z.string(),
       videoTitle: z.string().nullable(),
       scheduledFor: z.iso.datetime().nullable(),
-      inviteId: z.uuid(),
+      inviteId: z.uuid().nullable(),
       expiresAt: z.iso.datetime(),
       watching: z.object({ names: z.array(z.string()), count: z.number().int().nonnegative() }),
     })
     .nullable()
-    .describe('The party a party_invite points at, with who was watching when it was sent'),
+    .describe(
+      'The party a party_invite or party_starting points at; party_invite also carries who was watching when it was sent'
+    ),
   inviteId: z.uuid().optional().describe('The channel team invite a `team_invite` opens'),
   postId: z
     .uuid()

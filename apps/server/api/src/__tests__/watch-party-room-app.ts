@@ -34,7 +34,7 @@ export interface RoomApp extends TestApp {
   readonly owner: Account;
   readonly member: Account;
   /** An account with a channel, so it can be named, searched and invited. */
-  account(n: number): Promise<Account>;
+  account(n: number, role?: UserContext['role']): Promise<Account>;
   /** Takes a seat in the room for an account that has none. */
   seat(account: Account): Promise<void>;
   /** What the built-in Member role may do from now on, whoever holds it. */
@@ -64,7 +64,7 @@ export async function buildRoomApp(): Promise<RoomApp> {
   const { app, repositories } = testApp;
   const at = new Date();
 
-  const account: RoomApp['account'] = async (n) => {
+  const account: RoomApp['account'] = async (n, role = 'USER') => {
     const id = accountId(n);
     expectOk(await repositories.users.upsert({ id, email: `account${n}@taitube.local` }));
     expectOk(
@@ -74,11 +74,11 @@ export async function buildRoomApp(): Promise<RoomApp> {
         displayName: `Account ${n}`,
       })
     );
-    const user: UserContext = { id, role: 'USER' };
+    const user: UserContext = { id, role };
     return {
       user,
       key: keyOf(user),
-      headers: bearer(mintToken({ sub: id, role: 'USER', ttl: '1h' })),
+      headers: bearer(mintToken({ sub: id, role, ttl: '1h' })),
     };
   };
 

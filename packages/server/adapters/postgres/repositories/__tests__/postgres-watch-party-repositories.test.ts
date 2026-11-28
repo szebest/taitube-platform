@@ -8,11 +8,13 @@ describe('createWatchPartyRepositories', () => {
     expect(Object.keys(repositories).sort()).toEqual([
       'watchPartyControls',
       'watchPartyHousekeeping',
+      'watchPartyInterest',
       'watchPartyInviteLinks',
       'watchPartyInvites',
       'watchPartyMembers',
       'watchPartyMessages',
       'watchPartyQueue',
+      'watchPartyReports',
       'watchPartyRoles',
       'watchPartyRooms',
     ]);

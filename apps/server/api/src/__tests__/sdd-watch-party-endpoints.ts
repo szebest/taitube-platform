@@ -3,6 +3,23 @@ import type { SddEndpointContract } from './sdd-endpoint-contract';
 
 export const SDD_WATCH_PARTY_ENDPOINTS: SddEndpointContract[] = [
   {
+    path: '/v1/watch-parties',
+    method: 'get',
+    expectedStatuses: [200, 400, 429],
+    expectedErrorCodes: [
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorCodes.INVALID_CURSOR,
+      ErrorCodes.RATE_LIMITED,
+    ],
+    hasQueryParams: true,
+  },
+  {
+    path: '/v1/watch-parties/events',
+    method: 'get',
+    expectedStatuses: [200, 429],
+    expectedErrorCodes: [ErrorCodes.RATE_LIMITED],
+  },
+  {
     path: '/v1/watch-parties/{id}/close',
     method: 'post',
     expectedStatuses: [200, 401, 403, 404, 410],

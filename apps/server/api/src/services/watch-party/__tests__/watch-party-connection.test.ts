@@ -4,34 +4,40 @@ import type { UserContext } from '@vp/permissions';
 import type { RoomEnvelope } from '../watch-party-broadcaster';
 import { WatchPartySocketService } from '../watch-party-socket-service';
 import { GUEST_KEY, keyOf, ROOM_ID } from './watch-party-moderation-fixture';
-import { drainMicrotasks, socketRoom } from './watch-party-socket-fixture';
+import { drainMicrotasks, elapse, fakeTimers, socketRoom } from './watch-party-socket-fixture';
 import { MEMBER, OWNER, reading } from './watch-party-test-deps';
 
 const EVERYONE = { memberKey: null, audience: null, except: null } as const;
 const COUNTDOWN: WatchPartyServerFrame = { type: 'countdown', startsAt: 1 };
 
-async function connected(
-  user: UserContext = MEMBER,
-  beforeConnect: (party: Awaited<ReturnType<typeof socketRoom>>) => void = () => undefined
-) {
-  const party = await socketRoom();
-  beforeConnect(party);
+type Party = Awaited<ReturnType<typeof socketRoom>>;
+
+async function openOn(party: Party, user: UserContext, ticket = 'ticket') {
   const service = new WatchPartySocketService(party.socketDeps);
   expectOk(
     await party.gate.issueTicket(
-      'ticket',
+      ticket,
       { roomId: ROOM_ID, principal: { kind: 'user', userId: user.id }, role: user.role },
       30
     )
   );
-  const session = expectOk(await service.open({ roomId: ROOM_ID, ticket: 'ticket' }));
+  const session = expectOk(await service.open({ roomId: ROOM_ID, ticket }));
   const sent: WatchPartyServerFrame[] = [];
   const ended = vi.fn();
   const connection = expectOk(
     await service.connect(session, null, { send: (frame) => sent.push(frame), end: ended })
   );
   sent.length = 0;
-  return { party, connection, sent, ended };
+  return { connection, sent, ended };
+}
+
+async function connected(
+  user: UserContext = MEMBER,
+  beforeConnect: (party: Party) => void = () => undefined
+) {
+  const party = await socketRoom();
+  beforeConnect(party);
+  return { party, ...(await openOn(party, user)) };
 }
 
 describe('RoomConnection', () => {
@@ -145,6 +151,29 @@ describe('RoomConnection', () => {
 
     expect(expectOk(await party.presence.members(ROOM_ID, 0))).toEqual([]);
     expect(begin).toHaveBeenCalledWith(ROOM_ID);
+  });
+
+  it('keeps ownership for an owner who reconnects inside the 60 s', async () => {
+    fakeTimers();
+    try {
+      const { party, connection } = await connected(OWNER);
+      expectOk(
+        await party.presence.admit(ROOM_ID, keyOf(MEMBER), {
+          limit: null,
+          nowMs: party.deps.now().getTime(),
+          staleBeforeMs: 0,
+        })
+      );
+
+      connection.leave();
+      await elapse(59_000);
+      await openOn(party, OWNER, 'again');
+      await elapse(2_000);
+
+      expect((await party.room()).ownerKey).toBe(keyOf(OWNER));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps the spot for the newer socket when a superseded one closes', async () => {

@@ -4,9 +4,10 @@ import { memberKeyOf } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { WatchPartySocketService } from '../watch-party-socket-service';
+import { banKey } from './watch-party-access-fixture';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
 import { ORIGIN, socketRoom } from './watch-party-socket-fixture';
-import { MEMBER, OTHER, OWNER } from './watch-party-test-deps';
+import { DISCORD_ID, discordSession, MEMBER, OTHER, OWNER } from './watch-party-test-deps';
 
 type Party = Awaited<ReturnType<typeof socketRoom>>;
 
@@ -104,6 +105,40 @@ describe('WatchPartySocketService', () => {
 
     expect(expectErr(stranger).code).toBe(ErrorCodes.WATCH_PARTY_NOT_FOUND);
     expect(expectErr(banned).code).toBe(ErrorCodes.WATCH_PARTY_BANNED);
+  });
+
+  it('refuses a Discord member banned by key, whoever issued the credential', async () => {
+    const { party, service } = await setUp();
+    const key = `discord:${DISCORD_ID}`;
+    expectOk(
+      await party.repositories.watchPartyMembers.join(
+        {
+          roomId: ROOM_ID,
+          memberKey: key,
+          kind: 'discord',
+          userId: null,
+          discordUserId: DISCORD_ID,
+          displayName: 'Discord Dana',
+          avatarUrl: null,
+          ipHash: null,
+          joinedVia: 'link',
+          joinedAt: party.deps.now(),
+        },
+        null
+      )
+    );
+    await banKey(party, ROOM_ID, key);
+    expectOk(
+      await party.gate.issueTicket(
+        'discord-ticket',
+        { roomId: ROOM_ID, principal: discordSession().principal, role: 'USER' },
+        30
+      )
+    );
+
+    const refused = await service.open({ roomId: ROOM_ID, ticket: 'discord-ticket' });
+
+    expect(expectErr(refused).code).toBe(ErrorCodes.WATCH_PARTY_BANNED);
   });
 
   it('refuses a full room but admits its owner above the limit', async () => {

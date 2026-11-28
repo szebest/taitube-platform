@@ -14,6 +14,7 @@ type BufferingDeps = Pick<
   | 'secrets'
   | 'cdn'
   | 'gate'
+  | 'discovery'
 >;
 
 interface RoomWait {

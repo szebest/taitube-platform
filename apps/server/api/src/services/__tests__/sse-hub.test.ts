@@ -6,7 +6,7 @@ import { expectErr, expectOk } from '@kit/testing/result';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { userChannel, videoChannel } from '@vp/events';
+import { partiesChannel, userChannel, videoChannel } from '@vp/events';
 import { createPipelineMetrics } from '@vp/pipeline-metrics';
 import { SseHub, type SseHubOptions } from '../sse-hub';
 
@@ -113,8 +113,24 @@ describe('apps/server/api/services: SseHub', () => {
       userStatus,
       'id: 12\nevent: video.processing\ndata: {"type":"video.processing"',
     ],
+    [
+      'the parties channel a discovery event',
+      partiesChannel(),
+      { type: 'party.closed', payload: { id: VIDEO_ID } },
+      `event: party.closed\ndata: {"type":"party.closed","payload":{"id":"${VIDEO_ID}"}}`,
+    ],
   ])('delivers to a connection on %s', async (_label, channel, message, frame) => {
     expect(await deliver(channel, message)).toContain(frame);
+  });
+
+  it('drops a message on the parties channel that is not a discovery event, and says so', async () => {
+    const warn = vi.spyOn(logger, 'warn');
+
+    expect(await deliver(partiesChannel(), videoProgress)).toBe('');
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: partiesChannel() }),
+      'dropped a discovery event the contract does not know'
+    );
   });
 
   it('drops a message on a user channel that is not a user event, and says so', async () => {
@@ -135,7 +151,7 @@ describe('apps/server/api/services: SseHub', () => {
 
     expectOk(first);
     expectOk(second);
-    expect(psubscribe).toHaveBeenCalledTimes(2);
+    expect(psubscribe).toHaveBeenCalledTimes(3);
   });
 
   it('reports a cache that cannot take the wildcard subscription', async () => {
@@ -205,6 +221,22 @@ describe('apps/server/api/services: SseHub', () => {
 
     expectOk(register('video:test', VIEWER_ID));
     expect(hub.getUserConnectionCount(VIEWER_ID)).toBe(20);
+  });
+
+  it('refuses an address its 5th stream until one of its 4 closes', () => {
+    const limit = { subject: 'ip', key: '203.0.113.9', max: 4 } as const;
+    const open = () =>
+      hub.register({
+        channel: partiesChannel(),
+        limit,
+        rawResponse: new PassThrough() as unknown as ServerResponse,
+      });
+    const connections = Array.from({ length: 4 }, () => expectOk(open()));
+
+    expect(expectErr(open())).toMatchObject({ subject: 'ip', key: limit.key, limit: 4 });
+
+    connections[0]?.close();
+    expectOk(open());
   });
 
   it('refuses a stream past the pod cap until one closes', async () => {

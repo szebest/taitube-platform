@@ -23,6 +23,7 @@ describe('apps/server/worker/stages: notification-processors', () => {
       'notify-heart',
       'notify-moderation',
       'notify-party-invite',
+      'notify-party-reminder',
       'notify-post-subscribers',
       'notify-processing',
       'notify-subscribers',

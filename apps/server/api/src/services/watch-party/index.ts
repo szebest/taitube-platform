@@ -3,6 +3,8 @@ export * from './watch-party-broadcaster';
 export * from './watch-party-context';
 export * from './watch-party-controls-service';
 export * from './watch-party-deps';
+export * from './watch-party-discovery-feed';
+export * from './watch-party-discovery-service';
 export * from './watch-party-guest-service';
 export * from './watch-party-invite-service';
 export * from './watch-party-member-service';

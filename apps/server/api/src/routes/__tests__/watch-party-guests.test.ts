@@ -207,10 +207,15 @@ describe('watch party guest routes', () => {
       { method: 'GET' as const, url: '/v1/me/notifications' },
       { method: 'GET' as const, url: '/v1/me/subscriptions' },
       { method: 'POST' as const, url: `/v1/channels/${SEEDED.channelId}/subscribers` },
-    ])('is ignored by $method $url, which answers 401', async ({ method, url }) => {
+      {
+        method: 'POST' as const,
+        url: '/v1/watch-parties/018f0000-0000-7000-8000-00000000a001/invites',
+        payload: { userIds: [SEEDED.otherUserId] },
+      },
+    ])('is ignored by $method $url, which answers 401', async ({ method, url, payload }) => {
       const headers = await world.credentialFor(guestSession());
 
-      const res = await world.call('anonymous', method, url, { headers });
+      const res = await world.call('anonymous', method, url, { headers, payload });
 
       expect(res.statusCode).toBe(401);
       expect(res.json().code).toBe(ErrorCodes.UNAUTHORIZED);

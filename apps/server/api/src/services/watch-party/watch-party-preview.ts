@@ -54,7 +54,12 @@ function joinStateOf(failure: WatchPartyJoinFailure): WatchPartyJoinState {
 }
 
 export async function rosterPreviewOf(
-  { repositories, presence, config, now }: WatchPartyDeps,
+  {
+    repositories,
+    presence,
+    config,
+    now,
+  }: Pick<WatchPartyDeps, 'repositories' | 'presence' | 'config' | 'now'>,
   room: Pick<WatchPartyRoom, 'id' | 'visibility'>
 ): Promise<Result<RosterPreview, DatabaseUnavailable | CacheUnavailable>> {
   const present = await presence.members(room.id, now().getTime() - config.presence.staleAfterMs);

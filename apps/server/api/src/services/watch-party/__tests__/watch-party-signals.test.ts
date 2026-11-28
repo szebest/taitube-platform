@@ -1,9 +1,16 @@
 import { expectErr, expectOk } from '@kit/testing/result';
 import { ErrorCodes } from '@vp/errors';
 import { getWatchPartyPermissions, toWatchPartyViewer } from '@vp/permissions';
-import { foldReactions, react, requestPlayback, voteSkip } from '../watch-party-signals';
+import { RoomBatcher } from '../room-batcher';
+import {
+  flushReactions,
+  foldReactions,
+  react,
+  requestPlayback,
+  voteSkip,
+} from '../watch-party-signals';
 import { keyOf, ROOM_ID } from './watch-party-moderation-fixture';
-import { socketRoom } from './watch-party-socket-fixture';
+import { elapse, fakeTimers, socketRoom } from './watch-party-socket-fixture';
 import { MEMBER, OTHER, OWNER, userCaller } from './watch-party-test-deps';
 
 const ability = (permissions: Parameters<typeof toWatchPartyViewer>[0]) =>
@@ -50,6 +57,36 @@ describe('room signals', () => {
 
     expect(expectErr(await sent()).code).toBe(ErrorCodes.RATE_LIMITED);
     expect(add).toHaveBeenCalledTimes(10);
+  });
+
+  it('folds 200 members reacting inside 250 ms into one frame per pod', async () => {
+    fakeTimers();
+    const { deps, published } = await socketRoom();
+    const pods = ['a', 'b'].map(
+      () => new RoomBatcher({ windowMs: deps.config.reactionsFoldMs, flush: flushReactions(deps) })
+    );
+
+    for (const pod of pods) {
+      for (let member = 0; member < 200; member += 1) {
+        expectOk(
+          await react(deps, pod, {
+            roomId: ROOM_ID,
+            memberKey: `user:${pod === pods[0] ? 'a' : 'b'}${member}`,
+            emoji: member % 2 === 0 ? '🔥' : '🎉',
+            ability: REACTOR,
+          })
+        );
+      }
+    }
+    await elapse(deps.config.reactionsFoldMs);
+
+    const frames = published('reactions');
+    expect(deps.config.reactionsFoldMs).toBeLessThanOrEqual(250);
+    expect(frames).toHaveLength(2);
+    expect(frames.map(({ counts }) => counts)).toEqual([
+      { '🔥': 100, '🎉': 100 },
+      { '🔥': 100, '🎉': 100 },
+    ]);
   });
 
   it('refuses a reaction without chat.react', async () => {
