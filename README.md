@@ -225,6 +225,10 @@ taitube-platform/
   newest, views, likes or comments; `PATCH/DELETE /v1/creator/videos/:id` edit title, description,
   visibility, category, tags and thumbnail under an optimistic lock, and soft delete. An admin takes a
   video down with `POST /v1/admin/videos/:id/takedown`, and its owner cannot publish it again.
+- **Watch parties**: `POST /v1/watch-parties` opens a room and `WS /v1/watch-parties/:id/socket` keeps it in
+  sync across API pods, with chat, reactions and a shared queue. Accounts, guests on a pasted link and
+  Discord members hold room-scoped roles over a closed permission registry, enforced on the server; owners
+  set capacity and passwords, invite by account or link, and ban by member key.
 - **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
 - **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
   dashboards and Alertmanager rules; the apps write JSON logs to stdout.
