@@ -1,5 +1,6 @@
 import { andThen, err, fromPromise, map, ok, type Result } from '@kit/result';
 import type {
+  NewOutboxInput,
   OwnerTransfer,
   PlaybackChange,
   RoomWrite,
@@ -14,7 +15,7 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 import { replacePermissions, type RolePermissions } from './watch-party-role-permissions';
-import { insertSystemLine } from './watch-party-writes';
+import { insertOutbox, insertSystemLine } from './watch-party-writes';
 
 const {
   watchPartyRooms: rooms,
@@ -33,7 +34,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
   constructor(private readonly db: PostgresDatabase) {}
 
   async create(seed: WatchPartyRoomSeed): Promise<Result<WatchPartyRoom, DatabaseUnavailable>> {
-    const { room, roles: seedRoles, owner, queue: seedQueue } = seed;
+    const { room, roles: seedRoles, owner, queue: seedQueue, reminders = [] } = seed;
     const created = await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
@@ -75,6 +76,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
                 seedQueue.map((item) => ({ ...item, position: positionOf.get(item.id) ?? 0 }))
               );
           }
+          await insertOutbox(tx, reminders);
           return row;
         }),
       databaseUnavailable.during('createWatchPartyRoom')
@@ -122,18 +124,24 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     patch: SettingsPatch,
     expectedVersion: number,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    reminders: readonly NewOutboxInput[] = []
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
-    return this.write('updateWatchPartySettings', id, line, (tx) =>
-      tx
-        .update(rooms)
-        .set({
-          ...patch,
-          version: sql`${rooms.version} + 1`,
-          updatedAt: at,
-        })
-        .where(and(eq(rooms.id, id), eq(rooms.version, expectedVersion)))
-        .returning()
+    return this.write(
+      'updateWatchPartySettings',
+      id,
+      line,
+      (tx) =>
+        tx
+          .update(rooms)
+          .set({
+            ...patch,
+            version: sql`${rooms.version} + 1`,
+            updatedAt: at,
+          })
+          .where(and(eq(rooms.id, id), eq(rooms.version, expectedVersion)))
+          .returning(),
+      reminders
     );
   }
 
@@ -280,7 +288,8 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
     operation: string,
     id: string,
     line: NewSystemLine | null,
-    update: (tx: PostgresDatabase) => Promise<(typeof rooms.$inferSelect)[]>
+    update: (tx: PostgresDatabase) => Promise<(typeof rooms.$inferSelect)[]>,
+    outbound: readonly NewOutboxInput[] = []
   ): Promise<Result<RoomWrite, DatabaseUnavailable>> {
     return fromPromise(
       () =>
@@ -288,6 +297,7 @@ export class PostgresWatchPartyRoomRepository implements WatchPartyRoomRepositor
           const [applied] = await update(tx);
           if (applied) {
             if (line) await insertSystemLine(tx, id, line);
+            await insertOutbox(tx, outbound);
             return { type: 'applied', room: toRoom(applied) };
           }
           const [current] = await tx.select().from(rooms).where(eq(rooms.id, id));

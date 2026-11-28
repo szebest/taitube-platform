@@ -29,7 +29,7 @@ export class InMemoryWatchPartyRepositories {
   private readonly watchParties = new InMemoryWatchPartyStore();
 
   constructor(outbox: InMemoryOutboxRepository, userEvents: InMemoryUserEventRepository) {
-    this.watchPartyRooms = new InMemoryWatchPartyRoomRepository(this.watchParties);
+    this.watchPartyRooms = new InMemoryWatchPartyRoomRepository(this.watchParties, outbox);
     this.watchPartyRoles = new InMemoryWatchPartyRoleRepository(this.watchParties);
     this.watchPartyMembers = new InMemoryWatchPartyMemberRepository(this.watchParties);
     this.watchPartyQueue = new InMemoryWatchPartyQueueRepository(this.watchParties);

@@ -102,7 +102,8 @@ interface NotificationParty {
   name: string;
   videoTitle: string | null;
   scheduledFor: string | null;
-  inviteId: string;
+  /** `null` on a `party_starting` for an account that was interested and never invited. */
+  inviteId: string | null;
   expiresAt: string;
   watching: { names: string[]; count: number };
 }

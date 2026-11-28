@@ -20,6 +20,7 @@ import {
   type WatchPartyVideoNotShareable,
   watchPartyLimitReached,
 } from '@vp/errors';
+import { partyReminderOutboxes } from '@vp/job-contracts';
 import { canCreateWatchParty, type UserContext } from '@vp/permissions';
 import {
   type InvalidField,
@@ -146,7 +147,7 @@ function settingsOf(
     language: body.language ?? quick.language,
     accent: body.accent ?? quick.accent,
     scheduledFor: checked.scheduledFor,
-    autoStart: body.autoStart ?? quick.autoStart,
+    autoStart: body.autoStart ?? checked.scheduledFor !== null,
   };
 }
 
@@ -224,6 +225,10 @@ export async function createRoom(
       ipHash: null,
     }),
     queue: queue.value.items,
+    reminders:
+      input.scheduledFor === null || input.scheduledFor === undefined
+        ? []
+        : partyReminderOutboxes(roomId, input.scheduledFor, at),
   });
   if (isErr(created)) return created;
 

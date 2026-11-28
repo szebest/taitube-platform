@@ -1,4 +1,4 @@
-import type { NewSystemLine } from '@vp/core/repositories';
+import type { NewOutboxInput, NewSystemLine } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
@@ -7,6 +7,7 @@ const {
   watchPartyRooms: rooms,
   watchPartyMessages: messages,
   watchPartyQueueItems: queue,
+  outbox,
 } = schema;
 
 /** Serialises the room's writes for the rest of the transaction; `false` when the room is gone. */
@@ -36,6 +37,23 @@ export async function insertSystemLine(
     positionMs,
     createdAt,
   });
+}
+
+/** On the caller's transaction, so the jobs exist exactly when their cause committed. */
+export async function insertOutbox(
+  tx: PostgresDatabase,
+  items: readonly NewOutboxInput[]
+): Promise<void> {
+  if (items.length === 0) return;
+  await tx.insert(outbox).values(
+    items.map(({ id, kind, payload }) => ({
+      id: id || sql`gen_random_uuid()`,
+      kind,
+      payload,
+      createdAt: new Date(),
+      attempts: 0,
+    }))
+  );
 }
 
 /** The fencing token every role change moves; `null` when the room is gone. */

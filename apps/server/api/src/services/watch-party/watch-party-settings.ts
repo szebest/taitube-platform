@@ -1,7 +1,7 @@
 import { andThenAsync, assertNever, err, isErr, ok, type Result } from '@kit/result';
 import type { PatchWatchPartyBody, WatchPartyView } from '@vp/api-contracts';
 import type { HashingFailed } from '@vp/core/ports';
-import type { RoomWrite, SettingsPatch } from '@vp/core/repositories';
+import type { NewOutboxInput, RoomWrite, SettingsPatch } from '@vp/core/repositories';
 import type { WatchPartyCloseReason, WatchPartyPermission, WatchPartyRoom } from '@vp/domain';
 import { requireRoomPermission } from '@vp/domain-rules';
 import {
@@ -14,6 +14,7 @@ import {
   watchPartyClosed,
   watchPartyNotFound,
 } from '@vp/errors';
+import { partyReminderOutboxes } from '@vp/job-contracts';
 import type { PartyCaller } from './party-caller';
 import type { RoomContext } from './watch-party-context';
 import type { WatchPartyDeps } from './watch-party-deps';
@@ -101,6 +102,16 @@ function appliedRoom(
   }
 }
 
+/** A reschedule is the only edit that enqueues: reminders for the new instant, none for an unchanged one. */
+function remindersFor(
+  room: WatchPartyRoom,
+  scheduledFor: Date | null | undefined,
+  now: Date
+): NewOutboxInput[] {
+  if (!scheduledFor || scheduledFor.getTime() === room.scheduledFor?.getTime()) return [];
+  return partyReminderOutboxes(room.id, scheduledFor, now);
+}
+
 export type UpdateFailure =
   | InvalidRoomInput
   | HashingFailed
@@ -146,7 +157,8 @@ export async function updateRoom(
     patchOf(body, checked.value, passwordHash.value),
     body.version,
     line,
-    deps.now()
+    deps.now(),
+    remindersFor(context.room, checked.value.scheduledFor, deps.now())
   );
   if (isErr(written)) return written;
   const applied = appliedRoom(written.value, roomId, body.version);

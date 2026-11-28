@@ -10,6 +10,7 @@ import type {
   WatchPartySystemLine,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { NewOutboxInput } from './outbox-repository';
 
 /** A system line written in the transaction of its cause, so a reconnect replays it. */
 export interface NewSystemLine {
@@ -46,6 +47,8 @@ export interface WatchPartyRoomSeed {
   readonly owner: NewWatchPartyMember;
   /** In play order; the first is the lobby's item. */
   readonly queue: readonly NewWatchPartyQueueItem[];
+  /** Written to the outbox in the same transaction: the reminders of a scheduled room. */
+  readonly reminders?: readonly NewOutboxInput[];
 }
 
 export type SettingsPatch = Partial<WatchPartySettings> & { readonly passwordHash?: string | null };
@@ -88,7 +91,9 @@ export interface WatchPartyRoomRepositoryPort {
     patch: SettingsPatch,
     expectedVersion: number,
     line: NewSystemLine | null,
-    at: Date
+    at: Date,
+    /** Written to the outbox in the same transaction, and only when the patch applied. */
+    reminders?: readonly NewOutboxInput[]
   ): Promise<Result<RoomWrite, DatabaseUnavailable>>;
   /** One compare-and-set on `playback_version` and `roles_version`; the phase column follows. */
   commitPlayback(

@@ -8,6 +8,7 @@ import {
   ROOM_ID,
   roomSeed,
 } from '../../../__tests__/contract/watch-party-fixtures';
+import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';
 import { InMemoryWatchPartyRoomRepository } from '../in-memory-watch-party-room-repository';
 import { InMemoryWatchPartyStore } from '../in-memory-watch-party-store';
 
@@ -15,7 +16,7 @@ const UNKNOWN_ROOM_ID = '00000000-0000-7000-8000-00000000e0ff';
 
 async function seededStore() {
   const store = new InMemoryWatchPartyStore();
-  const rooms = new InMemoryWatchPartyRoomRepository(store);
+  const rooms = new InMemoryWatchPartyRoomRepository(store, new InMemoryOutboxRepository());
   expectOk(await rooms.create(roomSeed({ videoIds: [VIDEO_IDS.a, VIDEO_IDS.b] })));
   return store;
 }
